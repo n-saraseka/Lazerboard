@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.OsuApi.OsuApiClasses;
 using OsuScoreStats.DbService;
+using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories;
+using OsuScoreStats.OsuApi.Enums;
+
 namespace OsuScoreStats.ApiMethods;
 
 public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
@@ -16,11 +18,12 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
     /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
     /// <param name="optionalMods">An array of optional mod acronyms</param>
     /// <param name="amount">Amount of scores to return</param>
-    /// <param name="sort">Parameter to sort by</param>
+    /// <param name="userId">User ID (filters to only that user if set)</param>
     /// <param name="isDesc">Whether sort is descending or not</param>
+    /// <param name="sort">Parameter to sort by</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>IEnumerable containing up to 100 highest pp scores at given date</returns>
-    public async Task<IEnumerable<Score>> GetScoresAsync(
+    /// <returns>List containing up to 100 highest pp scores at given date</returns>
+    public async Task<List<Score>> GetScoresAsync(
         Mode? mode, 
         DateOnly? dateStart,
         DateOnly? dateEnd,
@@ -28,6 +31,7 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
         string[]? mandatoryMods,
         string[]? optionalMods,
         int? amount,
+        int? userId,
         string? sort = "pp",
         bool isDesc = true,
         CancellationToken ct = default)
@@ -36,8 +40,10 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
         
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
         var scoreRepository = new ScoreRepository(dbContext);
+
+        var query = scoreRepository.GetAll();
         
-        var query = scoreRepository.GetAll().AsQueryable();
+        if (userId != null) query = query.Where(s => s.UserId == userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
         var targetStartDate = dateStart ?? DateOnly.FromDateTime(latestDate);
@@ -60,18 +66,12 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
         }
         
         if (mandatoryMods?.Length > 0)
-            if (optionalMods?.Length > 0)
-                query = query.Where(s =>
-                    mandatoryMods.All(m => s.ModAcronyms.Contains(m)) &&
-                    s.ModAcronyms.All(m => mandatoryMods.Contains(m) || optionalMods.Contains(m)));
-            else
-                query = query.Where(s =>
-                    mandatoryMods.All(m => s.ModAcronyms.Contains(m)) &&
-                    s.ModAcronyms.All(m => mandatoryMods.Contains(m)));
-        else
-            if (optionalMods?.Length > 0)
-                query = query.Where(s =>
-                    s.ModAcronyms.All(m => optionalMods.Contains(m)));
+            query = query.Where(s =>
+                mandatoryMods.All(m => s.ModAcronyms.Contains(m)) &&
+                s.ModAcronyms.All(m => mandatoryMods.Contains(m)));
+        if (optionalMods?.Length > 0)
+            query = query.Where(s =>
+                s.ModAcronyms.All(m => optionalMods.Contains(m)));
 
         switch (sort)
         {
@@ -90,34 +90,7 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
         }
         
         query = query.Take(scoresAmount);
-
-        var scores = await query.ToListAsync(ct);
         
-        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-
-        foreach (var beatmapId in beatmapIds)
-        {
-            var scoresOnThisBeatmap = scores.Where(s => s.BeatmapId == beatmapId).ToList();
-
-            var allScoresOnThisBeatmap = await dbContext.Scores
-                .Where(s => s.BeatmapId == beatmapId && s.Mode == mode)
-                .OrderByDescending(s => s.TotalScore)
-                .ThenBy(s => s.Id)
-                .ToListAsync(ct);
-
-            for (int i = 0; i < scoresOnThisBeatmap.Count; i++)
-            {
-                scoresOnThisBeatmap[i].MapRank = allScoresOnThisBeatmap.IndexOf(allScoresOnThisBeatmap
-                    .Find(s => s.Id == scoresOnThisBeatmap[i].Id)) + 1;
-            }
-
-            foreach (var score in scores)
-            {
-                if (score.BeatmapId == beatmapId)
-                    score.MapRank = scoresOnThisBeatmap.Find(s => s.Id == score.Id).MapRank;
-            }
-        }
-        
-        return scores;
+        return await query.ToListAsync(ct);
     } 
 }

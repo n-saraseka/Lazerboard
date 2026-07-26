@@ -1,15 +1,15 @@
 using Newtonsoft.Json;
 using System.Text;
-using OsuScoreStats.OsuApi.OsuApiClasses;
 using osu.Game.Beatmaps;
 using osu.Game.IO;
-using System.Threading.RateLimiting;
+using OsuScoreStats.OsuApi.OsuApiEntities;
+using OsuScoreStats.OsuApi.Enums;
+
 namespace OsuScoreStats.OsuApi;
 
 public class OsuApiService(
     IHttpClientFactory httpClientFactory, 
-    IConfiguration config, 
-    RateLimiter limiter)
+    IConfiguration config)
 {
     private static TokenInfo? _token;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
@@ -42,29 +42,22 @@ public class OsuApiService(
         
         while (!ct.IsCancellationRequested)
         {
-            using var lease = await limiter.AcquireAsync(cancellationToken: ct);
-            if (lease.IsAcquired)
+            try
             {
-                try
+                var response = await client.SendAsync(requestMessage, ct);
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
-                    var response = await client.SendAsync(requestMessage, ct);
-                    response.EnsureSuccessStatusCode();
-                    responseText = await response.Content.ReadAsStringAsync(ct);
-                }
-                catch (HttpRequestException ex)
-                {
-                    Console.WriteLine(ex.StatusCode);
-                    throw;
+                    var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(1);
+                    await Task.Delay(retryAfter, ct);
                 }
 
+                responseText = await response.Content.ReadAsStringAsync(ct);
                 break;
             }
-            else
+            catch (HttpRequestException ex)
             {
-                if (lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-                    await Task.Delay(retryAfter, ct);
-                else
-                    await Task.Delay(TimeSpan.FromSeconds(1), ct);
+                Console.WriteLine(ex.StatusCode);
+                throw;
             }
         }
         return responseText;
@@ -172,26 +165,18 @@ public class OsuApiService(
         Beatmap beatmap = null;
         while (!ct.IsCancellationRequested)
         {
-            using var lease = await limiter.AcquireAsync(cancellationToken: ct);
-            if (lease.IsAcquired)
+            try
             {
-                try
-                {
-                    using var stream = await client.GetStreamAsync($"https://osu.ppy.sh/osu/{score.BeatmapId}", ct);
-                    using var reader = new LineBufferedReader(stream);
-                    beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
-                    return beatmap;
-                }
-                catch (HttpRequestException ex)
-                {
-                    Console.WriteLine(ex.StatusCode);
-                    throw;
-                }
+                using var stream = await client.GetStreamAsync($"https://osu.ppy.sh/osu/{score.BeatmapId}", ct);
+                using var reader = new LineBufferedReader(stream);
+                beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
+                return beatmap;
             }
-            if (lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-                await Task.Delay(retryAfter, ct);
-            else
-                await Task.Delay(TimeSpan.FromSeconds(1), ct);
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine(ex.StatusCode);
+                throw;
+            }
         }
 
         return beatmap;
@@ -221,7 +206,7 @@ public class OsuApiService(
 
         APIBeatmap[] beatmaps = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
 
-        Console.WriteLine($"Populated {ids.Count} Beatmap objects from the API");
+        Console.WriteLine($"Received {ids.Count} Beatmap objects from the API");
 
         return beatmaps;
     }
@@ -251,7 +236,7 @@ public class OsuApiService(
 
         User[] users = JsonConvert.DeserializeObject<Dictionary<string, User[]>>(usersResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
 
-        Console.WriteLine($"Populated {ids.Count} User objects from the API");
+        Console.WriteLine($"Received {ids.Count} User objects from the API");
 
         return users;
     }

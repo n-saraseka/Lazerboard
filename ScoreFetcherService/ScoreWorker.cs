@@ -15,8 +15,8 @@ public class ScoreWorker(IScoreFetcher scoreFetcher) : BackgroundService
             // process beatmap and user data first
             var userIds = scores.Select(s => s.UserId).Distinct();
             var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
-            var usersTask = scoreFetcher.ProcessUsersAsync(userIds, stoppingToken);
-            var beatmapsTask = scoreFetcher.ProcessBeatmapsAsync(beatmapIds, stoppingToken);
+            var usersTask = scoreFetcher.GetUsersFromApiAsync(userIds, stoppingToken);
+            var beatmapsTask = scoreFetcher.GetBeatmapsFromApiAsync(beatmapIds, stoppingToken);
             
             await Task.WhenAll(usersTask, beatmapsTask);
             

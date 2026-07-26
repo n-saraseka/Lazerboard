@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
-namespace OsuScoreStats.OsuApi.OsuApiClasses;
+
+namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
 public class TokenInfo
 {

@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
-using OsuScoreStats.OsuApi.OsuApiClasses;
 using OsuScoreStats.Calculators;
 using OsuScoreStats.ScoreFetcherService;
 using System.Threading.RateLimiting;
 using OsuScoreStats.ApiMethods;
 using OsuScoreStats.OsuApi;
+using OsuScoreStats.OsuApi.Enums;
+using OsuScoreStats.OsuEntityToDtoService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,25 +20,16 @@ builder.Services.AddPooledDbContextFactory<ScoreDataContext>(
                 .MapEnum<Mode>("mode")
                 .MapEnum<Grade>("grade")
                 .MapEnum<BeatmapStatus>("beatmap_status"))
-                .UseSnakeCaseNamingConvention());
+                .UseSnakeCaseNamingConvention()
+                .EnableSensitiveDataLogging());
 
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<RateLimiter>(sp => 
-    new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-    {
-        TokenLimit = 1,
-        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-        QueueLimit = 60,
-        ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-        TokensPerPeriod = 1,
-        AutoReplenishment = true
-    })
-);
 
 builder.Services.AddSingleton<OsuApiService>();
 builder.Services.AddSingleton<ICalculator, ScoreCalculator>();
 builder.Services.AddSingleton<IScoreFetcher, ScoreFetcher>();
-//builder.Services.AddHostedService<LeaderboardWorker>();
+builder.Services.AddSingleton<IOsuEntityToDtoService, OsuEntityToDtoService>();
+builder.Services.AddHostedService<LeaderboardWorker>();
 builder.Services.AddScoped<ScoreMethods>();
 builder.Services.AddScoped<BeatmapMethods>();
 builder.Services.AddScoped<UserMethods>();
@@ -72,91 +64,54 @@ app.MapGet("/api/scores", async (
         string[]? mandatoryMods,
         string[]? optionalMods,
         int? amount,
+        int? userId,
         string? sort,
         bool isDesc,
-        CancellationToken ct) =>
-    {
-        return await scoreMethods.GetScoresAsync(
-            mode, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, sort, isDesc, ct);
-    })
+        CancellationToken ct) => await scoreMethods.GetScoresAsync(
+        mode, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, userId, sort, isDesc, ct))
     .WithName("GetScores")
     .WithOpenApi();
 
 app.MapGet("/api/beatmaps/{id:int}", async (
         BeatmapMethods beatmapMethods, 
         int id,
-        CancellationToken ct) =>
-    {
-        return await beatmapMethods.GetBeatmapAsync(id, ct);
-    })
+        CancellationToken ct) => await beatmapMethods.GetBeatmapAsync(id, ct))
     .WithName("GetBeatmap")
     .WithOpenApi();
 
 app.MapGet("/api/beatmaps", async (
         BeatmapMethods beatmapMethods, 
         int[] beatmapIds,
-        CancellationToken ct) =>
-    {
-        return await beatmapMethods.GetBeatmapsAsync(beatmapIds, ct);
-    })
+        CancellationToken ct) => await beatmapMethods.GetBeatmapsAsync(beatmapIds, ct))
     .WithName("GetBeatmaps")
     .WithOpenApi();
 
 app.MapGet("/api/beatmapsets", async (
         BeatmapMethods beatmapMethods, 
         int[] beatmapsetIds,
-        CancellationToken ct) =>
-    {
-        return await beatmapMethods.GetBeatmapsetsAsync(beatmapsetIds, ct);
-    })
+        CancellationToken ct) => await beatmapMethods.GetBeatmapsetsAsync(beatmapsetIds, ct))
     .WithName("GetBeatmapsets")
     .WithOpenApi();
 
 app.MapGet("/api/users/{id:int}", async (
         UserMethods userMethods,
         int id,
-        CancellationToken ct) =>
-    {
-        return await userMethods.GetUserAsync(id, ct);
-    })
+        CancellationToken ct) => await userMethods.GetUserAsync(id, ct))
     .WithName("GetUser")
     .WithOpenApi();
 
 app.MapGet("/api/users", async (
         UserMethods userMethods, 
         int[] userIds,
-        CancellationToken ct) =>
-    {
-        return await userMethods.GetUsersAsync(userIds, ct);
-    })
+        CancellationToken ct) => await userMethods.GetUsersAsync(userIds, ct))
     .WithName("GetUsers")
-    .WithOpenApi();
-
-app.MapGet("/api/users/{id:int}/scores", async (
-        UserMethods userMethods,
-        int id,
-        Mode? mode,
-        string[]? mandatoryMods,
-        string[]? optionalMods,
-        int? page,
-        int? amountPerPage,
-        string? sort,
-        bool isDesc,
-        CancellationToken ct) =>
-    {
-        return await userMethods.GetUserScoresAsync(id, mode, mandatoryMods, optionalMods, page, amountPerPage, sort, isDesc, ct);
-    })
-    .WithName("GetUserScores")
     .WithOpenApi();
 
 app.MapGet("/api/users/{id:int}/scores/count", async (
         UserMethods userMethods,
         int id,
         Mode? mode,
-        CancellationToken ct) =>
-    {
-        return await userMethods.GetUserScoresCountAsync(id, mode, ct);
-    })
+        CancellationToken ct) => await userMethods.GetUserScoresCountAsync(id, mode, ct))
     .WithName("GetUserScoresCount")
     .WithOpenApi();
 

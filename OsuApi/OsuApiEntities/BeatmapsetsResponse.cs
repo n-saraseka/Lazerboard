@@ -1,10 +1,11 @@
 using Newtonsoft.Json;
-namespace OsuScoreStats.OsuApi.OsuApiClasses;
+
+namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
 public class BeatmapsetsResponse
 {
     [JsonProperty("beatmapsets")]
-    public Beatmapset[] Beatmapsets { get; set; } = Array.Empty<Beatmapset>();
+    public List<Beatmapset> Beatmapsets { get; set; } = new();
     [JsonProperty("cursor_string")]
     public string Cursor { get; set; } = string.Empty;
 }

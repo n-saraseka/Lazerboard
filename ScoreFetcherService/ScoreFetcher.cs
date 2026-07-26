@@ -1,28 +1,39 @@
 using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.OsuApi.OsuApiClasses;
 using OsuScoreStats.Calculators;
 using OsuScoreStats.DbService;
 using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.OsuApi;
+using OsuScoreStats.OsuApi.Enums;
+using OsuScoreStats.OsuApi.OsuApiEntities;
+using OsuScoreStats.OsuEntityToDtoService;
+using Score = OsuScoreStats.OsuApi.OsuApiEntities.Score;
+using User = OsuScoreStats.OsuApi.OsuApiEntities.User;
+
 namespace OsuScoreStats.ScoreFetcherService;
 
-public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculator, IDbContextFactory<ScoreDataContext> dbContextFactory) : IScoreFetcher
+public class ScoreFetcher(OsuApiService osuApiService, 
+    ICalculator scoreCalculator, 
+    IDbContextFactory<ScoreDataContext> dbContextFactory,
+    IOsuEntityToDtoService entityToDtoService) : IScoreFetcher
 {
     /// <summary>
-    /// Get beatmapsets from the API search endpoint
+    /// Get beatmapsets from API and save beatmapset and beatmap data
     /// </summary>
     /// <param name="cursor">Cursor string</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Populated BeatmapsetsResponse object</returns>
-    public async Task<BeatmapsetsResponse> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
+    public async Task<BeatmapsetsResponse> ProcessBeatmapsetSearchAsync(string? cursor, CancellationToken ct = default)
     {
-        var beatmapsets = await osuApiService.GetBeatmapsetsAsync(cursor, ct);
+        var beatmapsetsResponse = await osuApiService.GetBeatmapsetsAsync(cursor, ct);
         
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-        BeatmapsetRepository beatmapsetRepository = new(dbContext);
-        await beatmapsetRepository.CreateBulkAsync(beatmapsets.Beatmapsets, ct);
         
-        return beatmapsets;
+        var beatmapsets = beatmapsetsResponse.Beatmapsets;
+        await ProcessBeatmapsetsAsync(beatmapsets, dbContext, ct);
+        var beatmaps = beatmapsets.SelectMany(bs => bs.Beatmaps);
+        await ProcessBeatmapsAsync(beatmaps, dbContext, ct);
+        
+        return beatmapsetsResponse;
     }
 
     public async Task<BeatmapScores> GetBeatmapScoresAsync(APIBeatmap beatmap, Mode? mode, int legacyOnly = 0, CancellationToken ct = default)
@@ -30,19 +41,13 @@ public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculat
         var scores = await osuApiService.GetBeatmapScoresAsync(beatmap.Id, mode, legacyOnly, ct); 
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
         
-        BeatmapRepository beatmapRepository = new(dbContext);
-        await beatmapRepository.CreateAsync(beatmap, ct);
-        
         var users = scores.Scores.Select(s => s.User).Distinct().ToList();
-        UserRepository userRepository = new(dbContext);
-        var existingUsers = await userRepository.GetExistingBulkAsync(users, ct);
-        var newUsers = users.Where(user => !existingUsers.Select(u => u.Id).Contains(user.Id)).ToList();
-        await userRepository.CreateBulkAsync(newUsers, ct);
+        await GetUsersFromApiAsync(users.Select(u => u.Id), ct);
         
-        ScoreRepository scoreRepository = new(dbContext);
-        ProcessModAcronyms(scores.Scores);
+        var scoreRepository = new ScoreRepository(dbContext);
 
-        var existingScores = await scoreRepository.GetExistingBulkAsync(scores.Scores, ct);
+        var scoreIds = scores.Scores.Select(s => s.Id).Distinct().ToList();
+        var existingScores = await scoreRepository.GetBulkAsync(scoreIds, ct);
         var newScores = scores.Scores.Where(score => !existingScores.Select(s => s.Id).Contains(score.Id)).ToList();
 
         var unrankedScores = newScores.Where(s => s.PP == null);
@@ -68,10 +73,9 @@ public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculat
     /// <returns>Populated ScoresResponse object</returns>
     public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
-        var scores = await osuApiService.GetScoresAsync(cursor, ct);
-        ProcessModAcronyms(scores.Scores);
-        return scores;
+        return await osuApiService.GetScoresAsync(cursor, ct);
     }
+    
     /// <summary>
     /// Process data from unranked scores, including PP calculation. Calculates highest PP scores for each mode
     /// </summary>
@@ -87,12 +91,17 @@ public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculat
         var scoresCounter = scoresList.Count;
 
         for (int i = 0; i < scoresCounter; i++)
+        {
             scoresList[i].PP = await scoreCalculator.CalculateAsync(scoresList[i], ct);
-
+            await Task.Delay(1000, ct);
+        }
+        
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
         
         ScoreRepository scoreRepository = new(dbContext);
-        await scoreRepository.CreateBulkAsync(scoresList, ct);
+        var scoreDtos = scoresList.Select(entityToDtoService.ScoreEntityToDto);
+        scoreRepository.CreateBulk(scoreDtos);
+        await scoreRepository.SaveChangesAsync(ct);
         
         Console.WriteLine($"Saved {scoresCounter} unranked scores between {start} and {end} to the DB.");
     }
@@ -113,19 +122,21 @@ public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculat
         
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
         
-        var scoreRepository = new ScoreRepository(dbContext);
-        await scoreRepository.CreateBulkAsync(scoresList, ct);
+        ScoreRepository scoreRepository = new(dbContext);
+        var scoreDtos = scoresList.Select(entityToDtoService.ScoreEntityToDto);
+        scoreRepository.CreateBulk(scoreDtos);
+        await scoreRepository.SaveChangesAsync(ct);
         
         Console.WriteLine($"Saved {scoresCounter} ranked scores between {start} and {end} to the DB.");
     }
     
     /// <summary>
-    /// Process user data from user IDs
+    /// Get user data from API and process the respective data
     /// </summary>
     /// <param name="userIds">IEnumerable containing user IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns></returns>
-    public async Task ProcessUsersAsync(IEnumerable<int> userIds, CancellationToken ct = default)
+    public async Task GetUsersFromApiAsync(IEnumerable<int> userIds, CancellationToken ct = default)
     {
         const int batchSize = 50;
         var users = new List<User>();
@@ -141,44 +152,28 @@ public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculat
         }
         
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-
-        var userRepository = new UserRepository(dbContext);
-        var existingUserIds = await userRepository
-            .GetAll()
-            .Where(u => userIds.Contains(u.Id))
-            .Select(u => u.Id)
-            .ToListAsync(ct);
         
-        // update old users first
-        var usersToUpdate = users.Where(u => existingUserIds.Contains(u.Id)).ToList();
-        await userRepository.UpdateBulkAsync(usersToUpdate, ct);
-        
-        // then create new users
-        var newUsers = users.Where(u => !existingUserIds.Contains(u.Id)).ToList();
-        await userRepository.CreateBulkAsync(newUsers, ct);
+        var countries = users.Select(u => u.Country).DistinctBy(c => c.Code);
+        await ProcessCountriesAsync(countries, dbContext, ct);
+        await ProcessUsersAsync(users, dbContext, ct);
     }
     
     /// <summary>
-    /// Process beatmap data from beatmap IDs
+    /// Get beatmaps from API and process the data
     /// </summary>
     /// <param name="beatmapIds">IEnumerable containing beatmap IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns></returns>
-    public async Task ProcessBeatmapsAsync(IEnumerable<int> beatmapIds, CancellationToken ct = default)
+    public async Task GetBeatmapsFromApiAsync(IEnumerable<int> beatmapIds, CancellationToken ct = default)
     {
         const int batchSize = 50;
         var beatmaps = new List<APIBeatmap>();
         
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
         var beatmapRepository = new BeatmapRepository(dbContext);
+        var existingBeatmaps = await beatmapRepository.GetBulkAsync(beatmapIds, ct);
         
-        var existingBeatmapIds = await beatmapRepository
-            .GetAll()
-            .Where(b => beatmapIds.Contains(b.Id))
-            .Select(b => b.Id)
-            .ToListAsync(ct);
-        
-        var newBeatmapIds = beatmapIds.Where(id => !existingBeatmapIds.Contains(id));
+        var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id));
         
         if (newBeatmapIds.Count() > 0)
         {
@@ -189,25 +184,65 @@ public class ScoreFetcher(OsuApiService osuApiService, ICalculator scoreCalculat
                 beatmaps.AddRange(beatmapData);
             }
         }
-
-        // create new maps
-        await beatmapRepository.CreateBulkAsync(beatmaps, ct);
+        
+        var beatmapsets = beatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
+        await ProcessBeatmapsetsAsync(beatmapsets, dbContext, ct);
+        await ProcessBeatmapsAsync(beatmaps, dbContext, ct);
+    }
+    
+    private async Task ProcessBeatmapsetsAsync(IEnumerable<Beatmapset> beatmapsets, DbContext dbContext, CancellationToken ct)
+    {
+        var beatmapsetRepository = new BeatmapsetRepository(dbContext);
+        
+        var existingBeatmapsets = await beatmapsetRepository.GetBulkAsync(beatmapsets.Select(bs => bs.Id), ct);
+        var newBeatmapsets = beatmapsets.Where(bs => !existingBeatmapsets.Select(s => s.Id).Contains(bs.Id));
+        var beatmapsetDtos = newBeatmapsets.Select(entityToDtoService.BeatmapsetEntityToDto);
+        
+        beatmapsetRepository.CreateBulk(beatmapsetDtos);
+        await beatmapsetRepository.SaveChangesAsync(ct);
+        
+        Console.WriteLine($"Saved {beatmapsetDtos.Count()} new beatmapsets to the DB.");
     }
 
-    private void ProcessModAcronyms(IEnumerable<Score> scores)
+    private async Task ProcessBeatmapsAsync(IEnumerable<APIBeatmap> beatmaps, DbContext dbContext, CancellationToken ct)
     {
-        foreach (var score in scores)
-        {
-            var modAcronyms = new List<string>();
-            foreach (var mod in score.Mods)
-            {
-                var acronym = mod.Acronym;
-                if (mod.Settings.ContainsKey("speed_change"))
-                    acronym += $"({mod.Settings["speed_change"]}x)";
-                modAcronyms.Add(acronym);
-            }
-                
-            score.ModAcronyms = modAcronyms.ToArray();
-        }
+        var beatmapRepository = new BeatmapRepository(dbContext);
+        
+        var existingBeatmaps = await beatmapRepository.GetBulkAsync(beatmaps.Select(b => b.Id), ct);
+        var newBeatmaps = beatmaps.Where(b => !existingBeatmaps.Select(s => s.Id).Contains(b.Id));
+        var beatmapDtos = newBeatmaps.Select(entityToDtoService.BeatmapEntityToDto);
+        
+        beatmapRepository.CreateBulk(beatmapDtos);
+        await beatmapRepository.SaveChangesAsync(ct);
+        
+        Console.WriteLine($"Saved {beatmapDtos.Count()} new beatmaps to the DB.");
+    }
+
+    private async Task ProcessCountriesAsync(IEnumerable<Country> countries, DbContext dbContext, CancellationToken ct)
+    {
+        var countryRepository = new CountryRepository(dbContext);
+        
+        var existingCountries = await countryRepository.GetBulkAsync(countries.Select(c => c.Code), ct);
+        var newCountries = countries.Where(co => !existingCountries.Select(c => c.Id).Contains(co.Code));
+        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto);
+        
+        countryRepository.CreateBulk(countryDtos);
+        await countryRepository.SaveChangesAsync(ct);
+        
+        Console.WriteLine($"Saved {countryDtos.Count()} new countries to the DB.");
+    }
+
+    private async Task ProcessUsersAsync(IEnumerable<User> users, DbContext dbContext, CancellationToken ct)
+    {
+        var userRepository = new UserRepository(dbContext);
+        
+        var existingUsers = await userRepository.GetBulkAsync(users.Select(u => u.Id), ct);
+        var userDtos = users.Select(entityToDtoService.UserEntityToDto);
+        var newUsers = userDtos.Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id));
+        
+        userRepository.CreateBulk(newUsers);
+        Console.WriteLine($"Saved {newUsers.Count()} new users to the DB.");
+        
+        await userRepository.SaveChangesAsync(ct);
     }
 }

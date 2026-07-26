@@ -1,4 +1,5 @@
-using OsuScoreStats.OsuApi.OsuApiClasses;
+using OsuScoreStats.OsuApi.OsuApiEntities;
+
 namespace OsuScoreStats.ScoreFetcherService;
 
 public class LeaderboardWorker(IScoreFetcher scoreFetcher) : BackgroundService
@@ -10,19 +11,18 @@ public class LeaderboardWorker(IScoreFetcher scoreFetcher) : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
-            var beatmapsetsResponse = await scoreFetcher.GetBeatmapsetsAsync(_cursor, stoppingToken);
+            var beatmapsetsResponse = await scoreFetcher.ProcessBeatmapsetSearchAsync(_cursor, stoppingToken);
             _cursor = beatmapsetsResponse.Cursor;
             var beatmapsets = beatmapsetsResponse.Beatmapsets;
             var beatmaps = new List<APIBeatmap>();
             foreach (var beatmapset in beatmapsets)
-                foreach (var beatmap in beatmapset.Beatmaps)
-                    if (!beatmaps.Contains(beatmap))
-                        beatmaps.Add(beatmap);
+                beatmaps.AddRange(beatmapset.Beatmaps);
             
-            var beatmapScoreTasks = new List<Task<BeatmapScores>>();
             foreach (var beatmap in beatmaps)
-                beatmapScoreTasks.Add(scoreFetcher.GetBeatmapScoresAsync(beatmap, beatmap.Mode, 0, stoppingToken));
-            await Task.WhenAll(beatmapScoreTasks);
+            {
+                await scoreFetcher.GetBeatmapScoresAsync(beatmap, beatmap.Mode, 0, stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+            }
         }
     }
 }

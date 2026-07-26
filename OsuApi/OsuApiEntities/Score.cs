@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using osu.Game.Online.API;
-namespace OsuScoreStats.OsuApi.OsuApiClasses;
+using OsuScoreStats.OsuApi.Enums;
+
+namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
 public class Score
 {
@@ -17,7 +18,6 @@ public class Score
     [JsonProperty("beatmap_id")]
     public int BeatmapId { get; set; }
     [JsonProperty("user")]
-    [NotMapped]
     public User User { get; set; }
     [JsonProperty("user_id")]
     public int UserId { get; set; }
@@ -25,9 +25,7 @@ public class Score
     [JsonConverter(typeof(StringEnumConverter))]
     public Grade Grade { get; set; }
     [JsonProperty("mods")]
-    [NotMapped]
     public APIMod[] Mods { get; set; } = Array.Empty<APIMod>();
-    public string[] ModAcronyms { get; set; } = Array.Empty<string>();
     [JsonProperty("accuracy")]
     public float Accuracy { get; set; }
     [JsonProperty("max_combo")]
@@ -37,13 +35,11 @@ public class Score
     [JsonProperty("maximum_statistics")]
     public Statistics MaximumStatistics { get; set; } = null!;
     [JsonProperty("total_score")]
-    public int TotalScore { get; set; }
+    public long TotalScore { get; set; }
     [JsonProperty("classic_total_score")]
     public int ClassicTotalScore { get; set; }
     [JsonProperty("legacy_total_score")]
     public int LegacyTotalScore { get; set; }
     [JsonProperty("pp")]
     public float? PP { get; set; }
-    [NotMapped]
-    public int? MapRank { get; set; }
 }

@@ -6,6 +6,7 @@ const conversionMods = ["AL", "CL", "DA", "MR", "RD", "SG", "TP"];
 const automationMods = ["AP", "RX", "SO"];
 const funMods = ["AD", "AS", "BM", "BR", "BU", "DF", "DP", "FR", "GR", "MG", "MU", "NS", "RP", "SI", "SY", "TR", "WD", "WG", "WU"]
 const systemMods = ["TD"];
+const speedChangeMods = ["DT", "NC", "HT", "DC"];
 
 const modCategories = {};
 difficultyDecreasingMods.forEach(mod => modCategories[mod] = "difficulty-decrease");
@@ -222,8 +223,12 @@ function gridScore(score, user, beatmap, beatmapset) {
     mods.classList.add("score-mods");
     score.modAcronyms.forEach(mod => {
         const modSpan = document.createElement("span");
-        modSpan.classList.add("mod", `mod-${getModCategory(mod.substring(0, 2))}`);
-        modSpan.innerText = mod;
+        modSpan.classList.add("mod", `mod-${getModCategory(mod.slice(0,2))}`);
+        let modText = mod;
+        if (score.speedChange && speedChangeMods.indexOf(mod) !== -1) {
+            modText += `(${score.speedChange})`;
+        }
+        modSpan.innerText = modText;
         mods.appendChild(modSpan);
     });
 
@@ -239,10 +244,10 @@ function gridScore(score, user, beatmap, beatmapset) {
     acc.innerText = (score.accuracy * 100).toFixed(2) + "%";
     accMisses.appendChild(acc);
 
-    if (score.statistics.countMiss > 0) {
+    if (score.misses > 0) {
         const misses = document.createElement("span");
         misses.classList.add("score-misses");
-        misses.innerText = score.statistics.countMiss + "x";
+        misses.innerText = score.misses + "x";
         accMisses.appendChild(misses);
     }
 
@@ -276,8 +281,12 @@ function rowScore(score, user, beatmap, beatmapset) {
     mods.classList.add("score-row-mods");
     score.modAcronyms.forEach(mod => {
         const modSpan = document.createElement("span");
-        modSpan.classList.add("mod", `mod-${getModCategory(mod.substring(0, 2))}`);
-        modSpan.innerText = mod;
+        modSpan.classList.add("mod", `mod-${getModCategory(mod.slice(0,2))}`);
+        let modText = mod;
+        if (score.speedChange && speedChangeMods.indexOf(mod) !== -1) {
+            modText += `(${score.speedChange})`;
+        }
+        modSpan.innerText = modText;
         mods.appendChild(modSpan);
     });
 
@@ -312,8 +321,8 @@ function rowScore(score, user, beatmap, beatmapset) {
 
     const misses = document.createElement("td");
     misses.classList.add("score-misses");
-    if (score.statistics.countMiss) {
-        misses.innerText = `${score.statistics.countMiss}x`;
+    if (score.misses) {
+        misses.innerText = `${score.misses}x`;
     }
 
     const mapImage = document.createElement("td");

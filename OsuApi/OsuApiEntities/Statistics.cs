@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using osu.Game.Rulesets.Scoring;
-namespace OsuScoreStats.OsuApi.OsuApiClasses;
+
+namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
 public class Statistics
 {

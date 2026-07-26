@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OsuScoreStats.OsuApi.OsuApiClasses;
+using OsuScoreStats.DbService.Entities;
 namespace OsuScoreStats.DbService.EntityConfigurations;
 
-public class BeatmapConfiguration : IEntityTypeConfiguration<APIBeatmap>
+public class BeatmapConfiguration : IEntityTypeConfiguration<Beatmap>
 {
-    public void Configure(EntityTypeBuilder<APIBeatmap> builder)
+    public void Configure(EntityTypeBuilder<Beatmap> builder)
     {
         builder
             .HasOne(b => b.Beatmapset)

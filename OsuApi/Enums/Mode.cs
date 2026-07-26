@@ -1,4 +1,4 @@
-﻿namespace OsuScoreStats.OsuApi.OsuApiClasses;
+﻿namespace OsuScoreStats.OsuApi.Enums;
 
 public enum Mode
 {

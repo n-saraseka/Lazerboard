@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
-namespace OsuScoreStats.OsuApi.OsuApiClasses;
+using OsuScoreStats.OsuApi.Enums;
+
+namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
 public class APIBeatmap
 {

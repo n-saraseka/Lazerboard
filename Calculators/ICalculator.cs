@@ -1,4 +1,5 @@
-using OsuScoreStats.OsuApi.OsuApiClasses;
+using OsuScoreStats.OsuApi.OsuApiEntities;
+
 namespace OsuScoreStats.Calculators;
 
 public interface ICalculator

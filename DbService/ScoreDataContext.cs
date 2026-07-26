@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.OsuApi.OsuApiClasses;
 using OsuScoreStats.DbService.EntityConfigurations;
+using OsuScoreStats.DbService.Entities;
+
 namespace OsuScoreStats.DbService;
 
 public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbContext(options)
 {
-    public DbSet<APIBeatmap> Beatmaps { get; set; }
+    public DbSet<Beatmap> Beatmaps { get; set; }
     public DbSet<Beatmapset> Beatmapsets { get; set; }
     public DbSet<Country> Countries { get; set; }
     public DbSet<Score> Scores { get; set; }
@@ -16,7 +17,6 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new ScoreConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new BeatmapConfiguration());
-        modelBuilder.ApplyConfiguration(new CountryConfiguration());
     }
 }
     

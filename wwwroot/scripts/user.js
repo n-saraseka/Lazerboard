@@ -63,16 +63,15 @@ sortDirectionSelect.addEventListener("change", async () => {
 });
 
 // Get user scores from the API
-async function getUserScores(mode = 0, page = null, amountPerPage = 25, sort = "date", isDesc = true) {
+async function getScores(mode = 0, amount = 100, sort = "pp", isDesc = true, page = 1) {
     const params = new URLSearchParams();
     params.append("mode", mode.toString());
-    if (page != null) {
-        params.append("page", page.toString());
-    }
-    params.append("amountPerPage", amountPerPage.toString());
-    params.append("sort", sort.toString());
+    params.append("amount", amount.toString());
+    params.append("sort", sort);
     params.append("isDesc", isDesc.toString());
-    const response = await fetch(`/api/users/${userId}/scores?${params.toString()}`, {
+    params.append("page", page);
+    params.append("userId", userId);
+    const response = await fetch(`/api/users/${userId}/scores?` + params.toString(), {
         method: "GET",
         headers: { "Accept": "application/json" },
     });
@@ -317,7 +316,7 @@ async function fillWithData(mode = 0, page = 1, amountPerPage = 25, sort = "date
     }
     generateScorePagesUl(scoreCount, amountPerPage);
     
-    const scores = await getUserScores(mode, page, amountPerPage, sort, isDesc);
+    const scores = await getScores(mode, amountPerPage, sort, isDesc, page);
 
     let beatmapIds = [];
     scores.forEach(score => beatmapIds.push(score.beatmapId));

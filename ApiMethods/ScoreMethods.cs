@@ -18,9 +18,9 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
     /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
     /// <param name="optionalMods">An array of optional mod acronyms</param>
     /// <param name="amount">Amount of scores to return</param>
-    /// <param name="userId">User ID (filters to only that user if set)</param>
-    /// <param name="isDesc">Whether sort is descending or not</param>
+    /// <param name="page">Page (defaults to 1)</param>
     /// <param name="sort">Parameter to sort by</param>
+    /// <param name="isDesc">Whether sort is descending or not</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>List containing up to 100 highest pp scores at given date</returns>
     public async Task<List<Score>> GetScoresAsync(
@@ -31,19 +31,18 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
         string[]? mandatoryMods,
         string[]? optionalMods,
         int? amount,
-        int? userId,
+        int? page = 1,
         string? sort = "pp",
         bool isDesc = true,
         CancellationToken ct = default)
     {
-        var scoresAmount = (amount == null) ? 25 : Math.Min(100, Math.Max((int)amount, 0));
+        var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
+        var scoresAmount = amount == null ? 25 : Math.Min(100, Math.Max((int)amount, 0));
         
         var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
         var scoreRepository = new ScoreRepository(dbContext);
 
         var query = scoreRepository.GetAll();
-        
-        if (userId != null) query = query.Where(s => s.UserId == userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
         var targetStartDate = dateStart ?? DateOnly.FromDateTime(latestDate);
@@ -89,7 +88,7 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
                 break;
         }
         
-        query = query.Take(scoresAmount);
+        query = query.Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
         
         return await query.ToListAsync(ct);
     } 

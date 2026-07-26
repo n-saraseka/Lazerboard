@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
 using OsuScoreStats.Calculators;
 using OsuScoreStats.ScoreFetcherService;
-using System.Threading.RateLimiting;
 using OsuScoreStats.ApiMethods;
 using OsuScoreStats.OsuApi;
 using OsuScoreStats.OsuApi.Enums;
@@ -29,7 +28,7 @@ builder.Services.AddSingleton<OsuApiService>();
 builder.Services.AddSingleton<ICalculator, ScoreCalculator>();
 builder.Services.AddSingleton<IScoreFetcher, ScoreFetcher>();
 builder.Services.AddSingleton<IOsuEntityToDtoService, OsuEntityToDtoService>();
-builder.Services.AddHostedService<LeaderboardWorker>();
+//builder.Services.AddHostedService<LeaderboardWorker>();
 builder.Services.AddScoped<ScoreMethods>();
 builder.Services.AddScoped<BeatmapMethods>();
 builder.Services.AddScoped<UserMethods>();
@@ -64,11 +63,11 @@ app.MapGet("/api/scores", async (
         string[]? mandatoryMods,
         string[]? optionalMods,
         int? amount,
-        int? userId,
+        int? page,
         string? sort,
         bool isDesc,
         CancellationToken ct) => await scoreMethods.GetScoresAsync(
-        mode, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, userId, sort, isDesc, ct))
+        mode, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
     .WithName("GetScores")
     .WithOpenApi();
 
@@ -107,6 +106,21 @@ app.MapGet("/api/users", async (
     .WithName("GetUsers")
     .WithOpenApi();
 
+app.MapGet("/api/users/{userId:int}/scores", async (
+        UserMethods userMethods,
+        int userId,
+        Mode? mode,
+        string[]? mandatoryMods,
+        string[]? optionalMods,
+        int? amount,
+        int? page,
+        string? sort,
+        bool isDesc,
+        CancellationToken ct) => await userMethods.GetUserScoresAsync(
+        userId, mode, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
+    .WithName("GetUserScores")
+    .WithOpenApi();
+
 app.MapGet("/api/users/{id:int}/scores/count", async (
         UserMethods userMethods,
         int id,
@@ -118,7 +132,7 @@ app.MapGet("/api/users/{id:int}/scores/count", async (
 app.MapControllerRoute(
     name: "user",
     pattern: "user/{id}",
-    defaults: new { controller = "User", action = "Index" });
+    defaults: new { controller = "User", action = "UserPage" });
 
 app.MapControllers();
 app.Run();

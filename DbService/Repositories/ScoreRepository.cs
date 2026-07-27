@@ -4,7 +4,7 @@ using OsuScoreStats.DbService.Repositories.Interfaces;
 
 namespace OsuScoreStats.DbService.Repositories;
 
-public class ScoreRepository(DbContext db) : BaseRepository<Score, ulong>(db), IScoreRepository
+public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>(db), IScoreRepository
 {
     public Task<List<Score>> GetByBeatmapIdAsync(int beatmapId, CancellationToken cancellationToken) =>
         Set.Where(s => s.BeatmapId == beatmapId).ToListAsync(cancellationToken);

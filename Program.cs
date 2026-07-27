@@ -3,13 +3,11 @@ using OsuScoreStats.DbService;
 using OsuScoreStats.Calculators;
 using OsuScoreStats.ScoreFetcher;
 using OsuScoreStats.ApiMethods;
-using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuEntityToDtoService;
-using Sentry.Protocol;
 
 var builder = WebApplication.CreateBuilder(args);
 

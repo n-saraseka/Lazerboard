@@ -110,6 +110,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             var beatmapId = group.Key;
             var groupScores = group
                 .OrderByDescending(b => b.TotalScore)
+                .ThenBy(b => b.Date)
                 .Select(entityToDtoService.ScoreEntityToDto)
                 .ToList();
             var matchingGroup = existingGroupedScores.FirstOrDefault(g => g.Key == beatmapId);
@@ -121,10 +122,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             }
             else
             {
-                var beatmapScores = matchingGroup
-                    .OrderByDescending(b => b.TotalScore)
-                    .ThenBy(b => b.Date)
-                    .ToList();
+                var beatmapScores = matchingGroup.ToList();
             
                 var existingScores = await scoreRepository.GetBulkAsync(beatmapScores.Select(s => s.Id), ct);
                 var scoreDtos = 
@@ -132,7 +130,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                             .Select(s => s.Id)
                             .Contains(b.Id))
                         .DistinctBy(s => s.Id);
-                var merged = existingScores.Concat(scoreDtos).OrderByDescending(b => b.TotalScore).ToList();
+                var merged = existingScores
+                    .Concat(scoreDtos)
+                    .OrderByDescending(b => b.TotalScore)
+                    .ThenBy(b => b.Date)
+                    .ToList();
             
                 foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
             

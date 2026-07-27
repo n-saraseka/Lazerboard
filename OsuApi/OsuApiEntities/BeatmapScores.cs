@@ -4,5 +4,5 @@ namespace OsuScoreStats.OsuApi.OsuApiEntities;
 public class BeatmapScores
 {
     [JsonProperty("scores")]
-    public Score[] Scores { get; set; } = Array.Empty<Score>();
+    public APIScore[] Scores { get; set; } = Array.Empty<APIScore>();
 }

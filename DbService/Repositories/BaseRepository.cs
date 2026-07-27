@@ -4,7 +4,7 @@ using OsuScoreStats.DbService.Repositories.Interfaces;
 
 namespace OsuScoreStats.DbService.Repositories;
 
-public class BaseRepository<T, TKey>(DbContext db) : IRepository<T, TKey>
+public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     where T: class, IEntity<TKey>
     where TKey : IEquatable<TKey>
 {

@@ -156,10 +156,10 @@ public class OsuApiService(
     /// <summary>
     /// Download a map from the API and decode it into a Beatmap object
     /// </summary>
-    /// <param name="score">Score object to parse the beatmap ID from</param>
+    /// <param name="apiScore">APIScore object to parse the beatmap ID from</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Parsed Beatmap object</returns>
-    public async Task<Beatmap?> GetScoreBeatmapAsync(Score score, CancellationToken ct = default)
+    public async Task<Beatmap?> GetScoreBeatmapAsync(APIScore apiScore, CancellationToken ct = default)
     {
         var client = httpClientFactory.CreateClient();
         Beatmap beatmap = null;
@@ -167,7 +167,7 @@ public class OsuApiService(
         {
             try
             {
-                using var stream = await client.GetStreamAsync($"https://osu.ppy.sh/osu/{score.BeatmapId}", ct);
+                using var stream = await client.GetStreamAsync($"https://osu.ppy.sh/osu/{apiScore.BeatmapId}", ct);
                 using var reader = new LineBufferedReader(stream);
                 beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
                 return beatmap;
@@ -216,9 +216,9 @@ public class OsuApiService(
     /// </summary>
     /// <param name="ids">List containing user IDs</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List with populated User objects</returns>
+    /// <returns>List with populated APIUser objects</returns>
     /// <exception cref="ArgumentException"></exception>
-    public async Task<User[]> GetUsersAsync(List<int> ids, CancellationToken ct = default)
+    public async Task<APIUser[]> GetUsersAsync(List<int> ids, CancellationToken ct = default)
     {
 
         int count = ids.Count;
@@ -234,7 +234,7 @@ public class OsuApiService(
             false, 
             ct);
 
-        User[] users = JsonConvert.DeserializeObject<Dictionary<string, User[]>>(usersResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
+        APIUser[] users = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
 
         Console.WriteLine($"Received {ids.Count} User objects from the API");
 

@@ -13,28 +13,28 @@ using OsuScoreStats.OsuApi;
 using System.Reflection;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
-using Score = OsuScoreStats.OsuApi.OsuApiEntities.Score;
 
 namespace OsuScoreStats.Calculators;
 
 public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
 {
-    public async Task<float> CalculateAsync(Score score, CancellationToken ct)
+    public async Task<float> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {
         // preparing necessary data
-        var ruleset = GetRulesetFromScore(score);
+        var ruleset = GetRulesetFromScore(apiScore);
         var beatmap = new Beatmap();
         try
         {
-            beatmap = await osuApiService.GetScoreBeatmapAsync(score, ct);
+            beatmap = await osuApiService.GetScoreBeatmapAsync(apiScore, ct);
+            await Task.Delay(TimeSpan.FromSeconds(1), ct);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Couldn't get the beatmap for score {score.Id}. Beatmap ID: {score.BeatmapId}.");
+            Console.WriteLine($"Couldn't get the beatmap for score {apiScore.Id}. Beatmap ID: {apiScore.BeatmapId}.");
             Console.WriteLine($"Failed with the following exception: {ex.Message}");
             return 0;
         }
-        var scoreInfo = GetScoreInfo(score, beatmap, ruleset);
+        var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);
         var flatWorkingBeatmap = new FlatWorkingBeatmap(beatmap);
 
         // diffcalc
@@ -47,34 +47,34 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
     /// <summary>
     /// Prepare ScoreInfo object for use in calculating difficulty and performance attributes
     /// </summary>
-    /// <param name="score">Score data from the API</param>
+    /// <param name="apiScore">Score data from the API</param>
     /// <param name="beatmap">Beatmap data for this score</param>
     /// <param name="ruleset">This score's Ruleset</param>
     /// <returns>The populated ScoreInfo</returns>
-    public ScoreInfo GetScoreInfo(Score score, IBeatmap beatmap, Ruleset ruleset)
+    public ScoreInfo GetScoreInfo(APIScore apiScore, IBeatmap beatmap, Ruleset ruleset)
     {
-        var scoreStatistics = ScoreStatisticsToDict(score.Statistics);
-        var maximumStatistics = ScoreStatisticsToDict(score.MaximumStatistics);
+        var scoreStatistics = ScoreStatisticsToDict(apiScore.Statistics);
+        var maximumStatistics = ScoreStatisticsToDict(apiScore.MaximumStatistics);
 
         var soloScoreInfo = new SoloScoreInfo
         {
-            BeatmapID = score.BeatmapId,
-            RulesetID = (int)score.Mode,
-            TotalScore = score.TotalScore,
-            LegacyTotalScore = score.LegacyTotalScore,
-            LegacyScoreId = score.LegacyScoreId,
-            Accuracy = score.Accuracy,
-            UserID = score.UserId,
-            MaxCombo = score.Combo,
-            Rank = (ScoreRank)score.Grade,
-            EndedAt = score.Date,
-            Mods = score.Mods,
+            BeatmapID = apiScore.BeatmapId,
+            RulesetID = (int)apiScore.Mode,
+            TotalScore = apiScore.TotalScore,
+            LegacyTotalScore = apiScore.LegacyTotalScore,
+            LegacyScoreId = apiScore.LegacyScoreId,
+            Accuracy = apiScore.Accuracy,
+            UserID = apiScore.UserId,
+            MaxCombo = apiScore.Combo,
+            Rank = (ScoreRank)apiScore.Grade,
+            EndedAt = apiScore.Date,
+            Mods = apiScore.Mods,
             Statistics = scoreStatistics,
             MaximumStatistics = maximumStatistics
         };
 
         var mods = new List<Mod>();
-        foreach (APIMod apiMod in score.Mods)
+        foreach (APIMod apiMod in apiScore.Mods)
         {
             var mod = apiMod.ToMod(ruleset);
             mods.Add(mod);
@@ -87,10 +87,10 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
     /// <summary>
     /// Parses the Ruleset from given API Score data
     /// </summary>
-    /// <param name="score">Score object to parse the ruleset from</param>
+    /// <param name="apiScore">Score object to parse the ruleset from</param>
     /// <returns>Corresponding Ruleset object</returns>
-    public Ruleset GetRulesetFromScore(Score score) {
-        switch (score.Mode)
+    public Ruleset GetRulesetFromScore(APIScore apiScore) {
+        switch (apiScore.Mode)
         {
             case Mode.Osu:
                     return new OsuRuleset();

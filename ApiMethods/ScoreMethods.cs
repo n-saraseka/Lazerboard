@@ -2,11 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories;
+using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
 namespace OsuScoreStats.ApiMethods;
 
-public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
+public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository userRepository)
 {
     /// <summary>
     /// Get scores
@@ -38,9 +39,6 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
     {
         var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
         var scoresAmount = amount == null ? 25 : Math.Min(100, Math.Max((int)amount, 0));
-        
-        var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-        var scoreRepository = new ScoreRepository(dbContext);
 
         var query = scoreRepository.GetAll();
         
@@ -55,7 +53,6 @@ public class ScoreMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
         
         if (country != null)
         {
-            var userRepository = new UserRepository(dbContext);
             var userIdsThisCountry = await userRepository
                 .GetAll()
                 .Where(u => u.CountryCode == country)

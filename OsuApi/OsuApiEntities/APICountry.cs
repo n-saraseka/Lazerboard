@@ -2,7 +2,7 @@
 
 namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
-public class Country
+public class APICountry
 {
     [JsonProperty("code")]
     public string Code { get; set; }

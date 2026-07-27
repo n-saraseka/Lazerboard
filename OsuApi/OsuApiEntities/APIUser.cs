@@ -2,7 +2,7 @@
 
 namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
-public class User
+public class APIUser
 {
     [JsonProperty("id")]
     public int Id { get; set; }
@@ -11,5 +11,5 @@ public class User
     [JsonProperty("country_code")]
     public string CountryCode { get; set; }
     [JsonProperty("country")]
-    public Country Country { get; set; }
+    public APICountry Country { get; set; }
 }

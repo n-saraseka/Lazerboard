@@ -10,7 +10,7 @@ public class APIBeatmap
     [JsonProperty("beatmapset_id")]
     public int BeatmapsetId { get; set; }
     [JsonProperty("beatmapset")]
-    public Beatmapset? Beatmapset { get; set; }
+    public APIBeatmapset Beatmapset { get; set; }
     [JsonProperty("mode")]
     public Mode Mode { get; set; }
     [JsonProperty("version")]

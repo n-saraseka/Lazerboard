@@ -5,7 +5,7 @@ using OsuScoreStats.OsuApi.Enums;
 
 namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
-public class Score
+public class APIScore
 {
     [JsonProperty("id")]
     public ulong Id { get; set; }
@@ -18,7 +18,7 @@ public class Score
     [JsonProperty("beatmap_id")]
     public int BeatmapId { get; set; }
     [JsonProperty("user")]
-    public User User { get; set; }
+    public APIUser User { get; set; }
     [JsonProperty("user_id")]
     public int UserId { get; set; }
     [JsonProperty("rank")]

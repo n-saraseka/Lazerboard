@@ -4,5 +4,5 @@ namespace OsuScoreStats.Calculators;
 
 public interface ICalculator
 {
-    public Task<float> CalculateAsync(Score score, CancellationToken ct = default);
+    public Task<float> CalculateAsync(APIScore apiScore, CancellationToken ct = default);
 }

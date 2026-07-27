@@ -1,40 +1,30 @@
 using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.DbService;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories;
+using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
 namespace OsuScoreStats.ApiMethods;
 
-public class UserMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
+public class UserMethods(IScoreRepository scoreRepository, IUserRepository userRepository)
 {
     /// <summary>
     /// Get user data from the API
     /// </summary>
     /// <param name="userId">User ID</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Populated User object (or null)</returns>
-    public async Task<User?> GetUserAsync(int userId, CancellationToken ct = default)
-    {
-        var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-        var userRepository = new UserRepository(dbContext);
-        
-        return await userRepository.GetByIdAsync(userId, ct);
-    }
+    /// <returns>Populated APIUser object (or null)</returns>
+    public async Task<User?> GetUserAsync(int userId, CancellationToken ct = default) => 
+        await userRepository.GetByIdAsync(userId, ct);
     
     /// <summary>
     /// Get users data from the API
     /// </summary>
     /// <param name="userIds">Array containing user IDs</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List containing populated User objects</returns>
-    public async Task<List<User>> GetUsersAsync(int[] userIds, CancellationToken ct = default)
-    {
-        var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-        var userRepository = new UserRepository(dbContext);
-        
-        return await userRepository.GetBulkAsync(userIds, ct);
-    }
+    /// <returns>List containing populated APIUser objects</returns>
+    public async Task<List<User>> GetUsersAsync(int[] userIds, CancellationToken ct = default) => 
+        await userRepository.GetBulkAsync(userIds, ct);
     
     /// <summary>
     /// Get user scores
@@ -62,10 +52,6 @@ public class UserMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
     {
         var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
         var scoresAmount = (amount == null) ? 25 : Math.Min(100, Math.Max((int)amount, 0));
-        
-        var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-        var scoreRepository = new ScoreRepository(dbContext);
-
         var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
         
         if (mode.HasValue)
@@ -109,9 +95,6 @@ public class UserMethods(IDbContextFactory<ScoreDataContext> dbContextFactory)
     /// <returns>Count of scores set by user</returns>
     public async Task<int> GetUserScoresCountAsync(int userId, Mode? mode, CancellationToken ct)
     {
-        var dbContext = await dbContextFactory.CreateDbContextAsync(ct);
-        var scoreRepository = new ScoreRepository(dbContext);
-        
         var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
         
         if (mode.HasValue)

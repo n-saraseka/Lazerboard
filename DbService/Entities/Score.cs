@@ -21,4 +21,5 @@ public class Score : IEntity<ulong>
     public int ClassicTotalScore { get; set; }
     public int? LegacyTotalScore { get; set; }
     public float? PP { get; set; }
+    public int Rank { get; set; }
 }

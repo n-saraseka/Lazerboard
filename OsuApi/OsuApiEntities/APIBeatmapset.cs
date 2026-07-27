@@ -2,7 +2,7 @@
 
 namespace OsuScoreStats.OsuApi.OsuApiEntities;
 
-public class Beatmapset
+public class APIBeatmapset
 {
     [JsonProperty("id")]
     public int Id { get; set; }

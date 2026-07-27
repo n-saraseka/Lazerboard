@@ -145,7 +145,7 @@ function gridScore(score, beatmap, beatmapset) {
 
     const rank = document.createElement("strong");
     rank.classList.add("score-rank");
-    rank.innerText = `#${score.mapRank}`;
+    rank.innerText = `#${score.rank}`;
 
     const pp = document.createElement("strong");
     pp.classList.add("score-pp");
@@ -238,7 +238,7 @@ function rowScore(score, beatmap, beatmapset) {
 
     const rank = document.createElement("td");
     rank.classList.add("score-row-rank");
-    rank.innerText = `#${score.mapRank}`;
+    rank.innerText = `#${score.rank}`;
 
     const mods = document.createElement("td");
     mods.classList.add("score-row-mods");

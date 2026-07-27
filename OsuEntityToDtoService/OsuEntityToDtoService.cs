@@ -1,28 +1,29 @@
 using OsuScoreStats.DbService.Entities;
+using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.OsuEntityToDtoService;
 
 public class OsuEntityToDtoService : IOsuEntityToDtoService
 {
-    public Score ScoreEntityToDto(OsuApi.OsuApiEntities.Score score)
+    public Score ScoreEntityToDto(APIScore apiScore)
     {
         var dto = new Score
         {
-            Id = score.Id,
-            Date = score.Date,
-            Combo = score.Combo,
-            TotalScore = score.TotalScore,
-            LegacyTotalScore = score.LegacyTotalScore,
-            ClassicTotalScore = score.ClassicTotalScore,
-            Misses = score.Statistics.CountMiss,
-            BeatmapId = score.BeatmapId,
-            Accuracy = score.Accuracy,
-            PP = score.PP,
-            Grade = score.Grade,
-            UserId = score.UserId
+            Id = apiScore.Id,
+            Date = apiScore.Date,
+            Combo = apiScore.Combo,
+            TotalScore = apiScore.TotalScore,
+            LegacyTotalScore = apiScore.LegacyTotalScore,
+            ClassicTotalScore = apiScore.ClassicTotalScore,
+            Misses = apiScore.Statistics.CountMiss,
+            BeatmapId = apiScore.BeatmapId,
+            Accuracy = apiScore.Accuracy,
+            PP = apiScore.PP,
+            Grade = apiScore.Grade,
+            UserId = apiScore.UserId
         };
 
-        foreach (var mod in score.Mods)
+        foreach (var mod in apiScore.Mods)
         {
             var acronym = mod.Acronym;
             if (mod.Settings.TryGetValue("speed_change", out var value)) acronym += $"({value}x)";
@@ -32,14 +33,14 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
         return dto;
     }
 
-    public User UserEntityToDto(OsuApi.OsuApiEntities.User user) => new User
+    public User UserEntityToDto(APIUser user) => new User
     {
         Id = user.Id,
         Username = user.Username,
         CountryCode = user.CountryCode
     };
 
-    public Beatmap BeatmapEntityToDto(OsuApi.OsuApiEntities.APIBeatmap beatmap) => new Beatmap
+    public Beatmap BeatmapEntityToDto(APIBeatmap beatmap) => new Beatmap
     {
         Id = beatmap.Id,
         BeatmapsetId = beatmap.BeatmapsetId,
@@ -54,17 +55,17 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
         DifficultyName = beatmap.DifficultyName
     };
 
-    public Beatmapset BeatmapsetEntityToDto(OsuApi.OsuApiEntities.Beatmapset beatmapset) => new Beatmapset
+    public Beatmapset BeatmapsetEntityToDto(APIBeatmapset apiBeatmapset) => new Beatmapset
     {
-        Id = beatmapset.Id,
-        Artist = beatmapset.Artist,
-        Title = beatmapset.Title,
-        PreviewUrl = beatmapset.PreviewUrl
+        Id = apiBeatmapset.Id,
+        Artist = apiBeatmapset.Artist,
+        Title = apiBeatmapset.Title,
+        PreviewUrl = apiBeatmapset.PreviewUrl
     };
     
-    public Country CountryEntityToDto(OsuApi.OsuApiEntities.Country country) => new Country
+    public Country CountryEntityToDto(APICountry apiCountry) => new Country
     {
-        Id = country.Code,
-        Name = country.Name
+        Id = apiCountry.Code,
+        Name = apiCountry.Name
     };
 }

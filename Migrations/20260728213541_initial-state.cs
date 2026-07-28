@@ -9,7 +9,7 @@ using OsuScoreStats.OsuApi.Enums;
 namespace OsuScoreStats.Migrations
 {
     /// <inheritdoc />
-    public partial class removerequireds : Migration
+    public partial class initialstate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

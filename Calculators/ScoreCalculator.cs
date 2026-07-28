@@ -11,12 +11,13 @@ using osu.Game.Rulesets.Taiko;
 using osu.Game.Scoring;
 using OsuScoreStats.OsuApi;
 using System.Reflection;
+using osu.Game.IO;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.Calculators;
 
-public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
+public class ScoreCalculator(OsuApiService osuApiService, IConfiguration config) : ICalculator
 {
     public async Task<float> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {
@@ -25,8 +26,7 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
         var beatmap = new Beatmap();
         try
         {
-            beatmap = await osuApiService.GetScoreBeatmapAsync(apiScore, ct);
-            await Task.Delay(TimeSpan.FromSeconds(1), ct);
+            beatmap = await GetBeatmapFileAsync(apiScore.BeatmapId, ct);
         }
         catch (Exception ex)
         {
@@ -44,6 +44,7 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
 
         return (float)performanceAttributes.Total;
     }
+    
     /// <summary>
     /// Prepare ScoreInfo object for use in calculating difficulty and performance attributes
     /// </summary>
@@ -51,7 +52,7 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
     /// <param name="beatmap">Beatmap data for this score</param>
     /// <param name="ruleset">This score's Ruleset</param>
     /// <returns>The populated ScoreInfo</returns>
-    public ScoreInfo GetScoreInfo(APIScore apiScore, IBeatmap beatmap, Ruleset ruleset)
+    private ScoreInfo GetScoreInfo(APIScore apiScore, IBeatmap beatmap, Ruleset ruleset)
     {
         var scoreStatistics = ScoreStatisticsToDict(apiScore.Statistics);
         var maximumStatistics = ScoreStatisticsToDict(apiScore.MaximumStatistics);
@@ -89,7 +90,7 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
     /// </summary>
     /// <param name="apiScore">Score object to parse the ruleset from</param>
     /// <returns>Corresponding Ruleset object</returns>
-    public Ruleset GetRulesetFromScore(APIScore apiScore) {
+    private Ruleset GetRulesetFromScore(APIScore apiScore) {
         switch (apiScore.Mode)
         {
             case Mode.Osu:
@@ -102,12 +103,13 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
                     return new ManiaRuleset();
         }
     }
+    
     /// <summary>
     /// Creates a dictionary of statistics for each HitResult from API Statistics data
     /// </summary>
     /// <param name="stats">Hit statistics</param>
     /// <returns>Populated dictionary of statistics for each HitResult</returns>
-    public Dictionary<HitResult, int> ScoreStatisticsToDict(Statistics stats)
+    private Dictionary<HitResult, int> ScoreStatisticsToDict(Statistics stats)
     {
         Dictionary<HitResult, int> scoreStatistics = new Dictionary<HitResult, int>();
 
@@ -124,5 +126,17 @@ public class ScoreCalculator(OsuApiService osuApiService) : ICalculator
             }
         }
         return scoreStatistics;
+    }
+
+    private async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, CancellationToken ct)
+    {
+        var mapPath = $"{config["CacheFolder"]}/{beatmapId}.osu";
+        if (!File.Exists(mapPath)) await osuApiService.DownloadBeatmapAsync(beatmapId, ct);
+        
+        await using var stream = File.OpenRead(mapPath);
+        using var reader = new LineBufferedReader(stream);
+        var beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
+        await Task.Delay(TimeSpan.FromSeconds(1), ct);
+        return beatmap;
     }
 }

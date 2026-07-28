@@ -58,8 +58,12 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ScoreDataContext>();
-    await db.Database.EnsureCreatedAsync();
     await db.Database.MigrateAsync();
+}
+
+if (!Directory.Exists(builder.Configuration["CacheFolder"]))
+{
+    Directory.CreateDirectory(builder.Configuration["CacheFolder"]);
 }
 
 // Configure the HTTP request pipeline.

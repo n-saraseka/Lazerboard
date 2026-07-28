@@ -1,7 +1,5 @@
 using Newtonsoft.Json;
 using System.Text;
-using osu.Game.Beatmaps;
-using osu.Game.IO;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 using OsuScoreStats.OsuApi.Enums;
 
@@ -154,32 +152,30 @@ public class OsuApiService(
     }
     
     /// <summary>
-    /// Download a map from the API and decode it into a Beatmap object
+    /// Download a map from the API and save it to the cache folder
     /// </summary>
-    /// <param name="apiScore">APIScore object to parse the beatmap ID from</param>
+    /// <param name="beatmapId">The beatmap ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Parsed Beatmap object</returns>
-    public async Task<Beatmap?> GetScoreBeatmapAsync(APIScore apiScore, CancellationToken ct = default)
+    public async Task DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default)
     {
         var client = httpClientFactory.CreateClient();
-        Beatmap beatmap = null;
-        while (!ct.IsCancellationRequested)
+        var mapPath = $"{config["CacheFolder"]}/{beatmapId}.osu";
+        try
         {
-            try
-            {
-                using var stream = await client.GetStreamAsync($"https://osu.ppy.sh/osu/{apiScore.BeatmapId}", ct);
-                using var reader = new LineBufferedReader(stream);
-                beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
-                return beatmap;
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine(ex.StatusCode);
-                throw;
-            }
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, 
+                $"https://osu.ppy.sh/osu/{beatmapId}");
+            var response = await client.SendAsync(requestMessage, ct);
+            var responseBytes = await response.Content.ReadAsByteArrayAsync(ct);
+                    
+            await File.WriteAllBytesAsync(mapPath, responseBytes, ct);
+                
         }
-
-        return beatmap;
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex.StatusCode);
+            throw;
+        }
     }
 
     /// <summary>

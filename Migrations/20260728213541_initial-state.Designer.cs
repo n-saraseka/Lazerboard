@@ -14,8 +14,8 @@ using OsuScoreStats.OsuApi.Enums;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    [Migration("20260728140020_remove-requireds")]
-    partial class removerequireds
+    [Migration("20260728213541_initial-state")]
+    partial class initialstate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

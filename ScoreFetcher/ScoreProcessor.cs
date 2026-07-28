@@ -16,7 +16,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     public async Task<bool> CheckIfSignificantAsync(APIScore score, CancellationToken cancellationToken)
     {
         var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
-        if (beatmapScores.Any(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) return false;
+        if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) return false;
         return !CheckIfBetterAlreadyExists(score, beatmapScores);
     }
     
@@ -43,7 +43,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                 var beatmapScores = respectiveGroup.ToList();
                 foreach (var score in scoresInGroup)
                 {
-                    if (beatmapScores.Any(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) 
+                    if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) 
                         dictionary[score.Id] = false;
                     else 
                         dictionary[score.Id] = !CheckIfBetterAlreadyExists(score, beatmapScores);

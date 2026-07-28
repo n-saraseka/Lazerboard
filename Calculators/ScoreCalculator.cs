@@ -131,12 +131,15 @@ public class ScoreCalculator(OsuApiService osuApiService, IConfiguration config)
     private async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, CancellationToken ct)
     {
         var mapPath = $"{config["CacheFolder"]}/{beatmapId}.osu";
-        if (!File.Exists(mapPath)) await osuApiService.DownloadBeatmapAsync(beatmapId, ct);
+        if (!File.Exists(mapPath))
+        {
+            await osuApiService.DownloadBeatmapAsync(beatmapId, ct);
+            await Task.Delay(TimeSpan.FromSeconds(1), ct);
+        }
         
         await using var stream = File.OpenRead(mapPath);
         using var reader = new LineBufferedReader(stream);
         var beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
-        await Task.Delay(TimeSpan.FromSeconds(1), ct);
         return beatmap;
     }
 }

@@ -112,6 +112,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 .OrderByDescending(b => b.TotalScore)
                 .ThenBy(b => b.Date)
                 .Select(entityToDtoService.ScoreEntityToDto)
+                .DistinctBy(s => s.Id)
                 .ToList();
             var matchingGroup = existingGroupedScores.FirstOrDefault(g => g.Key == beatmapId);
             if (matchingGroup == null)
@@ -123,26 +124,24 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             else
             {
                 var beatmapScores = matchingGroup.ToList();
-            
-                var existingScores = await scoreRepository.GetBulkAsync(beatmapScores.Select(s => s.Id), ct);
-                var scoreDtos = 
-                    groupScores.Where(b => !existingScores
+                
+                var newScores = 
+                    groupScores.Where(b => !beatmapScores
                             .Select(s => s.Id)
-                            .Contains(b.Id))
-                        .DistinctBy(s => s.Id);
-                var merged = existingScores
-                    .Concat(scoreDtos)
+                            .Contains(b.Id));
+                var merged = beatmapScores
+                    .Concat(newScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .ToList();
             
                 foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
             
-                scoreRepository.CreateBulk(scoreDtos);
-                scoreRepository.UpdateBulk(existingScores);
+                scoreRepository.CreateBulk(newScores);
+                scoreRepository.UpdateBulk(beatmapScores);
             
-                updatedCount += existingScores.Count;
-                createdCount += scoreDtos.Count();
+                updatedCount += beatmapScores.Count;
+                createdCount += newScores.Count();
             }
         }
         

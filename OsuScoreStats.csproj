@@ -15,8 +15,12 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+        <PackageReference Include="MockQueryable.Moq" Version="10.0.2" />
+        <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+        <PackageReference Include="NUnit" Version="4.6.1" />
         <PackageReference Include="ppy.osu.Game.Rulesets.Catch" Version="2026.702.1" />
         <PackageReference Include="ppy.osu.Game.Rulesets.Mania" Version="2026.702.1" />
         <PackageReference Include="ppy.osu.Game.Rulesets.Osu" Version="2026.702.1" />

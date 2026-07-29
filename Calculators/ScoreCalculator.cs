@@ -139,7 +139,6 @@ public class ScoreCalculator(OsuApiService osuApiService, IConfiguration config)
         
         await using var stream = File.OpenRead(mapPath);
         using var reader = new LineBufferedReader(stream);
-        var beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
-        return beatmap;
+        return osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
     }
 }

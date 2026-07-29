@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
-using OsuScoreStats.Calculators;
+using OsuScoreStats.Calculations;
 using OsuScoreStats.ScoreFetcher;
 using OsuScoreStats.ApiMethods;
 using OsuScoreStats.DbService.Repositories;
@@ -39,6 +39,7 @@ builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
+builder.Services.AddScoped<ICacheStore, CacheStore>();
 
 // Background services
 builder.Services.AddHostedService<ScoreLeaderboardService>();

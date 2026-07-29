@@ -1,3 +1,4 @@
+using OsuScoreStats.Calculations;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
@@ -5,16 +6,19 @@ namespace OsuScoreStats.ScoreFetcher;
 public class ScoreLeaderboardService(IServiceProvider serviceProvider) : BackgroundService
 {
     private string? _cursor;
-
+    
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var scope = serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
+        var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
             
         while (!stoppingToken.IsCancellationRequested)
         {
+            cacheStore.CheckCache();
+            
             var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
             _cursor = beatmapsetsResponse.Cursor;
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
@@ -51,7 +55,6 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             await dataProcessor.ProcessUsersAsync(users, stoppingToken);
             
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
     }
 }

@@ -15,9 +15,9 @@ using osu.Game.IO;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
-namespace OsuScoreStats.Calculators;
+namespace OsuScoreStats.Calculations;
 
-public class ScoreCalculator(OsuApiService osuApiService, IConfiguration config) : ICalculator
+public class ScoreCalculator(ICacheStore cacheStore) : ICalculator
 {
     public async Task<float> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {
@@ -26,7 +26,7 @@ public class ScoreCalculator(OsuApiService osuApiService, IConfiguration config)
         var beatmap = new Beatmap();
         try
         {
-            beatmap = await GetBeatmapFileAsync(apiScore.BeatmapId, ct);
+            beatmap = await cacheStore.GetBeatmapFileAsync(apiScore.BeatmapId, ct);
         }
         catch (Exception ex)
         {
@@ -126,19 +126,5 @@ public class ScoreCalculator(OsuApiService osuApiService, IConfiguration config)
             }
         }
         return scoreStatistics;
-    }
-
-    private async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, CancellationToken ct)
-    {
-        var mapPath = $"{config["CacheFolder"]}/{beatmapId}.osu";
-        if (!File.Exists(mapPath))
-        {
-            await osuApiService.DownloadBeatmapAsync(beatmapId, ct);
-            await Task.Delay(TimeSpan.FromSeconds(1), ct);
-        }
-        
-        await using var stream = File.OpenRead(mapPath);
-        using var reader = new LineBufferedReader(stream);
-        return osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
     }
 }

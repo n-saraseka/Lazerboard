@@ -1,15 +1,23 @@
+using OsuScoreStats.Calculations;
+
 namespace OsuScoreStats.ScoreFetcher;
 
-public class ScoreFirehoseService(IApiFetcher apiFetcher,
-    IDataProcessor dataProcessor,
-    IScoreProcessor scoreProcessor) : BackgroundService
+public class ScoreFirehoseService(IServiceProvider serviceProvider) : BackgroundService
 {
     private string? _cursor;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using var scope = serviceProvider.CreateScope();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+        var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
+        var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+        
         while (!stoppingToken.IsCancellationRequested)
         {
+            cacheStore.CheckCache();
+            
             var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
             _cursor = scoresResponse.Cursor;
             var scores = scoresResponse.Scores;

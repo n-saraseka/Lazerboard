@@ -1,4 +1,4 @@
-using OsuScoreStats.Calculators;
+using OsuScoreStats.Calculations;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.OsuApiEntities;

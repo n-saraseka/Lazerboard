@@ -1,6 +1,6 @@
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
-namespace OsuScoreStats.Calculators;
+namespace OsuScoreStats.Calculations;
 
 public interface ICalculator
 {

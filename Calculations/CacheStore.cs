@@ -27,10 +27,12 @@ public class CacheStore : ICacheStore
     private bool ShouldCleanUp()
     {
         _deltaTime += DateTime.UtcNow - _startTime;
-        if (_deltaTime < TimeSpan.FromMinutes(_osuFileTTL / 2)) return false;
-        _deltaTime = TimeSpan.Zero;
-        _startTime = DateTime.UtcNow;
-        return true;
+        if (_deltaTime >= TimeSpan.FromMinutes(_osuFileTTL / 2))
+        {
+            _deltaTime = TimeSpan.Zero;
+            _startTime = DateTime.UtcNow;
+        }
+        return _deltaTime == TimeSpan.Zero;
     }
     
     public void CheckCache()

@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService.Entities;
-using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
-namespace OsuScoreStats.ApiMethods;
+namespace OsuScoreStats.Api;
 
 public class UserMethods(IScoreRepository scoreRepository, IUserRepository userRepository)
 {

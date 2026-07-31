@@ -1,12 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using osu.Game.Beatmaps;
-using OsuScoreStats.DbService;
 using OsuScoreStats.DbService.Entities;
-using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using Beatmap = OsuScoreStats.DbService.Entities.Beatmap;
 
-namespace OsuScoreStats.ApiMethods;
+namespace OsuScoreStats.Api;
 
 public class BeatmapMethods(IBeatmapRepository beatmapRepository, IBeatmapsetRepository beatmapsetRepository)
 {

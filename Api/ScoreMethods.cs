@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.DbService.Entities;
+using OsuScoreStats.Api.Dtos;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
@@ -21,8 +21,8 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
     /// <param name="sort">Parameter to sort by</param>
     /// <param name="isDesc">Whether sort is descending or not</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List containing up to 100 highest pp scores at given date</returns>
-    public async Task<List<Score>> GetScoresAsync(
+    /// <returns>A <see cref="ScoresResponse"/></returns>
+    public async Task<ScoresResponse> GetScoresAsync(
         Mode? mode, 
         DateOnly? dateStart,
         DateOnly? dateEnd,
@@ -38,7 +38,7 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
         var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
         var scoresAmount = amount == null ? 25 : Math.Min(100, Math.Max((int)amount, 0));
 
-        var query = scoreRepository.GetAll();
+        var query = scoreRepository.GetAllWithBeatmapAndUserData();
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
         var targetStartDate = dateStart ?? DateOnly.FromDateTime(latestDate);
@@ -83,8 +83,16 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
                 break;
         }
         
-        query = query.Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+        var count = await query.CountAsync(ct);
         
-        return await query.ToListAsync(ct);
+        query = query.Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+
+        var scores = await query.ToListAsync(ct);
+
+        return new ScoresResponse
+        {
+            Scores = scores,
+            Count = count,
+        };
     } 
 }

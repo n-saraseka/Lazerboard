@@ -1,71 +1,8 @@
 @model OsuScoreStats.ViewModels.UserViewModel
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <link rel="stylesheet" href="~/styles.css">
+
+@section Styles {
     <link rel="stylesheet" href="~/styles-user.css">
-</head>
-<body>
-<div class="container">
-    <a href="~/index.html">go to home page (i will design this later sorry)</a>
-    <div user-id="@Model.Id" user-country="@Model.CountryCode" class="user-card">
-        <img src="https://a.ppy.sh/@Model.Id" alt="@Model.Username" class="user-avatar"/>
-        <div class="user-data">
-            <div class="user-data-name">
-                <a href="https://osu.ppy.sh/users/@Model.Id" class="user-name">@Model.Username</a>
-            </div>
-        </div>
-    </div>
-    <div class="options">
-        <label for="scores-amount">Scores amount per page:
-            <select name="scores-amount" id="scores-amount">
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="75">75</option>
-                <option value="100">100</option>
-            </select>
-        </label>
-        <label for="scores-view">View:
-            <select name="scores-view" id="scores-view">
-                <option value="cards">Cards</option>
-                <option value="condensed">Condensed</option>
-            </select>
-        </label>
-        <label for="scores-sort">Sort by:
-            <select name="scores-sort" id="scores-sort">
-                <option value="date">Date and time set</option>
-                <option value="totalScore">Standardized score</option>
-                <option value="classicTotalScore">Classic score</option>
-                <option value="pp">PP</option>
-            </select>
-        </label>
-        <label for="scores-sort-direction">Sort direction:
-            <select name="scores-sort-direction" id="scores-sort-direction">
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-            </select>
-        </label>
-    </div>
-    <div class="scores"></div>
-    <table class="scores-table">
-        <thead>
-        <tr>
-            <td>PP</td>
-            <td>Rank</td>
-            <td>Mods</td>
-            <td>Score</td>
-            <td>Combo</td>
-            <td>Accuracy</td>
-            <td>Misses</td>
-            <td colspan="2">Beatmap</td>
-        </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</div>
-<script src="~/scripts/user.js"></script>
-</body>
-</html>
+}
+
+<a href="/">go to home page (i will design this later sorry)</a>
+<div class="react-app" data-component="UserPage" data-props='@Json.Serialize(Model)'></div>

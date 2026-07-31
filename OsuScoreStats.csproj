@@ -30,6 +30,9 @@
 
     <ItemGroup>
       <Folder Include="Migrations\" />
+      <Folder Include="react\public\" />
+      <Folder Include="react\src\assets\" />
+      <Folder Include="wwwroot\scripts\" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OsuScoreStats.Api.Dtos;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
@@ -30,6 +31,8 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
     /// </summary>
     /// <param name="userId">User ID</param>
     /// <param name="mode">Gameplay mode (Osu, Taiko, Fruits, Mania)</param>
+    /// <param name="dateStart">Date to begin getting scores from (defaults to Unix epoch)</param>
+    /// <param name="dateEnd">Date to end getting scores from (defaults to latest date in scores table)</param>
     /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
     /// <param name="optionalMods">An array of optional mod acronyms</param>
     /// <param name="amount">Amount of scores to return</param>
@@ -37,10 +40,12 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
     /// <param name="sort">Parameter to sort by</param>
     /// <param name="isDesc">Whether sort is descending or not</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List containing up to 100 highest pp scores at given date</returns>
-    public async Task<List<Score>> GetUserScoresAsync(
+    /// <returns>A <see cref="ScoresResponse"/></returns>
+    public async Task<ScoresResponse> GetUserScoresAsync(
         int userId,
         Mode? mode,
+        DateOnly? dateStart,
+        DateOnly? dateEnd,
         string[]? mandatoryMods,
         string[]? optionalMods,
         int? amount,
@@ -51,7 +56,13 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
     {
         var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
         var scoresAmount = (amount == null) ? 25 : Math.Min(100, Math.Max((int)amount, 0));
-        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
+        var query = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.UserId == userId);
+        
+        var latestDate = await query.MaxAsync(s => s.Date, ct);
+        var targetStartDate = dateStart ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
+        var targetEndDate = dateEnd ?? DateOnly.FromDateTime(latestDate);
+        query = query.Where(s => 
+            DateOnly.FromDateTime(s.Date) >= targetStartDate && DateOnly.FromDateTime(s.Date) <= targetEndDate);
         
         if (mode.HasValue)
             query = query.Where(s => s.Mode == mode.Value);
@@ -80,9 +91,18 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
                 break;
         }
         
-        query = query.Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+        var count = await query.CountAsync(ct);
         
-        return await query.ToListAsync(ct);
+        query = query
+            .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+
+        var scores = await query.ToListAsync(ct);
+
+        return new ScoresResponse
+        {
+            Scores = scores,
+            Count = count,
+        };
     } 
 
     /// <summary>

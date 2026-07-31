@@ -4,6 +4,10 @@ using OsuScoreStats.DbService.Entities;
 namespace OsuScoreStats.DbService.Repositories;
 
 public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db), IUserRepository
-{ 
-    // Only exists to keep things the same as other repositories for now.
+{
+    public Task<User?> GetByIdWithCountryAsync(int id, CancellationToken cancellationToken) => Set
+        .Where(u => u.Id == id)
+        .AsSplitQuery()
+        .Include(u => u.Country)
+        .FirstOrDefaultAsync(cancellationToken);
 }

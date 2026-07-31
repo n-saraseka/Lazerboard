@@ -1,8 +1,9 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
 using OsuScoreStats.Calculations;
 using OsuScoreStats.ScoreFetcher;
-using OsuScoreStats.ApiMethods;
+using OsuScoreStats.Api;
 using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi;
@@ -49,10 +50,13 @@ builder.Services.AddScoped<ScoreMethods>();
 builder.Services.AddScoped<BeatmapMethods>();
 builder.Services.AddScoped<UserMethods>();
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -128,6 +132,8 @@ app.MapGet("/api/users/{userId:int}/scores", async (
         UserMethods userMethods,
         int userId,
         Mode? mode,
+        DateOnly? dateStart,
+        DateOnly? dateEnd,
         string[]? mandatoryMods,
         string[]? optionalMods,
         int? amount,
@@ -135,7 +141,7 @@ app.MapGet("/api/users/{userId:int}/scores", async (
         string? sort,
         bool isDesc,
         CancellationToken ct) => await userMethods.GetUserScoresAsync(
-        userId, mode, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
+        userId, mode, dateStart, dateEnd, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
     .WithName("GetUserScores");
 
 app.MapGet("/api/users/{id:int}/scores/count", async (
@@ -149,6 +155,11 @@ app.MapControllerRoute(
     name: "user",
     pattern: "user/{id}",
     defaults: new { controller = "User", action = "UserPage" });
+
+app.MapControllerRoute(
+    name: "index",
+    pattern: "/",
+    defaults: new { controller = "Home", action = "Index" });
 
 app.MapControllers();
 app.Run();

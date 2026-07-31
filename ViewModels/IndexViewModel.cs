@@ -1,0 +1,9 @@
+using OsuScoreStats.DbService.Entities;
+
+namespace OsuScoreStats.ViewModels;
+
+public class IndexViewModel
+{
+    public List<Score> Scores { get; set; } = new();
+    public int Pages { get; set; }
+}

@@ -10,6 +10,8 @@ body {
     gap: 0.5em;
     flex-wrap: wrap;
     margin: 0 auto;
+    padding: 0 0;
+    justify-content: center;
 }
 
 .page {
@@ -23,7 +25,7 @@ body {
     background-color: rgb(30, 30, 30);
 }
 
-.page.active, .page:hover {
+.page.active, .page-navigation:hover {
     background-color: rgb(55, 55, 55);
 }
 
@@ -33,9 +35,17 @@ body {
     background-color: rgb(25, 25, 25);
     padding: 1em;
     border-radius: 1em;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-row-gap: 1em;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1em;
+}
+
+.react-app {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1em;
 }
 
 .options {

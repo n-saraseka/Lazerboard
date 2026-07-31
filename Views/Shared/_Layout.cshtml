@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/styles.css">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+<div class="container">
+    @RenderBody()
+</div>
+<script type="module" src="~/react/assets/index.js"></script>
+</body>
+</html>

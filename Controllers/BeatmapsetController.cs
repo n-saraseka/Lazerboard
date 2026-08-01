@@ -15,6 +15,7 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         var beatmapset = firstBeatmap.Beatmapset;
         
         var scores = await scoreRepository.GetByBeatmapIdAsync(firstBeatmap.Id, cancellationToken);
+        scores = scores.OrderBy(s => s.Rank).ToList();
 
         var viewModel = new BeatmapsetViewModel
         {
@@ -39,6 +40,7 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         var beatmapset = firstBeatmap.Beatmapset;
         
         var scores = await scoreRepository.GetByBeatmapIdAsync(id, cancellationToken);
+        scores = scores.OrderBy(s => s.Rank).ToList();
 
         var viewModel = new BeatmapsetViewModel
         {

@@ -6,4 +6,5 @@ public class Beatmapset : IEntity<int>
     public string Artist { get; set; }
     public string Title { get; set; }
     public string PreviewUrl { get; set; }
+    public List<Beatmap> Beatmaps { get; set; }
 }

@@ -24,10 +24,7 @@ public class ApiFetcher(OsuApiService osuApiService) : IApiFetcher
     /// <param name="cursor">Cursor string</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Populated ScoresResponse object</returns>
-    public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default)
-    {
-        return await osuApiService.GetScoresAsync(cursor, ct);
-    }
+    public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default) => await osuApiService.GetScoresAsync(cursor, ct);
     
     /// <summary>
     /// Get user data from API and process the respective data

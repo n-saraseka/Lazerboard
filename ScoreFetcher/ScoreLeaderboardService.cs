@@ -6,6 +6,7 @@ namespace OsuScoreStats.ScoreFetcher;
 public class ScoreLeaderboardService(IServiceProvider serviceProvider) : BackgroundService
 {
     private string? _cursor;
+    private double _apiInterval;
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -14,6 +15,8 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        _apiInterval = double.Parse(config["OsuApiInterval"]);
             
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -21,7 +24,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             
             var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
             _cursor = beatmapsetsResponse.Cursor;
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             
             var beatmapsets = beatmapsetsResponse.Beatmapsets;
             await dataProcessor.ProcessBeatmapsetsAsync(beatmapsets, stoppingToken);
@@ -36,7 +39,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             {
                 var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, beatmap.Mode, 0, stoppingToken);
                 scores.AddRange(beatmapScores.Scores);
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             }
             
             var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);

@@ -4,19 +4,28 @@ using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
 
-public class ApiFetcher(OsuApiService osuApiService) : IApiFetcher
+public class ApiFetcher : IApiFetcher
 {
+    private readonly double _apiInterval;
+    private readonly OsuApiService _osuApiService;
+    
+    public ApiFetcher(OsuApiService osuApiService, IConfiguration config)
+    {
+        _osuApiService = osuApiService;
+        _apiInterval = double.Parse(config["OsuApiInterval"]);
+    }
+    
     /// <summary>
     /// Get beatmapsets from API and save beatmapset and beatmap data
     /// </summary>
     /// <param name="cursor">Cursor string</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Populated BeatmapsetsResponse object</returns>
-    public async Task<BeatmapsetsResponse> SearchBeatmapsetsAsync(string? cursor, CancellationToken ct = default) =>
-        await osuApiService.GetBeatmapsetsAsync(cursor, ct);
+    public Task<BeatmapsetsResponse> SearchBeatmapsetsAsync(string? cursor, CancellationToken ct = default) =>
+        _osuApiService.GetBeatmapsetsAsync(cursor, ct);
 
-    public async Task<BeatmapScores> GetBeatmapScoresAsync(APIBeatmap beatmap, Mode? mode, int legacyOnly = 0, CancellationToken ct = default) =>
-        await osuApiService.GetBeatmapScoresAsync(beatmap.Id, mode, legacyOnly, ct);
+    public Task<BeatmapScores> GetBeatmapScoresAsync(APIBeatmap beatmap, Mode? mode, int legacyOnly = 0, CancellationToken ct = default) =>
+        _osuApiService.GetBeatmapScoresAsync(beatmap.Id, mode, legacyOnly, ct);
     
     /// <summary>
     /// Get scores from the API firehose
@@ -24,7 +33,7 @@ public class ApiFetcher(OsuApiService osuApiService) : IApiFetcher
     /// <param name="cursor">Cursor string</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Populated ScoresResponse object</returns>
-    public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default) => await osuApiService.GetScoresAsync(cursor, ct);
+    public Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default) => _osuApiService.GetScoresAsync(cursor, ct);
     
     /// <summary>
     /// Get user data from API and process the respective data
@@ -42,9 +51,9 @@ public class ApiFetcher(OsuApiService osuApiService) : IApiFetcher
             for (int i = 0; i < userIds.Count(); i += batchSize)
             {
                 var batch = userIds.Skip(i).Take(batchSize).ToList();
-                APIUser[] userData = await osuApiService.GetUsersAsync(batch, ct);
+                APIUser[] userData = await _osuApiService.GetUsersAsync(batch, ct);
                 users.AddRange(userData);
-                await Task.Delay(TimeSpan.FromSeconds(1), ct);
+                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
             }
         }
 
@@ -65,9 +74,9 @@ public class ApiFetcher(OsuApiService osuApiService) : IApiFetcher
         for (int i = 0; i < beatmapIds.Count(); i += batchSize)
         {
             var batch = beatmapIds.Skip(i).Take(batchSize).ToList();
-            APIBeatmap[] beatmapData = await osuApiService.GetBeatmapsAsync(batch, ct);
+            APIBeatmap[] beatmapData = await _osuApiService.GetBeatmapsAsync(batch, ct);
             beatmaps.AddRange(beatmapData);
-            await Task.Delay(TimeSpan.FromSeconds(1), ct);
+            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
         }
 
         return beatmaps;

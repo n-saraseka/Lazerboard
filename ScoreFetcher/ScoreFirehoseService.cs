@@ -5,6 +5,8 @@ namespace OsuScoreStats.ScoreFetcher;
 public class ScoreFirehoseService(IServiceProvider serviceProvider) : BackgroundService
 {
     private string? _cursor;
+    private double _apiInterval;
+    private const int RepeatAfterSeconds = 10;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -13,6 +15,8 @@ public class ScoreFirehoseService(IServiceProvider serviceProvider) : Background
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        _apiInterval = double.Parse(config["OsuApiInterval"]);
         
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -21,7 +25,7 @@ public class ScoreFirehoseService(IServiceProvider serviceProvider) : Background
             var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
             _cursor = scoresResponse.Cursor;
             var scores = scoresResponse.Scores;
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             
             var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
             var significantScores = scores.Where(s => checkResults[s.Id]).ToList();
@@ -47,7 +51,7 @@ public class ScoreFirehoseService(IServiceProvider serviceProvider) : Background
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
             
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(RepeatAfterSeconds), stoppingToken);
         }
     }
 }

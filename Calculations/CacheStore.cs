@@ -13,6 +13,7 @@ public class CacheStore : ICacheStore
     private const int DefaultTTL = 10;
     private TimeSpan _deltaTime;
     private DateTime _startTime;
+    private double _apiInterval;
 
     public CacheStore(IConfiguration config, OsuApiService osuApiService)
     {
@@ -22,6 +23,7 @@ public class CacheStore : ICacheStore
         _osuFileTTL = int.TryParse(_config["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
         _deltaTime = TimeSpan.Zero;
         _startTime = DateTime.UtcNow;
+        _apiInterval = double.Parse(config["OsuApiInterval"]);
     }
 
     private bool ShouldCleanUp()
@@ -57,7 +59,7 @@ public class CacheStore : ICacheStore
         if (!File.Exists(mapPath))
         {
             await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
-            await Task.Delay(TimeSpan.FromSeconds(1), ct);
+            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
         }
         
         await using var stream = File.OpenRead(mapPath);

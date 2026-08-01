@@ -9,7 +9,7 @@ public class BeatmapConfiguration : IEntityTypeConfiguration<Beatmap>
     {
         builder
             .HasOne(b => b.Beatmapset)
-            .WithMany(bs => bs.Beatmaps)
+            .WithMany()
             .HasForeignKey(b => b.BeatmapsetId);
     }
 }

@@ -10,7 +10,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder
             .HasOne(u => u.Country)
-            .WithMany(c => c.Users)
+            .WithMany()
             .HasForeignKey(u => u.CountryCode);
     }
 }

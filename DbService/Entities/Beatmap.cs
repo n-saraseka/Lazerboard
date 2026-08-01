@@ -16,5 +16,4 @@ public class Beatmap : IEntity<int>
     public float OverallDifficulty { get; set; }
     public float DrainLength { get; set; }
     public BeatmapStatus Status { get; set; }
-    public List<Score> Scores { get; set; }
 }

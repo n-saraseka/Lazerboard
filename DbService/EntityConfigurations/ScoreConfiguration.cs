@@ -10,11 +10,11 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
         builder.PrimitiveCollection(s => s.ModAcronyms);
         builder
             .HasOne(s => s.Beatmap)
-            .WithMany(b => b.Scores)
+            .WithMany()
             .HasForeignKey(s => s.BeatmapId);
         builder
             .HasOne(s => s.User)
-            .WithMany(u => u.Scores)
+            .WithMany()
             .HasForeignKey(s => s.UserId);
     }
 }

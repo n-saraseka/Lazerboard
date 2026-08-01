@@ -244,7 +244,7 @@ namespace OsuScoreStats.Migrations
             modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmap", b =>
                 {
                     b.HasOne("OsuScoreStats.DbService.Entities.Beatmapset", "Beatmapset")
-                        .WithMany("Beatmaps")
+                        .WithMany()
                         .HasForeignKey("BeatmapsetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -256,14 +256,14 @@ namespace OsuScoreStats.Migrations
             modelBuilder.Entity("OsuScoreStats.DbService.Entities.Score", b =>
                 {
                     b.HasOne("OsuScoreStats.DbService.Entities.Beatmap", "Beatmap")
-                        .WithMany("Scores")
+                        .WithMany()
                         .HasForeignKey("BeatmapId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_scores_beatmaps_beatmap_id");
 
                     b.HasOne("OsuScoreStats.DbService.Entities.User", "User")
-                        .WithMany("Scores")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -277,33 +277,13 @@ namespace OsuScoreStats.Migrations
             modelBuilder.Entity("OsuScoreStats.DbService.Entities.User", b =>
                 {
                     b.HasOne("OsuScoreStats.DbService.Entities.Country", "Country")
-                        .WithMany("Users")
+                        .WithMany()
                         .HasForeignKey("CountryCode")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_users_countries_country_code");
 
                     b.Navigation("Country");
-                });
-
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmap", b =>
-                {
-                    b.Navigation("Scores");
-                });
-
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmapset", b =>
-                {
-                    b.Navigation("Beatmaps");
-                });
-
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Country", b =>
-                {
-                    b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.User", b =>
-                {
-                    b.Navigation("Scores");
                 });
 #pragma warning restore 612, 618
         }

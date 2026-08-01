@@ -4,7 +4,7 @@ using OsuScoreStats.ViewModels;
 
 namespace OsuScoreStats.Controllers;
 
-public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Controller
+public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRepository scoreRepository) : Controller
 {
     public async Task<IActionResult> BeatmapsetPage(int id, CancellationToken cancellationToken = default)
     {
@@ -13,12 +13,15 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
         
         var firstBeatmap = beatmaps.First();
         var beatmapset = firstBeatmap.Beatmapset;
+        
+        var scores = await scoreRepository.GetByBeatmapIdAsync(firstBeatmap.Id, cancellationToken);
 
         var viewModel = new BeatmapsetViewModel
         {
             Beatmapset = beatmapset,
             Beatmaps = beatmaps,
-            SelectedBeatmapId = firstBeatmap.Id
+            SelectedBeatmapId = firstBeatmap.Id,
+            Scores = scores
         };
         
         return View(viewModel);
@@ -34,12 +37,15 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
         
         var firstBeatmap = beatmaps.First();
         var beatmapset = firstBeatmap.Beatmapset;
+        
+        var scores = await scoreRepository.GetByBeatmapIdAsync(id, cancellationToken);
 
         var viewModel = new BeatmapsetViewModel
         {
             Beatmapset = beatmapset,
             Beatmaps = beatmaps,
-            SelectedBeatmapId = id
+            SelectedBeatmapId = id,
+            Scores = scores
         };
         
         return View(viewModel);

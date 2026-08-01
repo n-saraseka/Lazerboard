@@ -6,6 +6,7 @@ using OsuScoreStats.ScoreFetcher;
 using OsuScoreStats.Api;
 using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
+using OsuScoreStats.Migrations;
 using OsuScoreStats.OsuApi;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuEntityToDtoService;
@@ -33,6 +34,7 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
+builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
 builder.Services.AddScoped<OsuApiService>();
@@ -64,6 +66,9 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ScoreDataContext>();
     await db.Database.MigrateAsync();
+    var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
+    var cancellationToken = CancellationToken.None;
+    await backpopulator.BackpopulateAsync(cancellationToken);
 }
 
 if (!Directory.Exists(builder.Configuration["CacheFolder"]))

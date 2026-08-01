@@ -61,9 +61,13 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("text")
                         .HasColumnName("difficulty_name");
 
-                    b.Property<float>("DrainLength")
-                        .HasColumnType("real")
+                    b.Property<int>("DrainLength")
+                        .HasColumnType("integer")
                         .HasColumnName("drain_length");
+
+                    b.Property<float?>("Health")
+                        .HasColumnType("real")
+                        .HasColumnName("health");
 
                     b.Property<Mode>("Mode")
                         .HasColumnType("mode")

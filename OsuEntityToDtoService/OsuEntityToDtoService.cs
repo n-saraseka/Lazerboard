@@ -47,6 +47,7 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
         CircleSize = beatmap.CircleSize,
         ApproachRate = beatmap.ApproachRate,
         OverallDifficulty = beatmap.OverallDifficulty,
+        Health = beatmap.Health,
         DrainLength = beatmap.DrainLength,
         Difficulty = beatmap.Difficulty,
         Status = beatmap.Status,

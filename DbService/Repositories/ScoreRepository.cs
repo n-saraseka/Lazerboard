@@ -8,6 +8,15 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
 {
     public Task<List<Score>> GetByBeatmapIdAsync(int beatmapId, CancellationToken cancellationToken) =>
         Set.Where(s => s.BeatmapId == beatmapId).ToListAsync(cancellationToken);
+    
+    public Task<List<Score>> GetByBeatmapIdWithUserDataAsync(int beatmapId, CancellationToken cancellationToken) =>
+        Set
+            .Where(s => s.BeatmapId == beatmapId)
+            .AsSplitQuery()
+            .Include(s => s.User)
+            .Include(s => s.Beatmap)
+            .ThenInclude(b => b.Beatmapset)
+            .ToListAsync(cancellationToken);
 
     public Task<List<IGrouping<int, Score>>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
         Set.Where(s => beatmapIds.Contains(s.BeatmapId)).GroupBy(s => s.BeatmapId).ToListAsync(cancellationToken);

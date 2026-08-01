@@ -161,5 +161,10 @@ app.MapControllerRoute(
     pattern: "/",
     defaults: new { controller = "Home", action = "Index" });
 
+app.MapControllerRoute(
+    name: "beatmapset",
+    pattern: "/beatmapsets/{id:int}",
+    defaults: new { controller = "Beatmapset", action = "BeatmapsetPage" });
+
 app.MapControllers();
 app.Run();

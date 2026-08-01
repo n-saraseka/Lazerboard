@@ -16,6 +16,7 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .Include(s => s.User)
             .Include(s => s.Beatmap)
             .ThenInclude(b => b.Beatmapset)
+            .OrderBy(s => s.Rank)
             .ToListAsync(cancellationToken);
 
     public Task<List<IGrouping<int, Score>>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>

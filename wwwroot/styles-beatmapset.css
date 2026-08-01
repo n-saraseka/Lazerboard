@@ -1,0 +1,71 @@
+.beatmapset {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    justify-content: center;
+}
+
+.beatmapset-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 2em;
+    background-blend-mode: darken;
+    background-size: cover;
+    border-radius: 2em;
+}
+
+.beatmapset-card h1 {
+    margin : 0 0;
+}
+
+.difficulties {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+
+.difficulty-icon {
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+}
+
+.difficulty-icon.difficulty-active, .difficulty-icon:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+}
+
+.beatmap-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    align-items: flex-start;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: auto;
+}
+
+.map-name {
+    color: white;
+}
+
+.beatmap-stat {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+
+.stat-bar {
+    display: flex;
+    gap: 1em;
+}
+
+.difficulty-bar {
+    height: 1em;
+    width: 6em;
+    border-radius: 1em;
+}

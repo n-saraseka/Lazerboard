@@ -20,6 +20,7 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             Accuracy = apiScore.Accuracy,
             PP = apiScore.PP,
             Grade = apiScore.Grade,
+            Mode = apiScore.Mode,
             UserId = apiScore.UserId
         };
 

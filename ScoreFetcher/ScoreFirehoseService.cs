@@ -1,4 +1,5 @@
 using OsuScoreStats.Calculations;
+using OsuScoreStats.DbService.Entities;
 
 namespace OsuScoreStats.ScoreFetcher;
 
@@ -47,7 +48,19 @@ public class ScoreFirehoseService(IServiceProvider serviceProvider) : Background
             var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
             var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
             var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct();
-            await dataProcessor.ProcessBeatmapsetsAsync(beatmapsets, stoppingToken);
+            var beatmapsetUserIds = beatmapsets.Select(bs => bs.UserId).Distinct().ToList();
+            var apiUsers = await apiFetcher.GetUsersAsync(beatmapsetUserIds, stoppingToken);
+            var apiUserIds = apiUsers.Select(u => u.Id).Distinct();
+            
+            var removedUserIds = beatmapsetUserIds.Where(b => !apiUserIds.Contains(b)).ToList();
+            var removedUsers = removedUserIds.Select(id => new User
+            {
+                Id = id,
+                Username = beatmapsets.First(b => b.UserId == id).Creator
+            });
+            
+            await dataProcessor.ProcessRemovedUsersAsync(removedUsers, stoppingToken);
+            await dataProcessor.ProcessUsersAsync(apiUsers, stoppingToken);
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
             
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);

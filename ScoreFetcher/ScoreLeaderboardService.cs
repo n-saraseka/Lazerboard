@@ -1,4 +1,5 @@
 using OsuScoreStats.Calculations;
+using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
@@ -27,6 +28,19 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             
             var beatmapsets = beatmapsetsResponse.Beatmapsets;
+            var beatmapsetUserIds = beatmapsets.Select(bs => bs.UserId).Distinct().ToList();
+            var apiUsers = await apiFetcher.GetUsersAsync(beatmapsetUserIds, stoppingToken);
+            var apiUserIds = apiUsers.Select(u => u.Id).Distinct();
+            
+            var removedUserIds = beatmapsetUserIds.Where(b => !apiUserIds.Contains(b)).ToList();
+            var removedUsers = removedUserIds.Select(id => new User
+            {
+                Id = id,
+                Username = beatmapsets.First(b => b.UserId == id).Creator
+            });
+            
+            await dataProcessor.ProcessRemovedUsersAsync(removedUsers, stoppingToken);
+            await dataProcessor.ProcessUsersAsync(apiUsers, stoppingToken);
             await dataProcessor.ProcessBeatmapsetsAsync(beatmapsets, stoppingToken);
             
             var beatmaps = new List<APIBeatmap>();

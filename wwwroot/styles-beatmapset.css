@@ -19,6 +19,11 @@
     margin : 0 0;
 }
 
+.beatmapset-card h1 a {
+    color: white;
+}
+
+
 .difficulties {
     display: flex;
     gap: 1em;
@@ -47,6 +52,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: auto;
+    grid-column-gap: 1em;
 }
 
 .map-name {
@@ -68,4 +74,8 @@
     height: 1em;
     width: 6em;
     border-radius: 1em;
+}
+
+.sort-thingy:hover {
+    cursor: pointer;
 }

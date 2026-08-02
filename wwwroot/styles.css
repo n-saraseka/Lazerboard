@@ -229,3 +229,41 @@ body {
     height: 1em;
     width: auto;
 }
+
+.mode-icon {
+    height: 2em;
+    width: 2em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.mode-osu {
+    mask-image: url("images/osu-std.svg");
+    -webkit-mask-image: url("images/osu-std.svg");
+}
+
+.mode-taiko {
+    mask-image: url("images/osu-taiko.svg");
+    -webkit-mask-image: url("images/osu-taiko.svg");
+}
+
+.mode-catch {
+    mask-image: url("images/osu-catch.svg");
+    -webkit-mask-image: url("images/osu-catch.svg");
+}
+
+.mode-mania {
+    mask-image: url("images/osu-mania.svg");
+    -webkit-mask-image: url("images/osu-mania.svg");
+}
+
+.mode-icon-wrapper.active, .mode-icon-wrapper.enabled:hover {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    cursor: pointer;
+}
+
+.mode-icon-wrapper.disabled {
+    opacity: 0.6;
+}

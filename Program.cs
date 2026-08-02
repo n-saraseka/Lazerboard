@@ -159,7 +159,8 @@ app.MapGet("/api/users/{id:int}/scores/count", async (
 app.MapGet("/api/beatmaps/{id:int}/scores", async (
         BeatmapMethods beatmapMethods,
         int id,
-        CancellationToken ct) => await beatmapMethods.GetBeatmapScoresAsync(id, ct))
+        Mode mode,
+        CancellationToken ct) => await beatmapMethods.GetBeatmapScoresAsync(id, mode, ct))
     .WithName("GetBeatmapScores");
 
 app.MapControllerRoute(

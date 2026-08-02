@@ -1,5 +1,6 @@
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
+using OsuScoreStats.OsuApi.Enums;
 using Beatmap = OsuScoreStats.DbService.Entities.Beatmap;
 
 namespace OsuScoreStats.Api;
@@ -39,8 +40,10 @@ public class BeatmapMethods(IBeatmapRepository beatmapRepository,
     /// Get collected scores on the beatmap from the API
     /// </summary>
     /// <param name="id">The <see cref="Beatmap"/> ID</param>
+    /// <param name="mode">The <see cref="Mode"/> </param>
     /// <param name="ct">Cancellation token</param>
     /// <returns></returns>
-    public async Task<List<Score>> GetBeatmapScoresAsync(int id, CancellationToken ct = default) =>
-        await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, ct);
+    public async Task<List<Score>> GetBeatmapScoresAsync(int id, Mode mode, CancellationToken ct = default) => 
+        await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, ct);
+        
 }

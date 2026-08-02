@@ -31,4 +31,6 @@ public class APIBeatmap
     public int DrainLength { get; set; }
     [JsonProperty("status")]
     public BeatmapStatus Status { get; set; }
+    [JsonProperty("user_id")]
+    public int UserId { get; set; }
 }

@@ -5,26 +5,26 @@ namespace OsuScoreStats.OsuEntityToDtoService;
 
 public class OsuEntityToDtoService : IOsuEntityToDtoService
 {
-    public Score ScoreEntityToDto(APIScore apiScore)
+    public Score ScoreEntityToDto(APIScore score)
     {
         var dto = new Score
         {
-            Id = apiScore.Id,
-            Date = apiScore.Date,
-            Combo = apiScore.Combo,
-            TotalScore = apiScore.TotalScore,
-            LegacyTotalScore = apiScore.LegacyTotalScore,
-            ClassicTotalScore = apiScore.ClassicTotalScore,
-            Misses = apiScore.Statistics.CountMiss,
-            BeatmapId = apiScore.BeatmapId,
-            Accuracy = apiScore.Accuracy,
-            PP = apiScore.PP,
-            Grade = apiScore.Grade,
-            Mode = apiScore.Mode,
-            UserId = apiScore.UserId
+            Id = score.Id,
+            Date = score.Date,
+            Combo = score.Combo,
+            TotalScore = score.TotalScore,
+            LegacyTotalScore = score.LegacyTotalScore,
+            ClassicTotalScore = score.ClassicTotalScore,
+            Misses = score.Statistics.CountMiss,
+            BeatmapId = score.BeatmapId,
+            Accuracy = score.Accuracy,
+            PP = score.PP,
+            Grade = score.Grade,
+            Mode = score.Mode,
+            UserId = score.UserId
         };
 
-        foreach (var mod in apiScore.Mods)
+        foreach (var mod in score.Mods)
         {
             var acronym = mod.Acronym;
             if (mod.Settings.TryGetValue("speed_change", out var value)) acronym += $"({value}x)";
@@ -54,20 +54,21 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
         Status = beatmap.Status,
         BPM = beatmap.BPM,
         Mode = beatmap.Mode,
-        DifficultyName = beatmap.DifficultyName
+        DifficultyName = beatmap.DifficultyName,
     };
 
-    public Beatmapset BeatmapsetEntityToDto(APIBeatmapset apiBeatmapset) => new Beatmapset
+    public Beatmapset BeatmapsetEntityToDto(APIBeatmapset beatmapset) => new Beatmapset
     {
-        Id = apiBeatmapset.Id,
-        Artist = apiBeatmapset.Artist,
-        Title = apiBeatmapset.Title,
-        PreviewUrl = apiBeatmapset.PreviewUrl
+        Id = beatmapset.Id,
+        Artist = beatmapset.Artist,
+        Title = beatmapset.Title,
+        Creator = beatmapset.Creator,
+        UserId = beatmapset.UserId,
     };
     
-    public Country CountryEntityToDto(APICountry apiCountry) => new Country
+    public Country CountryEntityToDto(APICountry country) => new Country
     {
-        Id = apiCountry.Code,
-        Name = apiCountry.Name
+        Id = country.Code,
+        Name = country.Name
     };
 }

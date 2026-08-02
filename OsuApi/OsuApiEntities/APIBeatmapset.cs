@@ -14,4 +14,8 @@ public class APIBeatmapset
     public string PreviewUrl { get; set; }
     [JsonProperty("beatmaps")]
     public APIBeatmap[] Beatmaps { get; set; } = Array.Empty<APIBeatmap>();
+    [JsonProperty("creator")]
+    public string Creator { get; set; }
+    [JsonProperty("user_id")]
+    public int UserId { get; set; }
 }

@@ -1,14 +1,67 @@
 using Microsoft.EntityFrameworkCore;
+using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.ScoreFetcher;
 
 namespace OsuScoreStats.Migrations;
 
-public class Backpopulator(IBeatmapRepository beatmapRepo, IApiFetcher apiFetcher): IBackpopulator
+public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
+    IBeatmapRepository beatmapRepo,
+    IUserRepository userRepo, 
+    IApiFetcher apiFetcher, 
+    IDataProcessor dataProcessor): IBackpopulator
 {
     public async Task BackpopulateAsync(CancellationToken token)
     {
         await AddMissingHealthAttributesAsync(token);
+        await AddMissingUserAttributesToBeatmapsAsync(token);
+    }
+
+    private async Task AddMissingUserAttributesToBeatmapsAsync(CancellationToken token)
+    {
+        var beatmapsets = await beatmapsetRepo.GetAll().Where(b => b.UserId == null).ToListAsync(token);
+        var beatmapsetIds = beatmapsets.Select(b => b.Id).ToList();
+        var beatmaps = await beatmapRepo.GetAll().Where(b => beatmapsetIds.Contains(b.BeatmapsetId)).ToListAsync(token);
+        if (beatmaps.Count > 0)
+        {
+            Console.WriteLine("Adding missing user attributes");
+            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
+            var apiBeatmapsets = apiBeatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
+            
+            var userIds = apiBeatmapsets.Select(b => b.UserId).Distinct().ToList();
+            var apiUsers = await apiFetcher.GetUsersAsync(userIds, token);
+            var apiCountries = apiUsers.Select(u => u.Country).DistinctBy(c => c.Code);
+            await dataProcessor.ProcessCountriesAsync(apiCountries, token);
+            await dataProcessor.ProcessUsersAsync(apiUsers, token);
+            
+            var apiUserIds = apiUsers.Select(u => u.Id).ToList();
+            var deletedOrRestrictedUserIds = userIds.Where(id => !apiUserIds.Contains(id)).ToList();
+
+            var deletedOrRestrictedUsers = deletedOrRestrictedUserIds.Select(id => new User
+            {
+                Id = id,
+                Username = apiBeatmapsets.First(b => b.UserId == id).Creator
+            });
+            
+            var existingUsers = await userRepo.GetBulkAsync(deletedOrRestrictedUserIds, token);
+            var existingUserIds = existingUsers.Select(u => u.Id).ToList();
+            var newUsers = deletedOrRestrictedUsers.Where(u => !existingUserIds.Contains(u.Id));
+            userRepo.CreateBulk(newUsers);
+            await userRepo.SaveChangesAsync(token);
+            
+            foreach (var beatmapset in beatmapsets)
+            {
+                var respectiveApiBeatmapset = apiBeatmapsets.FirstOrDefault(b => b.Id == beatmapset.Id);
+                beatmapset.Creator = respectiveApiBeatmapset?.Creator;
+                beatmapset.UserId = respectiveApiBeatmapset?.UserId ?? 0;
+                beatmapsetRepo.Update(beatmapset);
+                if (token.IsCancellationRequested)
+                {
+                    await beatmapsetRepo.SaveChangesAsync(token);
+                }
+            }
+            await beatmapsetRepo.SaveChangesAsync(token);
+        }
     }
     
     private async Task AddMissingHealthAttributesAsync(CancellationToken token)

@@ -38,7 +38,7 @@
     margin : 0 0;
 }
 
-.beatmapset-card h1 a {
+.beatmapset-card h1 a, .mapped-by a {
     color: white;
 }
 
@@ -85,4 +85,10 @@
 
 .sort-thingy:hover {
     cursor: pointer;
+}
+
+.mapped-by {
+    display: flex;
+    gap: 1em;
+    align-items: flex-end;
 }

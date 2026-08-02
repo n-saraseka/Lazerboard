@@ -10,5 +10,6 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
             .Where(b => b.BeatmapsetId == beatmapsetId)
             .OrderBy(b => b.Difficulty)
             .Include(b => b.Beatmapset)
+            .ThenInclude(bs => bs.User)
             .ToListAsync(ct);
 }

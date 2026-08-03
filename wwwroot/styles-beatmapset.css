@@ -92,3 +92,45 @@
     gap: 1em;
     align-items: flex-end;
 }
+
+.beatmap-title {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.beatmap-status {
+    padding: 0.25em 0.5em;
+    border-radius: 1em;
+}
+
+.status-graveyard {
+    background-color: #000000;
+    color: #5c6970;
+}
+
+.status-wip {
+    background-color: #000000;
+    color: #5c6970;
+}
+
+.status-pending {
+    background-color: #ffd966;
+    color: #394246;
+}
+
+.status-ranked, .status-approved {
+    background-color: #b3ff66;
+    color: #394246;
+}
+
+.status-qualified {
+    background-color: #66ccff;
+    color: #394246;
+}
+
+.status-loved {
+    background-color: #ff66ab;
+    color: #394246;
+}

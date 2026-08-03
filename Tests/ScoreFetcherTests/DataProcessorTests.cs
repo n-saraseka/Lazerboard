@@ -214,10 +214,9 @@ public class DataProcessorTests
         };
 
         var dbData = new List<Score>();
-        var groupedData = dbData.GroupBy(s => s.BeatmapId).ToList();
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedData);
+            .ReturnsAsync(dbData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
             .Returns<APIScore>(api => new Score
             {
@@ -269,7 +268,6 @@ public class DataProcessorTests
         };
 
         var dbData = new List<Score>();
-        var groupedData = dbData.GroupBy(s => s.BeatmapId).ToList();
 
         var scoreRanks = new Dictionary<ulong, int>
         {
@@ -279,7 +277,7 @@ public class DataProcessorTests
         };
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedData);
+            .ReturnsAsync(dbData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
             .Returns<APIScore>(api => new Score
             {
@@ -366,7 +364,6 @@ public class DataProcessorTests
                 Mode = Mode.Osu
             }
         };
-        var groupedData = dbData.GroupBy(s => s.BeatmapId).ToList();
 
         var scoreRanks = new Dictionary<ulong, int>
         {
@@ -379,7 +376,7 @@ public class DataProcessorTests
         };
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedData);
+            .ReturnsAsync(dbData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
             .Returns<APIScore>(api => new Score
             {

@@ -21,8 +21,8 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .OrderBy(s => s.Rank)
             .ToListAsync(cancellationToken);
 
-    public Task<List<IGrouping<int, Score>>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
-        Set.Where(s => beatmapIds.Contains(s.BeatmapId)).GroupBy(s => s.BeatmapId).ToListAsync(cancellationToken);
+    public Task<List<Score>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
+        Set.Where(s => beatmapIds.Contains(s.BeatmapId)).ToListAsync(cancellationToken);
 
     public IQueryable<Score> GetAllWithBeatmapAndUserData() => GetAll()
         .AsSplitQuery()

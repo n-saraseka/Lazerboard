@@ -1,0 +1,144 @@
+body {
+    font-family: "Cascadia Mono", monospace;
+    background-color: rgb(35, 35, 35);
+    color: white;
+}
+
+.scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-column-gap: 1em;
+    grid-row-gap: 1em;
+    font-size: 0.8em;
+}
+
+.score {
+    display: flex;
+    background-blend-mode: darken;
+    background-size: cover;
+    justify-content: space-between;
+    padding: 1em;
+    border-radius: 1em;
+    color: white;
+    text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
+}
+
+.score-total {
+    display: flex;
+    gap: 0.25em;
+    flex-wrap: wrap;
+}
+
+.score-secondary {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8em;
+}
+
+.score .mod {
+    font-weight: bold;
+    font-size: 1.25em;
+}
+
+.score-row-mods .mod {
+    font-weight: 400;
+}
+
+.score-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+
+.score-song-name {
+    font-size: 1.3em;
+}
+
+
+.scores-table tr td a, .score a {
+    color: white;
+}
+
+.score-ranked-score {
+    font-weight: bold;
+}
+
+.score-difficulty-name:hover {
+    text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
+}
+
+.score-right-column {
+    text-align: right;
+    align-items: flex-end;
+}
+
+.score-player-img {
+    width: 3em;
+    height: 3em;
+    border-radius: 1em;
+    box-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
+}
+
+.score-player-img:hover {
+    box-shadow: 0 0 1em rgba(255, 255, 255, 0.5);
+}
+
+.mod-difficulty-decrease {
+    color: rgb(60, 180, 60);
+}
+
+.mod-difficulty-increase {
+    color: rgb(180, 60, 60);
+}
+
+.mod-conversion {
+    color: rgb(120, 60, 180);
+}
+
+.mod-automation {
+    color: rgb(150, 150, 220);
+}
+
+.mod-fun {
+    color: rgb(200, 100, 140);
+}
+
+.mod-system {
+    color: rgb(255, 125, 60);
+}
+
+.score-acc-misses {
+    display: flex;
+    gap: 1em;
+}
+
+.score-misses {
+    color: red;
+}
+
+.scores-table {
+    font-weight: 350;
+    border-collapse: collapse;
+}
+
+.scores-table thead {
+    background-color: rgb(45, 45, 45);
+}
+
+.scores-table td {
+    padding: 0.1em 0.3em 0.1em 0.3em;
+}
+
+.score-row-map-image img {
+    height: 1em;
+    object-fit: cover;
+}
+
+.scores-table tbody tr:nth-child(odd) {
+    background-color: rgb(35, 35, 35);
+}
+
+.scores-table tbody tr:nth-child(even) {
+    background-color: rgb(40, 40, 40);
+}

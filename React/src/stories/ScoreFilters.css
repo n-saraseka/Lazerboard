@@ -1,0 +1,9 @@
+body {
+    font-family: "Cascadia Mono", monospace;
+}
+
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+}

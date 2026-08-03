@@ -250,7 +250,7 @@ body {
     -webkit-mask-image: url("images/osu-taiko.svg");
 }
 
-.mode-catch {
+.mode-fruits {
     mask-image: url("images/osu-catch.svg");
     -webkit-mask-image: url("images/osu-catch.svg");
 }

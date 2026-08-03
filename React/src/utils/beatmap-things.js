@@ -20,7 +20,7 @@ export function modeEnumToString(mode) {
         case 1:
             return 'taiko';
         case 2:
-            return 'catch';
+            return 'fruits';
         case 3:
             return 'mania';
     }

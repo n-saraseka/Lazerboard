@@ -4,6 +4,7 @@ import BeatmapScores from "../components/BeatmapScores.jsx";
 import ModeSelector from "../components/ModeSelector.jsx";
 import {useState} from "react";
 import MappedBy from "./MappedBy.jsx";
+import {modeEnumToString} from "../utils/beatmap-things.js";
 
 function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
     const allModes = [0, 1, 2, 3];
@@ -50,7 +51,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
             <div className="beatmapset-card" style={
                 {background: `url("https://assets.ppy.sh/beatmaps/${beatmapset.id}/covers/cover@2x.jpg") center, rgba(0, 0, 0, 0.7)`}
             }>
-                <h1><a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}`}>{`${beatmapset.artist} - ${beatmapset.title}`}</a></h1>
+                <h1><a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}#${modeEnumToString(selectedMode)}`}>{`${beatmapset.artist} - ${beatmapset.title}`}</a></h1>
                 <MappedBy user={beatmapset.user}/>
                 <div className="difficulties">
                     {beatmaps.map((beatmap, index) => (
@@ -62,7 +63,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
                                         key={index}/>))
                     }
                 </div>
-                <BeatmapCard beatmap={selectedBeatmap}/>
+                <BeatmapCard beatmap={selectedBeatmap} beatmapset={beatmapset} selectedMode={selectedMode}/>
             </div>
             <div className="mode-selection">
                 {allModes.map((mode, index) => (

@@ -1,4 +1,5 @@
 using OsuScoreStats.Calculations;
+using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
@@ -13,9 +14,10 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
         using var scope = serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-        var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var utils = scope.ServiceProvider.GetRequiredService<ScoreFetchingUtils>();
+        
         _apiInterval = double.Parse(config["OsuApiInterval"]);
             
         while (!stoppingToken.IsCancellationRequested)
@@ -27,7 +29,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             
             var beatmapsets = beatmapsetsResponse.Beatmapsets;
-            await dataProcessor.ProcessBeatmapsetsAsync(beatmapsets, stoppingToken);
+            await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
             
             var beatmaps = new List<APIBeatmap>();
             foreach (var beatmapset in beatmapsets)
@@ -42,21 +44,8 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
                 await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             }
             
-            var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
-            var significantScores = scores.Where(s => checkResults[s.Id]).ToList();
-            
-            // Calculate PP for scores that don't have it.
-            var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
-            foreach (var score in scoresWithoutPp)
-            {
-                await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
-            }
-            
-            var users = significantScores.Select(s => s.User).Distinct();
-            var countries = users.Select(u => u.Country).Distinct();
-            await dataProcessor.ProcessCountriesAsync(countries, stoppingToken);
-            await dataProcessor.ProcessUsersAsync(users, stoppingToken);
-            
+            var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }
     }

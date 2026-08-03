@@ -12,7 +12,7 @@ public class HomeController(IScoreRepository scoreRepository) : Controller
         var scoreQuery = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.Date >= DateTime.Today.ToUniversalTime());
         var scoresCount =  await scoreQuery.CountAsync(cancellationToken);
         var scores = await scoreQuery
-            .OrderByDescending(s => s.Date)
+            .OrderByDescending(s => s.PP)
             .Take(25)
             .ToListAsync(cancellationToken);
         var pages = (int)Math.Ceiling(scoresCount / 25d);

@@ -1,0 +1,136 @@
+.beatmapset {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    justify-content: center;
+}
+
+.beatmapset-modes {
+    display: flex;
+    gap: 1em;
+}
+
+.mode-selection {
+    display: flex;
+    flex: 1 1;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: flex-start;
+}
+
+.mode-selection .mode-icon {
+    width: 3em;
+    height: 3em;
+}
+
+.beatmapset-card {
+    display: flex;
+    flex: 10 1;
+    flex-direction: column;
+    gap: 1em;
+    padding: 2em;
+    background-blend-mode: darken;
+    background-size: cover;
+    border-radius: 2em;
+}
+
+.beatmapset-card h1 {
+    margin : 0 0;
+}
+
+.beatmapset-card h1 a, .mapped-by a {
+    color: white;
+}
+
+.difficulties {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+
+.beatmap-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    align-items: flex-start;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: auto;
+    grid-column-gap: 1em;
+}
+
+.map-name {
+    color: white;
+}
+
+.beatmap-stat {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+
+.stat-bar {
+    display: flex;
+    gap: 1em;
+}
+
+.difficulty-bar {
+    height: 1em;
+    width: 6em;
+    border-radius: 1em;
+}
+
+.sort-thingy:hover {
+    cursor: pointer;
+}
+
+.mapped-by {
+    display: flex;
+    gap: 1em;
+    align-items: flex-end;
+}
+
+.beatmap-title {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.beatmap-status {
+    padding: 0.25em 0.5em;
+    border-radius: 1em;
+}
+
+.status-graveyard {
+    background-color: #000000;
+    color: #5c6970;
+}
+
+.status-wip {
+    background-color: #000000;
+    color: #5c6970;
+}
+
+.status-pending {
+    background-color: #ffd966;
+    color: #394246;
+}
+
+.status-ranked, .status-approved {
+    background-color: #b3ff66;
+    color: #394246;
+}
+
+.status-qualified {
+    background-color: #66ccff;
+    color: #394246;
+}
+
+.status-loved {
+    background-color: #ff66ab;
+    color: #394246;
+}

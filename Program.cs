@@ -6,6 +6,7 @@ using OsuScoreStats.ScoreFetcher;
 using OsuScoreStats.Api;
 using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
+using OsuScoreStats.Migrations;
 using OsuScoreStats.OsuApi;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuEntityToDtoService;
@@ -33,6 +34,7 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
+builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
 builder.Services.AddScoped<OsuApiService>();
@@ -41,6 +43,7 @@ builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<ICacheStore, CacheStore>();
+builder.Services.AddScoped<ScoreFetchingUtils>();
 
 // Background services
 builder.Services.AddHostedService<ScoreLeaderboardService>();
@@ -64,6 +67,9 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ScoreDataContext>();
     await db.Database.MigrateAsync();
+    var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
+    var cancellationToken = CancellationToken.None;
+    await backpopulator.BackpopulateAsync(cancellationToken);
 }
 
 if (!Directory.Exists(builder.Configuration["CacheFolder"]))
@@ -151,6 +157,13 @@ app.MapGet("/api/users/{id:int}/scores/count", async (
         CancellationToken ct) => await userMethods.GetUserScoresCountAsync(id, mode, ct))
     .WithName("GetUserScoresCount");
 
+app.MapGet("/api/beatmaps/{id:int}/scores", async (
+        BeatmapMethods beatmapMethods,
+        int id,
+        Mode mode,
+        CancellationToken ct) => await beatmapMethods.GetBeatmapScoresAsync(id, mode, ct))
+    .WithName("GetBeatmapScores");
+
 app.MapControllerRoute(
     name: "user",
     pattern: "user/{id}",
@@ -160,6 +173,16 @@ app.MapControllerRoute(
     name: "index",
     pattern: "/",
     defaults: new { controller = "Home", action = "Index" });
+
+app.MapControllerRoute(
+    name: "beatmapset",
+    pattern: "/beatmapsets/{id:int}",
+    defaults: new { controller = "Beatmapset", action = "BeatmapsetPage"});
+
+app.MapControllerRoute(
+    name: "beatmap",
+    pattern: "/b/{id:int}",
+    defaults: new { controller = "Beatmapset", action = "BeatmapPage"});
 
 app.MapControllers();
 app.Run();

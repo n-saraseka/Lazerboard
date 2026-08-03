@@ -1,0 +1,10 @@
+.difficulty-icon {
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+}
+
+.difficulty-icon.difficulty-active, .difficulty-icon:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+}

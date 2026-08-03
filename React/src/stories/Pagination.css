@@ -1,0 +1,28 @@
+body {
+    font-family: "Cascadia Mono", monospace;
+    background-color: rgb(35, 35, 35);
+    color: white;
+}
+
+.pages {
+    display: flex;
+    list-style-type: none;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    margin: 0 auto;
+}
+
+.page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3em;
+    height: 3em;
+    border-radius: 1em;
+    cursor: pointer;
+    background-color: rgb(30, 30, 30);
+}
+
+.page.active, .page-navigation:hover {
+    background-color: rgb(55, 55, 55);
+}

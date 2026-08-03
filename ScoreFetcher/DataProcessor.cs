@@ -92,6 +92,23 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     }
     
     /// <summary>
+    /// Check for existing user data for users without CountryCode's and save new user DTOs to the database.
+    /// </summary>
+    /// <param name="users">The <see cref="User"/>s</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    public async Task ProcessRemovedUsersAsync(IEnumerable<User> users, CancellationToken ct)
+    {
+        var existingUsers = await userRepository.GetBulkAsync(users.Select(u => u.Id), ct);
+        var newUsers = users
+            .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))
+            .DistinctBy(u => u.Id);
+        
+        userRepository.CreateBulk(newUsers);
+        await userRepository.SaveChangesAsync(ct);
+        Console.WriteLine($"Saved {newUsers.Count()} new users to the DB.");
+    }
+    
+    /// <summary>
     /// Check for existing score data and save new score DTOs, assigning a rank to each one.
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
@@ -124,6 +141,16 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             else
             {
                 var beatmapScores = matchingGroup.ToList();
+
+                foreach (var score in groupScores.ToList())
+                {
+                    var matchingScore = beatmapScores.FirstOrDefault(b => b.UserId == score.UserId);
+                    if (matchingScore != null)
+                    {
+                        matchingScore = score;
+                        groupScores.Remove(score);
+                    }
+                }
                 
                 var newScores = 
                     groupScores.Where(b => !beatmapScores

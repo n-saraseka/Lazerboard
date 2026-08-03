@@ -61,9 +61,13 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("text")
                         .HasColumnName("difficulty_name");
 
-                    b.Property<float>("DrainLength")
-                        .HasColumnType("real")
+                    b.Property<int>("DrainLength")
+                        .HasColumnType("integer")
                         .HasColumnName("drain_length");
+
+                    b.Property<float?>("Health")
+                        .HasColumnType("real")
+                        .HasColumnName("health");
 
                     b.Property<Mode>("Mode")
                         .HasColumnType("mode")
@@ -100,18 +104,25 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("text")
                         .HasColumnName("artist");
 
-                    b.Property<string>("PreviewUrl")
+                    b.Property<string>("Creator")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("preview_url");
+                        .HasColumnName("creator");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("title");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id")
                         .HasName("pk_beatmapsets");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_beatmapsets_user_id");
 
                     b.ToTable("beatmapsets", (string)null);
                 });
@@ -223,7 +234,6 @@ namespace OsuScoreStats.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CountryCode")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("country_code");
 
@@ -253,6 +263,16 @@ namespace OsuScoreStats.Migrations
                     b.Navigation("Beatmapset");
                 });
 
+            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmapset", b =>
+                {
+                    b.HasOne("OsuScoreStats.DbService.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("fk_beatmapsets_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("OsuScoreStats.DbService.Entities.Score", b =>
                 {
                     b.HasOne("OsuScoreStats.DbService.Entities.Beatmap", "Beatmap")
@@ -279,8 +299,6 @@ namespace OsuScoreStats.Migrations
                     b.HasOne("OsuScoreStats.DbService.Entities.Country", "Country")
                         .WithMany()
                         .HasForeignKey("CountryCode")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_users_countries_country_code");
 
                     b.Navigation("Country");

@@ -103,6 +103,7 @@ body {
 
 .score-song-name {
     font-size: 1.3em;
+    color: white;
 }
 
 
@@ -191,4 +192,79 @@ body {
 
 .scores-table tbody tr:nth-child(even) {
     background-color: rgb(40, 40, 40);
+}
+
+.score-row-grade {
+    font-weight: bold;
+}
+
+.grade-f {
+    color: rgb(180, 60, 60);
+}
+
+.grade-d {
+    color: rgb(255, 90, 90);
+}
+
+.grade-c {
+    color: rgb(255, 142, 93);
+}
+
+.grade-b {
+    color: rgb(235, 189, 72);
+}
+
+.grade-a {
+    color: rgb(136, 218, 32);
+}
+
+.grade-s, .grade-x {
+    color: rgb(224, 200, 100);
+}
+
+.grade-sh, .grade-xh {
+    color: rgb(217, 241, 248);
+}
+
+.score-row-country img {
+    height: 1em;
+    width: auto;
+}
+
+.mode-icon {
+    height: 2em;
+    width: 2em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.mode-osu {
+    mask-image: url("images/osu-std.svg");
+    -webkit-mask-image: url("images/osu-std.svg");
+}
+
+.mode-taiko {
+    mask-image: url("images/osu-taiko.svg");
+    -webkit-mask-image: url("images/osu-taiko.svg");
+}
+
+.mode-catch {
+    mask-image: url("images/osu-catch.svg");
+    -webkit-mask-image: url("images/osu-catch.svg");
+}
+
+.mode-mania {
+    mask-image: url("images/osu-mania.svg");
+    -webkit-mask-image: url("images/osu-mania.svg");
+}
+
+.mode-icon-wrapper.active, .mode-icon-wrapper.enabled:hover {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    cursor: pointer;
+}
+
+.mode-icon-wrapper.disabled {
+    opacity: 0.6;
 }

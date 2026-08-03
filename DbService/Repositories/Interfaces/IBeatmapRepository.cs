@@ -4,5 +4,5 @@ namespace OsuScoreStats.DbService.Repositories.Interfaces;
 
 public interface IBeatmapRepository : IRepository<Beatmap, int>
 {
-    // Only exists to keep things the same as other repositories for now.
+    Task<List<Beatmap>> GetByBeatmapsetIdAsync(int beatmapsetId, CancellationToken ct);
 }

@@ -11,5 +11,6 @@ public interface IDataProcessor
     Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IEnumerable<int> ids, CancellationToken ct);
     Task ProcessCountriesAsync(IEnumerable<APICountry> countries, CancellationToken ct);
     Task ProcessUsersAsync(IEnumerable<APIUser> users, CancellationToken ct);
+    Task ProcessRemovedUsersAsync(IEnumerable<User> users, CancellationToken ct);
     Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct);
 }

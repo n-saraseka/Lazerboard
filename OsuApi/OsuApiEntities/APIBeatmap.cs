@@ -26,7 +26,11 @@ public class APIBeatmap
     [JsonProperty("accuracy")]
     public float OverallDifficulty { get; set; }
     [JsonProperty("drain")]
-    public float DrainLength { get; set; }
+    public float Health { get; set; }
+    [JsonProperty("hit_length")]
+    public int DrainLength { get; set; }
     [JsonProperty("status")]
     public BeatmapStatus Status { get; set; }
+    [JsonProperty("user_id")]
+    public int UserId { get; set; }
 }

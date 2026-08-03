@@ -29,9 +29,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Migrations\" />
-      <Folder Include="react\public\" />
-      <Folder Include="react\src\assets\" />
+      <Folder Include="React\public\" />
+      <Folder Include="React\src\assets\" />
       <Folder Include="wwwroot\scripts\" />
     </ItemGroup>
 

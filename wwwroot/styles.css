@@ -89,6 +89,11 @@ body {
     font-size: 1.25em;
 }
 
+.score-row-mode .mode-icon {
+    width: 1em;
+    height: 1em;
+}
+
 .score-row-mods .mod {
     font-weight: 400;
 }
@@ -245,7 +250,7 @@ body {
 }
 
 .color-taiko {
-    background-color: rgb(220, 200, 60);
+    background-color: rgb(200, 180, 60);
 }
 
 .color-fruits {

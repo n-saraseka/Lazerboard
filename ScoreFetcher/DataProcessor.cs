@@ -144,7 +144,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 foreach (var score in groupScores.ToList())
                 {
-                    var matchingScore = beatmapScores.FirstOrDefault(b => b.Id == score.Id);
+                    var matchingScore = beatmapScores.FirstOrDefault(b => b.UserId == score.UserId);
                     if (matchingScore != null)
                     {
                         matchingScore = score;

@@ -16,8 +16,10 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     public async Task<bool> CheckIfSignificantAsync(APIScore score, CancellationToken cancellationToken)
     {
         var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
-        if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) return false;
-        return !CheckIfBetterAlreadyExists(score, beatmapScores);
+        var scoresForMode = beatmapScores.Where(s => s.Mode == score.Mode).ToList();
+        if (scoresForMode.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) 
+            return false;
+        return !CheckIfBetterAlreadyExists(score, scoresForMode);
     }
     
     /// <summary>
@@ -29,15 +31,18 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<APIScore> scores, CancellationToken cancellationToken)
     {
         var dictionary = new Dictionary<ulong, bool>();
-        var groupedByBeatmapId = scores.GroupBy(s => s.BeatmapId);
-        var beatmapIds = groupedByBeatmapId.Select(s => s.Key).Distinct();
+        var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
         
-        var allBeatmapScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
+        var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
+        var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList(); 
+        
         foreach (var group in groupedByBeatmapId)
         {
             var scoresInGroup = group.ToList();
             
-            var respectiveGroup = allBeatmapScores.FirstOrDefault(g => g.Key == group.Key);
+            var respectiveGroup = groupedExistingScores.FirstOrDefault(g => 
+                g.Key.Mode == group.Key.Mode && g.Key.BeatmapId == group.Key.BeatmapId);
             if (respectiveGroup != null)
             {
                 var beatmapScores = respectiveGroup.ToList();

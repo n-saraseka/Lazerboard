@@ -1,5 +1,6 @@
 using OsuScoreStats.Calculations;
 using OsuScoreStats.DbService.Entities;
+using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
@@ -39,8 +40,16 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             var scores = new List<APIScore>();
             foreach (var beatmap in beatmaps)
             {
-                var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, beatmap.Mode, 0, stoppingToken);
-                scores.AddRange(beatmapScores.Scores);
+                var beatmapScores = new List<BeatmapScores>();
+                
+                foreach (var val in Enum.GetValues<Mode>())
+                {
+                    if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
+                    beatmapScores.Add(await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken));
+                    await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+                }
+                
+                scores.AddRange(beatmapScores.SelectMany(bs => bs.Scores));
                 await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             }
             

@@ -1,11 +1,13 @@
-import { getDifficultyColor } from "../utils/beatmap-things.js";
+import {getDifficultyColor, modeEnumToString} from "../utils/beatmap-things.js";
 import { timeSpanToString } from "../utils/datetime-things.js";
 import BeatmapStatusLabel from "./BeatmapStatusLabel.jsx";
 
-function BeatmapCard({beatmap}) {
+function BeatmapCard({beatmap, beatmapset, selectedMode}) {
     return (<div className="beatmap-card" >
         <div className="beatmap-title">
-            <a href={`https://osu.ppy.sh/b/${beatmap.id}`} className="map-name"><strong>{`[${beatmap.difficultyName}]`}</strong></a>
+            <a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}#${modeEnumToString(selectedMode)}/${beatmap.id}`} className="map-name">
+                <strong>{`[${beatmap.difficultyName}]`}</strong>
+            </a>
             <BeatmapStatusLabel status={beatmap.status}/>
         </div>
         <div className="stats-grid">

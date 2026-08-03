@@ -3,6 +3,7 @@ using NUnit.Framework;
 using OsuScoreStats.Calculations;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
+using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 using OsuScoreStats.ScoreFetcher;
 
@@ -31,6 +32,7 @@ public class ScoreProcessorTests
         {
             Id = 51,
             BeatmapId = 1,
+            Mode = Mode.Osu,
             TotalScore = 10000,
             UserId = 51
         };
@@ -38,10 +40,11 @@ public class ScoreProcessorTests
         var scores = new List<Score>();
         for (int i = 0; i < 50; i++)
         {
-            scores.Add(new Score()
+            scores.Add(new Score
             {
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
+                Mode = Mode.Osu,
                 TotalScore = 1000000 - 1000 * i,
                 UserId = i + 1
             });
@@ -63,6 +66,7 @@ public class ScoreProcessorTests
             Id = 50,
             BeatmapId = 1,
             TotalScore = 10000,
+            Mode = Mode.Osu,
             UserId = 50
         };
         
@@ -74,6 +78,7 @@ public class ScoreProcessorTests
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
                 TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
                 UserId = i + 1
             });
         }
@@ -94,6 +99,7 @@ public class ScoreProcessorTests
             Id = 51,
             BeatmapId = 1,
             TotalScore = 970000,
+            Mode = Mode.Osu,
             UserId = 50
         };
         
@@ -105,6 +111,7 @@ public class ScoreProcessorTests
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
                 TotalScore = 1000 * i,
+                Mode = Mode.Osu,
                 UserId = i + 1
             });
         }
@@ -125,6 +132,7 @@ public class ScoreProcessorTests
             Id = 50,
             BeatmapId = 1,
             TotalScore = 10000,
+            Mode = Mode.Osu,
             UserId = 50
         };
         
@@ -143,25 +151,28 @@ public class ScoreProcessorTests
         // Arrange
         var score = new List<APIScore>
         {
-            new APIScore()
+            new APIScore
             {
                 Id = 51,
                 BeatmapId = 1,
                 TotalScore = 10000,
+                Mode = Mode.Osu,
                 UserId = 51
             },
-            new APIScore()
+            new APIScore
             {
                 Id = 52,
                 BeatmapId = 1,
                 TotalScore = 990000,
+                Mode = Mode.Osu,
                 UserId = 52
             },
-            new APIScore()
+            new APIScore
             {
                 Id = 53,
                 BeatmapId = 1,
                 TotalScore = 1,
+                Mode = Mode.Osu,
                 UserId = 1
             }
         };
@@ -169,19 +180,18 @@ public class ScoreProcessorTests
         var scores = new List<Score>();
         for (int i = 0; i < 50; i++)
         {
-            scores.Add(new Score()
+            scores.Add(new Score
             {
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
                 TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
                 UserId = i + 1
             });
         }
-        
-        var groupedScores = scores.GroupBy(s => s.BeatmapId).ToList();
 
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedScores);
+            .ReturnsAsync(scores);
         
         // Act
         var dict = await _scoreProcessor.CheckIfSignificantBulkAsync(score, CancellationToken.None);
@@ -202,35 +212,36 @@ public class ScoreProcessorTests
         // Arrange
         var score = new List<APIScore>
         {
-            new APIScore()
+            new APIScore
             {
                 Id = 51,
                 BeatmapId = 1,
                 TotalScore = 10000,
+                Mode = Mode.Osu,
                 UserId = 51
             },
-            new APIScore()
+            new APIScore
             {
                 Id = 52,
                 BeatmapId = 1,
                 TotalScore = 990000,
+                Mode = Mode.Osu,
                 UserId = 52
             },
-            new APIScore()
+            new APIScore
             {
                 Id = 53,
                 BeatmapId = 1,
                 TotalScore = 1,
+                Mode = Mode.Osu,
                 UserId = 1
             }
         };
         
         var scores = new List<Score>();
-        
-        var groupedScores = scores.GroupBy(s => s.BeatmapId).ToList();
 
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedScores);
+            .ReturnsAsync(scores);
         
         // Act
         var dict = await _scoreProcessor.CheckIfSignificantBulkAsync(score, CancellationToken.None);
@@ -256,6 +267,7 @@ public class ScoreProcessorTests
             BeatmapId = 1,
             TotalScore = 10000,
             UserId = 11,
+            Mode = Mode.Osu,
             PP = 1
         };
         
@@ -275,6 +287,7 @@ public class ScoreProcessorTests
             Id = 1,
             BeatmapId = 1,
             TotalScore = 10000,
+            Mode = Mode.Osu,
             UserId = 11,
         };
 
@@ -298,6 +311,7 @@ public class ScoreProcessorTests
             Id = 50,
             BeatmapId = 1,
             TotalScore = 10000,
+            Mode = Mode.Osu,
             UserId = 50
         };
         
@@ -329,6 +343,7 @@ public class ScoreProcessorTests
             Id = 50,
             BeatmapId = 1,
             TotalScore = 10000,
+            Mode = Mode.Osu,
             UserId = 1
         };
         
@@ -340,6 +355,7 @@ public class ScoreProcessorTests
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
                 TotalScore = 1000 * i,
+                Mode = Mode.Osu,
                 UserId = i + 1
             });
         }
@@ -360,6 +376,7 @@ public class ScoreProcessorTests
             Id = 50,
             BeatmapId = 1,
             TotalScore = 10000,
+            Mode = Mode.Osu,
             UserId = 1
         };
         
@@ -371,6 +388,7 @@ public class ScoreProcessorTests
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
                 TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
                 UserId = i + 1
             });
         }

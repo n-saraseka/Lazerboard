@@ -2,6 +2,7 @@ using Moq;
 using NUnit.Framework;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
+using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 using OsuScoreStats.OsuEntityToDtoService;
 using OsuScoreStats.ScoreFetcher;
@@ -190,6 +191,7 @@ public class DataProcessorTests
             {
                 Id = 1,
                 BeatmapId = 1,
+                UserId = 1,
                 TotalScore = 100,
                 Date = new DateTime(2020, 1, 1)
             },
@@ -197,6 +199,7 @@ public class DataProcessorTests
             {
                 Id = 1,
                 BeatmapId = 1,
+                UserId = 2,
                 TotalScore = 100,
                 Date = new DateTime(2020, 1, 1)
             },
@@ -204,16 +207,16 @@ public class DataProcessorTests
             {
                 Id = 2,
                 BeatmapId = 1,
+                UserId = 3,
                 TotalScore = 50,
                 Date = new DateTime(2020, 3, 1)
             }
         };
 
         var dbData = new List<Score>();
-        var groupedData = dbData.GroupBy(s => s.BeatmapId).ToList();
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedData);
+            .ReturnsAsync(dbData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
             .Returns<APIScore>(api => new Score
             {
@@ -242,6 +245,7 @@ public class DataProcessorTests
             {
                 Id = 1,
                 BeatmapId = 1,
+                UserId = 1,
                 TotalScore = 100,
                 Date = new DateTime(2020, 1, 1)
             },
@@ -249,6 +253,7 @@ public class DataProcessorTests
             {
                 Id = 2,
                 BeatmapId = 1,
+                UserId = 2,
                 TotalScore = 100,
                 Date = new DateTime(2020, 2, 1)
             },
@@ -256,13 +261,13 @@ public class DataProcessorTests
             {
                 Id = 3,
                 BeatmapId = 1,
+                UserId = 3,
                 TotalScore = 50,
                 Date = new DateTime(2020, 3, 1)
             }
         };
 
         var dbData = new List<Score>();
-        var groupedData = dbData.GroupBy(s => s.BeatmapId).ToList();
 
         var scoreRanks = new Dictionary<ulong, int>
         {
@@ -272,7 +277,7 @@ public class DataProcessorTests
         };
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedData);
+            .ReturnsAsync(dbData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
             .Returns<APIScore>(api => new Score
             {
@@ -301,22 +306,28 @@ public class DataProcessorTests
             {
                 Id = 4,
                 BeatmapId = 1,
+                UserId = 1,
                 TotalScore = 200,
-                Date = new DateTime(2020, 1, 1)
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
             },
             new APIScore
             {
                 Id = 5,
                 BeatmapId = 1,
+                UserId = 2,
                 TotalScore = 200,
-                Date = new DateTime(2020, 2, 1)
+                Date = new DateTime(2020, 2, 1),
+                Mode = Mode.Osu
             },
             new APIScore
             {
                 Id = 6,
                 BeatmapId = 1,
+                UserId = 3,
                 TotalScore = 150,
-                Date = new DateTime(2020, 3, 1)
+                Date = new DateTime(2020, 3, 1),
+                Mode = Mode.Osu
             }
         };
 
@@ -326,28 +337,33 @@ public class DataProcessorTests
             {
                 Id = 1,
                 BeatmapId = 1,
+                UserId = 4,
                 TotalScore = 100,
                 Date = new DateTime(2020, 3, 1),
-                Rank = 1
+                Rank = 1,
+                Mode = Mode.Osu
             },
             new Score
             {
                 Id = 2,
                 BeatmapId = 1,
+                UserId = 5,
                 TotalScore = 100,
                 Date = new DateTime(2020, 4, 1),
-                Rank = 2
+                Rank = 2,
+                Mode = Mode.Osu
             },
             new Score
             {
                 Id = 3,
                 BeatmapId = 1,
+                UserId = 6,
                 TotalScore = 50,
                 Date = new DateTime(2020, 5, 1),
-                Rank = 3
+                Rank = 3,
+                Mode = Mode.Osu
             }
         };
-        var groupedData = dbData.GroupBy(s => s.BeatmapId).ToList();
 
         var scoreRanks = new Dictionary<ulong, int>
         {
@@ -360,7 +376,7 @@ public class DataProcessorTests
         };
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-            .ReturnsAsync(groupedData);
+            .ReturnsAsync(dbData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
             .Returns<APIScore>(api => new Score
             {

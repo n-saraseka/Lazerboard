@@ -116,22 +116,23 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
     {
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
-        var groupedByBeatmapId = scores.GroupBy(s => s.BeatmapId);
-        var existingGroupedScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
+        var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
+        var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
+        var existingGroupedScores = existingScores.SelectMany(s => s).GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
 
         var updatedCount = 0;
         var createdCount = 0;
         
-        foreach (var group in groupedByBeatmapId)
+        foreach (var group in groupedScores)
         {
-            var beatmapId = group.Key;
+            var key = group.Key;
             var groupScores = group
                 .OrderByDescending(b => b.TotalScore)
                 .ThenBy(b => b.Date)
                 .Select(entityToDtoService.ScoreEntityToDto)
                 .DistinctBy(s => s.Id)
                 .ToList();
-            var matchingGroup = existingGroupedScores.FirstOrDefault(g => g.Key == beatmapId);
+            var matchingGroup = existingGroupedScores.FirstOrDefault(g => g.Key == key);
             if (matchingGroup == null)
             {
                 foreach (var score in groupScores) score.Rank = groupScores.IndexOf(score) + 1;

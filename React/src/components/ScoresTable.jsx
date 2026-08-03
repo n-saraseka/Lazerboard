@@ -5,8 +5,8 @@ function ScoresTable({scores, usingStandardized}) {
         <thead>
         <tr>
             <td>Mode</td>
-            <td colSpan="2">Player</td>
             <td>Rank</td>
+            <td colSpan="2">Player</td>
             <td>PP</td>
             <td>Mods</td>
             <td>Score</td>

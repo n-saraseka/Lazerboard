@@ -132,7 +132,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 .Select(entityToDtoService.ScoreEntityToDto)
                 .DistinctBy(s => s.Id)
                 .ToList();
-            var matchingGroup = existingGroupedScores.FirstOrDefault(g => g.Key == key);
+            var matchingGroup = existingGroupedScores.FirstOrDefault(g => 
+                g.Key.Mode == key.Mode && g.Key.BeatmapId == key.BeatmapId);
             if (matchingGroup == null)
             {
                 foreach (var score in groupScores) score.Rank = groupScores.IndexOf(score) + 1;

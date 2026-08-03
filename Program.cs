@@ -43,6 +43,7 @@ builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<ICacheStore, CacheStore>();
+builder.Services.AddScoped<ScoreFetchingUtils>();
 
 // Background services
 builder.Services.AddHostedService<ScoreLeaderboardService>();

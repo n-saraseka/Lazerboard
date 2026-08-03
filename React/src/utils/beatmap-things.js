@@ -1,16 +1,16 @@
-import * as d3 from 'd3';
-
-// From osu-web, see: https://github.com/ppy/osu-web/blob/master/resources/js/utils/beatmap-helper.ts#L22
-const difficultyColorSpectrum = d3.scaleLinear()
-    .domain([0.1, 1.25, 2, 2.5, 3.3, 4.2, 4.9, 5.8, 6.7, 7.7, 9])
-    .clamp(true)
-    .range(['#4290FB', '#4FC0FF', '#4FFFD5', '#7CFF4F', '#F6F05C', '#FF8068', '#FF4E6F', '#C645B8', '#6563DE', '#18158E', '#000000'])
-    .interpolate(d3.interpolateRgb.gamma(2.2));
-
 export function getDifficultyColor(difficulty) {
     if (difficulty < 0.1) return '#AAAAAA';
+    if (difficulty < 1.25) return '#4290FB';
+    if (difficulty < 2) return '#4FC0FF';
+    if (difficulty < 2.5) return '#4FFFD5';
+    if (difficulty < 3.3) return '#7CFF4F';
+    if (difficulty < 4.2) return '#F6F05C';
+    if (difficulty < 5) return '#FF8068';
+    if (difficulty < 5.75) return '#FF4E6F';
+    if (difficulty < 6.5) return '#C645B8';
+    if (difficulty < 7.5) return '#6563DE';
+    if (difficulty < 9) return '#18158E';
     if (difficulty >= 9) return '#000000';
-    return difficultyColorSpectrum(difficulty);
 }
 
 export function modeEnumToString(mode) {

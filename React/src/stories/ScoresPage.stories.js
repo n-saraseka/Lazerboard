@@ -1,5 +1,4 @@
 import ScoresPage from '../components/ScoresPage';
-import { http, HttpResponse } from 'msw';
 
 import './ScoreCard.css';
 

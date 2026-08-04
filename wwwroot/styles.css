@@ -4,6 +4,12 @@ body {
     color: white;
 }
 
+.component-container {
+    background-color: rgb(30, 30, 30);
+    padding: 1em;
+    border-radius: 1em;
+}
+
 .pages {
     display: flex;
     list-style-type: none;
@@ -48,10 +54,13 @@ body {
     gap: 1em;
 }
 
+.component-container:has(.options) {
+    align-self: center;
+}
+
 .options {
     border-collapse: separate;
     border-spacing: 0 1em;
-    align-self: center;
 }
 
 .filter-container {

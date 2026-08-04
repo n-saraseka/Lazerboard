@@ -26,12 +26,16 @@ function UserPage({user, scores, count, pages}) {
 
     let dateRangeString = '';
     if (filters.dateStart !== '' || filters.dateEnd !== '') {
-        dateRangeString = 'from ';
+        dateRangeString = ' from ';
         const dateStrings = [];
-        [filters.dateStart, filters.dateEnd].forEach((dateFilter) => {
-            dateStrings.push((dateFilter === '' || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
-        });
-        dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
+        dateStrings.push(filters.dateStart === '' ? '' : (filters.dateStart === currentDate ? 'today' : dateStringFromDatetime(filters.dateStart)))
+        dateStrings.push((filters.dateEnd === '' || filters.dateEnd === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateEnd));
+        if (dateStrings[0] === '') {
+            dateRangeString += `until ${dateStrings[1]}`;
+        }
+        else {
+            dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
+        }
     }
 
     async function getScores(filterOptions, pageNumber = 1) {
@@ -67,12 +71,16 @@ function UserPage({user, scores, count, pages}) {
     return (<>
         <UserCard user={user} scoreCount={scoreCount}/>
         <h1 className="score-filters">Filter scores:</h1>
-        <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) => 
-            await getScores(newFilters)}/>
+        <div className="component-container">
+            <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
+                await getScores(newFilters)}/>
+        </div>
         <h1 className="score-range">{`All scores${dateRangeString}:`}</h1>
-        {filters.view === 'cards'
-            ? <ScoresGrid scores={allScores} usingStandardized={true}/>
-            : <ScoresTable scores={allScores} usingStandardized={true}/>}
+        <div className="component-container">
+            {filters.view === 'cards'
+                ? <ScoresGrid scores={allScores} usingStandardized={true}/>
+                : <ScoresTable scores={allScores} usingStandardized={true}/>}
+        </div>
         <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)
 }

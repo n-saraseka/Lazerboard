@@ -4,7 +4,6 @@ function ScoreFilters({filters, setFilters, refetchScores}) {
     const currentDate = new Date().toISOString().split("T")[0];
     
     return (<>
-        <h1 className="score-filters">Filter scores:</h1>
         <table className="options">
             <tbody>
             <tr>
@@ -52,21 +51,19 @@ function ScoreFilters({filters, setFilters, refetchScores}) {
                 <td>Date:</td>
                 <td>
                     <div className="filter-container">
-                        <label htmlFor="date-start">From:
-                            <input type="date" value={filters.dateStart} max={currentDate} onChange={(e) => {
-                                const allFilters = {...filters, dateStart: e.target.value};
-                                setFilters(allFilters);
-                                refetchScores(allFilters);
-                            }}/>
-                        </label>
-                        <label htmlFor="date-start">to:
-                            <input type="date" value={filters.dateEnd} max={currentDate}
-                                   onChange={(e) => {
-                                       const allFilters = {...filters, dateEnd: e.target.value};
-                                       setFilters(allFilters);
-                                       refetchScores(allFilters);
-                                   }}/>
-                        </label>
+                        <span>From:</span>
+                        <input type="date" value={filters.dateStart} max={currentDate} onChange={(e) => {
+                            const allFilters = {...filters, dateStart: e.target.value};
+                            setFilters(allFilters);
+                            refetchScores(allFilters);
+                        }}/>
+                        <span>to:</span>
+                        <input type="date" value={filters.dateEnd} max={currentDate}
+                               onChange={(e) => {
+                                   const allFilters = {...filters, dateEnd: e.target.value};
+                                   setFilters(allFilters);
+                                   refetchScores(allFilters);
+                               }}/>
                     </div>
                 </td>
             </tr>

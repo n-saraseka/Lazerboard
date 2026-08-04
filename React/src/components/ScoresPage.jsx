@@ -69,12 +69,17 @@ function ScoresPage({scores, pages}) {
     }
     
     return (<>
-        <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
-            await getScores(newFilters)}/>
+        <h1 className="score-filters">Filter scores:</h1>
+        <div className="component-container">
+            <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
+                await getScores(newFilters)}/>
+        </div>
         <h1 className="score-range">{`All scores${dateRangeString}:`}</h1>
-        {filters.view === 'cards' 
-            ? <ScoresGrid scores={allScores} usingStandardized={true}/> 
-            : <ScoresTable scores={allScores} usingStandardized={true}/>}
+        <div className="component-container">
+            {filters.view === 'cards'
+                ? <ScoresGrid scores={allScores} usingStandardized={true}/>
+                : <ScoresTable scores={allScores} usingStandardized={true}/>}
+        </div>
         <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)
 }

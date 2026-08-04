@@ -6,17 +6,17 @@ import {useState} from "react";
 import MappedBy from "./MappedBy.jsx";
 import {modeEnumToString} from "../utils/beatmap-things.js";
 
-function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
+function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, selectedMode}) {
     const allModes = [0, 1, 2, 3];
     const firstBeatmap = beatmaps.find((beatmap) => beatmap.id === selectedBeatmapId);
     const [selectedBeatmap, setSelectedBeatmap] = useState(firstBeatmap);
     const [beatmapScores, setBeatmapScores] = useState(scores);
     const [allowedModes, setAllowedModes] = useState(firstBeatmap.mode !== 0 ? [firstBeatmap.mode] : allModes);
-    const [selectedMode, setSelectedMode] = useState(selectedBeatmap.mode);
+    const [currentMode, setCurrentMode] = useState(selectedMode);
     
     async function switchMode(mode) {
         if (!allowedModes.includes(mode)) return;
-        setSelectedMode(mode);
+        setCurrentMode(mode);
         await getBeatmapScores(selectedBeatmap.id, mode);
     }
     
@@ -25,9 +25,9 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
         const newBeatmap = beatmaps.find((beatmap) => beatmap.id === id);
         setSelectedBeatmap(newBeatmap);
         setAllowedModes(newBeatmap.mode !== 0 ? [newBeatmap.mode] : allModes);
-        const newMode = selectedBeatmap.mode !== 0 ? selectedBeatmap.mode : selectedMode;
-        if (newMode !== selectedMode) {
-            setSelectedMode(newMode);
+        const newMode = selectedBeatmap.mode !== 0 ? selectedBeatmap.mode : currentMode;
+        if (newMode !== currentMode) {
+            setCurrentMode(newMode);
         }
         await getBeatmapScores(id, newMode);
     }
@@ -51,7 +51,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
             <div className="beatmapset-card" style={
                 {background: `url("https://assets.ppy.sh/beatmaps/${beatmapset.id}/covers/cover@2x.jpg") center, rgba(0, 0, 0, 0.7)`}
             }>
-                <h1><a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}#${modeEnumToString(selectedMode)}`}>{`${beatmapset.artist} - ${beatmapset.title}`}</a></h1>
+                <h1><a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}#${modeEnumToString(currentMode)}`}>{`${beatmapset.artist} - ${beatmapset.title}`}</a></h1>
                 <MappedBy user={beatmapset.user}/>
                 <div className="difficulties">
                     {beatmaps.map((beatmap, index) => (
@@ -63,13 +63,13 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores}) {
                                         key={index}/>))
                     }
                 </div>
-                <BeatmapCard beatmap={selectedBeatmap} beatmapset={beatmapset} selectedMode={selectedMode}/>
+                <BeatmapCard beatmap={selectedBeatmap} beatmapset={beatmapset} selectedMode={currentMode}/>
             </div>
             <div className="mode-selection">
                 {allModes.map((mode, index) => (
                     <ModeSelector mode={mode}
                                   allowedModes={allowedModes}
-                                  selectedMode={selectedMode}
+                                  selectedMode={currentMode}
                                   onModeSwitch={async () => await switchMode(mode)}
                                   key={index}/>
                 ))}

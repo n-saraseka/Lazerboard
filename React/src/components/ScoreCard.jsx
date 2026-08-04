@@ -7,10 +7,10 @@ function ScoreCard({score, usingStandardized}) {
             {background: `url("https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg") center, rgba(0, 0, 0, 0.7)`}
         }>
             <div className="score-column score-left-column">
-                <a href={`/beatmapsets/${score.beatmap.beatmapset.id}`} className="score-song-name">
+                <a href={`/beatmapsets/${score.beatmap.beatmapset.id}?mode=${score.mode}`} className="score-song-name">
                     <strong>{`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title}`}</strong>
                 </a>
-                <a href={`/b/${score.beatmap.id}`} className="score-difficulty-name">{`[${score.beatmap.difficultyName}]`}</a>
+                <a href={`/b/${score.beatmap.id}?mode=${score.mode}`} className="score-difficulty-name">{`[${score.beatmap.difficultyName}]`}</a>
                 <strong className="score-rank">{`#${score.rank}`}</strong>
                 <strong className="score-pp">{`${score.pp.toFixed(0)}pp`}</strong>
                 <div className="score-total">

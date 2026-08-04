@@ -68,7 +68,7 @@ body {
     background-size: cover;
     justify-content: space-between;
     padding: 1em;
-    border-radius: 1em;
+    border-radius: 1em 1em 0 0;
     color: white;
     text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
 }
@@ -87,6 +87,11 @@ body {
 .score .mod {
     font-weight: bold;
     font-size: 1.25em;
+}
+
+.score-row-mode .mode-icon {
+    width: 1em;
+    height: 1em;
 }
 
 .score-row-mods .mod {
@@ -229,6 +234,31 @@ body {
 .score-row-country img {
     height: 1em;
     width: auto;
+}
+
+.score-mode {
+    width: 100%;
+    padding: 0.5em 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 0 1em 1em;
+}
+
+.color-osu {
+    background-color: rgb(200, 120, 120);
+}
+
+.color-taiko {
+    background-color: rgb(200, 180, 60);
+}
+
+.color-fruits {
+    background-color: rgb(120, 200, 100);
+}
+
+.color-mania {
+    background-color: rgb(100, 100, 200);
 }
 
 .mode-icon {

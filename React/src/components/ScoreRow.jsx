@@ -1,11 +1,25 @@
 import ScoreMod from "./ScoreMod";
+import {modeEnumToString} from "../utils/beatmap-things.js";
+import {getEncodedCountry} from "../utils/user-things.js";
 
 function ScoreRow({score, usingStandardized}) {
+    const modeString = modeEnumToString(score.mode);
+    
     return (<tr className="score-row">
+        <td className="score-row-mode">
+            <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}}></div>
+        </td>
+        <td className="score-row-rank">{`#${score.rank}`}</td>
+        <td className="score-row-country">
+            <img
+                src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}
+                alt={score.user.country.name}
+                title={score.user.country.name}
+                className="country-img"/>
+        </td>
         <td className="score-row-player-name">
             <a href={`/user/${score.user.id}`}>{score.user.username}</a>
         </td>
-        <td className="score-row-rank">{`#${score.rank}`}</td>
         <td className="score-row-pp">{`${score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">
             {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym}/>)}

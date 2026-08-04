@@ -5,7 +5,6 @@ function ScoreFilters({filters, setFilters, refetchScores}) {
             <select name="scores-view" id="scores-view" value={filters.view} onChange={(e) => {
                 setFilters({...filters, view: e.target.value});
                 const allFilters = {...filters, view: e.target.value};
-                refetchScores(allFilters);
             }}>
                 <option value="cards">Cards</option>
                 <option value="condensed">Condensed</option>

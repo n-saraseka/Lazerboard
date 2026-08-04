@@ -18,9 +18,11 @@ function UserPage({user, scores, count, pages}) {
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
 
-    async function getScores(mode = 0, filterOptions, pageNumber = 1) {
+    async function getScores(mode = null, filterOptions, pageNumber = 1) {
         const params = new URLSearchParams();
-        params.append("mode", mode.toString());
+        if (mode !== null) {
+            params.append("mode", mode.toString());
+        }
         params.append("amount", filterOptions.scoresAmount.toString());
         params.append("sort", filterOptions.sortBy);
         params.append("isDesc", (filterOptions.sortDir === "desc").toString());
@@ -51,7 +53,7 @@ function UserPage({user, scores, count, pages}) {
         {filters.view === 'cards'
             ? <ScoresGrid scores={allScores} usingStandardized={true}/>
             : <ScoresTable scores={allScores} usingStandardized={true}/>}
-        <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(0, filters, newPage)}/>
+        <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(null, filters, newPage)}/>
     </>)
 }
 

@@ -44,7 +44,8 @@ const mockProps = {
                 id: 'UA',
                 name: 'Ukraine'
             }
-        }
+        },
+        mode: 0,
     },
     usingStandardized: true,
 };

@@ -140,7 +140,17 @@ body {
     font-size: 0.8em;
 }
 
+.score-card {
+    height: 100%;
+}
+
+.score-card {
+    display: flex;
+    flex-direction: column;
+}
+
 .score {
+    flex: 10 1;
     display: flex;
     background-blend-mode: darken;
     background-size: cover;
@@ -315,6 +325,7 @@ body {
 }
 
 .score-mode {
+    flex: 1 1;
     width: 100%;
     padding: 0.5em 0;
     display: flex;

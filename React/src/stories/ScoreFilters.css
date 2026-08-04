@@ -1,9 +1,103 @@
 body {
     font-family: "Cascadia Mono", monospace;
+    background-color: rgb(35, 35, 35);
+    color: white;
 }
 
-.options {
+.filter-container {
     display: flex;
-    flex-wrap: wrap;
     gap: 1em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.view-filter {
+    padding: 0.5em;
+    border-radius: 0.5em;
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    background-color: white;
+    color: black;
+}
+
+.view-filter:hover {
+    cursor: pointer;
+}
+
+.view-active, .view-filter:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+}
+
+.view-icon {
+    width: 1em;
+    height: 1em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    background-color: rgb(35, 35, 35);
+}
+
+.view-cards {
+    mask-image: url("images/card.svg");
+    -webkit-mask-image: url("images/card.svg");
+}
+
+.view-table {
+    mask-image: url("images/table.svg");
+    -webkit-mask-image: url("images/table.svg");
+}
+
+.sort-thingy:hover {
+    cursor: pointer;
+}
+
+.filter-container .mode-icon-wrapper:hover {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    cursor: pointer;
+}
+
+.mode-icon-wrapper.disabled {
+    opacity: 0.6;
+}
+
+.filter-container .mode-icon {
+    width: 2em;
+    height: 2em;
+    background-color: white;
+}
+
+.mode-icon {
+    height: 2em;
+    width: 2em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.mode-osu {
+    mask-image: url("images/osu-std.svg");
+    -webkit-mask-image: url("images/osu-std.svg");
+}
+
+.mode-taiko {
+    mask-image: url("images/osu-taiko.svg");
+    -webkit-mask-image: url("images/osu-taiko.svg");
+}
+
+.mode-fruits {
+    mask-image: url("images/osu-catch.svg");
+    -webkit-mask-image: url("images/osu-catch.svg");
+}
+
+.mode-mania {
+    mask-image: url("images/osu-mania.svg");
+    -webkit-mask-image: url("images/osu-mania.svg");
+}
+
+.score-range, .score-filters {
+    margin: 0 0;
+    text-align: center;
 }

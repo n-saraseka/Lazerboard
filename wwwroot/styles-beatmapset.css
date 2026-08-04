@@ -83,10 +83,6 @@
     border-radius: 1em;
 }
 
-.sort-thingy:hover {
-    cursor: pointer;
-}
-
 .mapped-by {
     display: flex;
     gap: 1em;

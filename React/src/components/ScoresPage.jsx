@@ -3,25 +3,33 @@ import ScoresTable from './ScoresTable';
 import ScoreFilters from './ScoreFilters';
 import {useState} from "react";
 import Pagination from "./Pagination.jsx";
+import {dateStringFromDatetime} from "../utils/datetime-things.js";
 
 function ScoresPage({scores, pages}) {
+    const currentDate = new Date().toISOString().split("T")[0];
+    
     const [filters, setFilters] = useState({
         view: 'cards',
         scoresAmount: 25,
         sortBy: 'pp',
         sortDir: 'desc',
         dateStart: '',
-        dateEnd: ''
+        dateEnd: '',
+        modes: Array(4).fill(0).map((m, i) => {
+            return { value: i, enabled: true };
+        })
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
     
-    async function getScores(mode = null, filterOptions, pageNumber) {
+    async function getScores(filterOptions, pageNumber) {
         const params = new URLSearchParams();
-        if (mode !== null) {
-            params.append("mode", mode.toString());
-        }
+        filterOptions.modes.forEach((mode) => {
+            if (mode.enabled) {
+                params.append("modes", mode.value.toString());
+            }
+        })
         params.append("amount", filterOptions.scoresAmount.toString());
         params.append("sort", filterOptions.sortBy);
         params.append("isDesc", (filterOptions.sortDir === "desc").toString());
@@ -46,14 +54,28 @@ function ScoresPage({scores, pages}) {
             setPageCount(Math.ceil(json.count / filterOptions.scoresAmount));
         }
     }
+
+    let dateRangeString = '';
+    if (filters.dateStart === '' && filters.dateEnd === '') {
+        dateRangeString = ' from today';
+    }
+    else {
+        dateRangeString = ' from ';
+        const dateStrings = [];
+        [filters.dateStart, filters.dateEnd].forEach((dateFilter) => {
+            dateStrings.push((dateFilter === '' || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
+        });
+        dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
+    }
     
     return (<>
         <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
-            await getScores(null, newFilters)}/>
+            await getScores(newFilters)}/>
+        <h1 className="score-range">{`All scores${dateRangeString}:`}</h1>
         {filters.view === 'cards' 
             ? <ScoresGrid scores={allScores} usingStandardized={true}/> 
             : <ScoresTable scores={allScores} usingStandardized={true}/>}
-        <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(null, filters, newPage)}/>
+        <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)
 }
 

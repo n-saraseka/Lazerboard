@@ -13,7 +13,12 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
     public async Task SaveAllBeatmapsetDataAsync(IReadOnlyCollection<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
     {
         var beatmapsetUserIds = beatmapsets.Select(bs => bs.UserId).Distinct().ToList();
-        var apiUsers = await apiFetcher.GetUsersAsync(beatmapsetUserIds, stoppingToken);
+        
+        var existingUsers = await dataProcessor.GetExistingUsersAsync(beatmapsetUserIds, stoppingToken);
+        var existingUserIds = existingUsers.Select(u => u.Id).ToList();
+        
+        var newUserIds = beatmapsetUserIds.Where(id => !existingUserIds.Contains(id)).ToList();
+        var apiUsers = await apiFetcher.GetUsersAsync(newUserIds, stoppingToken);
         var apiUserIds = apiUsers.Select(u => u.Id).Distinct();
             
         var removedUserIds = beatmapsetUserIds.Where(b => !apiUserIds.Contains(b)).ToList();

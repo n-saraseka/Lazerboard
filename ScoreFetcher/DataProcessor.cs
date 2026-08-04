@@ -56,6 +56,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IEnumerable<int> ids, CancellationToken ct) =>
         beatmapsetRepository.GetBulkAsync(ids, ct);
 
+    public Task<List<User>> GetExistingUsersAsync(IEnumerable<int> ids, CancellationToken ct) =>
+        userRepository.GetBulkAsync(ids, ct);
+
     /// <summary>
     /// Check for existing country data and save new country DTOs to the database.
     /// </summary>
@@ -80,7 +83,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessUsersAsync(IEnumerable<APIUser> users, CancellationToken ct)
     {
-        var existingUsers = await userRepository.GetBulkAsync(users.Select(u => u.Id), ct);
+        var existingUsers = await GetExistingUsersAsync(users.Select(u => u.Id), ct);
         var userDtos = users.Select(entityToDtoService.UserEntityToDto);
         var newUsers = userDtos
             .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))

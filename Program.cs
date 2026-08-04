@@ -90,7 +90,7 @@ app.UseHttpsRedirection();
 
 app.MapGet("/api/scores", async (
         ScoreMethods scoreMethods, 
-        Mode? mode, 
+        Mode[] modes, 
         DateOnly? dateStart,
         DateOnly? dateEnd,
         string? country,
@@ -101,7 +101,7 @@ app.MapGet("/api/scores", async (
         string? sort,
         bool isDesc,
         CancellationToken ct) => await scoreMethods.GetScoresAsync(
-        mode, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
+        modes, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
     .WithName("GetScores");
 
 app.MapGet("/api/beatmaps/{id:int}", async (
@@ -137,7 +137,7 @@ app.MapGet("/api/users", async (
 app.MapGet("/api/users/{userId:int}/scores", async (
         UserMethods userMethods,
         int userId,
-        Mode? mode,
+        Mode[] modes,
         DateOnly? dateStart,
         DateOnly? dateEnd,
         string[]? mandatoryMods,
@@ -147,7 +147,7 @@ app.MapGet("/api/users/{userId:int}/scores", async (
         string? sort,
         bool isDesc,
         CancellationToken ct) => await userMethods.GetUserScoresAsync(
-        userId, mode, dateStart, dateEnd, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
+        userId, modes, dateStart, dateEnd, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
     .WithName("GetUserScores");
 
 app.MapGet("/api/users/{id:int}/scores/count", async (

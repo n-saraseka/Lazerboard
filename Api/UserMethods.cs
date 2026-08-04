@@ -30,7 +30,7 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
     /// Get user scores
     /// </summary>
     /// <param name="userId">User ID</param>
-    /// <param name="mode">Gameplay mode (Osu, Taiko, Fruits, Mania)</param>
+    /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
     /// <param name="dateStart">Date to begin getting scores from (defaults to Unix epoch)</param>
     /// <param name="dateEnd">Date to end getting scores from (defaults to latest date in scores table)</param>
     /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
@@ -43,7 +43,7 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
     /// <returns>A <see cref="ScoresResponse"/></returns>
     public async Task<ScoresResponse> GetUserScoresAsync(
         int userId,
-        Mode? mode,
+        Mode[] modes,
         DateOnly? dateStart,
         DateOnly? dateEnd,
         string[]? mandatoryMods,
@@ -64,8 +64,7 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
         query = query.Where(s => 
             DateOnly.FromDateTime(s.Date) >= targetStartDate && DateOnly.FromDateTime(s.Date) <= targetEndDate);
         
-        if (mode.HasValue)
-            query = query.Where(s => s.Mode == mode.Value);
+        query = query.Where(s => modes.Contains(s.Mode));
         
         if (mandatoryMods?.Length > 0)
             query = query.Where(s =>

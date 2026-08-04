@@ -10,9 +10,9 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
     /// <summary>
     /// Get scores
     /// </summary>
-    /// <param name="mode">Gameplay mode (Osu, Taiko, Fruits, Mania)</param>
-    /// <param name="dateStart">Date to begin getting scores from (defaults to latest date in scores table)</param>
-    /// <param name="dateEnd">Date to end getting scores from (defaults to latest date in scores table)</param>
+    /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
+    /// <param name="dateStart">Date to begin getting scores from (defaults to today)</param>
+    /// <param name="dateEnd">Date to end getting scores from (defaults to today)</param>
     /// <param name="country">Country code</param>
     /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
     /// <param name="optionalMods">An array of optional mod acronyms</param>
@@ -23,7 +23,7 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
     /// <param name="ct">Cancellation token</param>
     /// <returns>A <see cref="ScoresResponse"/></returns>
     public async Task<ScoresResponse> GetScoresAsync(
-        Mode? mode, 
+        Mode[] modes, 
         DateOnly? dateStart,
         DateOnly? dateEnd,
         string? country,
@@ -40,14 +40,12 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
 
         var query = scoreRepository.GetAllWithBeatmapAndUserData();
         
-        var latestDate = await query.MaxAsync(s => s.Date, ct);
-        var targetStartDate = dateStart ?? DateOnly.FromDateTime(latestDate);
-        var targetEndDate = dateEnd ?? DateOnly.FromDateTime(latestDate);
+        query = query.Where(s => modes.Contains(s.Mode));
+            
+        var targetStartDate = dateStart ?? DateOnly.FromDateTime(DateTime.Today);
+        var targetEndDate = dateEnd ?? DateOnly.FromDateTime(DateTime.Today);
         query = query.Where(s => 
             DateOnly.FromDateTime(s.Date) >= targetStartDate && DateOnly.FromDateTime(s.Date) <= targetEndDate);
-        
-        if (mode.HasValue)
-            query = query.Where(s => s.Mode == mode.Value);
         
         if (country != null)
         {

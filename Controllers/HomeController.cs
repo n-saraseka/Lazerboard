@@ -9,7 +9,7 @@ public class HomeController(IScoreRepository scoreRepository) : Controller
 {
     public async Task<IActionResult> Index(int id, CancellationToken cancellationToken = default)
     {
-        var scoreQuery = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.Date >= DateTime.Today.ToUniversalTime());
+        var scoreQuery = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => DateOnly.FromDateTime(s.Date) >= DateOnly.FromDateTime(DateTime.Now));
         var scoresCount =  await scoreQuery.CountAsync(cancellationToken);
         var scores = await scoreQuery
             .OrderByDescending(s => s.PP)

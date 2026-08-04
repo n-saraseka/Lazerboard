@@ -11,14 +11,17 @@ export default {
     tags: ['autodocs']
 }
 
+const currentDate = new Date().toISOString().split("T")[0];
+
 const mockProps = {
     filters: {
         view: 'cards',
         scoresAmount: 25,
         sortBy: 'pp',
         sortDir: 'desc',
-        dateStart: '',
-        dateEnd: ''
+        dateStart: currentDate,
+        dateEnd: currentDate,
+        modes: [0, 1, 2, 3]
     },
     setFilters: (filters) => {},
     refetchScores: () => {}

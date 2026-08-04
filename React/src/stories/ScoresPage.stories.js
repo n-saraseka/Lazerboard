@@ -57,9 +57,4 @@ export const Default = {
     args: {
         ...mockProps,
     },
-    beforeEach({ msw }) {
-        msw.use(
-            http.get('')
-        )
-    }
 };

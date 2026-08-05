@@ -26,7 +26,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         var beatmaps = await beatmapRepo.GetAll().Where(b => beatmapsetIds.Contains(b.BeatmapsetId)).ToListAsync(token);
         if (beatmaps.Count > 0)
         {
-            logger.Log(LogLevel.Information, "Adding missing user attributes. Beatmapsets: {beatmapsets}", beatmapsets);
+            logger.Log(LogLevel.Information, "Adding missing user attributes. Beatmapsets count: {count}", beatmapsets.Count);
             Console.WriteLine("Adding missing user attributes");
             var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
             var apiBeatmapsets = apiBeatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
@@ -72,7 +72,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
                 }
                 catch (NpgsqlException ex)
                 {
-                    logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {beatmapsets}", beatmapsets);
+                    logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {@beatmapsets}", beatmapsets);
                 }
             }
 
@@ -82,7 +82,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
             }
             catch (NpgsqlException ex)
             {
-                logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {beatmapsets}", beatmapsets);
+                logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {@beatmapsets}", beatmapsets);
             }
         }
     }
@@ -92,7 +92,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         var beatmaps = await beatmapRepo.GetAll().Where(b => b.Health == null).ToListAsync(token);
         if (beatmaps.Count > 0)
         {
-            logger.Log(LogLevel.Information, "Adding missing health attributes. Beatmaps: {beatmaps}", beatmaps);
+            logger.Log(LogLevel.Information, "Adding missing health attributes. Beatmap count: {count}", beatmaps.Count);
             var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
             foreach (var beatmap in beatmaps)
             {
@@ -107,7 +107,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
                 }
                 catch (NpgsqlException ex)
                 {
-                    logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {beatmaps}", beatmaps);
+                    logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {@beatmaps}", beatmaps);
                 }
             }
             try
@@ -116,7 +116,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
             }
             catch (NpgsqlException ex)
             {
-                logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {beatmaps}", beatmaps);
+                logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {@beatmaps}", beatmaps);
             }
         }
     }

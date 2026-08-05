@@ -35,7 +35,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsetsAsync; Beatmapsets: {beatmapsets}", beatmapsetDtos);
+            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsetsAsync | Beatmapsets: {beatmapsets}", beatmapsetDtos);
         }
     }
 
@@ -60,7 +60,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsAsync; Beatmaps: {@beatmaps}", beatmapDtos);
+            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsAsync | Beatmaps: {@beatmaps}", beatmapDtos);
         }
     }
     
@@ -92,7 +92,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessCountriesAsync; Countries: {@countries}", countryDtos);
+            logger.Log(LogLevel.Error, exception, "Method: ProcessCountriesAsync | Countries: {@countries}", countryDtos);
         }
     }
 
@@ -175,7 +175,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 foreach (var score in groupScores) score.Rank = groupScores.IndexOf(score) + 1;
                 scoreRepository.CreateBulk(groupScores);
                 createdCount += groupScores.Count;
-                logger.Log(LogLevel.Information, "Method: ProcessScoresAsync; BeatmapID: {id}; Mode: {mode}; Scores: {merged}", 
+                logger.Log(LogLevel.Information, "Method: ProcessScoresAsync | BeatmapID: {id}; Mode: {mode}; Scores: {@scores}", 
                     group.Key.BeatmapId, group.Key.Mode, groupScores);
             }
             else
@@ -210,7 +210,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 updatedCount += beatmapScores.Count;
                 createdCount += newScores.Count();
                 
-                logger.Log(LogLevel.Information, "Method: ProcessScoresAsync; BeatmapID: {id}; Mode: {mode}; Scores: {merged}", 
+                logger.Log(LogLevel.Information, "Method: ProcessScoresAsync | BeatmapID: {id}; Mode: {mode}; Scores: {@scores}", 
                     group.Key.BeatmapId, group.Key.Mode, merged);
             }
         }
@@ -223,7 +223,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessScoresAsync");
+            logger.Log(LogLevel.Error, exception, "Method: ProcessScoresAsync | Scores: {@scores}", scores);
         }
     }
 }

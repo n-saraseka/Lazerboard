@@ -56,7 +56,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
             else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
         }
         
-        logger.Log(LogLevel.Information, "Method: CheckIfSignificantBulkAsync; Result: {@result}", dictionary);
+        logger.Log(LogLevel.Information, "Method: CheckIfSignificantBulkAsync | Result: {@result}", dictionary);
         
         return dictionary;
     }

@@ -23,7 +23,7 @@ public class ScoreFirehoseService(IServiceProvider serviceProvider, ILogger<Scor
         {
             cacheStore.CheckCache();
             
-            logger.Log(LogLevel.Information, "Looking up scores; Cursor: {cursor}", _cursor);
+            logger.Log(LogLevel.Information, "Looking up scores. Cursor: {cursor}", _cursor);
             
             var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
             _cursor = scoresResponse.Cursor;

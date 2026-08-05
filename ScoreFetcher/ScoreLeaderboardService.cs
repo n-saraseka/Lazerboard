@@ -1,11 +1,10 @@
 using OsuScoreStats.Calculations;
-using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
 
-public class ScoreLeaderboardService(IServiceProvider serviceProvider) : BackgroundService
+public class ScoreLeaderboardService(IServiceProvider serviceProvider, ILogger<ScoreLeaderboardService> logger) : BackgroundService
 {
     private string? _cursor;
     private double _apiInterval;
@@ -25,6 +24,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
         {
             cacheStore.CheckCache();
             
+            logger.Log(LogLevel.Information, "Searching beatmapsets. Cursor: {cursor}", _cursor);
             var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
             _cursor = beatmapsetsResponse.Cursor;
             await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
@@ -45,6 +45,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
                 foreach (var val in Enum.GetValues<Mode>())
                 {
                     if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
+                    logger.Log(LogLevel.Information, "Getting leaderboard scores. BeatmapID: {id}; Mode: {mode}", beatmap.Id, val);
                     beatmapScores.Add(await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken));
                     await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
                 }
@@ -54,6 +55,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider) : Backgro
             }
             
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }

@@ -5,7 +5,7 @@ using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.ScoreFetcher;
 
-public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calculator) : IScoreProcessor
+public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calculator, ILogger<IScoreProcessor> logger) : IScoreProcessor
 {
     /// <summary>
     /// Check if a score is significant (higher than the min TotalScore and no better score set by user exists)
@@ -17,8 +17,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     {
         var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
         var scoresForMode = beatmapScores.Where(s => s.Mode == score.Mode).ToList();
-        if (scoresForMode.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) 
-            return false;
+        if (scoresForMode.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 100) return false;
         return !CheckIfBetterAlreadyExists(score, scoresForMode);
     }
     
@@ -30,6 +29,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <returns>A dictionary of results of checks for every score ID</returns>
     public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<APIScore> scores, CancellationToken cancellationToken)
     {
+        logger.Log(LogLevel.Information, "Checking if some of {@count} scores are significant", scores.Count());
         var dictionary = new Dictionary<ulong, bool>();
         var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
@@ -48,7 +48,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                 var beatmapScores = respectiveGroup.ToList();
                 foreach (var score in scoresInGroup)
                 {
-                    if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) 
+                    if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 100) 
                         dictionary[score.Id] = false;
                     else 
                         dictionary[score.Id] = !CheckIfBetterAlreadyExists(score, beatmapScores);
@@ -56,6 +56,8 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
             }
             else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
         }
+        logger.Log(LogLevel.Information, "Significant score IDs: {@scoreIds}", 
+            dictionary.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToList());
         
         return dictionary;
     }

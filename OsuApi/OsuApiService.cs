@@ -7,7 +7,8 @@ namespace OsuScoreStats.OsuApi;
 
 public class OsuApiService(
     IHttpClientFactory httpClientFactory, 
-    IConfiguration config)
+    IConfiguration config, 
+    ILogger<OsuApiService> logger)
 {
     private static TokenInfo? _token;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
@@ -22,9 +23,9 @@ public class OsuApiService(
     /// <param name="ct">Cancellation token</param>
     /// <returns>Request response text</returns>
     private async Task<string> SendRequestAsync(HttpMethod method, 
-        string requestString, 
-        HttpContent? content, 
-        bool isTokenRequest = false, 
+        string requestString,
+        HttpContent? content,
+        bool isTokenRequest = false,
         CancellationToken ct = default)
     {
         var client = httpClientFactory.CreateClient();
@@ -52,9 +53,10 @@ public class OsuApiService(
                 responseText = await response.Content.ReadAsStringAsync(ct);
                 break;
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex.StatusCode);
+                logger.Log(LogLevel.Error, ex, "Method: OsuApiService.SendRequestAsync; Method: {@method}; RequestString: {requestString}; Content: {@content}", 
+                    method, requestString, content);
                 throw;
             }
         }
@@ -171,9 +173,9 @@ public class OsuApiService(
             await File.WriteAllBytesAsync(mapPath, responseBytes, ct);
                 
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine(ex.StatusCode);
+            logger.Log(LogLevel.Error, ex, "Method: DownloadBeatmapAsync");
             throw;
         }
     }
@@ -202,7 +204,7 @@ public class OsuApiService(
 
         APIBeatmap[] beatmaps = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
 
-        Console.WriteLine($"Received {ids.Count} Beatmap objects from the API");
+        logger.Log(LogLevel.Information, "Beatmaps received: {beatmapsCount}", ids.Count);
 
         return beatmaps;
     }
@@ -232,7 +234,7 @@ public class OsuApiService(
 
         APIUser[] users = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
 
-        Console.WriteLine($"Received {ids.Count} User objects from the API");
+        logger.Log(LogLevel.Information, "Users received: {usersCount}", ids.Count);
 
         return users;
     }

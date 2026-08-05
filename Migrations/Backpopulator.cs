@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.ScoreFetcher;
@@ -9,7 +10,8 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
     IBeatmapRepository beatmapRepo,
     IUserRepository userRepo, 
     IApiFetcher apiFetcher, 
-    IDataProcessor dataProcessor): IBackpopulator
+    IDataProcessor dataProcessor,
+    ILogger<IBackpopulator> logger): IBackpopulator
 {
     public async Task BackpopulateAsync(CancellationToken token)
     {
@@ -24,6 +26,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         var beatmaps = await beatmapRepo.GetAll().Where(b => beatmapsetIds.Contains(b.BeatmapsetId)).ToListAsync(token);
         if (beatmaps.Count > 0)
         {
+            logger.Log(LogLevel.Information, "Adding missing user attributes. Beatmapsets count: {count}", beatmapsets.Count);
             Console.WriteLine("Adding missing user attributes");
             var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
             var apiBeatmapsets = apiBeatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
@@ -47,7 +50,14 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
             var existingUserIds = existingUsers.Select(u => u.Id).ToList();
             var newUsers = deletedOrRestrictedUsers.Where(u => !existingUserIds.Contains(u.Id));
             userRepo.CreateBulk(newUsers);
-            await userRepo.SaveChangesAsync(token);
+            try
+            {
+                await userRepo.SaveChangesAsync(token);
+            }
+            catch (NpgsqlException ex)
+            {
+                logger.Log(LogLevel.Error, ex, "Method: IUserRepository.SaveChangesAsync; Users: {users}", newUsers);
+            }
             
             foreach (var beatmapset in beatmapsets)
             {
@@ -55,12 +65,25 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
                 beatmapset.Creator = respectiveApiBeatmapset?.Creator;
                 beatmapset.UserId = respectiveApiBeatmapset?.UserId ?? 0;
                 beatmapsetRepo.Update(beatmapset);
-                if (token.IsCancellationRequested)
+                if (!token.IsCancellationRequested) continue;
+                try
                 {
                     await beatmapsetRepo.SaveChangesAsync(token);
                 }
+                catch (NpgsqlException ex)
+                {
+                    logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {@beatmapsets}", beatmapsets);
+                }
             }
-            await beatmapsetRepo.SaveChangesAsync(token);
+
+            try
+            {
+                await beatmapsetRepo.SaveChangesAsync(token);
+            }
+            catch (NpgsqlException ex)
+            {
+                logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {@beatmapsets}", beatmapsets);
+            }
         }
     }
     
@@ -69,7 +92,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         var beatmaps = await beatmapRepo.GetAll().Where(b => b.Health == null).ToListAsync(token);
         if (beatmaps.Count > 0)
         {
-            Console.WriteLine("Adding missing health attributes");
+            logger.Log(LogLevel.Information, "Adding missing health attributes. Beatmap count: {count}", beatmaps.Count);
             var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
             foreach (var beatmap in beatmaps)
             {
@@ -77,12 +100,24 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
                 beatmap.Health = respectiveApiBeatmap?.Health ?? 0;
                 beatmap.DrainLength = respectiveApiBeatmap?.DrainLength ?? 0;
                 beatmapRepo.Update(beatmap);
-                if (token.IsCancellationRequested)
+                if (!token.IsCancellationRequested) continue;
+                try
                 {
                     await beatmapRepo.SaveChangesAsync(token);
                 }
+                catch (NpgsqlException ex)
+                {
+                    logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {@beatmaps}", beatmaps);
+                }
             }
-            await beatmapRepo.SaveChangesAsync(token);
+            try
+            {
+                await beatmapRepo.SaveChangesAsync(token);
+            }
+            catch (NpgsqlException ex)
+            {
+                logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {@beatmaps}", beatmaps);
+            }
         }
     }
 }

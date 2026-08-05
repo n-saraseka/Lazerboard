@@ -19,6 +19,7 @@ public class DataProcessorTests
     private Mock<IUserRepository> _userRepository;
     private Mock<IScoreRepository> _scoreRepository;
     private Mock<IOsuEntityToDtoService> _osuEntityToDtoService;
+    private Mock<ILogger<IDataProcessor>> _logger;
 
     [SetUp]
     public void Setup()
@@ -29,12 +30,14 @@ public class DataProcessorTests
         _userRepository = new();
         _scoreRepository = new();
         _osuEntityToDtoService = new();
+        _logger = new Mock<ILogger<IDataProcessor>>();
         _dataProcessor = new DataProcessor(_beatmapsetRepository.Object, 
             _beatmapRepository.Object, 
             _countryRepository.Object, 
             _userRepository.Object, 
             _scoreRepository.Object, 
-            _osuEntityToDtoService.Object);
+            _osuEntityToDtoService.Object,
+            _logger.Object);
     }
 
     [Test]

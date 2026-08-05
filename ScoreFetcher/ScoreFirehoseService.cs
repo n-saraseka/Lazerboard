@@ -1,9 +1,8 @@
 using OsuScoreStats.Calculations;
-using OsuScoreStats.DbService.Entities;
 
 namespace OsuScoreStats.ScoreFetcher;
 
-public class ScoreFirehoseService(IServiceProvider serviceProvider) : BackgroundService
+public class ScoreFirehoseService(IServiceProvider serviceProvider, ILogger<ScoreFirehoseService> logger) : BackgroundService
 {
     private string? _cursor;
     private double _apiInterval;
@@ -24,17 +23,23 @@ public class ScoreFirehoseService(IServiceProvider serviceProvider) : Background
         {
             cacheStore.CheckCache();
             
+            logger.Log(LogLevel.Information, "Looking up scores. Cursor: {cursor}", _cursor);
+            
             var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
             _cursor = scoresResponse.Cursor;
             var scores = scoresResponse.Scores;
+            logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
+            
             await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
             
             var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct();
             var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
             var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
+            logger.Log(LogLevel.Information, "NewBeatmapIds: {ids}", newBeatmapIds);
             var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
             
             var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct().ToList();

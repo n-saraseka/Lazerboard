@@ -1,3 +1,4 @@
+using Npgsql;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.OsuApiEntities;
@@ -10,7 +11,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     ICountryRepository countryRepository,
     IUserRepository userRepository,
     IScoreRepository scoreRepository,
-    IOsuEntityToDtoService entityToDtoService): IDataProcessor
+    IOsuEntityToDtoService entityToDtoService, 
+    ILogger<IDataProcessor> logger): IDataProcessor
 {
     /// <summary>
     /// Check for existing beatmapset data and save new beatmapset DTOs to the database.
@@ -26,9 +28,15 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .DistinctBy(bs => bs.Id);
         
         beatmapsetRepository.CreateBulk(beatmapsetDtos);
-        await beatmapsetRepository.SaveChangesAsync(ct);
-        
-        Console.WriteLine($"Saved {beatmapsetDtos.Count()} new beatmapsets to the DB.");
+        try
+        {
+            await beatmapsetRepository.SaveChangesAsync(ct);
+            logger.Log(LogLevel.Information, "New beatmapsets: {createdCount}", beatmapsetDtos.Count());
+        }
+        catch (NpgsqlException exception)
+        {
+            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsetsAsync | Beatmapsets: {beatmapsets}", beatmapsetDtos);
+        }
     }
 
     /// <summary>
@@ -45,9 +53,15 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .DistinctBy(b => b.Id);
         
         beatmapRepository.CreateBulk(beatmapDtos);
-        await beatmapRepository.SaveChangesAsync(ct);
-        
-        Console.WriteLine($"Saved {beatmapDtos.Count()} new beatmaps to the DB.");
+        try
+        {
+            await beatmapRepository.SaveChangesAsync(ct);
+            logger.Log(LogLevel.Information, "New beatmaps: {createdCount}", beatmapDtos.Count());
+        }
+        catch (NpgsqlException exception)
+        {
+            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsAsync | Beatmaps: {@beatmaps}", beatmapDtos);
+        }
     }
     
     public Task<List<Beatmap>> GetExistingBeatmapsAsync(IEnumerable<int> ids, CancellationToken ct) =>
@@ -71,9 +85,15 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id);
         
         countryRepository.CreateBulk(countryDtos);
-        await countryRepository.SaveChangesAsync(ct);
-        
-        Console.WriteLine($"Saved {countryDtos.Count()} new countries to the DB.");
+        try
+        {
+            await countryRepository.SaveChangesAsync(ct);
+            logger.Log(LogLevel.Information, "New countries: {createdCount}", countryDtos.Count());
+        }
+        catch (NpgsqlException exception)
+        {
+            logger.Log(LogLevel.Error, exception, "Method: ProcessCountriesAsync | Countries: {@countries}", countryDtos);
+        }
     }
 
     /// <summary>
@@ -90,8 +110,15 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .DistinctBy(u => u.Id);
         
         userRepository.CreateBulk(newUsers);
-        await userRepository.SaveChangesAsync(ct);
-        Console.WriteLine($"Saved {newUsers.Count()} new users to the DB.");
+        try
+        {
+            await userRepository.SaveChangesAsync(ct);
+            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
+        }
+        catch (NpgsqlException exception)
+        {
+            logger.Log(LogLevel.Error, exception, "Method: ProcessUsersAsync; Users: {users}", newUsers);
+        }
     }
     
     /// <summary>
@@ -107,8 +134,15 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .DistinctBy(u => u.Id);
         
         userRepository.CreateBulk(newUsers);
-        await userRepository.SaveChangesAsync(ct);
-        Console.WriteLine($"Saved {newUsers.Count()} new users to the DB.");
+        try
+        {
+            await userRepository.SaveChangesAsync(ct);
+            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
+        }
+        catch (NpgsqlException exception)
+        {
+            logger.Log(LogLevel.Error, exception, "Method: ProcessRemovedUsersAsync; Users: {@users}", newUsers);
+        }
     }
     
     /// <summary>
@@ -118,6 +152,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
     {
+        logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
@@ -175,10 +210,16 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 createdCount += newScores.Count();
             }
         }
-        
-        await scoreRepository.SaveChangesAsync(ct);
-        
-        Console.WriteLine($"Saved {createdCount} new scores to the DB.");
-        Console.WriteLine($"Updated {updatedCount} scores from the DB.");
+
+        try
+        {
+            await scoreRepository.SaveChangesAsync(ct);
+
+            logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}", createdCount, updatedCount);
+        }
+        catch (NpgsqlException exception)
+        {
+            logger.Log(LogLevel.Error, exception, "Method: ProcessScoresAsync | Scores: {@scores}", scores);
+        }
     }
 }

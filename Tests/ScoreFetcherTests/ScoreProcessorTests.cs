@@ -209,6 +209,77 @@ public class ScoreProcessorTests
     }
     
     [Test]
+    public async Task CheckIfSignificantBulkAsync_SameScoresExist()
+    {
+        // Arrange
+        var score = new List<APIScore>
+        {
+            new APIScore
+            {
+                Id = 1,
+                BeatmapId = 1,
+                TotalScore = 1000000,
+                Mode = Mode.Osu,
+                UserId = 1
+            },
+            new APIScore
+            {
+                Id = 2,
+                BeatmapId = 1,
+                TotalScore = 999000,
+                Mode = Mode.Osu,
+                UserId = 2
+            },
+            new APIScore
+            {
+                Id = 3,
+                BeatmapId = 1,
+                TotalScore = 998000,
+                Mode = Mode.Osu,
+                UserId = 3
+            }
+        };
+
+        var scoreDtos = score.Select(s => new Score
+        {
+            Id = s.Id,
+            BeatmapId = s.BeatmapId,
+            TotalScore = s.TotalScore,
+            Mode = s.Mode,
+            UserId = s.UserId,
+        }).ToList();
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 100; i++)
+        {
+            scores.Add(new Score
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+        scores.AddRange(scoreDtos);
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Act
+        var dict = await _scoreProcessor.CheckIfSignificantBulkAsync(score, CancellationToken.None);
+        
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(dict.Count, Is.EqualTo(3));
+            Assert.IsFalse(dict[1]);
+            Assert.IsFalse(dict[2]);
+            Assert.IsFalse(dict[3]);
+        });
+    }
+    
+    [Test]
     public async Task CheckIfSignificantBulkAsync_RespectiveGroupDoesntExist()
     {
         // Arrange
@@ -310,7 +381,7 @@ public class ScoreProcessorTests
         // Arrange
         var score = new APIScore
         {
-            Id = 50,
+            Id = 51,
             BeatmapId = 1,
             TotalScore = 10000,
             Mode = Mode.Osu,
@@ -342,7 +413,7 @@ public class ScoreProcessorTests
         // Arrange
         var score = new APIScore
         {
-            Id = 50,
+            Id = 51,
             BeatmapId = 1,
             TotalScore = 10000,
             Mode = Mode.Osu,
@@ -375,7 +446,7 @@ public class ScoreProcessorTests
         // Arrange
         var score = new APIScore
         {
-            Id = 50,
+            Id = 51,
             BeatmapId = 1,
             TotalScore = 10000,
             Mode = Mode.Osu,
@@ -394,6 +465,94 @@ public class ScoreProcessorTests
                 UserId = i + 1
             });
         }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(_scoreProcessor.CheckIfBetterAlreadyExists(score, scores));
+    }
+
+    [Test]
+    public void CheckIfBetterAlreadyExists_SameScoreExists_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 50,
+            BeatmapId = 1,
+            TotalScore = 10000,
+            Mode = Mode.Osu,
+            UserId = 50
+        };
+
+        var scoreDto = new Score
+        {
+            Id = score.Id,
+            BeatmapId = score.BeatmapId,
+            TotalScore = score.TotalScore,
+            Mode = score.Mode,
+            UserId = score.UserId
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 49; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+        
+        scores.Add(scoreDto);
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(_scoreProcessor.CheckIfBetterAlreadyExists(score, scores));
+    }
+    
+    [Test]
+    public void CheckIfBetterAlreadyExists_SameScoreExistsButWorseComesFirst_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 50,
+            BeatmapId = 1,
+            TotalScore = 1000000,
+            Mode = Mode.Osu,
+            UserId = 2
+        };
+
+        var scoreDto = new Score
+        {
+            Id = score.Id,
+            BeatmapId = score.BeatmapId,
+            TotalScore = score.TotalScore,
+            Mode = score.Mode,
+            UserId = score.UserId
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 49; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+        
+        scores.Add(scoreDto);
 
         _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(scores);

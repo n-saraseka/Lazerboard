@@ -190,11 +190,12 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 foreach (var score in groupScores.ToList())
                 {
-                    var matchingScore = beatmapScores.FirstOrDefault(b => b.UserId == score.UserId);
-                    if (matchingScore != null)
+                    var matchingScores = beatmapScores.Where(b => b.UserId == score.UserId).ToList();
+                    if (matchingScores.Count > 0)
                     {
-                        scoreRepository.Delete(matchingScore);
-                        beatmapScores.Remove(score);
+                        scoreRepository.DeleteBulk(matchingScores);
+                        foreach (var s in matchingScores)
+                            beatmapScores.Remove(s);
                         deletedCount++;
                     }
                 }
@@ -210,9 +211,16 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .ToList();
             
                 foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
-            
-                scoreRepository.CreateBulk(newScores);
-                scoreRepository.UpdateBulk(beatmapScores);
+
+                if (newScores.Count() > 0)
+                {
+                    scoreRepository.CreateBulk(newScores);
+                }
+
+                if (beatmapScores.Count > 0)
+                {
+                    scoreRepository.UpdateBulk(beatmapScores);
+                }
             
                 updatedCount += beatmapScores.Count;
                 createdCount += newScores.Count();

@@ -81,8 +81,8 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <returns>True if there is a score set by user that is higher or equal, false otherwise</returns>
    public bool CheckIfBetterAlreadyExists(APIScore score, List<Score> beatmapScores)
     {
-        var existingScore = beatmapScores.FirstOrDefault(s => s.UserId == score.UserId);
-        if (existingScore == null) return false;
-        return existingScore.TotalScore >= score.TotalScore;
+        var existingScores = beatmapScores.Where(s => s.UserId == score.UserId).ToList();
+        if (existingScores.Count == 0) return false;
+        return existingScores.Max(s => s.TotalScore) >= score.TotalScore;
     }
 }

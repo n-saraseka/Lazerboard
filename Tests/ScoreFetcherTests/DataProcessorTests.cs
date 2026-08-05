@@ -400,4 +400,89 @@ public class DataProcessorTests
             dtos.Count() == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
     }
+    
+    [Test]
+    public async Task ProcessScoresAsync_MultipleDuplicatesExist_DuplicatesAreRemoved()
+    {
+        // Arrange
+        var data = new List<APIScore>
+        {
+            new APIScore
+            {
+                Id = 4,
+                BeatmapId = 1,
+                UserId = 1,
+                TotalScore = 200,
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 5,
+                BeatmapId = 1,
+                UserId = 2,
+                TotalScore = 200,
+                Date = new DateTime(2020, 2, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 6,
+                BeatmapId = 1,
+                UserId = 3,
+                TotalScore = 150,
+                Date = new DateTime(2020, 3, 1),
+                Mode = Mode.Osu
+            }
+        };
+
+        var dbData = data.Select(s => new Score
+        {
+            Id = s.Id + 3,
+            BeatmapId = s.BeatmapId,
+            UserId = s.UserId,
+            TotalScore = s.TotalScore - 1,
+            Date = s.Date,
+            Mode = s.Mode
+        }).ToList();
+
+        var copy = dbData.Select(s =>
+        {
+            s.Id += 3;
+            s.TotalScore -= 1;
+            return s;
+        }).ToList();
+        
+        dbData.AddRange(copy);
+
+        var scoreRanks = new Dictionary<ulong, int>
+        {
+            { 4, 1 },
+            { 5, 2 },
+            { 6, 3 },
+        };
+        
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+            .ReturnsAsync(dbData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
+            .Returns<APIScore>(api => new Score
+            {
+                Id = api.Id,
+                BeatmapId = api.BeatmapId,
+                TotalScore = api.TotalScore,
+                Date = api.Date,
+                UserId = api.UserId,
+                Mode = api.Mode
+            });
+
+        // Act
+        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        
+        // Assert
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
+            dtos.Count() == 3 &&
+            dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
+        _scoreRepository.Verify(r => r.DeleteBulk(It.IsAny<IEnumerable<Score>>()), Times.Exactly(3));
+        _scoreRepository.Verify(r => r.UpdateBulk(It.IsAny<IEnumerable<Score>>()), Times.Never);
+    }
 }

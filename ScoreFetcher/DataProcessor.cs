@@ -21,6 +21,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessBeatmapsetsAsync(IEnumerable<APIBeatmapset> beatmapsets, CancellationToken ct)
     {
+        if (beatmapsets.Count() == 0) return;
         var existingBeatmapsets = await GetExistingBeatmapsetsAsync(beatmapsets.Select(bs => bs.Id), ct);
         var newBeatmapsets = beatmapsets.Where(bs => !existingBeatmapsets.Select(s => s.Id).Contains(bs.Id));
         var beatmapsetDtos = newBeatmapsets
@@ -46,6 +47,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessBeatmapsAsync(IEnumerable<APIBeatmap> beatmaps, CancellationToken ct)
     {
+        if (beatmaps.Count() == 0) return;
         var existingBeatmaps = await GetExistingBeatmapsAsync(beatmaps.Select(b => b.Id), ct);
         var newBeatmaps = beatmaps.Where(b => !existingBeatmaps.Select(s => s.Id).Contains(b.Id));
         var beatmapDtos = newBeatmaps
@@ -80,6 +82,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessCountriesAsync(IEnumerable<APICountry> countries, CancellationToken ct)
     {
+        if (countries.Count() == 0) return;
         var existingCountries = await countryRepository.GetBulkAsync(countries.Select(c => c.Code), ct);
         var newCountries = countries.Where(co => !existingCountries.Select(c => c.Id).Contains(co.Code));
         var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id);
@@ -103,6 +106,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessUsersAsync(IEnumerable<APIUser> users, CancellationToken ct)
     {
+        if (users.Count() == 0) return;
         var existingUsers = await GetExistingUsersAsync(users.Select(u => u.Id), ct);
         var userDtos = users.Select(entityToDtoService.UserEntityToDto);
         var newUsers = userDtos
@@ -128,6 +132,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessRemovedUsersAsync(IEnumerable<User> users, CancellationToken ct)
     {
+        if (users.Count() == 0) return;
         var existingUsers = await userRepository.GetBulkAsync(users.Select(u => u.Id), ct);
         var newUsers = users
             .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))
@@ -152,6 +157,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
     {
+        if (scores.Count() == 0) return;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });

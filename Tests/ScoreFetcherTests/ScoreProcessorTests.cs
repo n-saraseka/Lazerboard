@@ -32,15 +32,15 @@ public class ScoreProcessorTests
         // Arrange
         var score = new APIScore
         {
-            Id = 51,
+            Id = 101,
             BeatmapId = 1,
             Mode = Mode.Osu,
             TotalScore = 10000,
-            UserId = 51
+            UserId = 101
         };
         
         var scores = new List<Score>();
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 100; i++)
         {
             scores.Add(new Score
             {
@@ -65,15 +65,15 @@ public class ScoreProcessorTests
         // Arrange
         var score = new APIScore
         {
-            Id = 50,
+            Id = 100,
             BeatmapId = 1,
             TotalScore = 10000,
             Mode = Mode.Osu,
-            UserId = 50
+            UserId = 100
         };
         
         var scores = new List<Score>();
-        for (int i = 0; i < 49; i++)
+        for (int i = 0; i < 99; i++)
         {
             scores.Add(new Score()
             {
@@ -98,7 +98,7 @@ public class ScoreProcessorTests
         // Arrange
         var score = new APIScore
         {
-            Id = 51,
+            Id = 101,
             BeatmapId = 1,
             TotalScore = 970000,
             Mode = Mode.Osu,
@@ -106,7 +106,7 @@ public class ScoreProcessorTests
         };
         
         var scores = new List<Score>();
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 100; i++)
         {
             scores.Add(new Score()
             {
@@ -155,23 +155,23 @@ public class ScoreProcessorTests
         {
             new APIScore
             {
-                Id = 51,
+                Id = 101,
                 BeatmapId = 1,
                 TotalScore = 10000,
                 Mode = Mode.Osu,
-                UserId = 51
+                UserId = 101
             },
             new APIScore
             {
-                Id = 52,
+                Id = 102,
                 BeatmapId = 1,
                 TotalScore = 990000,
                 Mode = Mode.Osu,
-                UserId = 52
+                UserId = 102
             },
             new APIScore
             {
-                Id = 53,
+                Id = 103,
                 BeatmapId = 1,
                 TotalScore = 1,
                 Mode = Mode.Osu,
@@ -180,7 +180,7 @@ public class ScoreProcessorTests
         };
         
         var scores = new List<Score>();
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 100; i++)
         {
             scores.Add(new Score
             {
@@ -202,9 +202,9 @@ public class ScoreProcessorTests
         Assert.Multiple(() =>
         {
             Assert.That(dict.Count, Is.EqualTo(3));
-            Assert.IsFalse(dict[51]);
-            Assert.IsTrue(dict[52]);
-            Assert.IsFalse(dict[53]);
+            Assert.IsFalse(dict[101]);
+            Assert.IsTrue(dict[102]);
+            Assert.IsFalse(dict[103]);
         });
     }
     

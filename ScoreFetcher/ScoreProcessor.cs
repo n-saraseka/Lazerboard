@@ -17,14 +17,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     {
         var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
         var scoresForMode = beatmapScores.Where(s => s.Mode == score.Mode).ToList();
-        if (scoresForMode.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50)
-        {
-            logger.Log(LogLevel.Information, "Method: CheckIfSignificantAsync; Score: {score}; Scores: {scores}; Result: {result}", 
-                score, scoresForMode, false);
-            return false;
-        }
-        logger.Log(LogLevel.Information, "Method: CheckIfSignificantAsync; Score: {score}; Scores: {scores}; Result: {result}", 
-            score, scoresForMode, !CheckIfBetterAlreadyExists(score, scoresForMode));
+        if (scoresForMode.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 100) return false;
         return !CheckIfBetterAlreadyExists(score, scoresForMode);
     }
     
@@ -54,7 +47,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                 var beatmapScores = respectiveGroup.ToList();
                 foreach (var score in scoresInGroup)
                 {
-                    if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 50) 
+                    if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 100) 
                         dictionary[score.Id] = false;
                     else 
                         dictionary[score.Id] = !CheckIfBetterAlreadyExists(score, beatmapScores);
@@ -63,8 +56,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
             else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
         }
         
-        logger.Log(LogLevel.Information, "Method: CheckIfSignificantBulkAsync; Score: {scores}; BeatmapScores: {beatmapScores}; Result: {result}", 
-            scores, existingScores, dictionary);
+        logger.Log(LogLevel.Information, "Method: CheckIfSignificantBulkAsync; Result: {@result}", dictionary);
         
         return dictionary;
     }
@@ -89,14 +81,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
    public bool CheckIfBetterAlreadyExists(APIScore score, List<Score> beatmapScores)
     {
         var existingScore = beatmapScores.FirstOrDefault(s => s.UserId == score.UserId);
-        if (existingScore == null)
-        {
-            logger.Log(LogLevel.Information, "Method: CheckIfBetterAlreadyExists; Score: {score}; Scores: {beatmapScores}; Result: {result}", 
-                score, beatmapScores, false);
-            return false;
-        }
-        logger.Log(LogLevel.Information, "Method: CheckIfBetterAlreadyExists; Score: {score}; Scores: {beatmapScores}; Result: {result}", 
-            score, beatmapScores, existingScore.TotalScore >= score.TotalScore);
+        if (existingScore == null) return false;
         return existingScore.TotalScore >= score.TotalScore;
     }
 }

@@ -45,7 +45,7 @@ public class ScoreLeaderboardService(IServiceProvider serviceProvider, ILogger<S
                 foreach (var val in Enum.GetValues<Mode>())
                 {
                     if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
-                    logger.Log(LogLevel.Information, "Getting leaderboard scores; BeatmapID: {id}, {mode}", beatmap.Id, beatmap.Mode);
+                    logger.Log(LogLevel.Information, "Getting leaderboard scores; BeatmapID: {id}; Mode: {mode}", beatmap.Id, val);
                     beatmapScores.Add(await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken));
                     await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
                 }

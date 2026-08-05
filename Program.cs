@@ -10,6 +10,7 @@ using OsuScoreStats.Migrations;
 using OsuScoreStats.OsuApi;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuEntityToDtoService;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +61,13 @@ builder.Services.AddControllersWithViews()
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Logs
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+    );
 
 var app = builder.Build();
 

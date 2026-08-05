@@ -15,13 +15,15 @@ public class ScoreProcessorTests
     private ScoreProcessor _scoreProcessor;
     private Mock<IScoreRepository> _scoreRepository;
     private Mock<ICalculator> _calculator;
+    private Mock<ILogger<IScoreProcessor>> _logger;
     
     [SetUp]
     public void Setup()
     {
         _scoreRepository = new Mock<IScoreRepository>();
         _calculator = new Mock<ICalculator>();
-        _scoreProcessor = new ScoreProcessor(_scoreRepository.Object, _calculator.Object);
+        _logger = new Mock<ILogger<IScoreProcessor>>();
+        _scoreProcessor = new ScoreProcessor(_scoreRepository.Object, _calculator.Object, _logger.Object);
     }
 
     [Test]

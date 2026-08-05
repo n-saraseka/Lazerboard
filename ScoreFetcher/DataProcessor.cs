@@ -31,7 +31,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await beatmapsetRepository.SaveChangesAsync(ct);
-            Console.WriteLine($"Saved {beatmapsetDtos.Count()} new beatmapsets to the DB.");
+            logger.Log(LogLevel.Information, "New beatmapsets: {createdCount}", beatmapsetDtos.Count());
         }
         catch (NpgsqlException exception)
         {
@@ -56,11 +56,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await beatmapRepository.SaveChangesAsync(ct);
-            Console.WriteLine($"Saved {beatmapDtos.Count()} new beatmaps to the DB.");
+            logger.Log(LogLevel.Information, "New beatmaps: {createdCount}", beatmapDtos.Count());
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsAsync; Beatmaps: {beatmaps}", beatmapDtos);
+            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsAsync; Beatmaps: {@beatmaps}", beatmapDtos);
         }
     }
     
@@ -88,11 +88,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await countryRepository.SaveChangesAsync(ct);
-            Console.WriteLine($"Saved {countryDtos.Count()} new countries to the DB.");
+            logger.Log(LogLevel.Information, "New countries: {createdCount}", countryDtos.Count());
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessCountriesAsync; Countries: {countries}", countryDtos);
+            logger.Log(LogLevel.Error, exception, "Method: ProcessCountriesAsync; Countries: {@countries}", countryDtos);
         }
     }
 
@@ -113,7 +113,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await userRepository.SaveChangesAsync(ct);
-            Console.WriteLine($"Saved {newUsers.Count()} new users to the DB.");
+            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
         }
         catch (NpgsqlException exception)
         {
@@ -137,11 +137,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await userRepository.SaveChangesAsync(ct);
-            Console.WriteLine($"Saved {newUsers.Count()} new users to the DB.");
+            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessRemovedUsersAsync; Users: {users}", newUsers);
+            logger.Log(LogLevel.Error, exception, "Method: ProcessRemovedUsersAsync; Users: {@users}", newUsers);
         }
     }
     
@@ -219,8 +219,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         {
             await scoreRepository.SaveChangesAsync(ct);
 
-            Console.WriteLine($"Saved {createdCount} new scores to the DB.");
-            Console.WriteLine($"Updated {updatedCount} scores from the DB.");
+            logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}", createdCount, updatedCount);
         }
         catch (NpgsqlException exception)
         {

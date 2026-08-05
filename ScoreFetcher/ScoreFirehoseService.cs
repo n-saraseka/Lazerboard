@@ -1,5 +1,4 @@
 using OsuScoreStats.Calculations;
-using OsuScoreStats.DbService.Entities;
 
 namespace OsuScoreStats.ScoreFetcher;
 

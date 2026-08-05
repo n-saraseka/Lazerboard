@@ -152,6 +152,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
     {
+        logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
@@ -209,9 +210,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             
                 updatedCount += beatmapScores.Count;
                 createdCount += newScores.Count();
-                
-                logger.Log(LogLevel.Information, "Method: ProcessScoresAsync | BeatmapID: {id}; Mode: {mode}; Scores: {@scores}", 
-                    group.Key.BeatmapId, group.Key.Mode, merged);
             }
         }
 

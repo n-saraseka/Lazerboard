@@ -166,6 +166,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
         var updatedCount = 0;
         var createdCount = 0;
+        var deletedCount = 0;
         
         foreach (var group in groupedScores)
         {
@@ -192,8 +193,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     var matchingScore = beatmapScores.FirstOrDefault(b => b.UserId == score.UserId);
                     if (matchingScore != null)
                     {
-                        matchingScore = score;
-                        groupScores.Remove(score);
+                        scoreRepository.Delete(matchingScore);
+                        beatmapScores.Remove(score);
+                        deletedCount++;
                     }
                 }
                 
@@ -221,7 +223,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         {
             await scoreRepository.SaveChangesAsync(ct);
 
-            logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}", createdCount, updatedCount);
+            logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}; Deleted scores: {deletedCount}", 
+                createdCount, updatedCount, deletedCount);
         }
         catch (NpgsqlException exception)
         {

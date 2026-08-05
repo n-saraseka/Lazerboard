@@ -6,8 +6,8 @@ namespace OsuScoreStats.Calculations;
 
 public class CacheStore : ICacheStore
 {
-    private IConfiguration _config;
     private OsuApiService _osuApiService;
+    private ILogger<CacheStore> _logger;
     private string _cachePath;
     private int _osuFileTTL;
     private const int DefaultTTL = 10;
@@ -15,15 +15,15 @@ public class CacheStore : ICacheStore
     private DateTime _startTime;
     private double _apiInterval;
 
-    public CacheStore(IConfiguration config, OsuApiService osuApiService)
+    public CacheStore(IConfiguration config, OsuApiService osuApiService, ILogger<CacheStore> logger)
     {
-        _config = config;
         _osuApiService = osuApiService;
-        _cachePath = _config["CacheFolder"];
-        _osuFileTTL = int.TryParse(_config["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
+        _logger = logger;
+        _cachePath = config.GetValue<string>("CacheFolder");
+        _osuFileTTL = int.TryParse(config["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
         _deltaTime = TimeSpan.Zero;
         _startTime = DateTime.UtcNow;
-        _apiInterval = double.Parse(config["OsuApiInterval"]);
+        _apiInterval = config.GetValue<double>("OsuApiInterval");
     }
 
     private bool ShouldCleanUp()
@@ -41,7 +41,7 @@ public class CacheStore : ICacheStore
     {
         if (!ShouldCleanUp()) return;
         
-        Console.WriteLine("Checking if any files in cache folder exceeded their TTL...");
+        _logger.Log(LogLevel.Information, "Checking if any files in cache folder exceeded their TTL...");
         var deletedCount = 0;
         var files = Directory.EnumerateFiles(_cachePath);
         foreach (var file in files)
@@ -50,7 +50,7 @@ public class CacheStore : ICacheStore
                 File.Delete(file);
                 deletedCount++;
             }
-        Console.WriteLine($"Deleted {deletedCount} files from beatmap cache");
+        _logger.Log(LogLevel.Information, "Removed {count} files from beatmap cache", deletedCount);
     }
     
     public async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, CancellationToken ct)
@@ -58,8 +58,15 @@ public class CacheStore : ICacheStore
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
         if (!File.Exists(mapPath))
         {
-            await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
-            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
+            try
+            {
+                await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
+                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, ex, "Method: OsuApiService.DownloadBeatmapsAsync; BeatmapID: {id}", beatmapId);
+            }
         }
         
         await using var stream = File.OpenRead(mapPath);

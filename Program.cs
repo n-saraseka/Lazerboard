@@ -193,4 +193,16 @@ app.MapControllerRoute(
     defaults: new { controller = "Beatmapset", action = "BeatmapPage"});
 
 app.MapControllers();
-app.Run();
+
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

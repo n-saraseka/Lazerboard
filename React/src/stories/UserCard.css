@@ -12,6 +12,8 @@
     width: 5em;
     height: 5em;
     border-radius: 1em;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .user-data {

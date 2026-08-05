@@ -85,6 +85,8 @@ body {
     height: 3em;
     border-radius: 1em;
     box-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .score-player-img:hover {

@@ -9,40 +9,43 @@ using osu.Game.Rulesets.Osu;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Taiko;
 using osu.Game.Scoring;
-using OsuScoreStats.OsuApi;
 using System.Reflection;
-using osu.Game.IO;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 
 namespace OsuScoreStats.Calculations;
 
-public class ScoreCalculator(ICacheStore cacheStore) : ICalculator
+public class ScoreCalculator(ICacheStore cacheStore, ILogger<ScoreCalculator> logger) : ICalculator
 {
-    public async Task<float> CalculateAsync(APIScore apiScore, CancellationToken ct)
+    public async Task<float?> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {
         // preparing necessary data
         var ruleset = GetRulesetFromScore(apiScore);
-        var beatmap = new Beatmap();
+        Beatmap beatmap;
         try
         {
             beatmap = await cacheStore.GetBeatmapFileAsync(apiScore.BeatmapId, ct);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Couldn't get the beatmap for score {apiScore.Id}. Beatmap ID: {apiScore.BeatmapId}.");
-            Console.WriteLine($"Failed with the following exception: {ex.Message}");
-            return 0;
+            logger.Log(LogLevel.Error, ex, "Method: ScoreCalculator.CalculateAsync; Score: {score}, Beatmap ID: {beatmapId}", apiScore, apiScore.BeatmapId);
+            return null;
         }
         var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);
         var flatWorkingBeatmap = new FlatWorkingBeatmap(beatmap);
 
         // diffcalc
-        var difficultyAttributes = ruleset.CreateDifficultyCalculator(flatWorkingBeatmap).Calculate(scoreInfo.Mods);
+        var difficultyAttributes = ruleset.CreateDifficultyCalculator(flatWorkingBeatmap).Calculate(scoreInfo.Mods, ct);
         var performanceCalculator = ruleset.CreatePerformanceCalculator();
-        var performanceAttributes = await performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
-
-        return (float)performanceAttributes.Total;
+        if (performanceCalculator != null)
+        {
+            var performanceAttributes = await performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
+            logger.Log(LogLevel.Information, "Method: ScoreCalculator.CalculateAsync; Score: {score}, PP: {pp}", apiScore, (float)performanceAttributes.Total);
+            return (float)performanceAttributes.Total;
+        }
+        logger.Log(LogLevel.Error, "Method: ScoreCalculator.CalculateAsync; Score: {score}; Error: {error}", 
+            apiScore, $"{nameof(performanceCalculator)} is null");
+        return null;
     }
     
     /// <summary>

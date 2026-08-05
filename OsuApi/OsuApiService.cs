@@ -7,7 +7,8 @@ namespace OsuScoreStats.OsuApi;
 
 public class OsuApiService(
     IHttpClientFactory httpClientFactory, 
-    IConfiguration config)
+    IConfiguration config, 
+    ILogger<OsuApiService> logger)
 {
     private static TokenInfo? _token;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
@@ -22,9 +23,9 @@ public class OsuApiService(
     /// <param name="ct">Cancellation token</param>
     /// <returns>Request response text</returns>
     private async Task<string> SendRequestAsync(HttpMethod method, 
-        string requestString, 
-        HttpContent? content, 
-        bool isTokenRequest = false, 
+        string requestString,
+        HttpContent? content,
+        bool isTokenRequest = false,
         CancellationToken ct = default)
     {
         var client = httpClientFactory.CreateClient();
@@ -52,9 +53,10 @@ public class OsuApiService(
                 responseText = await response.Content.ReadAsStringAsync(ct);
                 break;
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex.StatusCode);
+                logger.Log(LogLevel.Error, ex, "Method: OsuApiService.SendRequestAsync; Method: {method}; RequestString: {requestString}; Content: {content}", 
+                    method, requestString, content);
                 throw;
             }
         }

@@ -65,7 +65,7 @@ public class CacheStore : ICacheStore
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Error, ex, "Method: OsuApiService.DownloadBeatmapsAsync; BeatmapID: {id}", beatmapId);
+                _logger.Log(LogLevel.Error, ex, "Method: OsuApiService.DownloadBeatmapsAsync | BeatmapID: {id}", beatmapId);
             }
         }
         

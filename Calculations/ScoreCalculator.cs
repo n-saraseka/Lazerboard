@@ -28,7 +28,7 @@ public class ScoreCalculator(ICacheStore cacheStore, ILogger<ScoreCalculator> lo
         }
         catch (Exception ex)
         {
-            logger.Log(LogLevel.Error, ex, "Method: ScoreCalculator.CalculateAsync; Score: {score}, Beatmap ID: {beatmapId}", apiScore, apiScore.BeatmapId);
+            logger.Log(LogLevel.Error, ex, "Method: ScoreCalculator.CalculateAsync | Score: {score}, Beatmap ID: {beatmapId}", apiScore, apiScore.BeatmapId);
             return null;
         }
         var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);
@@ -40,10 +40,10 @@ public class ScoreCalculator(ICacheStore cacheStore, ILogger<ScoreCalculator> lo
         if (performanceCalculator != null)
         {
             var performanceAttributes = await performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
-            logger.Log(LogLevel.Information, "Method: ScoreCalculator.CalculateAsync; Score: {score}, PP: {pp}", apiScore, (float)performanceAttributes.Total);
+            logger.Log(LogLevel.Information, "Score ID: {scoreId}, new PP: {pp}", apiScore.Id, (float)performanceAttributes.Total);
             return (float)performanceAttributes.Total;
         }
-        logger.Log(LogLevel.Error, "Method: ScoreCalculator.CalculateAsync; Score: {score}; Error: {error}", 
+        logger.Log(LogLevel.Error, "Method: ScoreCalculator.CalculateAsync | Score: {@score}; Error: {error}", 
             apiScore, $"{nameof(performanceCalculator)} is null");
         return null;
     }

@@ -95,8 +95,3 @@ body {
     -webkit-mask-image: url("images/chevron.svg");
     background-color: black;
 }
-
-.strict-mode {
-    text-decoration: underline;
-    text-decoration-style: dotted;
-}

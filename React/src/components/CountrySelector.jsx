@@ -17,7 +17,10 @@ function CountrySelector({countries, filters, setFilters}) {
                     <CountrySelectorRow key={index} 
                                         country={c}
                                         isPartOfList={true}
-                                        onClickAction={() => setFilters({...filters, country: c})} 
+                                        onClickAction={() => {
+                                            setFilters({...filters, country: c});
+                                            setDropdownEnabled(false);
+                                        }} 
                                         hasChevron={false}/>
                 )) }
             </div>

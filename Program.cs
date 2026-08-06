@@ -212,6 +212,11 @@ app.MapControllerRoute(
     pattern: "/b/{id:int}",
     defaults: new { controller = "Beatmapset", action = "BeatmapPage"});
 
+app.MapControllerRoute(
+    name: "scoreranking",
+    pattern: "scoreranking",
+    defaults: new { controller = "ScoreRanking", action = "ScoreRanking"});
+
 app.MapControllers();
 
 try

@@ -4,11 +4,13 @@ import { createRoot } from 'react-dom/client'
 import ScoresPage from './components/ScoresPage.jsx';
 import UserPage from './components/UserPage.jsx';
 import BeatmapsetPage from './components/BeatmapsetPage.jsx';
+import ScoreRankingPage from "./components/ScoreRankingPage.jsx";
 
 const allComponents = {
     "ScoresPage": ScoresPage,
     "UserPage": UserPage,
     "BeatmapsetPage": BeatmapsetPage,
+    "ScoreRankingPage": ScoreRankingPage,
 }
 
 document.querySelectorAll(".react-app").forEach((el) => {

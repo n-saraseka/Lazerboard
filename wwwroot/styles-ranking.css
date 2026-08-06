@@ -1,0 +1,102 @@
+body {
+    font-family: "Cascadia Mono", monospace;
+    background-color: rgb(35, 35, 35);
+    color: white;
+}
+
+.top-country, .countries, .top-selector, .mods-to-select  {
+    border: 1px solid black;
+    border-radius: 0.25em;
+}
+
+.country-selector, .mod-selection {
+    position: relative;
+    display: inline-block;
+    min-width: 250px;
+    max-width: fit-content;
+}
+
+.countries, .mods-to-select {
+    background-color: white;
+    position: absolute;
+    width: 100%;
+    z-index: 100;
+    height: 200px;
+    overflow-x: scroll;
+    overflow-y: scroll;
+}
+
+.countries > .selector-country:first-child, .mods-to-select > .mod-selector:first-child {
+    border-radius: 0.25em 0.25em 0 0;
+}
+
+.countries > .selector-country:last-child, .mods-to-select > .mod-selector:last-child {
+    border-radius: 0 0 0.25em 0.25em;
+}
+
+.top-country > .selector-country {
+    border-radius: 0.25em 0.25em;
+}
+
+.selector-country, .mod-selector {
+    display: flex;
+    gap: 1em;
+    justify-content: space-between;
+    height: 1em;
+    padding: 0.5em;
+    background-color: white;
+    color: black;
+    align-items: center;
+}
+
+.list-country:hover, .list-mod:hover, .mod-active {
+    background-color: #1967d2;
+    color: white;
+}
+
+.list-mod:hover .mod {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
+.selector-flag {
+    min-width: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.selector-flag img {
+    height: 1em;
+}
+
+.list-country:hover img {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+}
+
+.selector-countryname, .selector-modname {
+    flex: 3 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+    text-wrap: nowrap;
+}
+
+.selector-chevron {
+    width: 1em;
+    height: 1em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-image: url("images/chevron.svg");
+    -webkit-mask-image: url("images/chevron.svg");
+    background-color: black;
+}
+
+.strict-mode {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}

@@ -80,7 +80,7 @@ export const allMods = {
     automation: [
         Mod("RX", "Relax", false, [0, 1, 2]),
         Mod("AP", "Autopilot", false, [0]),
-        Mod("SO", "Spun Out", false [0])
+        Mod("SO", "Spun Out", false, [0])
     ],
     conversion: [
         Mod("TP", "Target Practice", false, [0]),
@@ -121,7 +121,7 @@ export const allMods = {
       Mod("NS", "No Scope", false, [0, 2]),
       Mod("MG", "Magnetised", false, [0, 2]),
       Mod("RP", "Repel", false, [0]),
-      Mod("AS", "Adaptive Speed", false , [0, 1, 3]),
+      Mod("AS", "Adaptive Speed", false, [0, 1, 3]),
       Mod("FR", "Freeze Frame", false, [0]),
       Mod("BU", "Bubbles", false, [0]),
       Mod("MF", "Moving Fast", false, [2]),

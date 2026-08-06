@@ -5,6 +5,7 @@ const conversionMods = ["AL", "CL", "DA", "MR", "RD", "SG", "TP"];
 const automationMods = ["AP", "RX", "SO"];
 const funMods = ["AD", "AS", "BM", "BR", "BU", "DF", "DP", "FR", "GR", "MG", "MU", "NS", "RP", "SI", "SY", "TR", "WD", "WG", "WU"]
 const systemMods = ["TD"];
+const rateChangeMods = ['DT', 'NC', 'HT', 'DC'];
 
 const modCategories = {};
 difficultyDecreasingMods.forEach(mod => modCategories[mod] = "difficulty-decrease");
@@ -18,8 +19,11 @@ function getModCategory(mod) {
     return modCategories[mod] || "unknown";
 }
 
-function ScoreMod({acronym}) {
-    return (<span className={`mod mod-${getModCategory(acronym.slice(0,2))}`}>{acronym}</span>)
+function ScoreMod({acronym, speedChange}) {
+    const isRateChange = rateChangeMods.includes(acronym) && speedChange !== null;
+    return (<span className={`mod mod-${getModCategory(acronym)}`}>
+        {`${acronym}${isRateChange ? `(${speedChange}x)` : ''}`}
+    </span>)
 }
 
 export default ScoreMod;

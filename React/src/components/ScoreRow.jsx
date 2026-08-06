@@ -22,7 +22,7 @@ function ScoreRow({score, usingStandardized}) {
         </td>
         <td className="score-row-pp">{`${score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">
-            {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym}/>)}
+            {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
         </td>
         <td className="score-total">
             <a href={`https://osu.ppy.sh/scores/${score.id}`}

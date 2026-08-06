@@ -33,7 +33,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
         <td className="score-row-pp">{`${score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{dateStringFromDatetime(score.date)}</td>
         <td className="score-row-mods">
-            {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym}/>)}
+            {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
         </td>
     </tr>)
 }

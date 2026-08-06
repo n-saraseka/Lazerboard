@@ -31,7 +31,6 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             {
                 if (value is double change)
                 {
-                    acronym += $"({value}x)";
                     dto.SpeedChange = change;
                 }
             }

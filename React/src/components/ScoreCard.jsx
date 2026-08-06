@@ -31,7 +31,7 @@ function ScoreCard({score, usingStandardized}) {
                          className="score-player-img"/>
                 </a>
                 <div className="score-mods">
-                    {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym}/>)}
+                    {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
                 </div>
                 <strong className="score-combo">{`${score.combo.toLocaleString('en-US')}x`}</strong>
                 <div className="score-acc-misses">

@@ -16,7 +16,7 @@ const mockProps = {
         id: 2319215043,
         accuracy: 0.9785,
         combo: 314,
-        modAcronyms: ['DT(2x)', 'FL', 'HD'],
+        modAcronyms: ['DT', 'FL', 'HD'],
         misses: 0,
         totalScore: 1699546,
         classicTotalScore: 0,
@@ -25,6 +25,7 @@ const mockProps = {
         beatmap_id: 75,
         pp: 100,
         rank: 1,
+        speedChange: 2,
         beatmap: {
             id: 75,
             beatmapsetId: 1,

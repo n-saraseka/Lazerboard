@@ -64,7 +64,10 @@ builder.Services.AddScoped<ICacheStore, CacheStore>();
 builder.Services.AddScoped<ScoreFetchingUtils>();
 
 // Background services
-builder.Services.AddHostedService<ScoreLeaderboardService>();
+if (builder.Configuration.GetValue<bool>("ScoreFetchingTurnedOn"))
+{
+    builder.Services.AddHostedService<ScoreLeaderboardService>();
+}
 
 // API
 builder.Services.AddScoped<ScoreMethods>();

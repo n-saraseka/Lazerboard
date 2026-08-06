@@ -1,7 +1,10 @@
 import ScoreMod from "./ScoreMod";
 import ModeWedge from "./ModeWedge.jsx";
+import {useState} from "react";
 
 function ScoreCard({score, usingStandardized}) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    
     return (<div className="score-card">
         <div className="score" style={
             {background: `url("https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg") center, rgba(0, 0, 0, 0.7)`}
@@ -30,8 +33,16 @@ function ScoreCard({score, usingStandardized}) {
                     <img src={`https://a.ppy.sh/${score.user.id}`} alt={score.user.username} title={score.user.username}
                          className="score-player-img"/>
                 </a>
-                <div className="score-mods">
-                    {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+                <div className="mods">
+                    {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+                    {score.modAcronyms.length > 5 && (<>
+                        {!isExpanded && (
+                            <span className="mod mod-unknown mods-expand" title="Click to expand" onClick={() => setIsExpanded(true)}>
+                                {`+${score.modAcronyms.length - 5}`}
+                            </span>
+                        )}
+                        {isExpanded && score.modAcronyms.slice(5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+                    </>)}
                 </div>
                 <strong className="score-combo">{`${score.combo.toLocaleString('en-US')}x`}</strong>
                 <div className="score-acc-misses">

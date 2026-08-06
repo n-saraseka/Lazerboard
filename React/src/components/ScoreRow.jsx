@@ -1,8 +1,10 @@
 import ScoreMod from "./ScoreMod";
 import {modeEnumToString} from "../utils/beatmap-things.js";
 import {getEncodedCountry} from "../utils/user-things.js";
+import {useState} from "react";
 
 function ScoreRow({score, usingStandardized}) {
+    const [isExpanded, setIsExpanded] = useState(false);
     const modeString = modeEnumToString(score.mode);
     
     return (<tr className="score-row">
@@ -22,7 +24,17 @@ function ScoreRow({score, usingStandardized}) {
         </td>
         <td className="score-row-pp">{`${score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">
-            {score.modAcronyms.map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+            <div className="mods">
+                {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+                {score.modAcronyms.length > 5 && (<>
+                    {!isExpanded && (
+                        <span className="mod mod-unknown mods-expand" title="Click to expand" onClick={() => setIsExpanded(true)}>
+                                {`+${score.modAcronyms.length - 5}`}
+                            </span>
+                    )}
+                    {isExpanded && score.modAcronyms.slice(5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+                </>)}
+            </div>
         </td>
         <td className="score-total">
             <a href={`https://osu.ppy.sh/scores/${score.id}`}

@@ -230,28 +230,65 @@ body {
     box-shadow: 0 0 1em rgba(255, 255, 255, 0.5);
 }
 
-.mod-difficulty-decrease {
-    color: rgb(60, 180, 60);
+.mod {
+    padding: 0.25em;
+    border-radius: 0.25em;
 }
 
-.mod-difficulty-increase {
-    color: rgb(180, 60, 60);
+.mods {
+    display: flex;
+    gap: 0.25em;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.scores-table .mods {
+    justify-content: flex-start;
+}
+
+.mods .mod {
+    text-shadow: none;
+}
+
+.mod-difficultyDecrease {
+    background-color: rgb(179, 255, 102);
+    color: rgb(60, 89, 30);
+}
+
+.mod-difficultyIncrease {
+    background-color: rgb(255, 102, 102);
+    color: rgb(89, 30, 30);
 }
 
 .mod-conversion {
-    color: rgb(120, 60, 180);
+    background-color: rgb(140, 102, 255);
+    color: rgb(45, 30, 89)
 }
 
 .mod-automation {
-    color: rgb(150, 150, 220);
+    background-color: rgb(102, 204, 255);
+    color: rgb(30, 70, 89);
 }
 
 .mod-fun {
-    color: rgb(200, 100, 140);
+    background-color: rgb(255, 102, 171);
+    color: rgb(89, 30, 57);
 }
 
 .mod-system {
-    color: rgb(255, 125, 60);
+    background-color: rgb(255, 204, 34);
+    color: rgb(89, 70, 5);
+}
+
+.mod-unknown {
+    background-color: rgb(180, 180, 180);
+    color: rgb(50, 50, 50);
+}
+
+.mods-expand {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
 }
 
 .score-acc-misses {
@@ -263,7 +300,12 @@ body {
     color: red;
 }
 
+.table-wrapper {
+    overflow-x: auto;
+}
+
 .scores-table {
+    width: 100%;
     font-weight: 350;
     border-collapse: collapse;
 }

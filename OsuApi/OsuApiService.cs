@@ -6,7 +6,7 @@ using OsuScoreStats.OsuApi.Enums;
 namespace OsuScoreStats.OsuApi;
 
 public class OsuApiService(
-    IHttpClientFactory httpClientFactory, 
+    HttpClient httpClient, 
     IConfiguration config, 
     ILogger<OsuApiService> logger)
 {
@@ -28,7 +28,6 @@ public class OsuApiService(
         bool isTokenRequest = false,
         CancellationToken ct = default)
     {
-        var client = httpClientFactory.CreateClient();
         var requestMessage = new HttpRequestMessage(method, requestString);
         requestMessage.Content = content;
         if (!isTokenRequest)
@@ -39,27 +38,9 @@ public class OsuApiService(
         }
         var responseText = "";
         
-        while (!ct.IsCancellationRequested)
-        {
-            try
-            {
-                var response = await client.SendAsync(requestMessage, ct);
-                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                {
-                    var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(1);
-                    await Task.Delay(retryAfter, ct);
-                }
-
-                responseText = await response.Content.ReadAsStringAsync(ct);
-                break;
-            }
-            catch (Exception ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Method: OsuApiService.SendRequestAsync; Method: {@method}; RequestString: {requestString}; Content: {@content}", 
-                    method, requestString, content);
-                throw;
-            }
-        }
+        var response = await httpClient.SendAsync(requestMessage, ct);
+        responseText = await response.Content.ReadAsStringAsync(ct);
+        
         return responseText;
     }
     
@@ -161,13 +142,12 @@ public class OsuApiService(
     /// <returns>Parsed Beatmap object</returns>
     public async Task DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default)
     {
-        var client = httpClientFactory.CreateClient();
         var mapPath = $"{config["CacheFolder"]}/{beatmapId}.osu";
         try
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, 
                 $"https://osu.ppy.sh/osu/{beatmapId}");
-            var response = await client.SendAsync(requestMessage, ct);
+            var response = await httpClient.SendAsync(requestMessage, ct);
             var responseBytes = await response.Content.ReadAsByteArrayAsync(ct);
                     
             await File.WriteAllBytesAsync(mapPath, responseBytes, ct);

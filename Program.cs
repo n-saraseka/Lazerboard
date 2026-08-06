@@ -11,6 +11,8 @@ using OsuScoreStats.OsuApi;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuEntityToDtoService;
 using Serilog;
+using Polly;
+using Polly.Extensions.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,8 +28,6 @@ builder.Services.AddDbContext<ScoreDataContext>(
                 .MapEnum<BeatmapStatus>("beatmap_status"))
                 .UseSnakeCaseNamingConvention());
 
-builder.Services.AddHttpClient();
-
 // Database related
 builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();
 builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
@@ -38,7 +38,24 @@ builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
-builder.Services.AddScoped<OsuApiService>();
+static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(IServiceProvider services)
+{
+    return HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        .WaitAndRetryAsync(4, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+            onRetry: (outcome, timespan, retryCount, context) =>
+            {
+                var logger = services.GetRequiredService<ILogger<OsuApiService>>();
+                
+                logger.Log(LogLevel.Warning, outcome.Exception ,"HTTP request error. Retry no. {attempt}. Next retry in {timespan}", 
+                    retryCount, timespan);
+            });
+}
+builder.Services.AddHttpClient<OsuApiService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .AddPolicyHandler((services, request) => GetRetryPolicy(services));
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();

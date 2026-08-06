@@ -94,6 +94,7 @@ body {
 }
 
 .mod {
+    font-weight: bold;
     padding: 0.25em;
     border-radius: 0.25em;
 }

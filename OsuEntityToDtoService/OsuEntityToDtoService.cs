@@ -27,7 +27,14 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
         foreach (var mod in score.Mods)
         {
             var acronym = mod.Acronym;
-            if (mod.Settings.TryGetValue("speed_change", out var value)) acronym += $"({value}x)";
+            if (mod.Settings.TryGetValue("speed_change", out var value))
+            {
+                if (value is double change)
+                {
+                    acronym += $"({value}x)";
+                    dto.SpeedChange = change;
+                }
+            }
             dto.ModAcronyms.Add(acronym);
         }
 

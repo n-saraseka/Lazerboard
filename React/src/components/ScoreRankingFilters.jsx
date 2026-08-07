@@ -45,7 +45,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
             <tr>
                 <td>PP:</td>
                 <td>
-                    <div>
+                    <div className="filter-container">
                         <span>From:</span>
                         <input type="number" step={1} min={1} max={3000} value={filters.ppRange.min ?? ""} onChange={(e) => {
                             const allFilters = {...filters, ppRange: {...filters.ppRange, min: e.target.value}};
@@ -62,7 +62,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
             <tr>
                 <td>Total score:</td>
                 <td>
-                    <div>
+                    <div className="filter-container">
                         <span>From:</span>
                         <input type="number" step={50000} min={0} max={1e6} value={filters.scoreRange.min ?? ""} onChange={(e) => {
                             const allFilters = {...filters, scoreRange: {...filters.scoreRange, min: e.target.value}};

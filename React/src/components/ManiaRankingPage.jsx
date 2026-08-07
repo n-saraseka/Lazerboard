@@ -12,7 +12,6 @@ function ScoreRankingPage({countries, userRanking}) {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(Math.ceil(userRanking.count / 10));
     const [userRankings, setUserRankings] = useState(userRanking.userRankings);
-    console.log(userRankings);
 
     async function getRankings(filterOptions, pageNumber = 1) {
         const params = new URLSearchParams();

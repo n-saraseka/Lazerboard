@@ -5,7 +5,6 @@ namespace OsuScoreStats.OsuEntityToDtoService;
 
 public class OsuEntityToDtoService : IOsuEntityToDtoService
 {
-    private string[] _speedChangeMods = ["DT", "NC", "HT", "DC"];
     public Score ScoreEntityToDto(APIScore score)
     {
         var dto = new Score
@@ -25,6 +24,8 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             UserId = score.UserId
         };
 
+        var modAcronyms = score.Mods.Select(m => m.Acronym).ToList();
+
         foreach (var mod in score.Mods)
         {
             var acronym = mod.Acronym;
@@ -36,7 +37,7 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
                 }
             }
 
-            if (dto.SpeedChange == null && _speedChangeMods.Contains(acronym))
+            if (dto.SpeedChange == null)
             {
                 switch (acronym)
                 {
@@ -47,6 +48,9 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
                     case "HT":
                     case "DC":
                         dto.SpeedChange = 0.75;
+                        break;
+                    default:
+                        dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU") ? null : 1;
                         break;
                 }
             }

@@ -63,11 +63,11 @@ export const allMods = {
         Mod("NR", "No Release", false, [3])
     ],
     difficultyIncrease: [
-        Mod("HR", "Hard Rock", false, [0, 1, 2, 3]),
         Mod("SD", "Sudden Death", false, [0, 1, 2, 3]),
         Mod("PF", "Perfect", false, [0, 1, 2, 3]),
         Mod("DT", "Double Time", true, [0, 1, 2, 3]),
         Mod("NC", "Nightcore", true, [0, 1, 2, 3]),
+        Mod("HR", "Hard Rock", false, [0, 1, 2, 3]),
         Mod("FI", "Fade In", false, [3]),
         Mod("HD", "Hidden", false, [0, 1, 2, 3]),
         Mod("TC", "Traceable", false, [0]),

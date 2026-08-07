@@ -69,7 +69,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                             setFilters(allFilters);
                         }}/>
                         <span>to:</span>
-                        <input type="number" step={50000} min={0} max={1e6} value={filters.scoreRange.min ?? ""} onChange={(e) => {
+                        <input type="number" step={50000} min={0} max={1e6} value={filters.scoreRange.max ?? ""} onChange={(e) => {
                             const allFilters = {...filters, scoreRange: {...filters.scoreRange, max: e.target.value}};
                             setFilters(allFilters);
                         }}/>
@@ -111,7 +111,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                     <div className="filter-container">
                         <ModSelector availableMods={possibleMods} mods={filters.mods} setMods={(mod) => updateMods(mod)}/>
                         <label htmlFor="lenientMode">Allow other mods:
-                            <input name="lenientMode" id="lenientMode" type="checkbox" value={filters.lenientMode} onClick={() => 
+                            <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() => 
                                 setFilters({...filters, lenientMode: !filters.lenientMode})}/>
                         </label>
                     </div>
@@ -123,6 +123,17 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                     <div className="filter-container">
                         <CountrySelector filters={filters} setFilters={setFilters} countries={countries}/>
                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Count:</td>
+                <td>
+                    <select name="scores-amount" id="scores-amount" value={filters.amount} onChange={(e) => 
+                        setFilters({...filters, amount: e.target.value})}>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
                 </td>
             </tr>
             </tbody>

@@ -64,23 +64,27 @@ function UserPage({user, scores, count, pages}) {
         if (response.ok) {
             const json = await response.json();
             setAllScores(json.scores);
-            setPageCount(Math.ceil(json.count / filterOptions.scoresAmount));
             setScoreCount(json.count);
             
+            const pages = Math.ceil(json.count / filterOptions.scoresAmount);
             if (pageNumber !== currentPage) {
                 setCurrentPage(pageNumber);
             }
+            if (pageNumber > pages) {
+                setCurrentPage(Math.max(1, pages));
+            }
+            setPageCount(pages);
         }
     }
 
     return (<>
         <UserCard user={user} scoreCount={scoreCount}/>
-        <h1 className="score-filters">Filter scores:</h1>
+        <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
             <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
-                await getScores(newFilters)}/>
+                await getScores(newFilters, currentPage)}/>
         </div>
-        <h1 className="score-range">{`All scores${dateRangeString}:`}</h1>
+        <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
             {filters.view === 'cards'
                 ? <ScoresGrid scores={allScores} usingStandardized={true}/>

@@ -95,3 +95,22 @@
     -webkit-mask-image: url("images/chevron.svg");
     background-color: black;
 }
+
+.user-ranking {
+    font-size: 1.3em;
+}
+
+.user-ranking .country-img {
+    height: 2em;
+}
+
+.user-ranking .player-img {
+    height: 2.5em;
+}
+
+.calc-button {
+    align-self: center;
+    font-family: "Cascadia Mono", monospace;
+    padding: 0.5em;
+    font-size: 1.1em;
+}

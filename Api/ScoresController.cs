@@ -133,12 +133,12 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         switch (lenientMode)
         {
             case true when mods.Length != 0:
-                query = query.Where(s => s.ModAcronyms.Any(a => mods.Contains(a)));
+                query = query.Where(s => mods.All(a => s.ModAcronyms.Contains(a)));
                 break;
             case false:
                 query = mods.Length == 0 
                         ? query.Where(s => s.ModAcronyms.Count == 0)
-                        : query.Where(s => s.ModAcronyms.All(a => mods.Contains(a)) && s.ModAcronyms.Count == mods.Length);
+                        : query.Where(s => mods.All(a => s.ModAcronyms.Contains(a)) && s.ModAcronyms.Count == mods.Length);
                 break;
         }
 

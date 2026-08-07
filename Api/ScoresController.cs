@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.Api.Dtos;
 using OsuScoreStats.DbService.Repositories.Interfaces;
@@ -5,7 +7,9 @@ using OsuScoreStats.OsuApi.Enums;
 
 namespace OsuScoreStats.Api;
 
-public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository userRepository)
+[ApiController]
+[Route("api/[controller]")]
+public class ScoresController(IScoreRepository scoreRepository, IUserRepository userRepository) : ControllerBase
 {
     /// <summary>
     /// Get scores
@@ -22,17 +26,17 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
     /// <param name="isDesc">Whether sort is descending or not</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>A <see cref="ScoresResponse"/></returns>
+    [HttpGet]
+    [AllowAnonymous]
     public async Task<ScoresResponse> GetScoresAsync(
-        Mode[] modes, 
-        DateOnly? dateStart,
-        DateOnly? dateEnd,
-        string? country,
-        string[]? mandatoryMods,
-        string[]? optionalMods,
-        int? amount,
-        int? page = 1,
-        string? sort = "pp",
-        bool isDesc = true,
+        [FromQuery] Mode[] modes, 
+        [FromQuery] DateOnly? dateStart,
+        [FromQuery] DateOnly? dateEnd,
+        [FromQuery] string? country,
+        [FromQuery] int? amount,
+        [FromQuery] int? page = 1,
+        [FromQuery] string? sort = "pp",
+        [FromQuery] bool isDesc = true,
         CancellationToken ct = default)
     {
         var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
@@ -56,14 +60,6 @@ public class ScoreMethods(IScoreRepository scoreRepository, IUserRepository user
                 .ToListAsync(ct);
             query = query.Where(s => userIdsThisCountry.Contains(s.UserId));
         }
-        
-        if (mandatoryMods?.Length > 0)
-            query = query.Where(s =>
-                mandatoryMods.All(m => s.ModAcronyms.Contains(m)) &&
-                s.ModAcronyms.All(m => mandatoryMods.Contains(m)));
-        if (optionalMods?.Length > 0)
-            query = query.Where(s =>
-                s.ModAcronyms.All(m => optionalMods.Contains(m)));
 
         switch (sort)
         {

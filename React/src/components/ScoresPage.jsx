@@ -55,7 +55,7 @@ function ScoresPage({scores, pages}) {
         }
     }
 
-    let dateRangeString = '';
+    let dateRangeString;
     if (filters.dateStart === '' && filters.dateEnd === '') {
         dateRangeString = ' from today';
     }

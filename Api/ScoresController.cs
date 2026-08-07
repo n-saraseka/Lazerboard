@@ -160,6 +160,10 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             .Take(rankingAmount)
             .ToListAsync(cancellationToken);
         result = result.OrderByDescending(r => r.ScoresCount).ToList();
+        foreach (var userRanking in result)
+        {
+            userRanking.Rank = result.IndexOf(userRanking) + 1 + (rankingPage - 1) * rankingAmount;
+        }
 
         return new UserRankingResponse
         {

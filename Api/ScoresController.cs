@@ -185,6 +185,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <summary>
     /// Get a user ranking by count of 1 million scores in <see cref="Mode.Mania"/>
     /// </summary>
+    /// <param name="minStars">Minimum beatmap star rating</param>
+    /// <param name="maxStars">Maximum beatmap star rating</param>
     /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
@@ -193,6 +195,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     [HttpGet("millions")]
     [AllowAnonymous]
     public async Task<UserRankingResponse> GetMillionsRankingAsync(
+        [FromQuery] double? minStars,
+        [FromQuery] double? maxStars,
         [FromQuery] string? countryCode,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -201,8 +205,11 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         var rankingPage = page == null ? 1 : Math.Max(1, (int)page);
         var rankingAmount = amount == null ? 10 : Math.Min(50, Math.Max((int)amount, 10));
         
-        var query = scoreRepository.GetAllWithUserData()
+        var query = scoreRepository.GetAllWithBeatmapAndUserData()
             .Where(s => s.Mode == Mode.Mania && s.TotalScore == 1000000);
+
+        if (minStars != null) query = query.Where(s => s.Beatmap.Difficulty >= minStars);
+        if (maxStars != null) query = query.Where(s => s.Beatmap.Difficulty <= maxStars);
 
         if (countryCode != null) query = query.Where(s => s.User.CountryCode == countryCode);
 

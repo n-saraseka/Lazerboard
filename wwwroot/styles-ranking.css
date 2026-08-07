@@ -1,47 +1,41 @@
-body {
-    font-family: "Cascadia Mono", monospace;
-    background-color: rgb(35, 35, 35);
-    color: white;
-}
-
-.top-country, .countries, .top-selector, .mods-to-select  {
+.selector-top, .selector-items  {
     border: 1px solid black;
     border-radius: 0.25em;
 }
 
-.country-selector, .mod-selection {
+.selector {
     position: relative;
     display: inline-block;
     min-width: 250px;
     max-width: fit-content;
 }
 
-.countries, .mods-to-select {
+.selector-items {
     background-color: white;
     position: absolute;
     width: 100%;
     z-index: 100;
     height: 200px;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: scroll;
 }
 
-.countries > .selector-country:first-child, .mods-to-select > .mod-selector:first-child {
+.selector-items > .selector-item:first-child {
     border-radius: 0.25em 0.25em 0 0;
 }
 
-.countries > .selector-country:last-child, .mods-to-select > .mod-selector:last-child {
+.selector-items > .selector-item:last-child {
     border-radius: 0 0 0.25em 0.25em;
 }
 
-.top-country > .selector-country {
+.top-selector > .selector-item {
     border-radius: 0.25em 0.25em;
 }
 
-.selector-country, .mod-selector {
+.selector-item {
     display: flex;
     gap: 1em;
-    justify-content: space-between;
+    justify-content: space-between; 
     height: 1em;
     padding: 0.5em;
     background-color: white;
@@ -49,31 +43,31 @@ body {
     align-items: center;
 }
 
-.list-country:hover, .list-mod:hover, .mod-active {
+.list-selector:hover, .mod-active {
     background-color: #1967d2;
     color: white;
 }
 
-.list-mod:hover .mod {
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
-}
-
-.selector-flag {
+.selector-image {
     min-width: 1em;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.selector-flag img {
+.selector-image img {
     height: 1em;
 }
 
-.list-country:hover img {
+.list-selector:hover img {
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
 }
 
-.selector-countryname, .selector-modname {
+.list-selector:hover .mod {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
+.selector-name {
     flex: 3 1;
     display: flex;
     justify-content: space-between;

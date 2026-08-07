@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.Api.Dtos;
+using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
@@ -9,7 +10,7 @@ namespace OsuScoreStats.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ScoresController(IScoreRepository scoreRepository, IUserRepository userRepository) : ControllerBase
+public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
 {
     /// <summary>
     /// Get scores
@@ -17,10 +18,8 @@ public class ScoresController(IScoreRepository scoreRepository, IUserRepository 
     /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
     /// <param name="dateStart">Date to begin getting scores from (defaults to today)</param>
     /// <param name="dateEnd">Date to end getting scores from (defaults to today)</param>
-    /// <param name="country">Country code</param>
-    /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
-    /// <param name="optionalMods">An array of optional mod acronyms</param>
-    /// <param name="amount">Amount of scores to return</param>
+    /// <param name="country"><see cref="Country"/> code</param>
+    /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="sort">Parameter to sort by</param>
     /// <param name="isDesc">Whether sort is descending or not</param>
@@ -51,15 +50,7 @@ public class ScoresController(IScoreRepository scoreRepository, IUserRepository 
         query = query.Where(s => 
             DateOnly.FromDateTime(s.Date) >= targetStartDate && DateOnly.FromDateTime(s.Date) <= targetEndDate);
         
-        if (country != null)
-        {
-            var userIdsThisCountry = await userRepository
-                .GetAll()
-                .Where(u => u.CountryCode == country)
-                .Select(u => u.Id).Distinct()
-                .ToListAsync(ct);
-            query = query.Where(s => userIdsThisCountry.Contains(s.UserId));
-        }
+        if (country != null) query = query.Where(s => s.User.CountryCode == country);
 
         switch (sort)
         {
@@ -88,5 +79,92 @@ public class ScoresController(IScoreRepository scoreRepository, IUserRepository 
             Scores = scores,
             Count = count,
         };
-    } 
+    }
+
+    /// <summary>
+    /// Get a user ranking by scores count
+    /// </summary>
+    /// <param name="rankMin">Minimum map rank threshold</param>
+    /// <param name="rankMax">Maximum map rank threshold</param>
+    /// <param name="modes">Modes to count scores from</param>
+    /// <param name="mods">Mods to count scores with</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
+    /// <param name="ppMin">Minimum PP threshold</param>
+    /// <param name="ppMax">Maximum PP threshold</param>
+    /// <param name="scoreMin">Minimum TotalScore threshold</param>
+    /// <param name="scoreMax">Maximum TotalScore threshold</param>
+    /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
+    /// <param name="page">Page (defaults to 1)</param>
+    /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A <see cref="UserRankingResponse"/></returns>
+    [HttpGet("ranking")]
+    [AllowAnonymous]
+    public async Task<UserRankingResponse> GetUserRankingAsync(
+        [FromQuery] int rankMin,
+        [FromQuery] int rankMax,
+        [FromQuery] Mode[] modes,
+        [FromQuery] string[] mods,
+        [FromQuery] bool lenientMode,
+        [FromQuery] int? ppMin,
+        [FromQuery] int? ppMax,
+        [FromQuery] int? scoreMin,
+        [FromQuery] int? scoreMax,
+        [FromQuery] string? countryCode,
+        [FromQuery] int? page,
+        [FromQuery] int? amount,
+        CancellationToken cancellationToken)
+    {
+        var rankingPage = page == null ? 1 : Math.Max(1, (int)page);
+        var rankingAmount = amount == null ? 10 : Math.Min(50, Math.Max((int)amount, 10));
+        
+        var query = scoreRepository.GetAllWithUserData();
+
+        query = query.Where(s => s.Rank >= rankMin && s.Rank <= rankMax);
+        
+        if (ppMin != null) query = query.Where(s => s.PP >= ppMin);
+        if (ppMax != null) query = query.Where(s => s.PP <= ppMax);
+        
+        if (scoreMin != null) query = query.Where(s => s.TotalScore >= scoreMin);
+        if (scoreMax != null) query = query.Where(s => s.TotalScore <= scoreMax);
+        
+        query = query.Where(s => modes.Contains(s.Mode));
+
+        switch (lenientMode)
+        {
+            case true when mods.Length != 0:
+                query = query.Where(s => s.ModAcronyms.Any(a => mods.Contains(a)));
+                break;
+            case false:
+                query = mods.Length == 0 
+                        ? query.Where(s => s.ModAcronyms.Count == 0)
+                        : query.Where(s => s.ModAcronyms.All(a => mods.Contains(a)) && s.ModAcronyms.Count == mods.Length);
+                break;
+        }
+
+        if (countryCode != null) query = query.Where(s => s.User.CountryCode == countryCode);
+
+        var group = query
+            .GroupBy(s => s.User)
+            .Select(g => new UserRanking 
+            {
+                User = g.Key,
+                ScoresCount = g.Count() 
+            })
+            .OrderByDescending(s => s.ScoresCount);
+
+        var count = await group.CountAsync(cancellationToken);
+
+        var result = await group
+            .Skip((rankingPage - 1) * rankingAmount)
+            .Take(rankingAmount)
+            .ToListAsync(cancellationToken);
+        result = result.OrderByDescending(r => r.ScoresCount).ToList();
+
+        return new UserRankingResponse
+        {
+            UserRankings = result,
+            Count = count
+        };
+    }
 }

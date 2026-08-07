@@ -135,6 +135,11 @@ app.MapControllerRoute(
     pattern: "scoreranking",
     defaults: new { controller = "ScoreRanking", action = "ScoreRanking"});
 
+app.MapControllerRoute(
+    name: "maniamillions",
+    pattern: "maniamillions",
+    defaults: new { controller = "ScoreRanking", action = "ManiaMillions"});
+
 app.MapControllers();
 
 try

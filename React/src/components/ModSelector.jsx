@@ -4,7 +4,7 @@ import ModSelectorRow from "./ModSelectorRow.jsx";
 function ModSelector({availableMods, mods, setMods}) {
     const [isExpanded, setIsExpanded] = useState(false);
     return (
-        <div className="selector">
+        <div className="selector selector-mods">
             <div className="selector-item top-selector" onClick={() => setIsExpanded(!isExpanded)}>
                 <span>Click to select</span>
                 <div className="selector-chevron"></div>

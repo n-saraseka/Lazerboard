@@ -5,7 +5,7 @@ function CountrySelector({countries, filters, setFilters}) {
     const allCountries = [{ id: "All", name: "All countries" }].concat(countries);
     const [dropdownEnabled, setDropdownEnabled] = useState(false);
     return (
-        <div className="selector">
+        <div className="selector selector-countries">
             <div className="selector-top">
                 <CountrySelectorRow country={filters.country}
                                     isPartOfList={false}

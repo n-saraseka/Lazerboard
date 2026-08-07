@@ -12,8 +12,11 @@ body {
 .selector {
     position: relative;
     display: inline-block;
-    min-width: 250px;
-    max-width: fit-content;
+    width: 250px;
+}
+
+.selector-countries {
+    width: 400px;
 }
 
 .selector-items {

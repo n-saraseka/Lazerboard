@@ -105,7 +105,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                     </div>
                 </td>
             </tr>
-            <tr className="options-dropdown">
+            <tr>
                 <td>Mods:</td>
                 <td>
                     <div className="filter-container">
@@ -117,7 +117,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                     </div>
                 </td>
             </tr>
-            <tr className="options-dropdown">
+            <tr>
                 <td>Country:</td>
                 <td>
                     <div className="filter-container">

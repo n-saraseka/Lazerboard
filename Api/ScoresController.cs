@@ -181,4 +181,56 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             Count = count
         };
     }
+    
+    /// <summary>
+    /// Get a user ranking by count of 1 million scores in <see cref="Mode.Mania"/>
+    /// </summary>
+    /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
+    /// <param name="page">Page (defaults to 1)</param>
+    /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A <see cref="UserRankingResponse"/></returns>
+    [HttpGet("millions")]
+    [AllowAnonymous]
+    public async Task<UserRankingResponse> GetMillionsRankingAsync(
+        [FromQuery] string? countryCode,
+        [FromQuery] int? page,
+        [FromQuery] int? amount,
+        CancellationToken cancellationToken)
+    {
+        var rankingPage = page == null ? 1 : Math.Max(1, (int)page);
+        var rankingAmount = amount == null ? 10 : Math.Min(50, Math.Max((int)amount, 10));
+        
+        var query = scoreRepository.GetAllWithUserData()
+            .Where(s => s.Mode == Mode.Mania && s.TotalScore == 1000000);
+
+        if (countryCode != null) query = query.Where(s => s.User.CountryCode == countryCode);
+
+        var group = query
+            .GroupBy(s => s.User)
+            .Select(g => new UserRanking 
+            {
+                User = g.Key,
+                ScoresCount = g.Count() 
+            })
+            .OrderByDescending(s => s.ScoresCount);
+
+        var count = await group.CountAsync(cancellationToken);
+
+        var result = await group
+            .Skip((rankingPage - 1) * rankingAmount)
+            .Take(rankingAmount)
+            .ToListAsync(cancellationToken);
+        result = result.OrderByDescending(r => r.ScoresCount).ToList();
+        foreach (var userRanking in result)
+        {
+            userRanking.Rank = result.IndexOf(userRanking) + 1 + (rankingPage - 1) * rankingAmount;
+        }
+
+        return new UserRankingResponse
+        {
+            UserRankings = result,
+            Count = count
+        };
+    }
 }

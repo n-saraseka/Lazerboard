@@ -91,8 +91,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
     /// <param name="ppMin">Minimum PP threshold</param>
     /// <param name="ppMax">Maximum PP threshold</param>
-    /// <param name="scoreMin">Minimum TotalScore threshold</param>
-    /// <param name="scoreMax">Maximum TotalScore threshold</param>
+    /// <param name="accMin">Minimum accuracy threshold</param>
+    /// <param name="accMax">Maximum accuracy threshold</param>
     /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
@@ -108,8 +108,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] bool lenientMode,
         [FromQuery] int? ppMin,
         [FromQuery] int? ppMax,
-        [FromQuery] int? scoreMin,
-        [FromQuery] int? scoreMax,
+        [FromQuery] double? accMin,
+        [FromQuery] double? accMax,
         [FromQuery] string? countryCode,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -125,8 +125,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         if (ppMin != null) query = query.Where(s => s.PP >= ppMin);
         if (ppMax != null) query = query.Where(s => s.PP <= ppMax);
         
-        if (scoreMin != null) query = query.Where(s => s.TotalScore >= scoreMin);
-        if (scoreMax != null) query = query.Where(s => s.TotalScore <= scoreMax);
+        if (accMin != null) query = query.Where(s => s.Accuracy >= accMin / 100.0f);
+        if (accMax != null) query = query.Where(s => s.Accuracy <= accMax / 100.0f);
         
         query = query.Where(s => modes.Contains(s.Mode));
 

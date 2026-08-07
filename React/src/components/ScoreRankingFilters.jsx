@@ -60,17 +60,17 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                 </td>
             </tr>
             <tr>
-                <td>Total score:</td>
+                <td>Accuracy:</td>
                 <td>
                     <div className="filter-container">
                         <span>From:</span>
-                        <input type="number" step={50000} min={0} max={1e6} value={filters.scoreRange.min ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, scoreRange: {...filters.scoreRange, min: e.target.value}};
+                        <input type="number" step={0.01} min={0} max={100} value={filters.accRange.min ?? ""} onChange={(e) => {
+                            const allFilters = {...filters, accRange: {...filters.accRange, min: e.target.value}};
                             setFilters(allFilters);
                         }}/>
                         <span>to:</span>
-                        <input type="number" step={50000} min={0} max={1e6} value={filters.scoreRange.max ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, scoreRange: {...filters.scoreRange, max: e.target.value}};
+                        <input type="number" step={0.01} min={0} max={100} value={filters.accRange.max ?? ""} onChange={(e) => {
+                            const allFilters = {...filters, accRange: {...filters.accRange, max: e.target.value}};
                             setFilters(allFilters);
                         }}/>
                     </div>

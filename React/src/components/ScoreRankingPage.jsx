@@ -6,7 +6,7 @@ function ScoreRankingPage({countries}) {
     const [filters, setFilters] = useState({
         rankRange: {min: 1, max: 100},
         ppRange: {min: null, max: null},
-        scoreRange: {min: null, max: null},
+        accRange: {min: null, max: null},
         country: {id: "All", name: "All countries"},
         mods: [],
         lenientMode: true,
@@ -44,11 +44,11 @@ function ScoreRankingPage({countries}) {
             params.append("ppMax", filterOptions.ppRange.max );
         }
 
-        if (filterOptions.scoreRange.min !== null) {
-            params.append("scoreMin", filterOptions.scoreRange.min);
+        if (filterOptions.accRange.min !== null) {
+            params.append("accMin", filterOptions.accRange.min);
         }
-        if (filterOptions.scoreRange.max !== null) {
-            params.append("scoreMax", filterOptions.scoreRange.max );
+        if (filterOptions.accRange.max !== null) {
+            params.append("accMax", filterOptions.accRange.max);
         }
         
         if (filters.country.id !== "All") {

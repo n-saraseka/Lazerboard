@@ -21,6 +21,7 @@ function UserPage({user, scores, count, pages}) {
         })
     });
     const [scoreCount, setScoreCount] = useState(count);
+    const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
 
@@ -65,6 +66,10 @@ function UserPage({user, scores, count, pages}) {
             setAllScores(json.scores);
             setPageCount(Math.ceil(json.count / filterOptions.scoresAmount));
             setScoreCount(json.count);
+            
+            if (pageNumber !== currentPage) {
+                setCurrentPage(pageNumber);
+            }
         }
     }
 

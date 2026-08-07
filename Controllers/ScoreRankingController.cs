@@ -10,7 +10,7 @@ public class ScoreRankingController(ICountryRepository countryRepository) : Cont
 {
     public async Task<IActionResult> ScoreRanking(CancellationToken cancellationToken = default)
     {
-        var countries = await countryRepository.GetAll().ToListAsync(cancellationToken);
+        var countries = await countryRepository.GetAll().OrderBy(c => c.Name).ToListAsync(cancellationToken);
 
         var viewModel = new ScoreRankingViewModel
         {

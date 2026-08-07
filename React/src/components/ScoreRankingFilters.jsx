@@ -16,12 +16,6 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
         return arr;
     }, [filters]);
     
-    function updateMods(mod) {
-        console.log(mod);
-        const newMods = filters.mods.includes(mod) ? filters.mods.filter(m => m !== mod) : filters.mods.concat(mod);
-        setFilters({...filters, mods: newMods});
-    }
-    
     return (<>
         <table className="options">
             <tbody>
@@ -77,6 +71,23 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                 </td>
             </tr>
             <tr>
+                <td>Speed:</td>
+                <td>
+                    <div className="filter-container">
+                        <span>From:</span>
+                        <input type="number" step={0.05} min={0} max={2} value={filters.rateRange.min ?? ""} onChange={(e) => {
+                            const allFilters = {...filters, rateRange: {...filters.rateRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        <span>to:</span>
+                        <input type="number" step={0.05} min={0} max={2} value={filters.rateRange.max ?? ""} onChange={(e) => {
+                            const allFilters = {...filters, rateRange: {...filters.rateRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                    </div>
+                </td>
+            </tr>
+            <tr>
                 <td>Mode:</td>
                 <td>
                     <div className="filter-container">
@@ -109,11 +120,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                 <td>Mods:</td>
                 <td>
                     <div className="filter-container">
-                        <ModSelector availableMods={possibleMods} mods={filters.mods} setMods={(mod) => updateMods(mod)}/>
-                        <label htmlFor="lenientMode">Allow other mods:
-                            <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() => 
-                                setFilters({...filters, lenientMode: !filters.lenientMode})}/>
-                        </label>
+                        <ModSelector availableMods={possibleMods} filters={filters} setFilters={setFilters}/>
                     </div>
                 </td>
             </tr>

@@ -93,6 +93,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <param name="ppMax">Maximum PP threshold</param>
     /// <param name="accMin">Minimum accuracy threshold</param>
     /// <param name="accMax">Maximum accuracy threshold</param>
+    /// <param name="speedMin">Minimum speed threshold</param>
+    /// <param name="speedMax">Maximum speed threshold</param>
     /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
@@ -110,6 +112,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] int? ppMax,
         [FromQuery] double? accMin,
         [FromQuery] double? accMax,
+        [FromQuery] double? speedMin,
+        [FromQuery] double? speedMax,
         [FromQuery] string? countryCode,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -127,6 +131,12 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         
         if (accMin != null) query = query.Where(s => s.Accuracy >= accMin / 100.0f);
         if (accMax != null) query = query.Where(s => s.Accuracy <= accMax / 100.0f);
+
+        // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
+        // SpeedChange is null only if one of the following mods is active: Wind Up, Wind Down, Adaptive Speed
+        if (speedMin != null || speedMax != null) query = query.Where(s => s.SpeedChange != null);
+        if (speedMin != null) query = query.Where(s => s.SpeedChange >= speedMin);
+        if (speedMax != null) query = query.Where(s => s.SpeedChange <= speedMax);
         
         query = query.Where(s => modes.Contains(s.Mode));
 

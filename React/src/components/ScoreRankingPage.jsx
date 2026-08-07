@@ -7,6 +7,7 @@ function ScoreRankingPage({countries}) {
         rankRange: {min: 1, max: 100},
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
+        rateRange: {min: null, max: null},
         country: {id: "All", name: "All countries"},
         mods: [],
         lenientMode: true,
@@ -49,6 +50,14 @@ function ScoreRankingPage({countries}) {
         }
         if (filterOptions.accRange.max !== null) {
             params.append("accMax", filterOptions.accRange.max);
+        }
+        
+        if (filterOptions.rateRange.min !== null) {
+            params.append("speedMin", filterOptions.rateRange.min);
+        }
+
+        if (filterOptions.rateRange.max !== null) {
+            params.append("speedMax", filterOptions.rateRange.max);
         }
         
         if (filters.country.id !== "All") {

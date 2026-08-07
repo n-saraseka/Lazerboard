@@ -50,7 +50,7 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
                         dto.SpeedChange = 0.75;
                         break;
                     default:
-                        dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU") ? null : 1;
+                        dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? null : 1;
                         break;
                 }
             }

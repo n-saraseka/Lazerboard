@@ -67,6 +67,10 @@ body {
     border-spacing: 1em;
 }
 
+.options tr td:first-child {
+    text-align: right;
+}
+
 .filter-container {
     display: flex;
     gap: 1em;

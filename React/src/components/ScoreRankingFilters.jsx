@@ -20,74 +20,6 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
         <table className="options">
             <tbody>
             <tr>
-                <td>Rank:</td>
-                <td>
-                    <div className="filter-container">
-                        <span>From:</span>
-                        <input type="number" step={1} min={1} max={100} value={filters.rankRange.min} onChange={(e) => {
-                            const allFilters = {...filters, rankRange: {...filters.rankRange, min: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                        <span>to:</span>
-                        <input type="number" step={1} min={1} max={100} value={filters.rankRange.max} onChange={(e) => {
-                            const allFilters = {...filters, rankRange: {...filters.rankRange, max: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>PP:</td>
-                <td>
-                    <div className="filter-container">
-                        <span>From:</span>
-                        <input type="number" step={1} min={1} max={3000} value={filters.ppRange.min ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, ppRange: {...filters.ppRange, min: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                        <span>to:</span>
-                        <input type="number" step={1} min={1} max={3000} value={filters.ppRange.max ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, ppRange: {...filters, max: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>Accuracy:</td>
-                <td>
-                    <div className="filter-container">
-                        <span>From:</span>
-                        <input type="number" step={0.01} min={0} max={100} value={filters.accRange.min ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, accRange: {...filters.accRange, min: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                        <span>to:</span>
-                        <input type="number" step={0.01} min={0} max={100} value={filters.accRange.max ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, accRange: {...filters.accRange, max: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>Speed:</td>
-                <td>
-                    <div className="filter-container">
-                        <span>From:</span>
-                        <input type="number" step={0.05} min={0} max={2} value={filters.rateRange.min ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, rateRange: {...filters.rateRange, min: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                        <span>to:</span>
-                        <input type="number" step={0.05} min={0} max={2} value={filters.rateRange.max ?? ""} onChange={(e) => {
-                            const allFilters = {...filters, rateRange: {...filters.rateRange, max: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                    </div>
-                </td>
-            </tr>
-            <tr>
                 <td>Mode:</td>
                 <td>
                     <div className="filter-container">
@@ -107,12 +39,88 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
                                                 m.enabled = !m.enabled;
                                             }
                                             return m;
-                                        }), 
+                                        }),
                                         mods: newMods};
                                     setFilters(allFilters);
                                 }}></div>
                             </div>
                         ))}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Rank:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="rankMin">From: <input id="rankMin" name="rankMin" type="number" step={1} 
+                                                              min={1} max={100} value={filters.rankRange.min} onChange={(e) => {
+                                                                  const allFilters = {...filters, rankRange: {...filters.rankRange, min: e.target.value}};
+                                                                  setFilters(allFilters);
+                                                              }}/>
+                        </label>
+                        <label htmlFor="rankMax">to: <input id="rankMax" name="rankMax" type="number" step={1} 
+                                                            min={1} max={100} value={filters.rankRange.max} onChange={(e) => {
+                                                                const allFilters = {...filters, rankRange: {...filters.rankRange, max: e.target.value}};
+                                                                setFilters(allFilters);
+                                                            }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>PP:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="ppMin">From: <input id="ppMin" name="ppMin" type="number" step={1}
+                                                              min={1} max={3000} value={filters.ppRange.min} onChange={(e) => {
+                            const allFilters = {...filters, ppRange: {...filters.ppRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="ppMax">to: <input id="ppMax" name="ppMax" type="number" step={1}
+                                                            min={1} max={3000} value={filters.ppRange.max} onChange={(e) => {
+                            const allFilters = {...filters, ppRange: {...filters.ppRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Accuracy:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="accMin">From: <input id="accMin" name="accMin" type="number" step={0.01}
+                                                             min={1} max={100} value={filters.accRange.min} onChange={(e) => {
+                            const allFilters = {...filters, accRange: {...filters.accRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="accMax">to: <input id="accMax" name="accMax" type="number" step={0.01}
+                                                           min={1} max={100} value={filters.accRange.max} onChange={(e) => {
+                            const allFilters = {...filters, accRange: {...filters.accRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Speed:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="rateMin">From: <input id="rateMin" name="rateMin" type="number" step={1}
+                                                             min={0} max={2} value={filters.rateRange.min} onChange={(e) => {
+                            const allFilters = {...filters, rateRange: {...filters.rateRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="rateMax">to: <input id="rateMax" name="rateMax" type="number" step={1}
+                                                           min={0} max={2} value={filters.rateRange.max} onChange={(e) => {
+                            const allFilters = {...filters, rateRange: {...filters.rateRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
                     </div>
                 </td>
             </tr>

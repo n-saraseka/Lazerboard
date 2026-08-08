@@ -21,11 +21,9 @@ function ModSelector({availableMods, filters, setFilters}) {
                     )) }
                 </div>
             </div>
-            
-            <label htmlFor="lenientMode">Allow other mods:
-                <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() =>
-                    setFilters({...filters, lenientMode: !filters.lenientMode})}/>
-            </label>
+            <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() =>
+                setFilters({...filters, lenientMode: !filters.lenientMode})}/>
+            <label htmlFor="lenientMode">Allow other mods</label>
         </>
     )
 }

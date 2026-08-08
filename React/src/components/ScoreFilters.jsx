@@ -24,6 +24,48 @@ function ScoreFilters({filters, setFilters, refetchScores}) {
                 </td>
             </tr>
             <tr>
+                <td>Modes:</td>
+                <td>
+                    <div className="filter-container">
+                        {filters.modes.map((mode, index) => (
+                            <div className={`mode-icon-wrapper ${mode.enabled ? "enabled" : "disabled"}`} key={index}>
+                                <div className={`mode-icon mode-${modeEnumToString(index)}`} onClick={() =>{
+                                    const allFilters = {...filters, modes: filters.modes.map((m, i) => {
+                                            if (i === index) {
+                                                m.enabled = !m.enabled;
+                                            }
+                                            return m;
+                                        })};
+                                    setFilters(allFilters);
+                                    refetchScores(allFilters);
+                                }}></div>
+                            </div>
+                        ))}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Date:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="dateStart">From: <input id="dateStart" name="dateStart" type="date" 
+                                                                value={filters.dateStart} max={currentDate} onChange={(e) => {
+                                                                    const allFilters = {...filters, dateStart: e.target.value};
+                                                                    setFilters(allFilters);
+                                                                    refetchScores(allFilters);
+                                                                }}/>
+                        </label>
+                        <label htmlFor="dateEnd">to: <input id="dateEnd" name="dateEnd" type="date" 
+                                                            value={filters.dateEnd} max={currentDate} onChange={(e) => {
+                                                                const allFilters = {...filters, dateEnd: e.target.value};
+                                                                setFilters(allFilters);
+                                                                refetchScores(allFilters);
+                                                            }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
                 <td>Sort:</td>
                 <td>
                     <div className="filter-container">
@@ -44,47 +86,6 @@ function ScoreFilters({filters, setFilters, refetchScores}) {
                         }}>
                         {filters.sortDir === "asc" ? "↑" : "↓"}
                         </span>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>Date:</td>
-                <td>
-                    <div className="filter-container">
-                        <span>From:</span>
-                        <input type="date" value={filters.dateStart} max={currentDate} onChange={(e) => {
-                            const allFilters = {...filters, dateStart: e.target.value};
-                            setFilters(allFilters);
-                            refetchScores(allFilters);
-                        }}/>
-                        <span>to:</span>
-                        <input type="date" value={filters.dateEnd} max={currentDate}
-                               onChange={(e) => {
-                                   const allFilters = {...filters, dateEnd: e.target.value};
-                                   setFilters(allFilters);
-                                   refetchScores(allFilters);
-                               }}/>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>Modes:</td>
-                <td>
-                    <div className="filter-container">
-                        {filters.modes.map((mode, index) => (
-                            <div className={`mode-icon-wrapper ${mode.enabled ? "enabled" : "disabled"}`} key={index}>
-                                <div className={`mode-icon mode-${modeEnumToString(index)}`} onClick={() =>{
-                                    const allFilters = {...filters, modes: filters.modes.map((m, i) => {
-                                            if (i === index) {
-                                                m.enabled = !m.enabled;
-                                            }
-                                            return m;
-                                        })};
-                                    setFilters(allFilters);
-                                    refetchScores(allFilters);
-                                }}></div>
-                            </div>
-                        ))}
                     </div>
                 </td>
             </tr>

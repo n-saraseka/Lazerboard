@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
 using OsuScoreStats.Calculations;
 using OsuScoreStats.ScoreFetcher;
-using OsuScoreStats.Api;
 using OsuScoreStats.DbService.Repositories;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.Migrations;
@@ -69,11 +68,6 @@ if (builder.Configuration.GetValue<bool>("ScoreFetchingTurnedOn"))
     builder.Services.AddHostedService<ScoreLeaderboardService>();
 }
 
-// API
-builder.Services.AddScoped<ScoreMethods>();
-builder.Services.AddScoped<BeatmapMethods>();
-builder.Services.AddScoped<UserMethods>();
-
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
@@ -116,82 +110,6 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 
-app.MapGet("/api/scores", async (
-        ScoreMethods scoreMethods, 
-        Mode[] modes, 
-        DateOnly? dateStart,
-        DateOnly? dateEnd,
-        string? country,
-        string[]? mandatoryMods,
-        string[]? optionalMods,
-        int? amount,
-        int? page,
-        string? sort,
-        bool isDesc,
-        CancellationToken ct) => await scoreMethods.GetScoresAsync(
-        modes, dateStart, dateEnd, country, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
-    .WithName("GetScores");
-
-app.MapGet("/api/beatmaps/{id:int}", async (
-        BeatmapMethods beatmapMethods, 
-        int id,
-        CancellationToken ct) => await beatmapMethods.GetBeatmapAsync(id, ct))
-    .WithName("GetBeatmap");
-
-app.MapGet("/api/beatmaps", async (
-        BeatmapMethods beatmapMethods, 
-        int[] beatmapIds,
-        CancellationToken ct) => await beatmapMethods.GetBeatmapsAsync(beatmapIds, ct))
-    .WithName("GetBeatmaps");
-
-app.MapGet("/api/beatmapsets", async (
-        BeatmapMethods beatmapMethods, 
-        int[] beatmapsetIds,
-        CancellationToken ct) => await beatmapMethods.GetBeatmapsetsAsync(beatmapsetIds, ct))
-    .WithName("GetBeatmapsets");
-
-app.MapGet("/api/users/{id:int}", async (
-        UserMethods userMethods,
-        int id,
-        CancellationToken ct) => await userMethods.GetUserAsync(id, ct))
-    .WithName("GetUser");
-
-app.MapGet("/api/users", async (
-        UserMethods userMethods, 
-        int[] userIds,
-        CancellationToken ct) => await userMethods.GetUsersAsync(userIds, ct))
-    .WithName("GetUsers");
-
-app.MapGet("/api/users/{userId:int}/scores", async (
-        UserMethods userMethods,
-        int userId,
-        Mode[] modes,
-        DateOnly? dateStart,
-        DateOnly? dateEnd,
-        string[]? mandatoryMods,
-        string[]? optionalMods,
-        int? amount,
-        int? page,
-        string? sort,
-        bool isDesc,
-        CancellationToken ct) => await userMethods.GetUserScoresAsync(
-        userId, modes, dateStart, dateEnd, mandatoryMods, optionalMods, amount, page, sort, isDesc, ct))
-    .WithName("GetUserScores");
-
-app.MapGet("/api/users/{id:int}/scores/count", async (
-        UserMethods userMethods,
-        int id,
-        Mode? mode,
-        CancellationToken ct) => await userMethods.GetUserScoresCountAsync(id, mode, ct))
-    .WithName("GetUserScoresCount");
-
-app.MapGet("/api/beatmaps/{id:int}/scores", async (
-        BeatmapMethods beatmapMethods,
-        int id,
-        Mode mode,
-        CancellationToken ct) => await beatmapMethods.GetBeatmapScoresAsync(id, mode, ct))
-    .WithName("GetBeatmapScores");
-
 app.MapControllerRoute(
     name: "user",
     pattern: "user/{id}",
@@ -211,6 +129,16 @@ app.MapControllerRoute(
     name: "beatmap",
     pattern: "/b/{id:int}",
     defaults: new { controller = "Beatmapset", action = "BeatmapPage"});
+
+app.MapControllerRoute(
+    name: "scoreranking",
+    pattern: "scoreranking",
+    defaults: new { controller = "ScoreRanking", action = "ScoreRanking"});
+
+app.MapControllerRoute(
+    name: "maniamillions",
+    pattern: "maniamillions",
+    defaults: new { controller = "ScoreRanking", action = "ManiaMillions"});
 
 app.MapControllers();
 

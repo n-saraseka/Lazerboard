@@ -61,8 +61,9 @@ function BeatmapScores({scores}) {
     }
     
     return (
-        <table className="scores-table">
-            <thead>
+        <div className="table-wrapper">
+            <table className="scores-table">
+                <thead>
                 <tr>
                     <SortableColumn columnName="Rank" propertyName="rank" hover={hover} setHover={setHover} sort={sort} setSort={setSort}/>
                     <td colSpan={2}>Player</td>
@@ -75,11 +76,12 @@ function BeatmapScores({scores}) {
                     <SortableColumn columnName="Date" propertyName="date" hover={hover} setHover={setHover} sort={sort} setSort={setSort}/>
                     <td>Mods</td>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 {sortedScores.map((score, index) => (<BeatmapScoreRow key={index} score={score} usingStandardized={true}/>))}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     )
 }
 

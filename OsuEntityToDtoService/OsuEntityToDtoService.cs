@@ -24,13 +24,31 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             UserId = score.UserId
         };
 
+        var modAcronyms = score.Mods.Select(m => m.Acronym).ToList();
+
         foreach (var mod in score.Mods)
         {
             var acronym = mod.Acronym;
-            if (mod.Settings.TryGetValue("speed_change", out var value)) acronym += $"({value}x)";
+            if (mod.Settings.TryGetValue("speed_change", out var value))
+            {
+                if (value is double change)
+                {
+                    dto.SpeedChange = change;
+                }
+            }
+            
             dto.ModAcronyms.Add(acronym);
         }
-
+        
+        if (dto.SpeedChange == null)
+        {
+            if (modAcronyms.Any(a => a == "DT" || a == "NC"))
+                dto.SpeedChange = 1.5;
+            if (modAcronyms.Any(a => a == "HT" || a == "DC"))
+                dto.SpeedChange = 0.75;
+            dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? dto.SpeedChange : 1;
+        }
+        
         return dto;
     }
 

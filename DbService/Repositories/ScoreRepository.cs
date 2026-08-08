@@ -30,4 +30,9 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
         .ThenInclude(u => u.Country)
         .Include(s => s.Beatmap)
         .ThenInclude(b => b.Beatmapset);
+
+    public IQueryable<Score> GetAllWithUserData() => GetAll()
+        .AsSplitQuery()
+        .Include(s => s.User)
+        .ThenInclude(u => u.Country);
 }

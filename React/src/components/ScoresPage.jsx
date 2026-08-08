@@ -47,15 +47,20 @@ function ScoresPage({scores, pages}) {
 
         if (response.ok) {
             const json = await response.json();
-            if (pageNumber !== undefined && pageNumber !== currentPage) {
+            setAllScores(json.scores);
+            
+            const pages = Math.ceil(json.count / filterOptions.scoresAmount);
+            if (pageNumber !== currentPage) {
                 setCurrentPage(pageNumber);
             }
-            setAllScores(json.scores);
-            setPageCount(Math.ceil(json.count / filterOptions.scoresAmount));
+            if (pageNumber > pages) {
+                setCurrentPage(Math.max(1, pages));
+            }
+            setPageCount(pages);
         }
     }
 
-    let dateRangeString = '';
+    let dateRangeString;
     if (filters.dateStart === '' && filters.dateEnd === '') {
         dateRangeString = ' from today';
     }
@@ -69,12 +74,12 @@ function ScoresPage({scores, pages}) {
     }
     
     return (<>
-        <h1 className="score-filters">Filter scores:</h1>
+        <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
             <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
-                await getScores(newFilters)}/>
+                await getScores(newFilters, currentPage)}/>
         </div>
-        <h1 className="score-range">{`All scores${dateRangeString}:`}</h1>
+        <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
             {filters.view === 'cards'
                 ? <ScoresGrid scores={allScores} usingStandardized={true}/>

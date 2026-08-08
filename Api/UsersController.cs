@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.Api.Dtos;
 using OsuScoreStats.DbService.Entities;
@@ -6,26 +8,10 @@ using OsuScoreStats.OsuApi.Enums;
 
 namespace OsuScoreStats.Api;
 
-public class UserMethods(IScoreRepository scoreRepository, IUserRepository userRepository)
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController(IScoreRepository scoreRepository, IUserRepository userRepository) : ControllerBase
 {
-    /// <summary>
-    /// Get user data from the API
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Populated APIUser object (or null)</returns>
-    public async Task<User?> GetUserAsync(int userId, CancellationToken ct = default) => 
-        await userRepository.GetByIdAsync(userId, ct);
-    
-    /// <summary>
-    /// Get users data from the API
-    /// </summary>
-    /// <param name="userIds">Array containing user IDs</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List containing populated APIUser objects</returns>
-    public async Task<List<User>> GetUsersAsync(int[] userIds, CancellationToken ct = default) => 
-        await userRepository.GetBulkAsync(userIds, ct);
-    
     /// <summary>
     /// Get user scores
     /// </summary>
@@ -41,17 +27,19 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
     /// <param name="isDesc">Whether sort is descending or not</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>A <see cref="ScoresResponse"/></returns>
+    [HttpGet("{userId:int}/scores")]
+    [AllowAnonymous]
     public async Task<ScoresResponse> GetUserScoresAsync(
         int userId,
-        Mode[] modes,
-        DateOnly? dateStart,
-        DateOnly? dateEnd,
-        string[]? mandatoryMods,
-        string[]? optionalMods,
-        int? amount,
-        int? page = 1,
-        string? sort = "pp",
-        bool isDesc = true,
+        [FromQuery] Mode[] modes,
+        [FromQuery] DateOnly? dateStart,
+        [FromQuery] DateOnly? dateEnd,
+        [FromQuery] string[]? mandatoryMods,
+        [FromQuery] string[]? optionalMods,
+        [FromQuery] int? amount,
+        [FromQuery] int? page = 1,
+        [FromQuery] string? sort = "pp",
+        [FromQuery] bool isDesc = true,
         CancellationToken ct = default)
     {
         var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
@@ -102,22 +90,5 @@ public class UserMethods(IScoreRepository scoreRepository, IUserRepository userR
             Scores = scores,
             Count = count,
         };
-    } 
-
-    /// <summary>
-    /// Get count of scores set by user
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="mode">Gameplay mode (osu, taiko, fruits, mania)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Count of scores set by user</returns>
-    public async Task<int> GetUserScoresCountAsync(int userId, Mode? mode, CancellationToken ct)
-    {
-        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
-        
-        if (mode.HasValue)
-            query = query.Where(s => s.Mode == mode.Value);
-
-        return await query.CountAsync(ct);
     }
 }

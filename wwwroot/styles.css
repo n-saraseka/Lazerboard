@@ -5,6 +5,10 @@ body {
 }
 
 .component-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1em;
     background-color: rgb(30, 30, 30);
     padding: 1em;
     border-radius: 1em;
@@ -54,13 +58,13 @@ body {
     gap: 1em;
 }
 
-.component-container:has(.options) {
+.component-container:has(.options), .component-container:has(.user-ranking) {
     align-self: center;
 }
 
 .options {
     border-collapse: separate;
-    border-spacing: 0 1em;
+    border-spacing: 1em;
 }
 
 .filter-container {
@@ -127,7 +131,7 @@ body {
     background-color: white;
 }
 
-.score-range, .score-filters {
+.section-header {
     margin: 0 0;
     text-align: center;
 }
@@ -174,7 +178,6 @@ body {
 
 .score .mod {
     font-weight: bold;
-    font-size: 1.25em;
 }
 
 .score-row-mode .mode-icon {
@@ -198,7 +201,6 @@ body {
     font-size: 1.3em;
     color: white;
 }
-
 
 .scores-table tr td a, .score a {
     color: white;
@@ -230,28 +232,66 @@ body {
     box-shadow: 0 0 1em rgba(255, 255, 255, 0.5);
 }
 
-.mod-difficulty-decrease {
-    color: rgb(60, 180, 60);
+.mod {
+    font-weight: bold;
+    padding: 0.25em;
+    border-radius: 0.25em;
 }
 
-.mod-difficulty-increase {
-    color: rgb(180, 60, 60);
+.mods {
+    display: flex;
+    gap: 0.25em;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.scores-table .mods {
+    justify-content: flex-start;
+}
+
+.mods .mod {
+    text-shadow: none;
+}
+
+.mod-difficultyDecrease {
+    background-color: rgb(179, 255, 102);
+    color: rgb(60, 89, 30);
+}
+
+.mod-difficultyIncrease {
+    background-color: rgb(255, 102, 102);
+    color: rgb(89, 30, 30);
 }
 
 .mod-conversion {
-    color: rgb(120, 60, 180);
+    background-color: rgb(140, 102, 255);
+    color: rgb(45, 30, 89)
 }
 
 .mod-automation {
-    color: rgb(150, 150, 220);
+    background-color: rgb(102, 204, 255);
+    color: rgb(30, 70, 89);
 }
 
 .mod-fun {
-    color: rgb(200, 100, 140);
+    background-color: rgb(255, 102, 171);
+    color: rgb(89, 30, 57);
 }
 
 .mod-system {
-    color: rgb(255, 125, 60);
+    background-color: rgb(255, 204, 34);
+    color: rgb(89, 70, 5);
+}
+
+.mod-unknown {
+    background-color: rgb(180, 180, 180);
+    color: rgb(50, 50, 50);
+}
+
+.mods-expand {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
 }
 
 .score-acc-misses {
@@ -263,7 +303,12 @@ body {
     color: red;
 }
 
+.table-wrapper {
+    overflow-x: auto;
+}
+
 .scores-table {
+    width: 100%;
     font-weight: 350;
     border-collapse: collapse;
 }
@@ -279,6 +324,17 @@ body {
 .score-row-map-image img {
     height: 1em;
     object-fit: cover;
+}
+
+.player-img {
+    height: 1em;
+    object-fit: contain;
+}
+
+.score-user-data {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
 }
 
 .scores-table tbody tr:nth-child(odd) {

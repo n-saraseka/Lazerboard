@@ -25,7 +25,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
         const newBeatmap = beatmaps.find((beatmap) => beatmap.id === id);
         setSelectedBeatmap(newBeatmap);
         setAllowedModes(newBeatmap.mode !== 0 ? [newBeatmap.mode] : allModes);
-        const newMode = selectedBeatmap.mode !== 0 ? selectedBeatmap.mode : currentMode;
+        const newMode = newBeatmap.mode !== 0 ? newBeatmap.mode : currentMode;
         if (newMode !== currentMode) {
             setCurrentMode(newMode);
         }

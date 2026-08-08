@@ -4,6 +4,26 @@ body {
     color: white;
 }
 
+input[type="number"], input[type="date"], select {
+    font-size: 1em;
+    padding: 0.5em;
+    border-radius: 0.25em;
+    border: 1px solid black;
+    font-family: "Cascadia Mono", monospace;
+}
+
+input[type="date"] {
+    width: 7.8em;
+}
+
+input[type="number"] {
+    width: 4em;
+}
+
+select {
+    min-width: 4.5em;
+}   
+
 .component-container {
     display: flex;
     flex-direction: column;
@@ -67,6 +87,10 @@ body {
     border-spacing: 1em;
 }
 
+.options tr td:first-child {
+    text-align: right;
+}
+
 .filter-container {
     display: flex;
     gap: 1em;
@@ -76,7 +100,7 @@ body {
 
 .view-filter {
     padding: 0.5em;
-    border-radius: 0.5em;
+    border-radius: 0.25em;
     display: flex;
     gap: 0.5em;
     align-items: center;
@@ -110,6 +134,10 @@ body {
 .view-table {
     mask-image: url("images/table.svg");
     -webkit-mask-image: url("images/table.svg");
+}
+
+.options .sort-thingy {
+    font-size: 1.5em;
 }
 
 .sort-thingy:hover {
@@ -156,6 +184,8 @@ body {
 .score {
     flex: 10 1;
     display: flex;
+    flex-direction: column;
+    gap: 1em;
     background-blend-mode: darken;
     background-size: cover;
     justify-content: space-between;
@@ -189,12 +219,33 @@ body {
     font-weight: 400;
 }
 
-.score-column {
+.scorecard-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.scorecard-row.title-row {
+    align-items: flex-start;
+}
+
+.scorecard-column.title-column {
+    flex : 2 1;
+}
+
+.scorecard-row .scorecard-column:first-child {
+    align-items: flex-start;
+}
+
+.scorecard-row .scorecard-column:last-child {
+    align-items: flex-end;
+}   
+
+.scorecard-column {
+    flex: 1 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1em;
-    flex-wrap: wrap;
+    gap: 0.5em;
 }
 
 .score-song-name {
@@ -294,9 +345,9 @@ body {
     text-decoration-style: dotted;
 }
 
-.score-acc-misses {
+.score-combo-misses {
     display: flex;
-    gap: 1em;
+    gap: 0.5em;
 }
 
 .score-misses {

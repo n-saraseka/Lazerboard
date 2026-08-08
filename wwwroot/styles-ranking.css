@@ -26,6 +26,10 @@
     height: 200px;
 }
 
+.selector-item {
+    border-radius: 0.25em;
+}
+
 .selector-items > .selector-item:first-child {
     border-radius: 0.25em 0.25em 0 0;
 }

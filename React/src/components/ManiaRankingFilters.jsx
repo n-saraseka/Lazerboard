@@ -8,16 +8,20 @@ function ManiaRankingFilters({filters, setFilters, countries}) {
                 <td>Star rating:</td>
                 <td>
                     <div className="filter-container">
-                        <span>From:</span>
-                        <input type="number" step={0.1} min={0} max={20} value={filters.starRange.min ?? ''} onChange={(e) => {
-                            const allFilters = {...filters, starRange: {...filters.starRange, min: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
-                        <span>to:</span>
-                        <input type="number" step={0.1} min={0} max={20} value={filters.starRange.max ?? ''} onChange={(e) => {
-                            const allFilters = {...filters, starRange: {...filters.starRange, max: e.target.value}};
-                            setFilters(allFilters);
-                        }}/>
+                        <label htmlFor="starMin">From: <input id="starMin" name="starMin" type="number" 
+                                                              step={0.1} min={0} max={20} value={filters.starRange.min ?? ''} 
+                                                              onChange={(e) => {
+                                                                  const allFilters = {...filters, starRange: {...filters.starRange, min: e.target.value}};
+                                                                  setFilters(allFilters);
+                                                              }}/>
+                        </label>
+                        <label htmlFor="starMax">to: <input id="starMax" name="starMax" type="number" 
+                                                            step={0.1} min={0} max={20} value={filters.starRange.max ?? ''} 
+                                                            onChange={(e) => {
+                                                                const allFilters = {...filters, starRange: {...filters.starRange, max: e.target.value}};
+                                                                setFilters(allFilters);
+                                                            }}/>
+                        </label>
                     </div>
                 </td>
             </tr>

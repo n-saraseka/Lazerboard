@@ -184,6 +184,8 @@ select {
 .score {
     flex: 10 1;
     display: flex;
+    flex-direction: column;
+    gap: 1em;
     background-blend-mode: darken;
     background-size: cover;
     justify-content: space-between;
@@ -217,12 +219,33 @@ select {
     font-weight: 400;
 }
 
-.score-column {
+.scorecard-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.scorecard-row.title-row {
+    align-items: flex-start;
+}
+
+.scorecard-column.title-column {
+    flex : 2 1;
+}
+
+.scorecard-row .scorecard-column:first-child {
+    align-items: flex-start;
+}
+
+.scorecard-row .scorecard-column:last-child {
+    align-items: flex-end;
+}   
+
+.scorecard-column {
+    flex: 1 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1em;
-    flex-wrap: wrap;
+    gap: 0.5em;
 }
 
 .score-song-name {
@@ -322,9 +345,9 @@ select {
     text-decoration-style: dotted;
 }
 
-.score-acc-misses {
+.score-combo-misses {
     display: flex;
-    gap: 1em;
+    gap: 0.5em;
 }
 
 .score-misses {

@@ -36,28 +36,19 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
                     dto.SpeedChange = change;
                 }
             }
-
-            if (dto.SpeedChange == null)
-            {
-                switch (acronym)
-                {
-                    case "DT":
-                    case "NC":
-                        dto.SpeedChange = 1.5;
-                        break;
-                    case "HT":
-                    case "DC":
-                        dto.SpeedChange = 0.75;
-                        break;
-                    default:
-                        dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? null : 1;
-                        break;
-                }
-            }
             
             dto.ModAcronyms.Add(acronym);
         }
-
+        
+        if (dto.SpeedChange == null)
+        {
+            if (modAcronyms.Any(a => a == "DT" || a == "NC"))
+                dto.SpeedChange = 1.5;
+            if (modAcronyms.Any(a => a == "HT" || a == "DC"))
+                dto.SpeedChange = 0.75;
+            dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? dto.SpeedChange : 1;
+        }
+        
         return dto;
     }
 

@@ -216,11 +216,12 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                 <tr>
                     <td>Count:</td>
                     <td>
-                        <select name="scores-amount" id="scores-amount" value={filters.scoresAmount} onChange={(e) => {
-                            const allFilters = {...filters, scoresAmount: e.target.value};
+                        <select name="scores-amount" id="scores-amount" value={filters.amount} onChange={(e) => {
+                            const allFilters = {...filters, amount: e.target.value};
                             setFilters(allFilters);
                             refetchScores(allFilters, true);
                         }}>
+                            <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>

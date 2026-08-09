@@ -20,7 +20,7 @@ function ScoreRankingFilters({filters, setFilters, countries}) {
         <table className="options">
             <tbody>
             <tr>
-                <td>Mode:</td>
+                <td>Modes:</td>
                 <td>
                     <div className="filter-container">
                         {filters.modes.map((mode, index) => (

@@ -1,14 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/styles.css">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+<header>
+    <div class="logo-navigation">
+        <strong>OsuScoreStats</strong>
+        <ul class="navigation">
+            <li>
+                <a asp-controller="Home" asp-action="Index">Home page</a>
+                <a asp-controller="ScoreRanking" asp-action="ScoreRanking">Score ranking</a>
+            </li>
+            <li>
+                <a asp-controller="ScoreRanking" asp-action="ManiaMillions">Mania millions</a>
+            </li>
+        </ul>
+    </div>
+</header>
 <div class="container">
     @RenderBody()
 </div>
+<footer>
+    <div>
+        <span>Made by <a href="https://osu.ppy.sh/users/8706541"><strong>SomeMelGuy</strong></a></span>
+    </div>
+    <ul class="footer-links">
+        <li><a href="http://github.com/n-saraseka/OsuScoreStats/"><strong>Source code</strong></a></li>
+    </ul>
+</footer>
 <script type="module" src="~/react/assets/index.js"></script>
 </body>
 </html>

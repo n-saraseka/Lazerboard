@@ -1,5 +1,9 @@
 @model OsuScoreStats.ViewModels.UserViewModel
 
+@{
+    ViewBag.Title = $"{Model.User.Username}'s profile";
+}
+
 @section Styles {
     <link rel="stylesheet" href="~/styles-user.css">
 }

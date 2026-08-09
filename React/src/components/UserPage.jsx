@@ -114,9 +114,9 @@ function UserPage({user, scores, count, pages}) {
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : filters.view === 'cards'
+                    : scoresCount > 0 && (filters.view === 'cards'
                         ? <ScoresGrid scores={allScores} usingStandardized={true}/>
-                        : <ScoresTable scores={allScores} usingStandardized={true}/>)}
+                        : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
         <Pagination key={paginationFlag} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, false, newPage)}/>
     </>)

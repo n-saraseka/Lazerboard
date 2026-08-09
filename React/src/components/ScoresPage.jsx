@@ -114,9 +114,9 @@ function ScoresPage({scores, pages, countries}) {
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : filters.view === 'cards'
+                    : scoresCount > 0 && (filters.view === 'cards'
                             ? <ScoresGrid scores={allScores} usingStandardized={true}/>
-                            : <ScoresTable scores={allScores} usingStandardized={true}/>)}
+                            : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
         <Pagination key={scoresCount} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)

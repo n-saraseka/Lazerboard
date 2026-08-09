@@ -4,6 +4,7 @@ import ScoreRankingTable from "./ScoreRankingTable.jsx";
 import Pagination from "./Pagination.jsx";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
+import {assembleSearchParams} from "../utils/score-things.js";
 function ScoreRankingPage({countries, userRanking}) {
     const [filters, setFilters] = useState({
         starRange: {min: null, max: null},
@@ -22,19 +23,7 @@ function ScoreRankingPage({countries, userRanking}) {
         setIsError(false);
         
         const params = new URLSearchParams();
-
-        if (filterOptions.starRange.min !== null) {
-            params.append("minStars", filterOptions.starRange.min);
-        }
-        if (filterOptions.starRange.max !== null) {
-            params.append("maxStars", filterOptions.starRange.max );
-        }
-
-        if (filters.country.id !== "All") {
-            params.append("countryCode", filters.country.id);
-        }
-
-        params.append("page", pageNumber);
+        assembleSearchParams(params, filterOptions, pageNumber);
         
         try {
             const response = await fetch(`/api/scores/millions?` + params.toString(), {

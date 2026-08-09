@@ -5,7 +5,7 @@ using OsuScoreStats.ViewModels;
 
 namespace OsuScoreStats.Controllers;
 
-public class HomeController(IScoreRepository scoreRepository) : Controller
+public class HomeController(IScoreRepository scoreRepository, ICountryRepository countryRepository) : Controller
 {
     public async Task<IActionResult> Index(int id, CancellationToken cancellationToken = default)
     {
@@ -16,11 +16,13 @@ public class HomeController(IScoreRepository scoreRepository) : Controller
             .Take(25)
             .ToListAsync(cancellationToken);
         var pages = (int)Math.Ceiling(scoresCount / 25d);
+        var countries = await countryRepository.GetAll().OrderBy(c => c.Name).ToListAsync(cancellationToken);
 
         var viewModel = new IndexViewModel
         {
             Scores = scores,
-            Pages = pages
+            Pages = pages,
+            Countries = countries
         };
         
         return View(viewModel);

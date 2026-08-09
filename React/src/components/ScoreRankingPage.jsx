@@ -4,6 +4,7 @@ import ScoreRankingTable from "./ScoreRankingTable.jsx";
 import Pagination from "./Pagination.jsx";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
+import {assembleSearchParams} from "../utils/score-things.js";
 
 function ScoreRankingPage({countries}) {
     const [filters, setFilters] = useState({
@@ -31,48 +32,7 @@ function ScoreRankingPage({countries}) {
         setIsError(false);
         
         const params = new URLSearchParams();
-        filterOptions.modes.forEach((mode) => {
-            if (mode.enabled) {
-                params.append("modes", mode.value.toString());
-            }
-        });
-        filterOptions.mods.forEach((mod) => {
-            params.append("mods", mod);
-        })
-        params.append("lenientMode", filters.lenientMode.toString());
-        params.append("page", pageNumber.toString());
-        params.append("amount", filterOptions.amount.toString());
-
-        params.append("rankMin", filterOptions.rankRange.min);
-        params.append("rankMax", filterOptions.rankRange.max);
-        
-        if (filterOptions.ppRange.min !== null) {
-            params.append("ppMin", filterOptions.ppRange.min);
-        }
-        if (filterOptions.ppRange.max !== null) {
-            params.append("ppMax", filterOptions.ppRange.max );
-        }
-
-        if (filterOptions.accRange.min !== null) {
-            params.append("accMin", filterOptions.accRange.min);
-        }
-        if (filterOptions.accRange.max !== null) {
-            params.append("accMax", filterOptions.accRange.max);
-        }
-        
-        if (filterOptions.rateRange.min !== null) {
-            params.append("speedMin", filterOptions.rateRange.min);
-        }
-
-        if (filterOptions.rateRange.max !== null) {
-            params.append("speedMax", filterOptions.rateRange.max);
-        }
-        
-        if (filters.country.id !== "All") {
-            params.append("countryCode", filters.country.id);
-        }
-        
-        params.append("page", pageNumber);
+        assembleSearchParams(params, filterOptions, pageNumber);
         
         try {
             const response = await fetch(`/api/scores/ranking?` + params.toString(), {

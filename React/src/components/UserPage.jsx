@@ -7,20 +7,29 @@ import UserCard from "./UserCard.jsx";
 import {dateStringFromDatetime} from "../utils/datetime-things.js";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
+import {assembleSearchParams} from "../utils/score-things.js";
 
 function UserPage({user, scores, count, pages}) {
     const currentDate = new Date().toISOString().split("T")[0];
     
     const [filters, setFilters] = useState({
         view: 'cards',
-        scoresAmount: 25,
-        sortBy: 'date',
-        sortDir: 'desc',
-        dateStart: '',
-        dateEnd: '',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
-        })
+        }),
+        dateRange: {
+            min: '',
+            max: ''
+        },
+        rankRange: {min: 1, max: 100},
+        ppRange: {min: null, max: null},
+        accRange: {min: null, max: null},
+        rateRange: {min: null, max: null},
+        mods: [],
+        lenientMode: true,
+        sortBy: 'date',
+        sortDir: 'desc',
+        amount: 25,
     });
     const [scoreCount, setScoreCount] = useState(count);
     const [currentPage, setCurrentPage] = useState(1);
@@ -30,11 +39,11 @@ function UserPage({user, scores, count, pages}) {
     const [isError, setIsError] = useState(false);
 
     let dateRangeString = '';
-    if (filters.dateStart !== '' || filters.dateEnd !== '') {
+    if (filters.dateRange.min !== '' || filters.dateRange.max !== '') {
         dateRangeString = ' from ';
         const dateStrings = [];
-        dateStrings.push(filters.dateStart === '' ? '' : (filters.dateStart === currentDate ? 'today' : dateStringFromDatetime(filters.dateStart)))
-        dateStrings.push((filters.dateEnd === '' || filters.dateEnd === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateEnd));
+        dateStrings.push(filters.dateRange.min === '' ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
+        dateStrings.push((filters.dateRange.max === '' || filters.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateRange.max));
         if (dateStrings[0] === '') {
             dateRangeString += `until ${dateStrings[1]}`;
         }
@@ -48,21 +57,7 @@ function UserPage({user, scores, count, pages}) {
         setIsError(false);
         
         const params = new URLSearchParams();
-        filterOptions.modes.forEach((mode) => {
-            if (mode.enabled) {
-                params.append("modes", mode.value.toString());
-            }
-        })
-        params.append("amount", filterOptions.scoresAmount.toString());
-        params.append("sort", filterOptions.sortBy);
-        params.append("isDesc", (filterOptions.sortDir === "desc").toString());
-        if (filterOptions.dateStart !== '') {
-            params.append("dateStart", filterOptions.dateStart);
-        }
-        if (filterOptions.dateEnd !== '') {
-            params.append("dateEnd", filterOptions.dateEnd);
-        }
-        params.append("page", pageNumber);
+        assembleSearchParams(params, filterOptions, pageNumber);
         
         try {
             const response = await fetch(`/api/users/${user.id}/scores?` + params.toString(), {
@@ -75,7 +70,7 @@ function UserPage({user, scores, count, pages}) {
                 setAllScores(json.scores);
                 setScoreCount(json.count);
 
-                const pages = Math.ceil(json.count / filterOptions.scoresAmount);
+                const pages = Math.ceil(json.count / filterOptions.amount);
                 if (pageNumber !== currentPage) {
                     setCurrentPage(pageNumber);
                 }
@@ -103,7 +98,7 @@ function UserPage({user, scores, count, pages}) {
         <UserCard user={user} scoreCount={scoreCount}/>
         <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
-            <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
+            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
                 await getScores(newFilters, currentPage)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>

@@ -6,20 +6,30 @@ import Pagination from "./Pagination.jsx";
 import {dateStringFromDatetime} from "../utils/datetime-things.js";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
+import {assembleSearchParams} from "../utils/score-things.js";
 
-function ScoresPage({scores, pages}) {
+function ScoresPage({scores, pages, countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
-    
+
     const [filters, setFilters] = useState({
         view: 'cards',
-        scoresAmount: 25,
-        sortBy: 'pp',
-        sortDir: 'desc',
-        dateStart: '',
-        dateEnd: '',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
-        })
+        }),
+        dateRange: {
+            min: '',
+            max: ''
+        },
+        rankRange: {min: 1, max: 100},
+        ppRange: {min: null, max: null},
+        accRange: {min: null, max: null},
+        rateRange: {min: null, max: null},
+        country: {id: "All", name: "All countries"},
+        mods: [],
+        lenientMode: true,
+        sortBy: 'pp',
+        sortDir: 'desc',
+        amount: 25,
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(pages);
@@ -32,21 +42,7 @@ function ScoresPage({scores, pages}) {
         setIsError(false);
         
         const params = new URLSearchParams();
-        filterOptions.modes.forEach((mode) => {
-            if (mode.enabled) {
-                params.append("modes", mode.value.toString());
-            }
-        })
-        params.append("amount", filterOptions.scoresAmount.toString());
-        params.append("sort", filterOptions.sortBy);
-        params.append("isDesc", (filterOptions.sortDir === "desc").toString());
-        if (filterOptions.dateStart !== '') {
-            params.append("dateStart", filterOptions.dateStart);
-        }
-        if (filterOptions.dateEnd !== '') {
-            params.append("dateEnd", filterOptions.dateEnd);
-        }
-        params.append("page", pageNumber ?? currentPage);
+        assembleSearchParams(params, filterOptions, pageNumber);
 
         setIsLoading(true);
         
@@ -60,7 +56,7 @@ function ScoresPage({scores, pages}) {
                 const json = await response.json();
                 setAllScores(json.scores);
 
-                const pages = Math.ceil(json.count / filterOptions.scoresAmount);
+                const pages = Math.ceil(json.count / filterOptions.amount);
                 if (pageNumber !== currentPage) {
                     setCurrentPage(pageNumber);
                 }
@@ -85,13 +81,13 @@ function ScoresPage({scores, pages}) {
     }
 
     let dateRangeString;
-    if (filters.dateStart === '' && filters.dateEnd === '') {
+    if (filters.dateRange.min === '' && filters.dateRange.max === '') {
         dateRangeString = ' from today';
     }
     else {
         dateRangeString = ' from ';
         const dateStrings = [];
-        [filters.dateStart, filters.dateEnd].forEach((dateFilter) => {
+        [filters.dateRange.min, filters.dateRange.max].forEach((dateFilter) => {
             dateStrings.push((dateFilter === '' || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
         });
         dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
@@ -100,8 +96,8 @@ function ScoresPage({scores, pages}) {
     return (<>
         <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
-            <ScoreFilters filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
-                await getScores(newFilters, currentPage)}/>
+            <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}
+                          refetchScores={ async (newFilters) => await getScores(newFilters, currentPage)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">

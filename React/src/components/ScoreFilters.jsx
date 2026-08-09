@@ -1,6 +1,21 @@
 import {modeEnumToString} from "../utils/beatmap-things.js";
+import ModSelector from "./ModSelector.jsx";
+import CountrySelector from "./CountrySelector.jsx";
+import {useMemo} from "react";
+import {allMods} from "../utils/score-things.js";
 
-function ScoreFilters({filters, setFilters, refetchScores}) {
+function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
+    const possibleMods = useMemo(() => {
+        let arr = [];
+        for (const key of Object.keys(allMods)) {
+            const matchingMods = allMods[key].filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
+            matchingMods.forEach(m => {
+                arr.push(m.acronym);
+            });
+        }
+        return arr;
+    }, [filters]);
+    
     const currentDate = new Date().toISOString().split("T")[0];
     
     return (<>
@@ -45,26 +60,120 @@ function ScoreFilters({filters, setFilters, refetchScores}) {
                 </td>
             </tr>
             <tr>
-                <td>Date:</td>
+                <td>Rank:</td>
                 <td>
                     <div className="filter-container">
-                        <label htmlFor="dateStart">From: <input id="dateStart" name="dateStart" type="date" 
-                                                                value={filters.dateStart} max={currentDate} onChange={(e) => {
-                                                                    const allFilters = {...filters, dateStart: e.target.value};
-                                                                    setFilters(allFilters);
-                                                                    refetchScores(allFilters);
-                                                                }}/>
+                        <label htmlFor="rankMin">From: <input id="rankMin" name="rankMin" type="number" step={1}
+                                                              min={1} max={100} value={filters.rankRange.min} onChange={(e) => {
+                            const allFilters = {...filters, rankRange: {...filters.rankRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
                         </label>
-                        <label htmlFor="dateEnd">to: <input id="dateEnd" name="dateEnd" type="date" 
-                                                            value={filters.dateEnd} max={currentDate} onChange={(e) => {
-                                                                const allFilters = {...filters, dateEnd: e.target.value};
-                                                                setFilters(allFilters);
-                                                                refetchScores(allFilters);
-                                                            }}/>
+                        <label htmlFor="rankMax">to: <input id="rankMax" name="rankMax" type="number" step={1}
+                                                            min={1} max={100} value={filters.rankRange.max} onChange={(e) => {
+                            const allFilters = {...filters, rankRange: {...filters.rankRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
                         </label>
                     </div>
                 </td>
             </tr>
+            <tr>
+                <td>PP:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="ppMin">From: <input id="ppMin" name="ppMin" type="number" step={1}
+                                                            min={1} max={3000} value={filters.ppRange.min} onChange={(e) => {
+                            const allFilters = {...filters, ppRange: {...filters.ppRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="ppMax">to: <input id="ppMax" name="ppMax" type="number" step={1}
+                                                          min={1} max={3000} value={filters.ppRange.max} onChange={(e) => {
+                            const allFilters = {...filters, ppRange: {...filters.ppRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Accuracy:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="accMin">From: <input id="accMin" name="accMin" type="number" step={0.01}
+                                                             min={1} max={100} value={filters.accRange.min} onChange={(e) => {
+                            const allFilters = {...filters, accRange: {...filters.accRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="accMax">to: <input id="accMax" name="accMax" type="number" step={0.01}
+                                                           min={1} max={100} value={filters.accRange.max} onChange={(e) => {
+                            const allFilters = {...filters, accRange: {...filters.accRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Speed:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="rateMin">From: <input id="rateMin" name="rateMin" type="number" step={1}
+                                                              min={0} max={2} value={filters.rateRange.min} onChange={(e) => {
+                            const allFilters = {...filters, rateRange: {...filters.rateRange, min: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="rateMax">to: <input id="rateMax" name="rateMax" type="number" step={1}
+                                                            min={0} max={2} value={filters.rateRange.max} onChange={(e) => {
+                            const allFilters = {...filters, rateRange: {...filters.rateRange, max: e.target.value}};
+                            setFilters(allFilters);
+                        }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Date:</td>
+                <td>
+                    <div className="filter-container">
+                        <label htmlFor="dateStart">From: <input id="dateStart" name="dateStart" type="date"
+                                                                value={filters.dateRange.min} max={currentDate} onChange={(e) => {
+                            const allFilters = {...filters, dateRange: {...filters.dateRange, min: e.target.value}};
+                            setFilters(allFilters);
+                            refetchScores(allFilters);
+                        }}/>
+                        </label>
+                        <label htmlFor="dateEnd">to: <input id="dateEnd" name="dateEnd" type="date"
+                                                            value={filters.dateRange.max} max={currentDate} onChange={(e) => {
+                            const allFilters = {...filters, dateRange: {...filters.dateRange, max: e.target.value}};
+                            setFilters(allFilters);
+                            refetchScores(allFilters);
+                        }}/>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Mods:</td>
+                <td>
+                    <div className="filter-container">
+                        <ModSelector availableMods={possibleMods} filters={filters} setFilters={setFilters}/>
+                    </div>
+                </td>
+            </tr>
+            {!isUser && (
+                <tr>
+                    <td>Country:</td>
+                    <td>
+                        <div className="filter-container">
+                            <CountrySelector filters={filters} setFilters={setFilters} countries={countries}/>
+                        </div>
+                    </td>
+                </tr>
+            )}
             <tr>
                 <td>Sort:</td>
                 <td>

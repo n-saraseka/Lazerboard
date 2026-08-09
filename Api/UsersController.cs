@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.Api.Dtos;
-using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
@@ -10,15 +9,15 @@ namespace OsuScoreStats.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IScoreRepository scoreRepository, IUserRepository userRepository) : ControllerBase
+public class UsersController(IScoreRepository scoreRepository) : ControllerBase
 {
     /// <summary>
     /// Get user scores
     /// </summary>
     /// <param name="userId">User ID</param>
     /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
-    /// <param name="dateStart">Date to begin getting scores from (defaults to Unix epoch)</param>
-    /// <param name="dateEnd">Date to end getting scores from (defaults to latest date in scores table)</param>
+    /// <param name="dateMin">Date to begin getting scores from (defaults to Unix epoch)</param>
+    /// <param name="dateMax">Date to end getting scores from (defaults to latest date in scores table)</param>
     /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
     /// <param name="optionalMods">An array of optional mod acronyms</param>
     /// <param name="amount">Amount of scores to return</param>
@@ -32,8 +31,8 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
     public async Task<ScoresResponse> GetUserScoresAsync(
         int userId,
         [FromQuery] Mode[] modes,
-        [FromQuery] DateOnly? dateStart,
-        [FromQuery] DateOnly? dateEnd,
+        [FromQuery] DateOnly? dateMin,
+        [FromQuery] DateOnly? dateMax,
         [FromQuery] string[]? mandatoryMods,
         [FromQuery] string[]? optionalMods,
         [FromQuery] int? amount,
@@ -47,36 +46,22 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         var query = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.UserId == userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
-        var targetStartDate = dateStart ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
-        var targetEndDate = dateEnd ?? DateOnly.FromDateTime(latestDate);
-        query = query.Where(s => 
-            DateOnly.FromDateTime(s.Date) >= targetStartDate && DateOnly.FromDateTime(s.Date) <= targetEndDate);
+        var targetStartDate = dateMin ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
+        var targetEndDate = dateMax ?? DateOnly.FromDateTime(latestDate);
         
-        query = query.Where(s => modes.Contains(s.Mode));
-        
-        if (mandatoryMods?.Length > 0)
-            query = query.Where(s =>
-                mandatoryMods.All(m => s.ModAcronyms.Contains(m)) &&
-                s.ModAcronyms.All(m => mandatoryMods.Contains(m)));
-        if (optionalMods?.Length > 0)
-            query = query.Where(s =>
-                s.ModAcronyms.All(m => optionalMods.Contains(m)));
-
-        switch (sort)
-        {
-            case "totalScore":
-                query = (isDesc) ? query.OrderByDescending(s => s.TotalScore) : query.OrderBy(s => s.TotalScore);
-                break;
-            case "classicTotalScore":
-                query = (isDesc) ? query.OrderByDescending(s => s.ClassicTotalScore) : query.OrderBy(s => s.ClassicTotalScore);
-                break;
-            case "date":
-                query = (isDesc) ? query.OrderByDescending(s => s.Date) : query.OrderBy(s => s.Date);
-                break;
-            default:
-                query = (isDesc) ? query.OrderByDescending(s => s.PP) : query.OrderBy(s => s.PP);
-                break;
-        }
+        query = FilterUtils.FilterScoreQuery(query, 
+            modes,
+            [targetStartDate, targetEndDate],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            null,
+            null,
+            sort,
+            isDesc);
         
         var count = await query.CountAsync(ct);
         

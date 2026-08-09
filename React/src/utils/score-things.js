@@ -149,3 +149,76 @@ export function getModData(acronym) {
         modData: Mod(acronym, acronym, false, [0, 1, 2, 3])
     };
 }
+
+export function assembleSearchParams(params, filters, pageNumber) {
+    if (filters.modes !== undefined) {
+        filters.modes.forEach((mode) => {
+            if (mode.enabled) {
+                params.append("modes", mode.value.toString());
+            }
+        });
+    }
+    
+    if (filters.dateRange !== undefined) {
+        if (filters.dateRange.min !== '') {
+            params.append("dateMin", filters.dateRange.min);
+        }
+        if (filters.dateRange.max !== '') {
+            params.append("dateMax", filters.dateRange.max);
+        }
+    }
+    
+    if (filters.ppRange !== undefined) {
+        params.append("rankMin", filters.rankRange.min);
+        params.append("rankMax", filters.rankRange.max);
+    }
+
+    if (filters.ppRange !== undefined) {
+        if (filters.ppRange.min !== null) {
+            params.append("ppMin", filters.ppRange.min);
+        }
+        if (filters.ppRange.max !== null) {
+            params.append("ppMax", filters.ppRange.max);
+        }
+    }
+    
+    if (filters.accRange !== undefined) {
+        if (filters.accRange.min !== null) {
+            params.append("accMin", filters.accRange.min);
+        }
+
+        if (filters.accRange.max !== null) {
+            params.append("accMax", filters.accRange.max);
+        }
+    }
+    
+    if (filters.rateRange !== undefined) {
+        if (filters.rateRange.min !== null) {
+            params.append("speedMin", filters.rateRange.min);
+        }
+        if (filters.rateRange.max !== null) {
+            params.append("speedMax", filters.rateRange.max);
+        }
+    }
+    
+    if (filters.country !== undefined) {
+        if (filters.country.id !== "All") {
+            params.append("countryCode", filters.country.id);
+        }
+    }
+    
+    if (filters.mods !== undefined) {
+        filters.mods.forEach((mod) => {
+            params.append("mods", mod);
+        })
+        params.append("lenientMode", filters.lenientMode.toString());
+    }
+
+    if (filters.sortBy !== undefined) {
+        params.append("sort", filters.sortBy);
+        params.append("isDesc", (filters.sortDir === "desc").toString());
+    }
+
+    params.append("amount", filters.amount.toString());
+    params.append("page", pageNumber);
+}

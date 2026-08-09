@@ -14,7 +14,7 @@ function Pagination({pages, onPageChange}) {
     }
     
     return (
-        pages > 0 &&
+        pages > 1 &&
         <ul className="pages">
             {page !== 1 && <li className="page page-navigation" onClick={() => changePage(page - 1)}>&lt;</li>}
             {minPage !== 1 && <>

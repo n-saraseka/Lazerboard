@@ -31,18 +31,24 @@ function ScoresPage({scores, pages, countries}) {
         sortDir: 'desc',
         amount: 25,
     });
+    
     const [currentPage, setCurrentPage] = useState(1);
+    const [paginationFlag, setPaginationFlag] = useState(false); // blinks when pagination should reset
+    const [scoresCount, setScoresCount] = useState(0);
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
-    
-    async function getScores(filterOptions, pageNumber) {
+
+    async function getScores(filterOptions, couldChangePagination, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
+
+        const actualPage = couldChangePagination ? 1 : pageNumber;
+        if (couldChangePagination) setPaginationFlag(!paginationFlag);
         
         const params = new URLSearchParams();
-        assembleSearchParams(params, filterOptions, pageNumber);
+        assembleSearchParams(params, filterOptions, actualPage);
 
         setIsLoading(true);
         
@@ -55,24 +61,27 @@ function ScoresPage({scores, pages, countries}) {
             if (response.ok) {
                 const json = await response.json();
                 setAllScores(json.scores);
+                setScoresCount(json.count);
 
                 const pages = Math.ceil(json.count / filterOptions.amount);
-                if (pageNumber !== currentPage) {
-                    setCurrentPage(pageNumber);
+                if (actualPage !== currentPage) {
+                    setCurrentPage(actualPage);
                 }
-                if (pageNumber > pages) {
+                if (actualPage > pages) {
                     setCurrentPage(Math.max(1, pages));
                 }
                 setPageCount(pages);
             }
             else {
                 setCurrentPage(1);
+                setScoresCount(0);
                 setPageCount(0);
                 setIsError(true);
             }
         }
         catch (error) {
             setCurrentPage(1);
+            setScoresCount(0);
             setPageCount(0);
             setIsError(true);
         }
@@ -97,7 +106,7 @@ function ScoresPage({scores, pages, countries}) {
         <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
             <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}
-                          refetchScores={ async (newFilters) => await getScores(newFilters, currentPage)}/>
+                          refetchScores={ async (newFilters, couldChangePagination) => await getScores(newFilters, couldChangePagination, currentPage)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
@@ -109,7 +118,7 @@ function ScoresPage({scores, pages, countries}) {
                             ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                             : <ScoresTable scores={allScores} usingStandardized={true}/>)}
         </div>
-        <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
+        <Pagination key={scoresCount} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)
 }
 

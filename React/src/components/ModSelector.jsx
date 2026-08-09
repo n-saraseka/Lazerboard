@@ -7,7 +7,7 @@ function ModSelector({availableMods, filters, setFilters, refetchScores}) {
         const newFilters = {...filters, mods: newMods}
         setFilters(newFilters);
         if (refetchScores !== undefined) {
-            refetchScores(newFilters);
+            refetchScores(newFilters, true);
         }
     }
     

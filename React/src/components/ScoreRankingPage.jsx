@@ -22,8 +22,8 @@ function ScoreRankingPage({countries}) {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
-    
-    const [currentPage, setCurrentPage] = useState(1);
+
+    const [usersCount, setUsersCount] = useState(0);
     const [pageCount, setPageCount] = useState(0);
     const [userRankings, setUserRankings] = useState([]);
 
@@ -43,24 +43,19 @@ function ScoreRankingPage({countries}) {
             if (response.ok) {
                 const json = await response.json();
                 setUserRankings(json.userRankings);
+                setUsersCount(json.count);
 
                 const pages = Math.ceil(json.count / filterOptions.amount);
-                if (pageNumber !== currentPage) {
-                    setCurrentPage(pageNumber);
-                }
-                if (pageNumber > pages) {
-                    setCurrentPage(Math.max(1, pages));
-                }
                 setPageCount(pages);
             }
             else {
-                setCurrentPage(1);
+                setUsersCount(0);
                 setPageCount(0);
                 setIsError(true);
             }
         }
         catch (error) {
-            setCurrentPage(1);
+            setUsersCount(0);
             setPageCount(0);
             setIsError(true);
         }
@@ -73,7 +68,7 @@ function ScoreRankingPage({countries}) {
         <div className="component-container">
             <ScoreRankingFilters filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
-        <button className="calc-button" onClick={async () => await getRankings(filters, currentPage)}>
+        <button className="calc-button" onClick={async () => await getRankings(filters)}>
             Get ranking
         </button>
         {userRankings.length > 0 && <h1 className="section-header">User rankings:</h1>}
@@ -85,10 +80,10 @@ function ScoreRankingPage({countries}) {
                     : userRankings.length > 0 && (
                     <>
                         <ScoreRankingTable rankings={userRankings}/>
-                        <Pagination pages={pageCount} onPageChange={async (newPage) => await getRankings(filters, newPage)}/>
                     </>
                 ))}
         </div>
+        <Pagination key={usersCount} pages={pageCount} onPageChange={async (newPage) => await getRankings(filters, newPage)}/>
     </>)
 }
 

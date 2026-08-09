@@ -5,6 +5,25 @@ namespace OsuScoreStats.Api;
 
 public static class FilterUtils
 {
+    /// <summary>
+    /// Filter a <see cref="IQueryable{Score}"/> based on the given data
+    /// </summary>
+    /// <param name="query">A <see cref="IQueryable{Score}"/></param>
+    /// <param name="modes">An array with allowed <see cref="Mode"/>s</param>
+    /// <param name="dateRange">A <see cref="List{DateOnly}"/> with two Date values</param>
+    /// <param name="rankRange">A <see cref="List{int}"/> with two <see cref="Score"/>.Rank values</param>
+    /// <param name="ppRange">A <see cref="List{int}"/> with two <see cref="Score"/>.PP values</param>
+    /// <param name="accRange">A <see cref="List{double}"/> with two <see cref="Score"/>.Accuracy values</param>
+    /// <param name="speedRange">A <see cref="List{double}"/> with two <see cref="Score"/>.SpeedChange values</param>
+    /// <param name="starRange">A <see cref="List{double}"/> with two <see cref="Beatmap"/>.Difficulty values</param>
+    /// <param name="mods">An array of mod acronyms to filter scores</param>
+    /// <param name="lenientMode">Whether to allow other mods than those listed in <paramref name="mods"/> or not</param>
+    /// <param name="countryCode">The <see cref="Country"/> code to filter scores by</param>
+    /// <param name="sort">Name of the field to sort scores by</param>
+    /// <param name="isDesc">Whether sort is descending or not</param>
+    /// <remarks>The {x}Range parameters refer to <see cref="List{T}"/>s of two values, the minimum and the maximum.
+    /// When provided, it filters the query to look up scores between the two values </remarks>
+    /// <returns></returns>
     public static IQueryable<Score> FilterScoreQuery(IQueryable<Score> query,
         Mode[] modes,
         List<DateOnly?> dateRange,

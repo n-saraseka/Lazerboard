@@ -5,6 +5,8 @@ import ModeSelector from "../components/ModeSelector.jsx";
 import {useState} from "react";
 import MappedBy from "./MappedBy.jsx";
 import {modeEnumToString} from "../utils/beatmap-things.js";
+import Error from "./Error.jsx";
+import Loader from "./Loader.jsx";
 
 function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, selectedMode}) {
     const allModes = [0, 1, 2, 3];
@@ -13,6 +15,8 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
     const [beatmapScores, setBeatmapScores] = useState(scores);
     const [allowedModes, setAllowedModes] = useState(firstBeatmap.mode !== 0 ? [firstBeatmap.mode] : allModes);
     const [currentMode, setCurrentMode] = useState(selectedMode);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isError, setIsError] = useState(false);
     
     async function switchMode(mode) {
         if (!allowedModes.includes(mode)) return;
@@ -33,17 +37,30 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
     }
 
     async function getBeatmapScores(id, mode) {
+        setIsLoading(true);
+        setIsError(false);
+        
         const params = new URLSearchParams();
         params.append("mode", mode.toString());
-        const response = await fetch(`/api/beatmaps/${id}/scores?` + params.toString(), {
-            method: "GET",
-            headers: { "Accept": "application/json" },
-        });
-
-        if (response.ok) {
-            const json = await response.json();
-            setBeatmapScores(json);
+        
+        try {
+            const response = await fetch(`/api/beatmaps/${id}/scores?` + params.toString(), {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+            });
+            if (response.ok) {
+                const json = await response.json();
+                setBeatmapScores(json);
+            }
+            else {
+                setIsError(true);
+            }
         }
+        catch (error) {
+            setIsError(true);
+        }
+        
+        setIsLoading(false);
     }
     
     return (<>
@@ -75,7 +92,12 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
                 ))}
             </div>
         </div>
-        <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>
+        {isError 
+            ? (<Error/>) 
+            : (isLoading 
+                ? (<Loader/>) 
+                : <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>)}
+        
     </>)
 }
 

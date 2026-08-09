@@ -496,3 +496,55 @@ select {
 .mode-icon-wrapper.disabled {
     opacity: 0.6;
 }
+
+.loader-container {
+    height: 2em;
+    width: 2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loader {
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    mask-image: url("images/loader.svg");
+    -webkit-mask-image: url("images/loader.svg");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: cover;
+    -webkit-mask-repeat: no-repeat;
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+body {
+    font-family: "Cascadia Mono", monospace;
+    background-color: rgb(35, 35, 35);
+    color: white;
+}
+
+.error-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    align-items: center;
+    text-align: center;
+}
+
+.error-icon {
+    width: 2em;
+    height: 2em;
+    background-color: hsl(0, 70%, 55%);
+    mask-image: url("images/error.svg");
+    -webkit-mask-image: url("images/error.svg");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: cover;
+    -webkit-mask-repeat: no-repeat;
+}

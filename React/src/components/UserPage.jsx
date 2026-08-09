@@ -5,6 +5,8 @@ import {useState} from "react";
 import Pagination from "./Pagination.jsx";
 import UserCard from "./UserCard.jsx";
 import {dateStringFromDatetime} from "../utils/datetime-things.js";
+import Error from "./Error.jsx";
+import Loader from "./Loader.jsx";
 
 function UserPage({user, scores, count, pages}) {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -24,6 +26,8 @@ function UserPage({user, scores, count, pages}) {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isError, setIsError] = useState(false);
 
     let dateRangeString = '';
     if (filters.dateStart !== '' || filters.dateEnd !== '') {
@@ -40,6 +44,9 @@ function UserPage({user, scores, count, pages}) {
     }
 
     async function getScores(filterOptions, pageNumber = 1) {
+        setIsLoading(true);
+        setIsError(false);
+        
         const params = new URLSearchParams();
         filterOptions.modes.forEach((mode) => {
             if (mode.enabled) {
@@ -56,25 +63,40 @@ function UserPage({user, scores, count, pages}) {
             params.append("dateEnd", filterOptions.dateEnd);
         }
         params.append("page", pageNumber);
-        const response = await fetch(`/api/users/${user.id}/scores?` + params.toString(), {
-            method: "GET",
-            headers: { "Accept": "application/json" },
-        });
+        
+        try {
+            const response = await fetch(`/api/users/${user.id}/scores?` + params.toString(), {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+            });
 
-        if (response.ok) {
-            const json = await response.json();
-            setAllScores(json.scores);
-            setScoreCount(json.count);
-            
-            const pages = Math.ceil(json.count / filterOptions.scoresAmount);
-            if (pageNumber !== currentPage) {
-                setCurrentPage(pageNumber);
+            if (response.ok) {
+                const json = await response.json();
+                setAllScores(json.scores);
+                setScoreCount(json.count);
+
+                const pages = Math.ceil(json.count / filterOptions.scoresAmount);
+                if (pageNumber !== currentPage) {
+                    setCurrentPage(pageNumber);
+                }
+                if (pageNumber > pages) {
+                    setCurrentPage(Math.max(1, pages));
+                }
+                setPageCount(pages);
             }
-            if (pageNumber > pages) {
-                setCurrentPage(Math.max(1, pages));
+            else {
+                setCurrentPage(1);
+                setPageCount(0);
+                setIsError(true);
             }
-            setPageCount(pages);
         }
+        catch (error) {
+            setCurrentPage(1);
+            setPageCount(0);
+            setIsError(true);
+        }
+        
+        setIsLoading(false);
     }
 
     return (<>
@@ -86,9 +108,13 @@ function UserPage({user, scores, count, pages}) {
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
-            {filters.view === 'cards'
-                ? <ScoresGrid scores={allScores} usingStandardized={true}/>
-                : <ScoresTable scores={allScores} usingStandardized={true}/>}
+            {isError
+                ? (<Error/>)
+                : (isLoading
+                    ? (<Loader/>)
+                    : filters.view === 'cards'
+                        ? <ScoresGrid scores={allScores} usingStandardized={true}/>
+                        : <ScoresTable scores={allScores} usingStandardized={true}/>)}
         </div>
         <Pagination pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)

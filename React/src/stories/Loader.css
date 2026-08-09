@@ -12,9 +12,7 @@
     background-color: white;
     mask-image: url("images/loader.svg");
     -webkit-mask-image: url("images/loader.svg");
-    mask-position: center;
-    -webkit-mask-position: center;
-    mask-size: cover;
+    mask-size: contain;
     mask-repeat: no-repeat;
     -webkit-mask-size: cover;
     -webkit-mask-repeat: no-repeat;

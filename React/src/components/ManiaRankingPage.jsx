@@ -1,10 +1,11 @@
 import {useState} from "react";
-import ManiaRankingFilters from "./ManiaRankingFilters.jsx";
 import ScoreRankingTable from "./ScoreRankingTable.jsx";
 import Pagination from "./Pagination.jsx";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
 import {assembleSearchParams} from "../utils/score-things.js";
+import ScoreRankingFilters from "./ScoreRankingFilters.jsx";
+
 function ScoreRankingPage({countries, userRanking}) {
     const [filters, setFilters] = useState({
         starRange: {min: null, max: null},
@@ -57,7 +58,7 @@ function ScoreRankingPage({countries, userRanking}) {
     return (<>
         <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
-            <ManiaRankingFilters filters={filters} setFilters={setFilters} countries={countries}/>
+            <ScoreRankingFilters isMania={true} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
         <button className="calc-button" onClick={async () => await getRankings(filters)}>
             Get ranking

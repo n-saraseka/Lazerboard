@@ -66,7 +66,7 @@ function ScoreRankingPage({countries}) {
     return (<>
         <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
-            <ScoreRankingFilters filters={filters} setFilters={setFilters} countries={countries}/>
+            <ScoreRankingFilters isMania={false} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
         <button className="calc-button" onClick={async () => await getRankings(filters)}>
             Get ranking

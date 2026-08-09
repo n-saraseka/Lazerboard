@@ -153,15 +153,18 @@ select {
     background-color: rgb(40, 40, 40);
 }
 
+/* Would be cool if it worked but it unfortunately doesn't because the mod and country selectors get cut off. */
+
 .options-wrapper {
-    overflow: hidden;
+    /* overflow: hidden; */
     max-height: 1000px;
-    transition: max-height 1s ease-in-out;
+    /* transition: max-height 1s ease-in-out; */
 }
 
 .options-wrapper.collapsed {
     max-height: 0;
-    transition: max-height 0.5s cubic-bezier(0, 1, 0, 1);
+    overflow: hidden;
+    /* transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); */
 }
 
 .options {

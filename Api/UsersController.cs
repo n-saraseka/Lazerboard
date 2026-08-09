@@ -16,10 +16,18 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
     /// </summary>
     /// <param name="userId">User ID</param>
     /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
+    /// <param name="rankMin">Minimum map rank threshold</param>
+    /// <param name="rankMax">Maximum map rank threshold</param>
+    /// <param name="ppMin">Minimum PP threshold</param>
+    /// <param name="ppMax">Maximum PP threshold</param>
+    /// <param name="accMin">Minimum accuracy threshold</param>
+    /// <param name="accMax">Maximum accuracy threshold</param>
+    /// <param name="speedMin">Minimum speed threshold</param>
+    /// <param name="speedMax">Maximum speed threshold</param>
+    /// <param name="mods">Mods to count scores with</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
     /// <param name="dateMin">Date to begin getting scores from (defaults to Unix epoch)</param>
     /// <param name="dateMax">Date to end getting scores from (defaults to latest date in scores table)</param>
-    /// <param name="mandatoryMods">An array of mandatory mod acronyms</param>
-    /// <param name="optionalMods">An array of optional mod acronyms</param>
     /// <param name="amount">Amount of scores to return</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="sort">Parameter to sort by</param>
@@ -31,10 +39,18 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
     public async Task<ScoresResponse> GetUserScoresAsync(
         int userId,
         [FromQuery] Mode[] modes,
+        [FromQuery] int? rankMin,
+        [FromQuery] int? rankMax,
+        [FromQuery] int? ppMin,
+        [FromQuery] int? ppMax,
+        [FromQuery] double? accMin,
+        [FromQuery] double? accMax,
+        [FromQuery] double? speedMin,
+        [FromQuery] double? speedMax,
+        [FromQuery] string[] mods,
+        [FromQuery] bool lenientMode,
         [FromQuery] DateOnly? dateMin,
         [FromQuery] DateOnly? dateMax,
-        [FromQuery] string[]? mandatoryMods,
-        [FromQuery] string[]? optionalMods,
         [FromQuery] int? amount,
         [FromQuery] int? page = 1,
         [FromQuery] string? sort = "pp",
@@ -52,13 +68,13 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         query = FilterUtils.FilterScoreQuery(query, 
             modes,
             [targetStartDate, targetEndDate],
+            [rankMin, rankMax],
+            [ppMin, ppMax],
+            [accMin, accMax],
+            [speedMin, speedMax],
             [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            null,
+            mods,
+            lenientMode,
             null,
             sort,
             isDesc);

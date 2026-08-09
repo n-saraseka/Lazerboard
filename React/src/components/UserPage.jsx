@@ -21,7 +21,7 @@ function UserPage({user, scores, count, pages}) {
             min: '',
             max: ''
         },
-        rankRange: {min: 1, max: 100},
+        rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
         rateRange: {min: null, max: null},

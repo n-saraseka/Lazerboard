@@ -1,10 +1,14 @@
 import {useState} from "react";
 import ModSelectorRow from "./ModSelectorRow.jsx";
 
-function ModSelector({availableMods, filters, setFilters}) {
+function ModSelector({availableMods, filters, setFilters, refetchScores}) {
     function updateMods(mod) {
         const newMods = filters.mods.includes(mod) ? filters.mods.filter(m => m !== mod) : filters.mods.concat(mod);
-        setFilters({...filters, mods: newMods});
+        const newFilters = {...filters, mods: newMods}
+        setFilters(newFilters);
+        if (refetchScores !== undefined) {
+            refetchScores(newFilters);
+        }
     }
     
     const [isExpanded, setIsExpanded] = useState(false);
@@ -21,8 +25,13 @@ function ModSelector({availableMods, filters, setFilters}) {
                     )) }
                 </div>
             </div>
-            <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() =>
-                setFilters({...filters, lenientMode: !filters.lenientMode})}/>
+            <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() => {
+                const newFilters = {...filters, lenientMode: !filters.lenientMode}
+                setFilters(newFilters);
+                if (refetchScores !== undefined) {
+                    refetchScores(newFilters);
+                }
+            }}/>
             <label htmlFor="lenientMode">Allow other mods</label>
         </>
     )

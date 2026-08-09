@@ -16,9 +16,19 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// Get scores
     /// </summary>
     /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
+    /// <param name="rankMin">Minimum map rank threshold</param>
+    /// <param name="rankMax">Maximum map rank threshold</param>
+    /// <param name="ppMin">Minimum PP threshold</param>
+    /// <param name="ppMax">Maximum PP threshold</param>
+    /// <param name="accMin">Minimum accuracy threshold</param>
+    /// <param name="accMax">Maximum accuracy threshold</param>
+    /// <param name="speedMin">Minimum speed threshold</param>
+    /// <param name="speedMax">Maximum speed threshold</param>
+    /// <param name="mods">Mods to count scores with</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
     /// <param name="dateMin">Date to begin getting scores from (defaults to today)</param>
     /// <param name="dateMax">Date to end getting scores from (defaults to today)</param>
-    /// <param name="country"><see cref="Country"/> code</param>
+    /// <param name="countryCode"><see cref="Country"/> code</param>
     /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="sort">Parameter to sort by</param>
@@ -28,10 +38,20 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     [HttpGet]
     [AllowAnonymous]
     public async Task<ScoresResponse> GetScoresAsync(
-        [FromQuery] Mode[] modes, 
+        [FromQuery] Mode[] modes,
+        [FromQuery] int? rankMin,
+        [FromQuery] int? rankMax,
+        [FromQuery] int? ppMin,
+        [FromQuery] int? ppMax,
+        [FromQuery] double? accMin,
+        [FromQuery] double? accMax,
+        [FromQuery] double? speedMin,
+        [FromQuery] double? speedMax,
+        [FromQuery] string[] mods,
+        [FromQuery] bool lenientMode,
         [FromQuery] DateOnly? dateMin,
         [FromQuery] DateOnly? dateMax,
-        [FromQuery] string? country,
+        [FromQuery] string? countryCode,
         [FromQuery] int? amount,
         [FromQuery] int? page = 1,
         [FromQuery] string? sort = "pp",
@@ -51,14 +71,14 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         query = FilterUtils.FilterScoreQuery(query, 
             modes,
             [targetStartDate, targetEndDate],
+            [rankMin, rankMax],
+            [ppMin, ppMax],
+            [accMin, accMax],
+            [speedMin, speedMax],
             [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            null,
-            country,
+            mods,
+            lenientMode,
+            countryCode,
             sort,
             isDesc);
         
@@ -78,17 +98,17 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <summary>
     /// Get a user ranking by scores count
     /// </summary>
+    /// <param name="modes">Modes to count scores from</param>
     /// <param name="rankMin">Minimum map rank threshold</param>
     /// <param name="rankMax">Maximum map rank threshold</param>
-    /// <param name="modes">Modes to count scores from</param>
-    /// <param name="mods">Mods to count scores with</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
     /// <param name="ppMin">Minimum PP threshold</param>
     /// <param name="ppMax">Maximum PP threshold</param>
     /// <param name="accMin">Minimum accuracy threshold</param>
     /// <param name="accMax">Maximum accuracy threshold</param>
     /// <param name="speedMin">Minimum speed threshold</param>
     /// <param name="speedMax">Maximum speed threshold</param>
+    /// <param name="mods">Mods to count scores with</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
     /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
@@ -97,17 +117,17 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     [HttpGet("ranking")]
     [AllowAnonymous]
     public async Task<UserRankingResponse> GetUserRankingAsync(
+        [FromQuery] Mode[] modes,
         [FromQuery] int rankMin,
         [FromQuery] int rankMax,
-        [FromQuery] Mode[] modes,
-        [FromQuery] string[] mods,
-        [FromQuery] bool lenientMode,
         [FromQuery] int? ppMin,
         [FromQuery] int? ppMax,
         [FromQuery] double? accMin,
         [FromQuery] double? accMax,
         [FromQuery] double? speedMin,
         [FromQuery] double? speedMax,
+        [FromQuery] string[] mods,
+        [FromQuery] bool lenientMode,
         [FromQuery] string? countryCode,
         [FromQuery] int? page,
         [FromQuery] int? amount,

@@ -64,15 +64,17 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                 <td>
                     <div className="filter-container">
                         <label htmlFor="rankMin">From: <input id="rankMin" name="rankMin" type="number" step={1}
-                                                              min={1} max={100} value={filters.rankRange.min} onChange={(e) => {
+                                                              min={1} max={100} value={filters.rankRange.min ?? ''} onChange={(e) => {
                             const allFilters = {...filters, rankRange: {...filters.rankRange, min: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                         <label htmlFor="rankMax">to: <input id="rankMax" name="rankMax" type="number" step={1}
-                                                            min={1} max={100} value={filters.rankRange.max} onChange={(e) => {
+                                                            min={1} max={100} value={filters.rankRange.max ?? ''} onChange={(e) => {
                             const allFilters = {...filters, rankRange: {...filters.rankRange, max: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                     </div>
@@ -86,12 +88,14 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                                                             min={1} max={3000} value={filters.ppRange.min} onChange={(e) => {
                             const allFilters = {...filters, ppRange: {...filters.ppRange, min: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                         <label htmlFor="ppMax">to: <input id="ppMax" name="ppMax" type="number" step={1}
                                                           min={1} max={3000} value={filters.ppRange.max} onChange={(e) => {
                             const allFilters = {...filters, ppRange: {...filters.ppRange, max: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                     </div>
@@ -105,12 +109,14 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                                                              min={1} max={100} value={filters.accRange.min} onChange={(e) => {
                             const allFilters = {...filters, accRange: {...filters.accRange, min: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                         <label htmlFor="accMax">to: <input id="accMax" name="accMax" type="number" step={0.01}
                                                            min={1} max={100} value={filters.accRange.max} onChange={(e) => {
                             const allFilters = {...filters, accRange: {...filters.accRange, max: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                     </div>
@@ -124,12 +130,14 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                                                               min={0} max={2} value={filters.rateRange.min} onChange={(e) => {
                             const allFilters = {...filters, rateRange: {...filters.rateRange, min: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                         <label htmlFor="rateMax">to: <input id="rateMax" name="rateMax" type="number" step={1}
                                                             min={0} max={2} value={filters.rateRange.max} onChange={(e) => {
                             const allFilters = {...filters, rateRange: {...filters.rateRange, max: e.target.value}};
                             setFilters(allFilters);
+                            refetchScores(allFilters);
                         }}/>
                         </label>
                     </div>
@@ -160,7 +168,7 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                 <td>Mods:</td>
                 <td>
                     <div className="filter-container">
-                        <ModSelector availableMods={possibleMods} filters={filters} setFilters={setFilters}/>
+                        <ModSelector availableMods={possibleMods} filters={filters} setFilters={setFilters} refetchScores={refetchScores}/>
                     </div>
                 </td>
             </tr>
@@ -169,7 +177,7 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                     <td>Country:</td>
                     <td>
                         <div className="filter-container">
-                            <CountrySelector filters={filters} setFilters={setFilters} countries={countries}/>
+                            <CountrySelector filters={filters} setFilters={setFilters} countries={countries} refetchScores={refetchScores}/>
                         </div>
                     </td>
                 </tr>
@@ -184,6 +192,8 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                             refetchScores(allFilters);
                         }}>
                             <option value="pp">PP</option>
+                            <option value="rank">Rank</option>
+                            <option value="accuracy">Accuracy</option>
                             <option value="totalScore">Standardized score</option>
                             <option value="classicTotalScore">Classic score</option>
                             <option value="date">Date and time set</option>

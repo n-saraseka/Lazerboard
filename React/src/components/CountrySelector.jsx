@@ -1,7 +1,7 @@
 import {useState} from "react";
 import CountrySelectorRow from "./CountrySelectorRow.jsx";
 
-function CountrySelector({countries, filters, setFilters}) {
+function CountrySelector({countries, filters, setFilters, refetchScores}) {
     const allCountries = [{ id: "All", name: "All countries" }].concat(countries);
     const [dropdownEnabled, setDropdownEnabled] = useState(false);
     return (
@@ -18,7 +18,11 @@ function CountrySelector({countries, filters, setFilters}) {
                                         country={c}
                                         isPartOfList={true}
                                         onClickAction={() => {
-                                            setFilters({...filters, country: c});
+                                            const newFilters = {...filters, country: c}
+                                            setFilters(newFilters);
+                                            if (refetchScores !== undefined) {
+                                                refetchScores(newFilters);
+                                            }
                                             setDropdownEnabled(false);
                                         }} 
                                         hasChevron={false}/>

@@ -169,8 +169,12 @@ export function assembleSearchParams(params, filters, pageNumber) {
     }
     
     if (filters.ppRange !== undefined) {
-        params.append("rankMin", filters.rankRange.min);
-        params.append("rankMax", filters.rankRange.max);
+        if (filters.rankRange.min !== null) {
+            params.append("rankMin", filters.rankRange.min);
+        }
+        if (filters.rankRange.max !== null) {
+            params.append("rankMax", filters.rankRange.max);
+        }
     }
 
     if (filters.ppRange !== undefined) {

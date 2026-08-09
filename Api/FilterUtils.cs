@@ -104,6 +104,12 @@ public static class FilterUtils
             var castedDesc = (bool)isDesc;
             switch (sort)
             {
+                case "rank":
+                    query = castedDesc ? query.OrderBy(s => s.Rank) : query.OrderByDescending(s => s.Rank);
+                    break;
+                case "accuracy":
+                    query = castedDesc ? query.OrderByDescending(s => s.Accuracy) : query.OrderBy(s => s.Accuracy);
+                    break;
                 case "totalScore":
                     query = castedDesc ? query.OrderByDescending(s => s.TotalScore) : query.OrderBy(s => s.TotalScore);
                     break;

@@ -11,7 +11,7 @@ function ScoreRankingRow({ranking}) {
                          title={ranking.user.countryCode}
                          className="country-img"/>
                     <img src={`https://a.ppy.sh/${ranking.user.id}`} alt={ranking.user.username} className="player-img"/>
-                    <a href={`/user/${ranking.user.id}`}>{ranking.user.username}</a>
+                    <a href={`/users/${ranking.user.id}`}>{ranking.user.username}</a>
                 </div>
             </td>
             <td>{ranking.scoresCount}</td>

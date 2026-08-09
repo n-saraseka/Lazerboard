@@ -17,7 +17,7 @@ function ScoreCard({score, usingStandardized}) {
                     </a>
                 </div>
                 <div className="scorecard-column">
-                    <a href={`/user/${score.user.id}`}>
+                    <a href={`/users/${score.user.id}`}>
                         <img src={`https://a.ppy.sh/${score.user.id}`} alt={score.user.username} title={score.user.username}
                              className="score-player-img"/>
                     </a>

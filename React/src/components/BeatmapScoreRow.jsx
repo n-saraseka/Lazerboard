@@ -17,7 +17,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
                 className="country-img"/>
         </td>
         <td className="score-row-player-name">
-            <a href={`/user/${score.user.id}`}>{score.user.username}</a>
+            <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
         <td className={`score-row-grade ${gradeEnumToGradeClass(score.grade)}`}>{gradeEnumToGradeLetter(score.grade)}</td>
         <td className="score-total">

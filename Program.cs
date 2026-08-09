@@ -112,7 +112,7 @@ app.UseHttpsRedirection();
 
 app.MapControllerRoute(
     name: "user",
-    pattern: "user/{id}",
+    pattern: "users/{id}",
     defaults: new { controller = "User", action = "UserPage" });
 
 app.MapControllerRoute(

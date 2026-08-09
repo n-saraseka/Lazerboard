@@ -20,7 +20,7 @@ function ScoreRow({score, usingStandardized}) {
                 className="country-img"/>
         </td>
         <td className="score-row-player-name">
-            <a href={`/user/${score.user.id}`}>{score.user.username}</a>
+            <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
         <td className="score-row-pp">{`${score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">

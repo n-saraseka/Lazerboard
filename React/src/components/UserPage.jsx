@@ -103,7 +103,7 @@ function UserPage({user, scores, count, pages}) {
 
     return (<>
         <UserCard user={user} scoreCount={scoresCount}/>
-        <h1 className="section-header">Filter scores:</h1>
+        <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
             <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} refetchScores={ async (newFilters, couldChangePagination) =>
                 await getScores(newFilters, couldChangePagination, currentPage)}/>

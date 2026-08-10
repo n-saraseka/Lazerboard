@@ -1,11 +1,17 @@
 .user-card {
+    flex: 1 1;
     display: flex;
-    margin: 0 auto;
+    flex-direction: column;
     flex-wrap: wrap;
     gap: 1em;
     background-color: rgb(30, 30, 30);
     padding: 1em;
     border-radius: 1em;
+}
+
+.user-card-row {
+    display: flex;
+    gap: 1em;
 }
 
 .user-avatar {
@@ -25,7 +31,6 @@
 .user-data-name {
     display: flex;
     gap: 0.5em;
-    align-items: center;
 }
 
 .country-img {
@@ -37,4 +42,36 @@
     color: white;
     font-size: 1.5em;
     font-weight: bold;
+}
+
+.card-stats {
+    display: flex;
+    align-items: flex-start;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+
+.card-stats-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.player-stats {
+    flex: 4 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 1em;
+    max-width: 100000px;
+    max-height: 100000px;
+    transition: max-height 1s ease-in-out, max-width 1s ease-in-out;
+    overflow: hidden;
+}
+
+.card-stats:has(.player-stats.collapsed) .card-stats-column:first-child {
+    margin: 0 auto;
+}
+
+.player-stats.collapsed {
+    display: none;
 }

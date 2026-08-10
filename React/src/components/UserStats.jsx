@@ -8,7 +8,7 @@ import {getSpeedColor} from "../utils/score-things.js";
 defaults.font.family = "'Cascadia Mono', monospace";
 defaults.color = "white";
 
-function UserStats({data}) {
+function UserStats({data, isCollapsed}) {
     const history = {
         labels: data.history.map((item) => YearMonthFromDateTime(item.month)),
         datasets: [{
@@ -55,13 +55,18 @@ function UserStats({data}) {
     }
     
     return (
-        <div className="player-stats">
+        <div className={`player-stats ${isCollapsed ? "collapsed" : ""}`}>
             <div className="chart-wrapper">
                 <Line data={history} options={{
                     plugins: {
                         title: {
                             display: true,
                             text: "Top 100 leaderboard count history"
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderWidth: 4
                         }
                     }
                 }}/>

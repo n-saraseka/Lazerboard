@@ -108,9 +108,9 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
 
         var historyQuery = mode == null
             ? context.Database.SqlQuery<UserHistory>(
-                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId}\nGROUP BY month\nORDER BY month ASC)")
+                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND rank<=100\nGROUP BY month\nORDER BY month ASC)")
             : context.Database.SqlQuery<UserHistory>(
-                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND mode={mode}\nGROUP BY month\nORDER BY month ASC)");
+                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND rank<=100 AND mode={mode}\nGROUP BY month\nORDER BY month ASC)");
         
         var history = await historyQuery.ToListAsync(ct);
 

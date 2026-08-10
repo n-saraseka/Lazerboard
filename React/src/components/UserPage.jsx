@@ -1,13 +1,15 @@
 import ScoresGrid from './ScoresGrid';
 import ScoresTable from './ScoresTable';
 import ScoreFilters from './ScoreFilters';
-import {useState} from "react";
+import {useState, useEffect, useCallback} from "react";
 import Pagination from "./Pagination.jsx";
 import UserCard from "./UserCard.jsx";
 import {dateStringFromDatetime} from "../utils/datetime-things.js";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
 import {assembleSearchParams} from "../utils/score-things.js";
+import UserStats from "./UserStats.jsx";
+import CollapseUncollapseButton from "./CollapseUncollapseButton.jsx";
 
 function UserPage({user, scores, count, pages}) {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -31,6 +33,38 @@ function UserPage({user, scores, count, pages}) {
         sortDir: 'desc',
         amount: 25,
     });
+
+    const getUserStats = useCallback(async () => {
+        setStatsLoading(true);
+        setStatsError(false);
+
+        const params = new URLSearchParams();
+
+        try {
+            const response = await fetch(`/api/users/${user.id}/data?` + params.toString(), {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                setUserData(json);
+            }
+            else {
+                setStatsError(true);
+            }
+        }
+        catch (error) {
+            setUserData(null);
+            setStatsError(true);
+        }
+
+        setStatsLoading(false);
+    }, [user.id])
+    
+    useEffect( () => {
+        getUserStats();
+    }, [getUserStats]);
     
     const [currentPage, setCurrentPage] = useState(1);
     const [paginationFlag, setPaginationFlag] = useState(false); // blinks when pagination should reset
@@ -39,6 +73,11 @@ function UserPage({user, scores, count, pages}) {
     const [allScores, setAllScores] = useState(scores);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    
+    const [userData, setUserData] = useState(null);
+    const [showUserData, setShowUserData] = useState(true);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [statsError, setStatsError] = useState(false);
 
     let dateRangeString = '';
     if (filters.dateRange.min !== '' || filters.dateRange.max !== '') {
@@ -102,7 +141,20 @@ function UserPage({user, scores, count, pages}) {
     }
 
     return (<>
-        <UserCard user={user} scoreCount={scoresCount}/>
+        <div className="card-stats">
+            <div className="card-stats-column">
+                <UserCard user={user} scoreCount={count}/>
+                <div className="component-container">
+                    <CollapseUncollapseButton onCollapseUncollapse={() => setShowUserData(!showUserData)} isCollapsed={!showUserData}/>
+                </div>
+            </div>
+            {statsError
+                ? (<Error/>)
+                : (statsLoading
+                    ? (<Loader/>)
+                    : (<UserStats data={userData} isCollapsed={!showUserData}/>))
+            }
+        </div>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
             <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} refetchScores={ async (newFilters, couldChangePagination) =>

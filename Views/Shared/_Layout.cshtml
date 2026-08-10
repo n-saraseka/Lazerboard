@@ -11,11 +11,13 @@
         <strong>OsuScoreStats</strong>
         <ul class="navigation">
             <li>
-                <a asp-controller="Home" asp-action="Index">Home page</a>
-                <a asp-controller="ScoreRanking" asp-action="ScoreRanking">Score ranking</a>
+                <a asp-controller="Home" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>
             </li>
             <li>
-                <a asp-controller="ScoreRanking" asp-action="ManiaMillions">Mania millions</a>
+                <a asp-controller="ScoreRanking" asp-action="ScoreRanking" class="@(ViewData["ActivePage"] == "scoreranking" ? "active" : "inactive")">Score ranking</a>
+            </li>
+            <li>
+                <a asp-controller="ScoreRanking" asp-action="ManiaMillions" class="@(ViewData["ActivePage"] == "maniamillions" ? "active" : "inactive")">Mania millions</a>
             </li>
         </ul>
     </div>
@@ -28,7 +30,7 @@
         <span>Made by <a href="https://osu.ppy.sh/users/8706541"><strong>SomeMelGuy</strong></a></span>
     </div>
     <ul class="footer-links">
-        <li><a href="http://github.com/n-saraseka/OsuScoreStats/"><strong>Source code</strong></a></li>
+        <li><a href="https://github.com/n-saraseka/OsuScoreStats/"><strong>Source code</strong></a></li>
     </ul>
 </footer>
 <script type="module" src="~/react/assets/index.js"></script>

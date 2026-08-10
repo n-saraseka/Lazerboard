@@ -42,6 +42,15 @@ header {
     list-style-type: none;
 }
 
+.navigation a {
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+.navigation a.inactive {
+    color: rgba(255, 255, 255, 0.6);
+}
+
 footer {
     width: calc(100% - 1em);
     display: flex;
@@ -338,7 +347,7 @@ select {
     color: white;
 }
 
-.scores-table tr td a, .score a, header a, footer a {
+.scores-table tr td a, .score a, .navigation a.active, .navigation a.inactive:hover, footer a {
     color: white;
 }
 

@@ -1,7 +1,8 @@
 @model OsuScoreStats.ViewModels.IndexViewModel
 
 @{
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = "Home";
+    ViewData["ActivePage"] = "home";
 }
 
 <div class="react-app" data-component="ScoresPage" data-props='@Json.Serialize(Model)'></div>

@@ -92,4 +92,30 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
             Count = count,
         };
     }
+
+    /// <summary>
+    /// Get user data
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A <see cref="UserDataResponse"/></returns>
+    [HttpGet("{userId:int}/data")]
+    [AllowAnonymous]
+    public async Task<UserDataResponse> GetUserDataAsync(int userId, CancellationToken ct = default)
+    {
+        var context = scoreRepository.GetDbContext();
+
+        var history = await context.Database.SqlQuery<UserHistory>(
+                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId}\nGROUP BY month\nORDER BY month ASC)")
+            .ToListAsync(ct);
+
+        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
+        var count = await query.CountAsync(ct);
+
+        return new UserDataResponse
+        {
+            Count = count,
+            History = history
+        };
+    }
 }

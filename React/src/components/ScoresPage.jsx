@@ -45,6 +45,7 @@ function ScoresPage({scores, pages, countries}) {
         setIsError(false);
 
         const actualPage = couldChangePagination ? 1 : pageNumber;
+        
         if (couldChangePagination) setPaginationFlag(!paginationFlag);
         
         const params = new URLSearchParams();
@@ -118,7 +119,7 @@ function ScoresPage({scores, pages, countries}) {
                             ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                             : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
-        <Pagination key={scoresCount} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
+        <Pagination key={scoresCount} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, false, newPage)}/>
     </>)
 }
 

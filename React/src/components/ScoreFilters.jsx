@@ -72,7 +72,7 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                                                                   min={1} max={100} value={filters.rankRange.min ?? ''} onChange={(e) => {
                                 const allFilters = {...filters, rankRange: {...filters.rankRange, min: e.target.value}};
                                 setFilters(allFilters);
-                                refetchScores(allFilters);
+                                refetchScores(allFilters, true);
                             }}/>
                             </label>
                             <label htmlFor="rankMax">to: <input id="rankMax" name="rankMax" type="number" step={1}
@@ -199,6 +199,7 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                                 <option value="pp">PP</option>
                                 <option value="rank">Rank</option>
                                 <option value="accuracy">Accuracy</option>
+                                <option value="combo">Combo</option>
                                 <option value="totalScore">Standardized score</option>
                                 <option value="classicTotalScore">Classic score</option>
                                 <option value="date">Date and time set</option>

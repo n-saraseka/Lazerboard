@@ -104,6 +104,7 @@ public static class FilterUtils
             var castedDesc = (bool)isDesc;
             switch (sort)
             {
+                // Smaller rank = better, so we use OrderBy instead of OrderByDescending if the sort order chosen by user is descending
                 case "rank":
                     query = castedDesc ? query.OrderBy(s => s.Rank) : query.OrderByDescending(s => s.Rank);
                     break;
@@ -118,6 +119,9 @@ public static class FilterUtils
                     break;
                 case "date":
                     query = castedDesc ? query.OrderByDescending(s => s.Date) : query.OrderBy(s => s.Date);
+                    break;
+                case "combo":
+                    query = castedDesc ? query.OrderByDescending(s => s.Combo) : query.OrderBy(s => s.Combo);
                     break;
                 default:
                     query = castedDesc ? query.OrderByDescending(s => s.PP) : query.OrderBy(s => s.PP);

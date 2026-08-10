@@ -11,12 +11,18 @@ public class ScoreFetcherService : BackgroundService
     private string? _cursor;
     private double _apiInterval;
     private int _repeatExponent;
-    private bool _shouldUseFirehose = false;
+    private bool _shouldUseFirehose;
 
     public ScoreFetcherService(IServiceProvider serviceProvider, ILogger<ScoreFetcherService> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _shouldUseFirehose = File.Exists("use_firehose");
+
+        if (_shouldUseFirehose)
+            _logger.Log(LogLevel.Information, "Firehose file found. Fetching scores from the firehose");
+        else
+            _logger.Log(LogLevel.Information, "Firehose file not found. Scanning all existing leaderboards");
         
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -34,7 +40,7 @@ public class ScoreFetcherService : BackgroundService
             var utils = scope.ServiceProvider.GetRequiredService<ScoreFetchingUtils>();
             
             cacheStore.CheckCache();
-            if (_shouldUseFirehose) 
+            if (_shouldUseFirehose)
                 await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);
             else
                 await FetchLeaderboardsAsync(apiFetcher, dataProcessor, utils, stoppingToken);
@@ -50,34 +56,58 @@ public class ScoreFetcherService : BackgroundService
         await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
         
         var beatmapsets = beatmapsetsResponse.Beatmapsets;
-        await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
-        
-        var beatmaps = new List<APIBeatmap>();
-        foreach (var beatmapset in beatmapsets)
-            beatmaps.AddRange(beatmapset.Beatmaps);
-        await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
 
-        var scores = new List<APIScore>();
-        foreach (var beatmap in beatmaps)
+        if (beatmapsets.Count == 0)
         {
-            var beatmapScores = new List<BeatmapScores>();
-            
-            foreach (var val in Enum.GetValues<Mode>())
+            _logger.Log(LogLevel.Information, "No beatmapsets found.");
+            if (_repeatExponent >= 4)
             {
-                if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
-                _logger.Log(LogLevel.Information, "Getting leaderboard scores. BeatmapID: {id}; Mode: {mode}", beatmap.Id, val);
-                beatmapScores.Add(await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken));
-                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+                _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Switching to using the firehose", 
+                    _apiInterval * Math.Pow(2, _repeatExponent));
+                File.CreateText("use_firehose").Close();
+                _cursor = null;
+                _repeatExponent = 0;
+                _shouldUseFirehose = true;
+                return;
             }
             
-            scores.AddRange(beatmapScores.SelectMany(bs => bs.Scores));
-            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+            var interval = _apiInterval * Math.Pow(2, _repeatExponent);
+            _logger.Log(LogLevel.Information, "Repeating beatmapset search after {seconds} seconds just to make sure", interval);
+            
+            await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+            _repeatExponent++;
         }
+        else
+        {
+            await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
         
-        var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-        _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
-        await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-        await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            var beatmaps = new List<APIBeatmap>();
+            foreach (var beatmapset in beatmapsets)
+                beatmaps.AddRange(beatmapset.Beatmaps);
+            await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
+
+            var scores = new List<APIScore>();
+            foreach (var beatmap in beatmaps)
+            {
+                var beatmapScores = new List<BeatmapScores>();
+            
+                foreach (var val in Enum.GetValues<Mode>())
+                {
+                    if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
+                    _logger.Log(LogLevel.Information, "Getting leaderboard scores. BeatmapID: {id}; Mode: {mode}", beatmap.Id, val);
+                    beatmapScores.Add(await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken));
+                    await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+                }
+            
+                scores.AddRange(beatmapScores.SelectMany(bs => bs.Scores));
+                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+            }
+        
+            var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+        }
     }
 
     private async Task FetchFromFirehoseAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor,

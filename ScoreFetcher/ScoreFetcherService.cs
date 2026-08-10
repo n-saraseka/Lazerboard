@@ -56,6 +56,13 @@ public class ScoreFetcherService : BackgroundService
         }
     }
 
+    /// <summary>
+    /// Scan scores from all existing beatmap leaderboards
+    /// </summary>
+    /// <param name="apiFetcher">A <see cref="IApiFetcher"/> service</param>
+    /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
+    /// <param name="utils">A <see cref="ScoreFetchingUtils"/> service</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
         ScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
@@ -119,6 +126,13 @@ public class ScoreFetcherService : BackgroundService
         }
     }
 
+    /// <summary>
+    /// Get scores from the firehose endpoint
+    /// </summary>
+    /// <param name="apiFetcher">A <see cref="IApiFetcher"/> service</param>
+    /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
+    /// <param name="utils">A <see cref="ScoreFetchingUtils"/> service</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FetchFromFirehoseAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor,
         ScoreFetchingUtils utils, CancellationToken stoppingToken)
     {

@@ -108,6 +108,10 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         var history = await context.Database.SqlQuery<UserHistory>(
                 $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId}\nGROUP BY month\nORDER BY month ASC)")
             .ToListAsync(ct);
+        
+        var starStats = await context.Database.SqlQuery<UserStars>(
+                $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId}\nGROUP BY sr_bracket\nORDER BY sr_bracket")
+            .ToListAsync(ct);
 
         var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
         var count = await query.CountAsync(ct);
@@ -115,7 +119,8 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         return new UserDataResponse
         {
             Count = count,
-            History = history
+            History = history,
+            StarStats = starStats
         };
     }
 }

@@ -117,6 +117,10 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
                 $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 5 UNION ALL\n\tSELECT 10 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound")
             .ToListAsync(ct);
 
+        var speedStats = await context.Database.SqlQuery<UserSpeedStats>(
+            $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores\nWHERE user_id = {userId} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket;")
+            .ToListAsync(ct);
+
         var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
         var count = await query.CountAsync(ct);
 
@@ -125,7 +129,8 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
             Count = count,
             History = history,
             StarStats = starStats,
-            RankStats = rankStats
+            RankStats = rankStats,
+            SpeedStats = speedStats
         };
     }
 }

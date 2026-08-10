@@ -148,12 +148,14 @@ function UserPage({user, scores, count, pages}) {
                     <CollapseUncollapseButton onCollapseUncollapse={() => setShowUserData(!showUserData)} isCollapsed={!showUserData} entityName="statistics"/>
                 </div>
             </div>
-            {statsError
-                ? (<Error/>)
-                : (statsLoading
-                    ? (<Loader/>)
-                    : (<UserStats data={userData} isCollapsed={!showUserData}/>))
-            }
+            <div className={`card-stats-column ${!showUserData ? 'collapsed' : ''}`}>
+                {statsError
+                    ? (<Error/>)
+                    : (statsLoading
+                        ? (<Loader/>)
+                        : (<UserStats data={userData} isCollapsed={!showUserData}/>))
+                }
+            </div>
         </div>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">

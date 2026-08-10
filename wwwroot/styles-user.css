@@ -1,5 +1,4 @@
 .user-card {
-    flex: 1 1;
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -64,8 +63,18 @@
     gap: 1em;
 }
 
-.player-stats {
+.card-stats .card-stats-column:first-child {
+    flex: 1 1;
+}
+
+.card-stats .card-stats-column:last-child {
     flex: 4 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-stats {
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 1em;
@@ -75,10 +84,10 @@
     overflow: hidden;
 }
 
-.card-stats:has(.player-stats.collapsed) .card-stats-column:first-child {
-    margin: 0 auto;
+.card-stats:has(.card-stats-column.collapsed) .card-stats-column:first-child {
+    align-items: center;
 }
 
-.player-stats.collapsed {
+.card-stats-column.collapsed {
     display: none;
 }

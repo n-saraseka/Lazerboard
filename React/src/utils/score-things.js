@@ -150,6 +150,12 @@ export function getModData(acronym) {
     };
 }
 
+export function getSpeedColor(speed) {
+    if (speed > 1) return 'rgb(255, 102, 102)';
+    if (speed < 1) return 'rgb(179, 255, 102)';
+    return 'rgb(255, 204, 34)';
+}
+
 export function assembleSearchParams(params, filters, pageNumber) {
     if (filters.modes !== undefined) {
         filters.modes.forEach((mode) => {

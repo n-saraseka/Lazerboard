@@ -15,7 +15,8 @@ function UserStats({data}) {
             label: 'Count',
             data: data.history.map((item) => item.monthlyCount),
             backgroundColor: 'rgb(180, 180, 180)',
-            borderColor: 'rgb(120, 120, 120)',
+            borderColor: 'rgb(180, 180, 180)',
+            pointRadius: 0
         }] 
     };
     
@@ -25,7 +26,6 @@ function UserStats({data}) {
             label: 'Count',
             data: data.rankStats.map((item) => item.count),
             backgroundColor: 'rgb(180, 180, 180)',
-            borderColor: 'rgb(120, 120, 120)',
         }],
     }
     

@@ -41,7 +41,7 @@ function UserStats({data}) {
                 ? data.starStats.find((i) => i.srBracket === sr).count 
                 : 0
             ),
-            backgroundColor: allSrs.map((sr) => getDifficultyColor(sr * 1.5))
+            backgroundColor: allSrs.map((sr) => getDifficultyColor(sr + 0.5))
         }],
     }
     

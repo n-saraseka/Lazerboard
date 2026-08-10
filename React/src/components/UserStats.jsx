@@ -20,6 +20,19 @@ function UserStats({data, isCollapsed}) {
         }] 
     };
     
+    const gridOptions = {
+        x: {
+            grid: {
+                color: 'rgb(45, 45, 45)'
+            }
+        },
+        y: {
+            grid: {
+                color: 'rgb(45, 45, 45)'
+            }
+        }
+    }
+    
     const rankStats = {
         labels: data.rankStats.map((item) => `#${item.rankBound}`),
         datasets: [{
@@ -68,7 +81,8 @@ function UserStats({data, isCollapsed}) {
                         line: {
                             borderWidth: 4
                         }
-                    }
+                    },
+                    scales: gridOptions
                 }}/>
             </div>
             <div className="chart-wrapper">
@@ -79,7 +93,8 @@ function UserStats({data, isCollapsed}) {
                             display: true,
                             text: "Rank distribution",
                         }
-                    }
+                    },
+                    scales: gridOptions
                 }}/>
             </div>
             <div className="chart-wrapper">
@@ -89,7 +104,8 @@ function UserStats({data, isCollapsed}) {
                             display: true,
                             text: "Star rating distribution"
                         }
-                    }
+                    },
+                    scales: gridOptions
                 }}/>
             </div>
             <div className="chart-wrapper">
@@ -99,7 +115,8 @@ function UserStats({data, isCollapsed}) {
                             display: true,
                             text: "Speed distribution"
                         }
-                    }
+                    },
+                    scales: gridOptions
                 }}/>
             </div>
         </div>

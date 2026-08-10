@@ -20,7 +20,7 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
     }, [filters]) : null;
     
     return (<>
-        <CollapseUncollapseButton isCollapsed={collapsed} onCollapseUncollapse={() => setCollapsed(!collapsed)}/>
+        <CollapseUncollapseButton isCollapsed={collapsed} onCollapseUncollapse={() => setCollapsed(!collapsed)} entityName="filters"/>
         <div className={`options-wrapper ${collapsed? "collapsed" : ""}`}>
             <table className="options">
                 <tbody>

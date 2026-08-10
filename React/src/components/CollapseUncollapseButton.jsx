@@ -1,7 +1,7 @@
-function CollapseUncollapseButton({isCollapsed, onCollapseUncollapse}) {
+function CollapseUncollapseButton({isCollapsed, onCollapseUncollapse, entityName}) {
     return (
         <div className="collapse-button" onClick={onCollapseUncollapse}>
-            <span>Click to {isCollapsed ? "unhide" : "hide"}</span>
+            <span>Click to {isCollapsed ? "unhide" : "hide"} {entityName}</span>
         </div>
     )
 }

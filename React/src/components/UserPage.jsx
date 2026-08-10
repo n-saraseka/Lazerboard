@@ -145,7 +145,7 @@ function UserPage({user, scores, count, pages}) {
             <div className="card-stats-column">
                 <UserCard user={user} scoreCount={count}/>
                 <div className="component-container">
-                    <CollapseUncollapseButton onCollapseUncollapse={() => setShowUserData(!showUserData)} isCollapsed={!showUserData}/>
+                    <CollapseUncollapseButton onCollapseUncollapse={() => setShowUserData(!showUserData)} isCollapsed={!showUserData} entityName="statistics"/>
                 </div>
             </div>
             {statsError

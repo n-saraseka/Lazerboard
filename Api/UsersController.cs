@@ -112,6 +112,10 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         var starStats = await context.Database.SqlQuery<UserStars>(
                 $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId}\nGROUP BY sr_bracket\nORDER BY sr_bracket")
             .ToListAsync(ct);
+        
+        var rankStats = await context.Database.SqlQuery<RankStats>(
+                $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 5 UNION ALL\n\tSELECT 10 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound")
+            .ToListAsync(ct);
 
         var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
         var count = await query.CountAsync(ct);
@@ -120,7 +124,8 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         {
             Count = count,
             History = history,
-            StarStats = starStats
+            StarStats = starStats,
+            RankStats = rankStats
         };
     }
 }

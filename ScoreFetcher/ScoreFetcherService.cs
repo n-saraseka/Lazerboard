@@ -1,3 +1,4 @@
+using System.Text;
 using OsuScoreStats.Calculations;
 using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
@@ -12,6 +13,7 @@ public class ScoreFetcherService : BackgroundService
     private double _apiInterval;
     private int _repeatExponent;
     private bool _shouldUseFirehose;
+    private bool _postRestart;
     private string _firehosePath;
 
     public ScoreFetcherService(IServiceProvider serviceProvider, ILogger<ScoreFetcherService> logger)
@@ -28,7 +30,10 @@ public class ScoreFetcherService : BackgroundService
         _shouldUseFirehose = File.Exists(_firehosePath);
 
         if (_shouldUseFirehose)
+        {
             _logger.Log(LogLevel.Information, "Firehose file found. Fetching scores from the firehose");
+            _postRestart = true;
+        }
         else
             _logger.Log(LogLevel.Information, "Firehose file not found. Scanning all existing leaderboards");
     }
@@ -120,38 +125,55 @@ public class ScoreFetcherService : BackgroundService
         _logger.Log(LogLevel.Information, "Looking up scores. Cursor: {cursor}", _cursor);
             
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
-        _cursor = scoresResponse.Cursor;
         var scores = scoresResponse.Scores;
-        _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
-            
-        await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
-            
-        var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-        _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 
-        if (significantScores.Count > 0)
+        if (_postRestart)
         {
-            _repeatExponent = 0;
-            
-            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-            
-            var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
-            var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
-            var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
-            _logger.Log(LogLevel.Information, "NewBeatmapIds: {ids}", newBeatmapIds);
-            var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
-            
-            var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct().ToList();
-            await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
-            await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
-            
-            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            if (scores.Length == 0)
+            {
+                _logger.Log(LogLevel.Warning, "Couldn't get current max score ID");
+            }
+            else
+            {
+                // 300 thousand scores is around 1.5 hours of missing scores which get processed in around 5 minutes
+                var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 300000;
+                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {scoreId}}}"));
+            }
         }
         else
         {
-            _logger.Log(LogLevel.Information, "No significant scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
-                _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
-            _repeatExponent++;
+            _cursor = scoresResponse.Cursor;
+            _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
+            
+            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+            
+            var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
+
+            if (significantScores.Count > 0)
+            {
+                _repeatExponent = 0;
+            
+                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+            
+                var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
+                var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
+                var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
+                _logger.Log(LogLevel.Information, "NewBeatmapIds: {ids}", newBeatmapIds);
+                var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
+            
+                var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct().ToList();
+                await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
+                await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
+            
+                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            }
+            else
+            {
+                _logger.Log(LogLevel.Information, "No significant scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
+                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
+                _repeatExponent++;
+            }
         }
         
         var interval = _apiInterval * Math.Pow(2, _repeatExponent);

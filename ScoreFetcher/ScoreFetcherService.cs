@@ -12,21 +12,25 @@ public class ScoreFetcherService : BackgroundService
     private double _apiInterval;
     private int _repeatExponent;
     private bool _shouldUseFirehose;
+    private string _firehosePath;
 
     public ScoreFetcherService(IServiceProvider serviceProvider, ILogger<ScoreFetcherService> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _shouldUseFirehose = File.Exists("use_firehose");
+        
+        using var scope = _serviceProvider.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        
+        _apiInterval = double.Parse(config["OsuApiInterval"]);
+        
+        _firehosePath = config["FirehosePath"];
+        _shouldUseFirehose = File.Exists(_firehosePath);
 
         if (_shouldUseFirehose)
             _logger.Log(LogLevel.Information, "Firehose file found. Fetching scores from the firehose");
         else
             _logger.Log(LogLevel.Information, "Firehose file not found. Scanning all existing leaderboards");
-        
-        using var scope = _serviceProvider.CreateScope();
-        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        _apiInterval = double.Parse(config["OsuApiInterval"]);
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,7 +68,7 @@ public class ScoreFetcherService : BackgroundService
             {
                 _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Switching to using the firehose", 
                     _apiInterval * Math.Pow(2, _repeatExponent));
-                File.CreateText("use_firehose").Close();
+                File.CreateText(_firehosePath).Close();
                 _cursor = null;
                 _repeatExponent = 0;
                 _shouldUseFirehose = true;

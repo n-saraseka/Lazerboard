@@ -23,8 +23,7 @@ public class ScoreFetcherService : BackgroundService
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         
         _apiInterval = double.Parse(config["OsuApiInterval"]);
-
-        _cursor = config["CursorString"];
+        
         _firehosePath = config["FirehosePath"];
         _shouldUseFirehose = File.Exists(_firehosePath);
 
@@ -65,7 +64,7 @@ public class ScoreFetcherService : BackgroundService
         if (beatmapsets.Count == 0)
         {
             _logger.Log(LogLevel.Information, "No beatmapsets found.");
-            if (_repeatExponent > 4)
+            if (_repeatExponent >= 4)
             {
                 _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Switching to using the firehose", 
                     _apiInterval * Math.Pow(2, _repeatExponent));

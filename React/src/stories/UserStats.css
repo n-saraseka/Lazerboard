@@ -1,0 +1,11 @@
+body {
+    font-family: "Cascadia Mono", monospace;
+    background-color: rgb(35, 35, 35);
+    color: white;
+}
+
+.player-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 1em;
+}

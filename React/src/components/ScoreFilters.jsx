@@ -22,7 +22,7 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
     
     return (<>
-        <CollapseUncollapseButton isCollapsed={collapsed} onCollapseUncollapse={() => setCollapsed(!collapsed)}/>
+        <CollapseUncollapseButton isCollapsed={collapsed} onCollapseUncollapse={() => setCollapsed(!collapsed)} entityName="filters"/>
         <div className={`options-wrapper ${collapsed? "collapsed" : ""}`}>
             <table className="options">
                 <tbody>

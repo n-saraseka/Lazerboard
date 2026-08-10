@@ -92,4 +92,63 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
             Count = count,
         };
     }
+
+    /// <summary>
+    /// Get user data
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="mode">A <see cref="Mode"/> to get specific data from (returns data from all modes if not provided)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A <see cref="UserDataResponse"/></returns>
+    [HttpGet("{userId:int}/data")]
+    [AllowAnonymous]
+    public async Task<UserDataResponse> GetUserDataAsync(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    {
+        var context = scoreRepository.GetDbContext();
+
+        var historyQuery = mode == null
+            ? context.Database.SqlQuery<UserHistory>(
+                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND rank<=100\nGROUP BY month\nORDER BY month ASC)")
+            : context.Database.SqlQuery<UserHistory>(
+                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND rank<=100 AND mode={mode}\nGROUP BY month\nORDER BY month ASC)");
+        
+        var history = await historyQuery.ToListAsync(ct);
+
+        var starsQuery = mode == null
+            ? context.Database.SqlQuery<UserStars>(
+                $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId}\nGROUP BY sr_bracket\nORDER BY sr_bracket")
+            : context.Database.SqlQuery<UserStars>(
+                $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId} AND s.mode={mode}\nGROUP BY sr_bracket\nORDER BY sr_bracket");
+        
+        var starStats = await starsQuery.ToListAsync(ct);
+
+        var ranksQuery = mode == null
+            ? context.Database.SqlQuery<RankStats>(
+                $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 5 UNION ALL\n\tSELECT 10 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound")
+            : context.Database.SqlQuery<RankStats>(
+                $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 5 UNION ALL\n\tSELECT 10 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId} AND mode={mode})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound");
+        
+        var rankStats = await ranksQuery.ToListAsync(ct);
+
+        var speedQuery = mode == null
+            ? context.Database.SqlQuery<UserSpeedStats>(
+                $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores\nWHERE user_id = {userId} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket")
+            : context.Database.SqlQuery<UserSpeedStats>(
+                $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores \nWHERE user_id = {userId} AND mode = {mode} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket");
+
+        var speedStats = await speedQuery.ToListAsync(ct);
+
+        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
+        if (mode != null) query = query.Where(s => s.Mode == mode);
+        var count = await query.CountAsync(ct);
+
+        return new UserDataResponse
+        {
+            Count = count,
+            History = history,
+            StarStats = starStats,
+            RankStats = rankStats,
+            SpeedStats = speedStats
+        };
+    }
 }

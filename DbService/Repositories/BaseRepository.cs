@@ -5,7 +5,7 @@ using OsuScoreStats.DbService.Repositories.Interfaces;
 namespace OsuScoreStats.DbService.Repositories;
 
 public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
-    where T: class, IEntity<TKey>
+    where T : class, IEntity<TKey>
     where TKey : IEquatable<TKey>
 {
     protected DbSet<T> Set => db.Set<T>();
@@ -15,6 +15,12 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// </summary>
     /// <returns>An <see cref="IQueryable"/> that can be used to query all items of class <see cref="T"/></returns>
     public IQueryable<T> GetAll() => Set.AsQueryable();
+    
+    /// <summary>
+    /// Get the <see cref="ScoreDataContext"/>
+    /// </summary>
+    /// <returns>A <see cref="ScoreDataContext"/></returns>
+    public DbContext GetDbContext() => db;
     
     /// <summary>
     /// Get an item by its ID

@@ -6,12 +6,14 @@ function UserCard({user, scoreCount}) {
             <div className="user-card-row">
                 <img src={`https://a.ppy.sh/${user.id}`} alt={user.username} className="user-avatar"/>
                 <div className="user-data-name">
-                    <img
-                        src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(user.country.id)}.svg`}
-                        alt={user.country.name}
-                        title={user.country.name}
-                        className="country-img"/>
-                    <a href={`https://osu.ppy.sh/users/${user.id}`} className="user-name">{user.username}</a>
+                    <div className="user-card-name">
+                        <img
+                            src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(user.country.id)}.svg`}
+                            alt={user.country.name}
+                            title={user.country.name}
+                            className="country-img"/>
+                        <a href={`https://osu.ppy.sh/users/${user.id}`} className="user-name">{user.username}</a>
+                    </div>
                 </div>
             </div>
             <div className="user-card-row">

@@ -28,9 +28,17 @@
     justify-content: space-between;
 }
 
+.user-card-name {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 .user-data-name {
     display: flex;
     gap: 0.5em;
+    align-items: flex-start;
 }
 
 .country-img {
@@ -38,7 +46,6 @@
 }
 
 .user-name {
-    display: inline-block;
     color: white;
     font-size: 1.5em;
     font-weight: bold;

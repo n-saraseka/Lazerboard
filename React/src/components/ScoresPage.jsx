@@ -34,7 +34,7 @@ function ScoresPage({scores, pages, countries}) {
     
     const [currentPage, setCurrentPage] = useState(1);
     const [paginationFlag, setPaginationFlag] = useState(false); // blinks when pagination should reset
-    const [scoresCount, setScoresCount] = useState(0);
+    const [scoresCount, setScoresCount] = useState(scores.length);
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
     const [isLoading, setIsLoading] = useState(false);
@@ -119,7 +119,7 @@ function ScoresPage({scores, pages, countries}) {
                             ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                             : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
-        <Pagination key={scoresCount} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, false, newPage)}/>
+        <Pagination key={paginationFlag} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, false, newPage)}/>
     </>)
 }
 

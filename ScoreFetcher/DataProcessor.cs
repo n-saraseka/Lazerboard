@@ -190,7 +190,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 foreach (var score in groupScores.ToList())
                 {
-                    var matchingScores = beatmapScores.Where(b => b.UserId == score.UserId).ToList();
+                    var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
                     if (matchingScores.Count > 0)
                     {
                         scoreRepository.DeleteBulk(matchingScores);

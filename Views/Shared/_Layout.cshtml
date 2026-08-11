@@ -11,7 +11,10 @@
         <strong>OsuScoreStats</strong>
         <ul class="navigation">
             <li>
-                <a asp-controller="Home" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>
+                <a asp-controller="General" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>
+            </li>
+            <li>
+                <a asp-controller="General" asp-action="About" class="@(ViewData["ActivePage"] == "about" ? "active" : "inactive")">About</a>
             </li>
             <li>
                 <a asp-controller="ScoreRanking" asp-action="ScoreRanking" class="@(ViewData["ActivePage"] == "scoreranking" ? "active" : "inactive")">Score ranking</a>

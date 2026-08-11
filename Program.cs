@@ -152,7 +152,12 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "index",
     pattern: "/",
-    defaults: new { controller = "Home", action = "Index" });
+    defaults: new { controller = "General", action = "Index" });
+
+app.MapControllerRoute(
+    name: "about",
+    pattern: "/about",
+    defaults: new { controller = "General", action = "About" });
 
 app.MapControllerRoute(
     name: "beatmapset",

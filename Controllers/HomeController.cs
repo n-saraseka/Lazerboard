@@ -5,9 +5,9 @@ using OsuScoreStats.ViewModels;
 
 namespace OsuScoreStats.Controllers;
 
-public class HomeController(IScoreRepository scoreRepository, ICountryRepository countryRepository) : Controller
+public class GeneralController(IScoreRepository scoreRepository, ICountryRepository countryRepository) : Controller
 {
-    public async Task<IActionResult> Index(int id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var scoreQuery = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => DateOnly.FromDateTime(s.Date) >= DateOnly.FromDateTime(DateTime.Today));
         var scoresCount =  await scoreQuery.CountAsync(cancellationToken);
@@ -26,5 +26,10 @@ public class HomeController(IScoreRepository scoreRepository, ICountryRepository
         };
         
         return View(viewModel);
+    }
+
+    public IActionResult About()
+    {
+        return View();
     }
 }

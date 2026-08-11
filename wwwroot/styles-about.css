@@ -1,0 +1,13 @@
+.about a {
+    color: white;
+}
+
+.about strong {
+    font-weight: 900;
+}
+
+.about h1 {
+    margin: 0 0;
+    padding: 0.5em 0;
+    border-bottom: solid 2px rgb(180, 180, 180);
+}

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OsuScoreStats.Api.Dtos;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
@@ -14,18 +15,35 @@ public class BeatmapsController(IBeatmapRepository beatmapRepository,
     /// <summary>
     /// Get collected scores on the <see cref="Beatmap"/> from the API
     /// </summary>
+    /// <remarks>Returns up to 100 scores per page</remarks>
     /// <param name="id">The <see cref="Beatmap"/> ID</param>
     /// <param name="mode">The <see cref="Mode"/> </param>
+    /// <param name="page">Page (defaults to 1)</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>A List of <see cref="Score"/>s</returns>
+    /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpGet("{id:int}/scores")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetBeatmapScoresAsync(int id, Mode mode, CancellationToken ct = default)
+    public async Task<IActionResult> GetBeatmapScoresAsync(int id, 
+        [FromQuery] Mode mode,
+        [FromQuery] int? page,
+        CancellationToken ct = default)
     {
+        var mapPage = page ?? 1;
+        
         var beatmap = await beatmapRepository.GetByIdAsync(id, ct);
         if (beatmap == null) return NotFound("Beatmap not found");
+
+        var count = await scoreRepository.GetBeatmapScoreCount(id, mode, ct);
+        var pages = (int)Math.Ceiling(count / 100d);
+        if (page > pages) mapPage = Math.Max(1, pages);
+
+        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, mapPage, ct);
         
-        return Ok(await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, ct));
+        return Ok(new ScoresResponse
+        {
+            Scores = scores,
+            Count = count
+        });
     }
         
         

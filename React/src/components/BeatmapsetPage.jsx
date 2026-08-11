@@ -7,14 +7,17 @@ import MappedBy from "./MappedBy.jsx";
 import {modeEnumToString} from "../utils/beatmap-things.js";
 import Error from "./Error.jsx";
 import Loader from "./Loader.jsx";
+import Pagination from "./Pagination.jsx";
 
-function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, selectedMode}) {
+function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores, selectedMode}) {
     const allModes = [0, 1, 2, 3];
     const firstBeatmap = beatmaps.find((beatmap) => beatmap.id === selectedBeatmapId);
     const [selectedBeatmap, setSelectedBeatmap] = useState(firstBeatmap);
     const [beatmapScores, setBeatmapScores] = useState(scores);
     const [allowedModes, setAllowedModes] = useState(firstBeatmap.mode !== 0 ? [firstBeatmap.mode] : allModes);
     const [currentMode, setCurrentMode] = useState(selectedMode);
+    const [pageCount, setPageCount] = useState(pages);
+    const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
     
@@ -36,12 +39,13 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
         await getBeatmapScores(id, newMode);
     }
 
-    async function getBeatmapScores(id, mode) {
+    async function getBeatmapScores(id, mode, page = 1) {
         setIsLoading(true);
         setIsError(false);
         
         const params = new URLSearchParams();
         params.append("mode", mode.toString());
+        params.append("page", page.toString());
         
         try {
             const response = await fetch(`/api/beatmaps/${id}/scores?` + params.toString(), {
@@ -50,13 +54,26 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
             });
             if (response.ok) {
                 const json = await response.json();
-                setBeatmapScores(json);
+                setBeatmapScores(json.scores);
+                
+                const newPages = Math.ceil(json.count / 100);
+                if (page !== currentPage) {
+                    setCurrentPage(page);
+                }
+                if (page > newPages) {
+                    setCurrentPage(newPages);
+                }
+                setPageCount(newPages);
             }
             else {
+                setCurrentPage(1);
+                setPageCount(1);
                 setIsError(true);
             }
         }
         catch (error) {
+            setCurrentPage(1);
+            setPageCount(1);
             setIsError(true);
         }
         
@@ -95,8 +112,14 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, scores, select
         {isError 
             ? (<Error/>) 
             : (isLoading 
-                ? (<Loader/>) 
-                : <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>)}
+                ? (<Loader/>)
+                : <>
+                    <Pagination key={currentPage} page={currentPage} pages={pageCount} onPageChange={(newPage) => 
+                        getBeatmapScores(selectedBeatmap.id, currentMode, newPage)}/>
+                    <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>
+                    <Pagination key={currentPage} page={currentPage} pages={pageCount} onPageChange={(newPage) =>
+                        getBeatmapScores(selectedBeatmap.id, currentMode, newPage)}/>
+                </>)}
         
     </>)
 }

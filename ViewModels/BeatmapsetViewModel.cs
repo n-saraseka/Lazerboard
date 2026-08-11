@@ -10,4 +10,5 @@ public class BeatmapsetViewModel
     public int SelectedBeatmapId { get; set; }
     public List<Score> Scores { get; set; }
     public Mode SelectedMode { get; set; }
+    public int Pages { get; set; }
 }

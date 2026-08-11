@@ -17,7 +17,10 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         
         var selectedMode = mode ?? firstBeatmap.Mode;
         
-        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(firstBeatmap.Id, selectedMode, cancellationToken);
+        var count = await scoreRepository.GetBeatmapScoreCount(firstBeatmap.Id, selectedMode, cancellationToken);
+        var pages = (int)Math.Ceiling(count / 100d);
+        
+        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(firstBeatmap.Id, selectedMode,1, cancellationToken);
 
         var viewModel = new BeatmapsetViewModel
         {
@@ -25,7 +28,8 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
             Beatmaps = beatmaps,
             SelectedBeatmapId = firstBeatmap.Id,
             Scores = scores,
-            SelectedMode = selectedMode
+            SelectedMode = selectedMode,
+            Pages = pages
         };
         
         return View(viewModel);
@@ -46,7 +50,10 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         
         var selectedMode = mode ?? firstBeatmap.Mode;
         
-        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, selectedMode, cancellationToken);
+        var count = await scoreRepository.GetBeatmapScoreCount(id, selectedMode, cancellationToken);
+        var pages = (int)Math.Ceiling(count / 100d);
+        
+        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, selectedMode, 1, cancellationToken);
 
         var viewModel = new BeatmapsetViewModel
         {
@@ -54,7 +61,8 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
             Beatmaps = beatmaps,
             SelectedBeatmapId = id,
             Scores = scores,
-            SelectedMode = selectedMode
+            SelectedMode = selectedMode,
+            Pages = pages
         };
         
         return View(viewModel);

@@ -164,6 +164,14 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         });
     }
 
-    public async Task<List<User>> SearchUsers(string query, CancellationToken ct = default) =>
+    /// <summary>
+    /// Search <see cref="User"/>s
+    /// </summary>
+    /// <param name="query">The search query</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>A List of <see cref="User"/>s</returns>
+    [HttpGet("search")]
+    [AllowAnonymous]
+    public async Task<List<User>> SearchUsers([FromQuery] string query, CancellationToken ct = default) =>
         await userRepository.SearchAsync(query, ct);
 }

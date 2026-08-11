@@ -149,8 +149,8 @@ public class ScoreFetcherService : BackgroundService
             }
             else
             {
-                // 300 thousand scores is around 1.5 hours of missing scores which get processed in around 5 minutes
-                var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 300000;
+                // 4.8 million scores is around a day of scores. These would get processed in around 1 hour and 20 minutes
+                var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 4.8e6;
                 _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {scoreId}}}"));
             }
         }

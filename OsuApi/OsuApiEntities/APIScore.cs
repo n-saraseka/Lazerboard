@@ -18,7 +18,7 @@ public class APIScore
     [JsonProperty("beatmap_id")]
     public int BeatmapId { get; set; }
     [JsonProperty("user")]
-    public APIUser User { get; set; }
+    public APIUser User { get; set; } = new();
     [JsonProperty("user_id")]
     public int UserId { get; set; }
     [JsonProperty("rank")]

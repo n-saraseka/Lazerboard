@@ -31,10 +31,11 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             var acronym = mod.Acronym;
             if (mod.Settings.TryGetValue("speed_change", out var value))
             {
-                if (value is double change)
-                {
+                if (value is long change)
                     dto.SpeedChange = change;
-                }
+                else if (value is double changeDouble)
+                    // Having to do that because of floating point weirdness.
+                    dto.SpeedChange = Math.Floor(changeDouble * 100) / 100;
             }
             
             dto.ModAcronyms.Add(acronym);
@@ -46,7 +47,7 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
                 dto.SpeedChange = 1.5;
             if (modAcronyms.Any(a => a == "HT" || a == "DC"))
                 dto.SpeedChange = 0.75;
-            dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? dto.SpeedChange : 1;
+            dto.SpeedChange ??= modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? null : 1;
         }
         
         return dto;

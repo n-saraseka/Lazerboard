@@ -39,12 +39,23 @@ public class ScoreCalculator(ICacheStore cacheStore, ILogger<ScoreCalculator> lo
         var performanceCalculator = ruleset.CreatePerformanceCalculator();
         if (performanceCalculator != null)
         {
-            var performanceAttributes = await performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
-            logger.Log(LogLevel.Information, "Score ID: {scoreId}, new PP: {pp}", apiScore.Id, (float)performanceAttributes.Total);
-            return (float)performanceAttributes.Total;
+            // Performance calculation might fail on weird maps like Aspire.
+            try
+            {
+                var performanceAttributes = await performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
+                logger.Log(LogLevel.Information, "Score ID: {scoreId}, new PP: {pp}", apiScore.Id,
+                    (float)performanceAttributes.Total);
+                return (float)performanceAttributes.Total;
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Error, ex, "Score calculation failed! Score: {score};", 
+                    apiScore.Id);
+                return null;
+            }
         }
-        logger.Log(LogLevel.Error, "Method: ScoreCalculator.CalculateAsync | Score: {@score}; Error: {error}", 
-            apiScore, $"{nameof(performanceCalculator)} is null");
+        logger.Log(LogLevel.Error, "Score calculation failed! Score ID: {score}; Error: {error}", 
+            apiScore.Id, $"{nameof(performanceCalculator)} is null");
         return null;
     }
     

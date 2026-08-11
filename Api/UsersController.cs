@@ -9,7 +9,7 @@ namespace OsuScoreStats.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IScoreRepository scoreRepository) : ControllerBase
+public class UsersController(IScoreRepository scoreRepository, IUserRepository userRepository) : ControllerBase
 {
     /// <summary>
     /// Get user scores
@@ -36,7 +36,7 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
     /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpGet("{userId:int}/scores")]
     [AllowAnonymous]
-    public async Task<ScoresResponse> GetUserScoresAsync(
+    public async Task<IActionResult> GetUserScoresAsync(
         int userId,
         [FromQuery] Mode[] modes,
         [FromQuery] int? rankMin,
@@ -57,8 +57,14 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] bool isDesc = true,
         CancellationToken ct = default)
     {
-        var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
-        var scoresAmount = (amount == null) ? 25 : Math.Min(100, Math.Max((int)amount, 0));
+        var scoresPage = page ?? 1;
+        var scoresAmount = amount ?? 25;
+
+        if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
+        
+        var user = await userRepository.GetByIdAsync(userId, ct);
+        if (user == null) return NotFound("User not found");
+        
         var query = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.UserId == userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
@@ -88,11 +94,11 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
 
         var scores = await query.ToListAsync(ct);
 
-        return new ScoresResponse
+        return Ok(new ScoresResponse
         {
             Scores = scores,
             Count = count,
-        };
+        });
     }
 
     /// <summary>
@@ -104,8 +110,11 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
     /// <returns>A <see cref="UserDataResponse"/></returns>
     [HttpGet("{userId:int}/data")]
     [AllowAnonymous]
-    public async Task<UserDataResponse> GetUserDataAsync(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    public async Task<IActionResult> GetUserDataAsync(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
     {
+        var user = await userRepository.GetByIdAsync(userId, ct);
+        if (user == null) return NotFound("User not found");
+        
         var context = scoreRepository.GetDbContext();
 
         var historyQuery = mode == null
@@ -144,13 +153,13 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
         if (mode != null) query = query.Where(s => s.Mode == mode);
         var count = await query.CountAsync(ct);
 
-        return new UserDataResponse
+        return Ok(new UserDataResponse 
         {
             Count = count,
             History = history,
             StarStats = starStats,
             RankStats = rankStats,
             SpeedStats = speedStats
-        };
+        });
     }
 }

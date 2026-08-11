@@ -37,7 +37,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ScoresResponse> GetScoresAsync(
+    public async Task<IActionResult> GetScoresAsync(
         [FromQuery] Mode[] modes,
         [FromQuery] int? rankMin,
         [FromQuery] int? rankMax,
@@ -58,8 +58,10 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] bool isDesc = true,
         CancellationToken ct = default)
     {
-        var scoresPage = page == null ? 1 : Math.Max(1, (int)page);
-        var scoresAmount = amount == null ? 25 : Math.Min(100, Math.Max((int)amount, 0));
+        var scoresPage = page ?? 1;
+        var scoresAmount = amount ?? 25;
+
+        if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
 
         var query = scoreRepository.GetAllWithBeatmapAndUserData();
         
@@ -90,11 +92,11 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
 
         var scores = await query.ToListAsync(ct);
 
-        return new ScoresResponse
+        return Ok(new ScoresResponse
         {
             Scores = scores,
             Count = count,
-        };
+        });
     }
 
     /// <summary>
@@ -118,7 +120,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <returns>A <see cref="UserRankingResponse"/></returns>
     [HttpGet("ranking")]
     [AllowAnonymous]
-    public async Task<UserRankingResponse> GetUserRankingAsync(
+    public async Task<IActionResult> GetUserRankingAsync(
         [FromQuery] Mode[] modes,
         [FromQuery] int rankMin,
         [FromQuery] int rankMax,
@@ -135,8 +137,10 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] int? amount,
         CancellationToken cancellationToken)
     {
-        var rankingPage = page == null ? 1 : Math.Max(1, (int)page);
-        var rankingAmount = amount == null ? 10 : Math.Min(50, Math.Max((int)amount, 10));
+        var rankingPage = page ?? 1;
+        var rankingAmount = amount ?? 10;
+        
+        if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
         
         var query = scoreRepository.GetAllWithUserData();
 
@@ -177,11 +181,11 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             userRanking.Rank = result.IndexOf(userRanking) + 1 + (rankingPage - 1) * rankingAmount;
         }
 
-        return new UserRankingResponse
+        return Ok(new UserRankingResponse
         {
             UserRankings = result,
             Count = count
-        };
+        });
     }
     
     /// <summary>
@@ -196,7 +200,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <returns>A <see cref="UserRankingResponse"/></returns>
     [HttpGet("millions")]
     [AllowAnonymous]
-    public async Task<UserRankingResponse> GetMillionsRankingAsync(
+    public async Task<IActionResult> GetMillionsRankingAsync(
         [FromQuery] double? minStars,
         [FromQuery] double? maxStars,
         [FromQuery] string? countryCode,
@@ -204,8 +208,10 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] int? amount,
         CancellationToken cancellationToken)
     {
-        var rankingPage = page == null ? 1 : Math.Max(1, (int)page);
-        var rankingAmount = amount == null ? 10 : Math.Min(50, Math.Max((int)amount, 10));
+        var rankingPage = page ?? 1;
+        var rankingAmount = amount ?? 10;
+        
+        if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
         
         var query = scoreRepository.GetAllWithBeatmapAndUserData()
             .Where(s => s.Mode == Mode.Mania && s.TotalScore == 1000000);
@@ -247,10 +253,10 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             userRanking.Rank = result.IndexOf(userRanking) + 1 + (rankingPage - 1) * rankingAmount;
         }
 
-        return new UserRankingResponse
+        return Ok(new UserRankingResponse
         {
             UserRankings = result,
             Count = count
-        };
+        });
     }
 }

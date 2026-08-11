@@ -8,8 +8,7 @@ namespace OsuScoreStats.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BeatmapsController(IBeatmapRepository beatmapRepository, 
-    IBeatmapsetRepository beatmapsetRepository, 
+public class BeatmapsController(IBeatmapRepository beatmapRepository,
     IScoreRepository scoreRepository) : ControllerBase
 {
     /// <summary>
@@ -21,7 +20,13 @@ public class BeatmapsController(IBeatmapRepository beatmapRepository,
     /// <returns>A List of <see cref="Score"/>s</returns>
     [HttpGet("{id:int}/scores")]
     [AllowAnonymous]
-    public async Task<List<Score>> GetBeatmapScoresAsync(int id, Mode mode, CancellationToken ct = default) => 
-        await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, ct);
+    public async Task<IActionResult> GetBeatmapScoresAsync(int id, Mode mode, CancellationToken ct = default)
+    {
+        var beatmap = await beatmapRepository.GetByIdAsync(id, ct);
+        if (beatmap == null) return NotFound("Beatmap not found");
+        
+        return Ok(await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, ct));
+    }
+        
         
 }

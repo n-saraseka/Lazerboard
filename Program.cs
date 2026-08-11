@@ -137,6 +137,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStatusCodePagesWithReExecute("/{0}");
+app.UseExceptionHandler("/500");
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseHttpsRedirection();

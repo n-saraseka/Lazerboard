@@ -29,6 +29,8 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
         });
             
         await dataProcessor.ProcessRemovedUsersAsync(removedUsers, stoppingToken);
+        var countries = apiUsers.Select(u => u.Country).Distinct().ToList();
+        await dataProcessor.ProcessCountriesAsync(countries, stoppingToken);
         await dataProcessor.ProcessUsersAsync(apiUsers, stoppingToken);
         await dataProcessor.ProcessBeatmapsetsAsync(beatmapsets, stoppingToken);
     }
@@ -61,8 +63,26 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     public async Task SaveUserDataFromScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
-        var users = scores.Select(s => s.User).Distinct();
-        var countries = users.Select(u => u.Country).Distinct();
+        List<APIUser> users;
+
+        // If scores don't have user data, fetch it additionally (in case we use the firehose)
+        if (scores[0].User.Id == 0)
+        {
+            var userIds = scores.Select(s => s.UserId).Distinct().ToList();
+            
+            var existingUsers = await dataProcessor.GetExistingUsersAsync(userIds, stoppingToken);
+            var existingUserIds = existingUsers.Select(u => u.Id).ToList();
+            
+            var newUserIds = userIds.Where(id => !existingUserIds.Contains(id)).ToList();
+            users = await apiFetcher.GetUsersAsync(newUserIds, stoppingToken);
+        }
+        else
+        {
+            users = scores.Select(s => s.User).Distinct().ToList();
+        }
+        
+        var countries = users.Select(u => u.Country).Distinct().ToList();
+            
         await dataProcessor.ProcessCountriesAsync(countries, stoppingToken);
         await dataProcessor.ProcessUsersAsync(users, stoppingToken);
     }

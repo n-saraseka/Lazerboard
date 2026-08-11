@@ -10,4 +10,13 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
         .AsSplitQuery()
         .Include(u => u.Country)
         .FirstOrDefaultAsync(cancellationToken);
+
+    public Task<List<User>> SearchAsync(string query, CancellationToken cancellationToken)
+    {
+        var trimmedQuery = query.Trim().Take(100).ToArray();
+        
+        return Set
+            .Where(u => u.Username.StartsWith(trimmedQuery))
+            .ToListAsync(cancellationToken);
+    } 
 }

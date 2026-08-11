@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.Api.Dtos;
+using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
 using OsuScoreStats.OsuApi.Enums;
 
@@ -162,4 +163,7 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
             SpeedStats = speedStats
         });
     }
+
+    public async Task<List<User>> SearchUsers(string query, CancellationToken ct = default) =>
+        await userRepository.SearchAsync(query, ct);
 }

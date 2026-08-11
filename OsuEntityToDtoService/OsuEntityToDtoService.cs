@@ -46,7 +46,7 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
                 dto.SpeedChange = 1.5;
             if (modAcronyms.Any(a => a == "HT" || a == "DC"))
                 dto.SpeedChange = 0.75;
-            dto.SpeedChange = modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? dto.SpeedChange : 1;
+            dto.SpeedChange ??= modAcronyms.Any(a => a == "WD" || a == "WU" || a == "AS") ? null : 1;
         }
         
         return dto;

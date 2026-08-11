@@ -121,8 +121,12 @@ public class ScoreFetcherService : BackgroundService
         
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
             _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
-            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+
+            if (significantScores.Count > 0)
+            {
+                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            }
         }
     }
 

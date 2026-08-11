@@ -1,14 +1,12 @@
 import {useState} from "react";
 
-function Pagination({pages, onPageChange}) {
+function Pagination({pages, page, onPageChange}) {
     const windowSize = 2;
-    const [page, setPage] = useState(1);
     const minPage = Math.max(1, page - windowSize);
     const maxPage = Math.min(pages, page + windowSize);
     
     function changePage(newPage) {
         if (newPage !== page) {
-            setPage(newPage);
             onPageChange(newPage);
         }
     }

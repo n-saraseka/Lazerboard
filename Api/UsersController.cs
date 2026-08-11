@@ -80,6 +80,8 @@ public class UsersController(IScoreRepository scoreRepository) : ControllerBase
             isDesc);
         
         var count = await query.CountAsync(ct);
+        var pages = (int)Math.Ceiling((double)count / scoresAmount);
+        if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
         
         query = query
             .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);

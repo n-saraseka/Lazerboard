@@ -14,7 +14,8 @@ function ScoreRankingPage({countries, userRanking}) {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
-    
+
+    const [currentPage, setCurrentPage] = useState(1);
     const [usersCount, setUsersCount] = useState(0);
     const [pageCount, setPageCount] = useState(Math.ceil(userRanking.count / 10));
     const [userRankings, setUserRankings] = useState(userRanking.userRankings);
@@ -38,6 +39,12 @@ function ScoreRankingPage({countries, userRanking}) {
                 setUsersCount(json.count);
 
                 const pages = Math.ceil(json.count / filterOptions.amount);
+                if (pageNumber !== currentPage) {
+                    setCurrentPage(pageNumber);
+                }
+                if (pageNumber > pages) {
+                    setCurrentPage(Math.max(1, pages));
+                }
                 setPageCount(pages);
             }
             else {
@@ -60,7 +67,7 @@ function ScoreRankingPage({countries, userRanking}) {
         <div className="component-container">
             <ScoreRankingFilters isMania={true} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
-        <button className="calc-button" onClick={async () => await getRankings(filters)}>
+        <button className="calc-button" onClick={async () => await getRankings(filters, currentPage)}>
             Get ranking
         </button>
         {userRankings.length > 0 && <h1 className="section-header">User rankings:</h1>}
@@ -75,7 +82,7 @@ function ScoreRankingPage({countries, userRanking}) {
                     </>
                 ))}
         </div>
-        <Pagination key={usersCount} pages={pageCount} onPageChange={async (newPage) => await getRankings(filters, newPage)}/>
+        <Pagination page={currentPage} pages={pageCount} onPageChange={async (newPage) => await getRankings(filters, newPage)}/>
     </>)
 }
 

@@ -67,7 +67,6 @@ function UserPage({user, scores, count, pages}) {
     }, [getUserStats]);
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [paginationFlag, setPaginationFlag] = useState(false); // blinks when pagination should reset
     const [scoresCount, setScoresCount] = useState(count);
     const [pageCount, setPageCount] = useState(pages);
     const [allScores, setAllScores] = useState(scores);
@@ -93,15 +92,12 @@ function UserPage({user, scores, count, pages}) {
         }
     }
 
-    async function getScores(filterOptions, couldChangePagination, pageNumber = 1) {
+    async function getScores(filterOptions, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
         
-        const actualPage = couldChangePagination ? 1 : pageNumber;
-        if (couldChangePagination) setPaginationFlag(!paginationFlag);
-        
         const params = new URLSearchParams();
-        assembleSearchParams(params, filterOptions, actualPage);
+        assembleSearchParams(params, filterOptions, pageNumber);
         
         try {
             const response = await fetch(`/api/users/${user.id}/scores?` + params.toString(), {
@@ -115,10 +111,10 @@ function UserPage({user, scores, count, pages}) {
                 setScoresCount(json.count);
 
                 const pages = Math.ceil(json.count / filterOptions.amount);
-                if (actualPage !== currentPage) {
-                    setCurrentPage(actualPage);
+                if (pageNumber !== currentPage) {
+                    setCurrentPage(pageNumber);
                 }
-                if (actualPage > pages) {
+                if (pageNumber > pages) {
                     setCurrentPage(Math.max(1, pages));
                 }
                 setPageCount(pages);
@@ -159,8 +155,8 @@ function UserPage({user, scores, count, pages}) {
         </div>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
-            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} refetchScores={ async (newFilters, couldChangePagination) =>
-                await getScores(newFilters, couldChangePagination, currentPage)}/>
+            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
+                await getScores(newFilters, currentPage)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
@@ -172,7 +168,7 @@ function UserPage({user, scores, count, pages}) {
                         ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                         : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
-        <Pagination key={paginationFlag} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, false, newPage)}/>
+        <Pagination page={currentPage} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
     </>)
 }
 

@@ -1,4 +1,7 @@
 using System.Text.Json;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.DbService;
 using OsuScoreStats.Calculations;
@@ -81,7 +84,37 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .ReadFrom.Services(services)
     );
 
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "default",
+            factory: partition => new SlidingWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = 60,
+                SegmentsPerWindow = 10,
+                QueueLimit = 3,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            }
+        ));
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers["Retry-After"] = $"{(int)retryAfter.TotalSeconds}";
+        }
+
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync($"Too many requests. Please try again later.", cancellationToken);
+    };
+});
+
 var app = builder.Build();
+
+app.UseRateLimiter();
 
 using (var scope = app.Services.CreateScope())
 {

@@ -31,10 +31,11 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             var acronym = mod.Acronym;
             if (mod.Settings.TryGetValue("speed_change", out var value))
             {
-                if (value is double change)
-                {
+                if (value is long change)
                     dto.SpeedChange = change;
-                }
+                else if (value is double changeDouble)
+                    // Having to do that because of floating point weirdness.
+                    dto.SpeedChange = Math.Floor(changeDouble * 100) / 100;
             }
             
             dto.ModAcronyms.Add(acronym);

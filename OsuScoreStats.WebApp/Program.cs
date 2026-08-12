@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.ScoreFetcher;
+using OsuScoreStats.BackgroundServices;
 using OsuScoreStats.Migrations;
 using OsuScoreStats.Shared.Calculations;
 using OsuScoreStats.Shared.DbService;

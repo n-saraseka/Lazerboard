@@ -2,7 +2,7 @@ using System.Text;
 using OsuScoreStats.Shared.Calculations;
 using OsuScoreStats.Shared.Processing;
 
-namespace OsuScoreStats.ScoreFetcher;
+namespace OsuScoreStats.BackgroundServices;
 
 public class ScoreFetcherService : BackgroundService
 {

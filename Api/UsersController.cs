@@ -25,8 +25,9 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
     /// <param name="accMax">Maximum accuracy threshold</param>
     /// <param name="speedMin">Minimum speed threshold</param>
     /// <param name="speedMax">Maximum speed threshold</param>
-    /// <param name="mods">Mods to count scores with</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
+    /// <param name="includeMods">Mod acronyms that should be included in all scores</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="includeMods"/></param>
+    /// <param name="excludeMods">Mod acronyms that should be excluded from all scores</param>
     /// <param name="dateMin">Date to begin getting scores from (defaults to Unix epoch)</param>
     /// <param name="dateMax">Date to end getting scores from (defaults to latest date in scores table)</param>
     /// <param name="amount">Amount of scores to return</param>
@@ -48,8 +49,9 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         [FromQuery] double? accMax,
         [FromQuery] double? speedMin,
         [FromQuery] double? speedMax,
-        [FromQuery] string[] mods,
-        [FromQuery] bool lenientMode,
+        [FromQuery] string[] includeMods, 
+        [FromQuery] bool lenientMode, 
+        [FromQuery] string[] excludeMods,
         [FromQuery] DateOnly? dateMin,
         [FromQuery] DateOnly? dateMax,
         [FromQuery] int? amount,
@@ -62,6 +64,7 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         var scoresAmount = amount ?? 25;
 
         if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
+        if (includeMods.Intersect(excludeMods).Any()) return BadRequest($"{nameof(includeMods)} must not contain any mods from {nameof(excludeMods)}");
         
         var user = await userRepository.GetByIdAsync(userId, ct);
         if (user == null) return NotFound("User not found");
@@ -80,7 +83,8 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
             PpRange = [ppMin, ppMax],
             AccuracyRange = [accMin, accMax],
             SpeedRange = [speedMin, speedMax],
-            Mods = mods,
+            IncludeMods = includeMods,
+            ExcludeMods = excludeMods,
             LenientMode = lenientMode,
             SortBy = sort,
             IsDescending = isDesc

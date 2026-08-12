@@ -217,11 +217,17 @@ export function assembleSearchParams(params, filters, pageNumber) {
         }
     }
     
-    if (filters.mods !== undefined) {
-        filters.mods.forEach((mod) => {
-            params.append("mods", mod);
+    if (filters.includeMods !== undefined) {
+        filters.includeMods.forEach((mod) => {
+            params.append("includeMods", mod);
         })
         params.append("lenientMode", filters.lenientMode.toString());
+    }
+
+    if (filters.excludeMods !== undefined) {
+        filters.excludeMods.forEach((mod) => {
+            params.append("excludeMods", mod);
+        })
     }
 
     if (filters.sortBy !== undefined) {

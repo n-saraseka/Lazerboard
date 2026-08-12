@@ -61,16 +61,18 @@ public static class FilterUtils
         {
             switch (command.LenientMode)
             {
-                case true when command.Mods.Length != 0:
-                    query = query.Where(s => command.Mods.All(a => s.ModAcronyms.Contains(a)));
+                case true when command.IncludeMods.Length != 0:
+                    query = query.Where(s => command.IncludeMods.All(a => s.ModAcronyms.Contains(a)));
                     break;
                 case false:
-                    query = command.Mods.Length == 0 
+                    query = command.IncludeMods.Length == 0 
                         ? query.Where(s => s.ModAcronyms.Count == 0)
-                        : query.Where(s => command.Mods.All(a => s.ModAcronyms.Contains(a)) && s.ModAcronyms.Count == command.Mods.Length);
+                        : query.Where(s => command.IncludeMods.All(a => s.ModAcronyms.Contains(a)) && s.ModAcronyms.Count == command.IncludeMods.Length);
                     break;
             }
         }
+
+        if (command.ExcludeMods.Length > 0) query = query.Where(s => s.ModAcronyms.All(a => !command.ExcludeMods.Contains(a)));
         
         if (command.CountryCode != null) query = query.Where(s => s.User.CountryCode == command.CountryCode);
 

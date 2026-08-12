@@ -14,7 +14,6 @@ export default {
 
 let mockMods = [];
 for (const key of Object.keys(allMods)) {
-    console.log(allMods[key]);
     const matchingMods = allMods[key].filter(m => m.modes.includes(0));
     matchingMods.forEach(m => {
         mockMods.push({
@@ -25,8 +24,11 @@ for (const key of Object.keys(allMods)) {
 }
 
 const mockProps = {
-    mods: mockMods,
-    setMods: (mods) => {}
+    availableMods: mockMods,
+    excludeMode: false,
+    filters: [],
+    setFilters: () => {},
+    refetchScores: () => {}
 };
 
 export const Default = {

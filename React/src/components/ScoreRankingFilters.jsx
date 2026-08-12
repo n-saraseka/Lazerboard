@@ -7,17 +7,32 @@ import CollapseUncollapseButton from "./CollapseUncollapseButton.jsx";
 
 function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
     const [collapsed, setCollapsed] = useState(true);
-    
-    const possibleMods = !isMania? useMemo(() => {
+
+    let allModData = [];
+    for (const key of Object.keys(allMods)) {
+        allModData = allModData.concat(allMods[key]);
+    }
+    const possibleIncludeMods = useMemo(() => {
         let arr = [];
-        for (const key of Object.keys(allMods)) {
-            const matchingMods = allMods[key].filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
-            matchingMods.forEach(m => {
+        const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
+        matchingMods.forEach(m => {
+            if (!filters.excludeMods.includes(m.acronym)) {
                 arr.push(m.acronym);
-            });
-        }
+            }
+        });
         return arr;
-    }, [filters]) : null;
+    }, [filters]);
+
+    const possibleExcludeMods = useMemo(() => {
+        let arr = [];
+        const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
+        matchingMods.forEach(m => {
+            if (!filters.includeMods.includes(m.acronym)) {
+                arr.push(m.acronym);
+            }
+        });
+        return arr;
+    }, [filters]);
     
     return (<>
         <CollapseUncollapseButton isCollapsed={collapsed} onCollapseUncollapse={() => setCollapsed(!collapsed)} entityName="filters"/>
@@ -153,10 +168,18 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                             </td>
                         </tr>
                         <tr>
-                            <td>Mods:</td>
+                            <td>Include mods:</td>
                             <td>
                                 <div className="filter-container">
-                                    <ModSelector availableMods={possibleMods} filters={filters} setFilters={setFilters}/>
+                                    <ModSelector availableMods={possibleIncludeMods} excludeMode={false} filters={filters} setFilters={setFilters}/>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Exclude mods:</td>
+                            <td>
+                                <div className="filter-container">
+                                    <ModSelector availableMods={possibleExcludeMods} excludeMode={true} filters={filters} setFilters={setFilters}/>
                                 </div>
                             </td>
                         </tr>

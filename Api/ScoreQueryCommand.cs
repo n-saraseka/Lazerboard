@@ -46,12 +46,17 @@ public class ScoreQueryCommand
     public List<double?> StarRange { get; set; } = new();
     
     /// <summary>
-    /// An array of mod acronyms to filter <see cref="Score"/>s by
+    /// An array of mod acronyms to include in <see cref="Score"/>s
     /// </summary>
-    public string[] Mods { get; set; } = [];
+    public string[] IncludeMods { get; set; } = [];
     
     /// <summary>
-    /// Whether to allow other mods than those listed in <see cref="Mods"/> or not
+    /// An array of mod acronyms to exclude from <see cref="Score"/>s
+    /// </summary>
+    public string[] ExcludeMods { get; set; } = [];
+    
+    /// <summary>
+    /// Whether to allow other mods than those listed in <see cref="IncludeMods"/> or not
     /// </summary>
     public bool? LenientMode { get; set; }
     

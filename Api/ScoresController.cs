@@ -24,8 +24,9 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <param name="accMax">Maximum accuracy threshold</param>
     /// <param name="speedMin">Minimum speed threshold</param>
     /// <param name="speedMax">Maximum speed threshold</param>
-    /// <param name="mods">Mods to count scores with</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
+    /// <param name="includeMods">Mod acronyms that should be included in all scores</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="includeMods"/></param>
+    /// <param name="excludeMods">Mod acronyms that should be excluded from all scores</param>
     /// <param name="dateMin">Date to begin getting scores from (defaults to today)</param>
     /// <param name="dateMax">Date to end getting scores from (defaults to today)</param>
     /// <param name="countryCode"><see cref="Country"/> code</param>
@@ -47,8 +48,9 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] double? accMax,
         [FromQuery] double? speedMin,
         [FromQuery] double? speedMax,
-        [FromQuery] string[] mods,
+        [FromQuery] string[] includeMods,
         [FromQuery] bool lenientMode,
+        [FromQuery] string[] excludeMods,
         [FromQuery] DateOnly? dateMin,
         [FromQuery] DateOnly? dateMax,
         [FromQuery] string? countryCode,
@@ -62,6 +64,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         var scoresAmount = amount ?? 25;
 
         if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
+        if (includeMods.Intersect(excludeMods).Any()) return BadRequest($"{nameof(includeMods)} must not contain any mods from {nameof(excludeMods)}");
 
         var query = scoreRepository.GetAllWithBeatmapAndUserData();
         
@@ -78,7 +81,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             PpRange = [ppMin, ppMax],
             AccuracyRange = [accMin, accMax],
             SpeedRange = [speedMin, speedMax],
-            Mods = mods,
+            IncludeMods = includeMods,
+            ExcludeMods = excludeMods,
             LenientMode = lenientMode,
             CountryCode = countryCode,
             SortBy = sort,
@@ -114,8 +118,9 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <param name="accMax">Maximum accuracy threshold</param>
     /// <param name="speedMin">Minimum speed threshold</param>
     /// <param name="speedMax">Maximum speed threshold</param>
-    /// <param name="mods">Mods to count scores with</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="mods"/></param>
+    /// <param name="includeMods">Mod acronyms that should be included in all scores</param>
+    /// <param name="lenientMode">Whether to allow other mods than <paramref name="includeMods"/></param>
+    /// <param name="excludeMods">Mod acronyms that should be excluded from all scores</param>
     /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
@@ -133,8 +138,9 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         [FromQuery] double? accMax,
         [FromQuery] double? speedMin,
         [FromQuery] double? speedMax,
-        [FromQuery] string[] mods,
+        [FromQuery] string[] includeMods,
         [FromQuery] bool lenientMode,
+        [FromQuery] string[] excludeMods,
         [FromQuery] string? countryCode,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -144,6 +150,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         var rankingAmount = amount ?? 10;
         
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
+        if (includeMods.Intersect(excludeMods).Any()) return BadRequest($"{nameof(includeMods)} must not contain any mods from {nameof(excludeMods)}");
         
         var query = scoreRepository.GetAllWithUserData();
         
@@ -154,7 +161,8 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             PpRange = [ppMin, ppMax],
             AccuracyRange = [accMin, accMax],
             SpeedRange = [speedMin, speedMax],
-            Mods = mods,
+            IncludeMods = includeMods,
+            ExcludeMods = excludeMods,
             LenientMode = lenientMode,
             CountryCode = countryCode,
         };

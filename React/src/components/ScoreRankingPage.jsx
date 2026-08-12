@@ -13,7 +13,8 @@ function ScoreRankingPage({countries}) {
         accRange: {min: null, max: null},
         rateRange: {min: null, max: null},
         country: {id: "All", name: "All countries"},
-        mods: [],
+        includeMods: [],
+        excludeMods: [],
         lenientMode: true,
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };

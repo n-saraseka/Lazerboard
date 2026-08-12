@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace OsuScoreStats.Migrations
+namespace OsuScoreStats.Shared.Migrations
 {
     /// <inheritdoc />
     public partial class AddHealthColumnToBeatmap : Migration

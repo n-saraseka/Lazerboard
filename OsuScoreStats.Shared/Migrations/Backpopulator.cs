@@ -5,7 +5,7 @@ using OsuScoreStats.Shared.DbService.Entities;
 using OsuScoreStats.Shared.DbService.Repositories.Interfaces;
 using OsuScoreStats.Shared.Processing;
 
-namespace OsuScoreStats.Migrations;
+namespace OsuScoreStats.Shared.Migrations;
 
 public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
     IBeatmapRepository beatmapRepo,

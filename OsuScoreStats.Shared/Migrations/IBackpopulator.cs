@@ -1,4 +1,4 @@
-namespace OsuScoreStats.Migrations;
+namespace OsuScoreStats.Shared.Migrations;
 
 public interface IBackpopulator
 {

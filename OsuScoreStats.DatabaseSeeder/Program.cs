@@ -7,6 +7,7 @@ using OsuScoreStats.Shared.Calculations;
 using OsuScoreStats.Shared.DbService;
 using OsuScoreStats.Shared.DbService.Repositories;
 using OsuScoreStats.Shared.DbService.Repositories.Interfaces;
+using OsuScoreStats.Shared.Migrations;
 using OsuScoreStats.Shared.OsuApi;
 using OsuScoreStats.Shared.OsuApi.Enums;
 using OsuScoreStats.Shared.OsuEntityToDtoService;
@@ -78,6 +79,15 @@ if (!Directory.Exists($"{baseDirectory}/${builder.Configuration["CacheFolder"]}"
 }
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ScoreDataContext>();
+    await db.Database.MigrateAsync();
+    var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
+    var cancellationToken = CancellationToken.None;
+    await backpopulator.BackpopulateAsync(cancellationToken);
+}
 
 try
 {

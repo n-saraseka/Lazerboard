@@ -11,7 +11,7 @@ using OsuScoreStats.Shared.OsuApi.Enums;
 
 #nullable disable
 
-namespace OsuScoreStats.Migrations
+namespace OsuScoreStats.Shared.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
     [Migration("20260802214328_MakeUserCountryNullable")]

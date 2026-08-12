@@ -34,6 +34,7 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
+builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
 static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(IServiceProvider services)

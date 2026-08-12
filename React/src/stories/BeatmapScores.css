@@ -1,9 +1,3 @@
-body {
-    font-family: "Cascadia Mono", monospace;
-    background-color: rgb(35, 35, 35);
-    color: white;
-}
-
 .mod {
     font-weight: bold;
     padding: 0.25em;

@@ -65,8 +65,7 @@ builder.Services.AddScoped<ICacheStore, CacheStore>();
 builder.Services.AddScoped<ScoreFetchingUtils>();
 
 // Background services
-if (builder.Configuration.GetValue<bool>("ScoreFetchingTurnedOn")) 
-    builder.Services.AddHostedService<ScoreFetcherService>();
+builder.Services.AddHostedService<ScoreFetcherService>();
 
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>

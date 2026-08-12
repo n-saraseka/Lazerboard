@@ -101,7 +101,9 @@ public static class FilterUtils
                     query = castedDesc ? query.OrderByDescending(s => s.Combo) : query.OrderBy(s => s.Combo);
                     break;
                 default:
-                    query = castedDesc ? query.OrderByDescending(s => s.PP) : query.OrderBy(s => s.PP);
+                    query = castedDesc 
+                        ? query.Where(s => s.PP != null).OrderByDescending(s => s.PP) 
+                        : query.Where(s => s.PP != null).OrderBy(s => s.PP);
                     break;
             }
         }

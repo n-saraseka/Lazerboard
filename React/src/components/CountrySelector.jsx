@@ -21,7 +21,7 @@ function CountrySelector({countries, filters, setFilters, refetchScores}) {
                                             const newFilters = {...filters, country: c}
                                             setFilters(newFilters);
                                             if (refetchScores !== undefined) {
-                                                refetchScores(newFilters, true);
+                                                refetchScores(newFilters);
                                             }
                                             setDropdownEnabled(false);
                                         }} 

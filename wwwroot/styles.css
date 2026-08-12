@@ -60,7 +60,7 @@ header {
 }
 
 header .react-app {
-    align-items: flex-end;
+    width: auto;
 }
 
 .search {

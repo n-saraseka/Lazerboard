@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OsuScoreStats.Shared.DbService;
@@ -10,12 +11,14 @@ using OsuScoreStats.Shared.OsuApi.Enums;
 
 #nullable disable
 
-namespace OsuScoreStats.Migrations
+namespace OsuScoreStats.Shared.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260812220909_RemoveAllIndexesActually")]
+    partial class RemoveAllIndexesActually
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

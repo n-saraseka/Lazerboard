@@ -72,19 +72,21 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         var targetStartDate = dateMin ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
         var targetEndDate = dateMax ?? DateOnly.FromDateTime(latestDate);
         
-        query = FilterUtils.FilterScoreQuery(query, 
-            modes,
-            [targetStartDate, targetEndDate],
-            [rankMin, rankMax],
-            [ppMin, ppMax],
-            [accMin, accMax],
-            [speedMin, speedMax],
-            [],
-            mods,
-            lenientMode,
-            null,
-            sort,
-            isDesc);
+        var command = new ScoreQueryCommand
+        {
+            Modes = modes,
+            DateRange = [targetStartDate, targetEndDate],
+            RankRange = [rankMin, rankMax],
+            PpRange = [ppMin, ppMax],
+            AccuracyRange = [accMin, accMax],
+            SpeedRange = [speedMin, speedMax],
+            Mods = mods,
+            LenientMode = lenientMode,
+            SortBy = sort,
+            IsDescending = isDesc
+        };
+        
+        query = FilterUtils.FilterScoreQuery(query, command);
         
         var count = await query.CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / scoresAmount);

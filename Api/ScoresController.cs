@@ -69,20 +69,23 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             
         var targetStartDate = dateMin ?? DateOnly.FromDateTime(DateTime.Today);
         var targetEndDate = dateMax ?? DateOnly.FromDateTime(DateTime.Today);
+
+        var command = new ScoreQueryCommand
+        {
+            Modes = modes,
+            DateRange = [targetStartDate, targetEndDate],
+            RankRange = [rankMin, rankMax],
+            PpRange = [ppMin, ppMax],
+            AccuracyRange = [accMin, accMax],
+            SpeedRange = [speedMin, speedMax],
+            Mods = mods,
+            LenientMode = lenientMode,
+            CountryCode = countryCode,
+            SortBy = sort,
+            IsDescending = isDesc
+        };
         
-        query = FilterUtils.FilterScoreQuery(query, 
-            modes,
-            [targetStartDate, targetEndDate],
-            [rankMin, rankMax],
-            [ppMin, ppMax],
-            [accMin, accMax],
-            [speedMin, speedMax],
-            [],
-            mods,
-            lenientMode,
-            countryCode,
-            sort,
-            isDesc);
+        query = FilterUtils.FilterScoreQuery(query, command);
         
         var count = await query.CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / scoresAmount);
@@ -143,20 +146,20 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
         
         var query = scoreRepository.GetAllWithUserData();
+        
+        var command = new ScoreQueryCommand
+        {
+            Modes = modes,
+            RankRange = [rankMin, rankMax],
+            PpRange = [ppMin, ppMax],
+            AccuracyRange = [accMin, accMax],
+            SpeedRange = [speedMin, speedMax],
+            Mods = mods,
+            LenientMode = lenientMode,
+            CountryCode = countryCode,
+        };
 
-        query = FilterUtils.FilterScoreQuery(query, 
-            modes,
-            [],
-            [rankMin, rankMax],
-            [ppMin, ppMax],
-            [accMin, accMax],
-            [speedMin, speedMax],
-            [],
-            mods,
-            lenientMode,
-            countryCode,
-            null,
-            null);
+        query = FilterUtils.FilterScoreQuery(query, command);
 
         var group = query
             .GroupBy(s => s.User)
@@ -216,19 +219,13 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         var query = scoreRepository.GetAllWithBeatmapAndUserData()
             .Where(s => s.Mode == Mode.Mania && s.TotalScore == 1000000);
 
-        query = FilterUtils.FilterScoreQuery(query,
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [minStars, maxStars],
-            [],
-            null,
-            countryCode,
-            null,
-            null);
+        var command = new ScoreQueryCommand
+        {
+            StarRange = [minStars, maxStars],
+            CountryCode = countryCode,
+        };
+        
+        query = FilterUtils.FilterScoreQuery(query, command);
 
         var group = query
             .GroupBy(s => s.User)

@@ -18,6 +18,7 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
         
         return Set
             .Where(u => u.Username.ToLower().StartsWith(trimmedQuery))
+            .Take(25)
             .AsSplitQuery()
             .Include(u => u.Country)
             .ToListAsync(cancellationToken);

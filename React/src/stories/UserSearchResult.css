@@ -2,7 +2,7 @@
     display: flex;
     gap: 0.5em;
     align-items: center;
-    background-color: rgb(20, 20, 20);
+    background-color: rgb(30, 30, 30);
     padding: 0.5em;
     text-decoration-color: white;
     border-radius: 0.5em;
@@ -28,5 +28,5 @@
 }
 
 .search-result:hover {
-    background-color: rgb(30, 30, 30);
+    background-color: rgb(45, 45, 45);
 }

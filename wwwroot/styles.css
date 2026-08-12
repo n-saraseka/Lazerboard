@@ -10,11 +10,11 @@ body {
 }
 
 header {
-    width: calc(100% - 1em);
+    width: calc(100% - 2em);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1em 0.5em;
+    padding: 1em;
     position: sticky;
     margin-bottom: 1em;
     top: 0;
@@ -51,21 +51,122 @@ header {
     color: rgba(255, 255, 255, 0.6);
 }
 
+.user-avatar {
+    width: 5em;
+    height: 5em;
+    border-radius: 1em;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+header .react-app {
+    align-items: flex-end;
+}
+
+.search {
+    padding: 0.5em;
+    border: 1px solid black;
+    background-color: white;
+    border-radius: 0.5em;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    width: 350px;
+}
+
+.search input[type="text"] {
+    padding: 0;
+    border: none;
+}
+
+.search::before {
+    display: block;
+    width: 1em;
+    height: 1em;
+    content: "";
+    mask-image: url("images/search.svg");
+    -webkit-mask-image: url("images/search.svg");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    background-color: rgb(35, 35, 35);
+}
+
+.search-result {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    background-color: rgb(30, 30, 30);
+    padding: 0.5em;
+    text-decoration-color: white;
+    border-radius: 0.5em;
+    font-size: 1.5em;
+    transition: background-color ease-in-out 0.2s;
+}
+
+.search-result * {
+    color: white;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.search-result .user-avatar {
+    width: 2em;
+    height: 2em;
+    object-fit: contain;
+    border-radius: 0.5em;
+}
+
+.search-result .country-img {
+    height: 1em;
+}
+
+.search-result:hover {
+    background-color: rgb(45, 45, 45);
+}
+
+.search-results {
+    position: absolute;
+    width: calc(350px + 1em);
+    z-index: 100;
+    height: 200px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-radius: 0.5em 0.5em 0 0;
+}
+
+.search-results .search-result {
+    width: 100%;
+    border-radius: 0 0 0 0;
+}
+
+.search-results .search-result:first-child {
+    border-radius: 0.5em 0.5em 0 0;
+}
+
+.search-results .search-result:last-child {
+    border-radius: 0 0 0.5em 0.5em;
+}
+
 footer {
-    width: calc(100% - 1em);
+    width: calc(100% - 2em);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 1em;
-    padding: 1em 0.5em;
+    padding: 1em;
     margin-top: 1em;
     z-index: 100;
     background-color: rgb(25, 25, 25);
     border-radius: 1em 1em 0 0;
 }
 
-input[type="number"], input[type="date"], select {
+input[type="number"], input[type="text"], input[type="date"], select {
     font-size: 1em;
     padding: 0.5em;
     border-radius: 0.25em;
@@ -742,5 +843,5 @@ body {
     -webkit-mask-position: center;
     mask-image: url("images/chevron.svg");
     -webkit-mask-image: url("images/chevron.svg");
-    background-color: black;
+    background-color: rgb(35, 35, 35);
 }

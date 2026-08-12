@@ -5,13 +5,13 @@ namespace OsuScoreStats.Shared.Processing;
 
 public interface IDataProcessor
 {
-    Task ProcessBeatmapsetsAsync(IEnumerable<APIBeatmapset> beatmapsets, CancellationToken ct);
-    Task ProcessBeatmapsAsync(IEnumerable<APIBeatmap> beatmaps, CancellationToken ct);
-    Task<List<Beatmap>> GetExistingBeatmapsAsync(IEnumerable<int> ids, CancellationToken ct);
-    Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IEnumerable<int> ids, CancellationToken ct);
-    Task<List<User>> GetExistingUsersAsync(IEnumerable<int> ids, CancellationToken ct);
-    Task ProcessCountriesAsync(IEnumerable<APICountry> countries, CancellationToken ct);
-    Task ProcessUsersAsync(IEnumerable<APIUser> users, CancellationToken ct);
-    Task ProcessRemovedUsersAsync(IEnumerable<User> users, CancellationToken ct);
-    Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct);
+    Task ProcessBeatmapsetsAsync(IList<APIBeatmapset> beatmapsets, CancellationToken ct);
+    Task ProcessBeatmapsAsync(IList<APIBeatmap> beatmaps, CancellationToken ct);
+    Task<List<Beatmap>> GetExistingBeatmapsAsync(IList<int> ids, CancellationToken ct);
+    Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IList<int> ids, CancellationToken ct);
+    Task<List<User>> GetExistingUsersAsync(IList<int> ids, CancellationToken ct);
+    Task ProcessCountriesAsync(IList<APICountry> countries, CancellationToken ct);
+    Task ProcessUsersAsync(IList<APIUser> users, CancellationToken ct);
+    Task ProcessRemovedUsersAsync(IList<User> users, CancellationToken ct);
+    Task ProcessScoresAsync(IList<APIScore> scores, CancellationToken ct);
 }

@@ -20,20 +20,21 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="beatmapsets">The <see cref="APIBeatmapset"/>s</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessBeatmapsetsAsync(IEnumerable<APIBeatmapset> beatmapsets, CancellationToken ct)
+    public async Task ProcessBeatmapsetsAsync(IList<APIBeatmapset> beatmapsets, CancellationToken ct)
     {
-        if (beatmapsets.Count() == 0) return;
-        var existingBeatmapsets = await GetExistingBeatmapsetsAsync(beatmapsets.Select(bs => bs.Id), ct);
+        if (beatmapsets.Count == 0) return;
+        var existingBeatmapsets = await GetExistingBeatmapsetsAsync(beatmapsets.Select(bs => bs.Id).ToList(), ct);
         var newBeatmapsets = beatmapsets.Where(bs => !existingBeatmapsets.Select(s => s.Id).Contains(bs.Id));
         var beatmapsetDtos = newBeatmapsets
             .Select(entityToDtoService.BeatmapsetEntityToDto)
-            .DistinctBy(bs => bs.Id);
+            .DistinctBy(bs => bs.Id)
+            .ToList();
         
         beatmapsetRepository.CreateBulk(beatmapsetDtos);
         try
         {
             await beatmapsetRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New beatmapsets: {createdCount}", beatmapsetDtos.Count());
+            logger.Log(LogLevel.Information, "New beatmapsets: {createdCount}", beatmapsetDtos.Count);
         }
         catch (NpgsqlException exception)
         {
@@ -46,20 +47,21 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="beatmaps">The <see cref="APIBeatmap"/>s</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessBeatmapsAsync(IEnumerable<APIBeatmap> beatmaps, CancellationToken ct)
+    public async Task ProcessBeatmapsAsync(IList<APIBeatmap> beatmaps, CancellationToken ct)
     {
-        if (beatmaps.Count() == 0) return;
-        var existingBeatmaps = await GetExistingBeatmapsAsync(beatmaps.Select(b => b.Id), ct);
+        if (beatmaps.Count == 0) return;
+        var existingBeatmaps = await GetExistingBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), ct);
         var newBeatmaps = beatmaps.Where(b => !existingBeatmaps.Select(s => s.Id).Contains(b.Id));
         var beatmapDtos = newBeatmaps
             .Select(entityToDtoService.BeatmapEntityToDto)
-            .DistinctBy(b => b.Id);
+            .DistinctBy(b => b.Id)
+            .ToList();
         
         beatmapRepository.CreateBulk(beatmapDtos);
         try
         {
             await beatmapRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New beatmaps: {createdCount}", beatmapDtos.Count());
+            logger.Log(LogLevel.Information, "New beatmaps: {createdCount}", beatmapDtos.Count);
         }
         catch (NpgsqlException exception)
         {
@@ -67,13 +69,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         }
     }
     
-    public Task<List<Beatmap>> GetExistingBeatmapsAsync(IEnumerable<int> ids, CancellationToken ct) =>
+    public Task<List<Beatmap>> GetExistingBeatmapsAsync(IList<int> ids, CancellationToken ct) =>
         beatmapRepository.GetBulkAsync(ids, ct);
     
-    public Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IEnumerable<int> ids, CancellationToken ct) =>
+    public Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IList<int> ids, CancellationToken ct) =>
         beatmapsetRepository.GetBulkAsync(ids, ct);
 
-    public Task<List<User>> GetExistingUsersAsync(IEnumerable<int> ids, CancellationToken ct) =>
+    public Task<List<User>> GetExistingUsersAsync(IList<int> ids, CancellationToken ct) =>
         userRepository.GetBulkAsync(ids, ct);
 
     /// <summary>
@@ -81,18 +83,18 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="countries">The <see cref="APICountry"/> objects</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessCountriesAsync(IEnumerable<APICountry> countries, CancellationToken ct)
+    public async Task ProcessCountriesAsync(IList<APICountry> countries, CancellationToken ct)
     {
-        if (countries.Count() == 0) return;
+        if (countries.Count == 0) return;
         var existingCountries = await countryRepository.GetBulkAsync(countries.Select(c => c.Code), ct);
         var newCountries = countries.Where(co => !existingCountries.Select(c => c.Id).Contains(co.Code));
-        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id);
+        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id).ToList();
         
         countryRepository.CreateBulk(countryDtos);
         try
         {
             await countryRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New countries: {createdCount}", countryDtos.Count());
+            logger.Log(LogLevel.Information, "New countries: {createdCount}", countryDtos.Count);
         }
         catch (NpgsqlException exception)
         {
@@ -105,20 +107,21 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="users">The <see cref="APIUser"/>s</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessUsersAsync(IEnumerable<APIUser> users, CancellationToken ct)
+    public async Task ProcessUsersAsync(IList<APIUser> users, CancellationToken ct)
     {
-        if (users.Count() == 0) return;
-        var existingUsers = await GetExistingUsersAsync(users.Select(u => u.Id), ct);
+        if (users.Count == 0) return;
+        var existingUsers = await GetExistingUsersAsync(users.Select(u => u.Id).ToList(), ct);
         var userDtos = users.Select(entityToDtoService.UserEntityToDto);
         var newUsers = userDtos
             .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))
-            .DistinctBy(u => u.Id);
+            .DistinctBy(u => u.Id)
+            .ToList();
         
         userRepository.CreateBulk(newUsers);
         try
         {
             await userRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
+            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count);
         }
         catch (NpgsqlException exception)
         {
@@ -131,19 +134,20 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="users">The <see cref="User"/>s</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessRemovedUsersAsync(IEnumerable<User> users, CancellationToken ct)
+    public async Task ProcessRemovedUsersAsync(IList<User> users, CancellationToken ct)
     {
-        if (users.Count() == 0) return;
+        if (users.Count == 0) return;
         var existingUsers = await userRepository.GetBulkAsync(users.Select(u => u.Id), ct);
         var newUsers = users
             .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))
-            .DistinctBy(u => u.Id);
+            .DistinctBy(u => u.Id)
+            .ToList();
         
         userRepository.CreateBulk(newUsers);
         try
         {
             await userRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
+            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count);
         }
         catch (NpgsqlException exception)
         {
@@ -156,9 +160,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
+    public async Task ProcessScoresAsync(IList<APIScore> scores, CancellationToken ct)
     {
-        if (scores.Count() == 0) return;
+        if (scores.Count == 0) return;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
@@ -204,7 +208,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 var newScores = 
                     groupScores.Where(b => !beatmapScores
                             .Select(s => s.Id)
-                            .Contains(b.Id));
+                            .Contains(b.Id))
+                            .ToList();
                 var merged = beatmapScores
                     .Concat(newScores)
                     .OrderByDescending(b => b.TotalScore)
@@ -213,7 +218,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             
                 foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
 
-                if (newScores.Count() > 0)
+                if (newScores.Count > 0)
                 {
                     scoreRepository.CreateBulk(newScores);
                 }
@@ -224,7 +229,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 }
             
                 updatedCount += beatmapScores.Count;
-                createdCount += newScores.Count();
+                createdCount += newScores.Count;
             }
         }
 

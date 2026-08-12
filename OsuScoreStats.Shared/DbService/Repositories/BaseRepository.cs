@@ -54,7 +54,7 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// Add items
     /// </summary>
     /// <param name="items">IEnumerable containing populated objects of class <see cref="T"/></param>
-    public void CreateBulk(IEnumerable<T> items) => Set.AddRange(items);
+    public void CreateBulk(IList<T> items) => Set.AddRange(items);
     
     /// <summary>
     /// Update item data
@@ -66,7 +66,7 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// Update items data
     /// </summary>
     /// <param name="items">IEnumerable containing populated objects of class <see cref="T"/></param>
-    public void UpdateBulk(IEnumerable<T> items) => Set.UpdateRange(items);
+    public void UpdateBulk(IList<T> items) => Set.UpdateRange(items);
     
     /// <summary>
     /// Delete item data
@@ -78,7 +78,7 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// Delete items data
     /// </summary>
     /// <param name="items"><see cref="IEnumerable{T}"/> containing populated objects of class <see cref="T"/></param>
-    public void DeleteBulk(IEnumerable<T> items) => Set.RemoveRange(items);
+    public void DeleteBulk(IList<T> items) => Set.RemoveRange(items);
     
     /// <summary>
     /// Save changes made in this context to the DB

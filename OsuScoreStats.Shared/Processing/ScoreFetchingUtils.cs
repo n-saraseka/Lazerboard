@@ -8,9 +8,9 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
     /// <summary>
     /// Save all beatmapset data from <see cref="APIBeatmapset"/>s (beatmapset creators and beatmapsets)
     /// </summary>
-    /// <param name="beatmapsets">A populated <see cref="IReadOnlyCollection{APIBeatmapset}"/></param>
+    /// <param name="beatmapsets">A populated <see cref="IList{APIBeatmapset}"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task SaveAllBeatmapsetDataAsync(IReadOnlyCollection<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
+    public async Task SaveAllBeatmapsetDataAsync(IList<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
     {
         var beatmapsetUserIds = beatmapsets.Select(bs => bs.UserId).Distinct().ToList();
         
@@ -26,7 +26,8 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
         {
             Id = id,
             Username = beatmapsets.First(b => b.UserId == id).Creator
-        });
+        })
+        .ToList();
             
         await dataProcessor.ProcessRemovedUsersAsync(removedUsers, stoppingToken);
         var countries = apiUsers.Select(u => u.Country).Distinct().ToList();

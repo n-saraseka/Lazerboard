@@ -28,9 +28,9 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>A dictionary of results of checks for every score ID</returns>
-    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<APIScore> scores, CancellationToken cancellationToken)
+    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IList<APIScore> scores, CancellationToken cancellationToken)
     {
-        logger.Log(LogLevel.Information, "Checking if some of {@count} scores are significant", scores.Count());
+        logger.Log(LogLevel.Information, "Checking if some of {@count} scores are significant", scores.Count);
         var dictionary = new Dictionary<ulong, bool>();
         var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();

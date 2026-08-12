@@ -11,10 +11,10 @@ public interface IRepository<T, TKey>
     ValueTask<T?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
     Task<List<T>> GetBulkAsync(IEnumerable<TKey> ids, CancellationToken cancellationToken = default);
     void Create(T item);
-    void CreateBulk(IEnumerable<T> items);
+    void CreateBulk(IList<T> items);
     void Update(T item);
-    void UpdateBulk(IEnumerable<T> items);
+    void UpdateBulk(IList<T> items);
     void Delete(T item);
-    void DeleteBulk(IEnumerable<T> items);
+    void DeleteBulk(IList<T> items);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

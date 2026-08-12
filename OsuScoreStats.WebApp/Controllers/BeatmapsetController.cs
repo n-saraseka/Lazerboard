@@ -44,11 +44,9 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         if (beatmaps.Count == 0) return NotFound();
         
         var respectiveBeatmap = beatmaps.First(b => b.Id == id);
+        var beatmapset = respectiveBeatmap.Beatmapset;
         
-        var firstBeatmap = beatmaps.First();
-        var beatmapset = firstBeatmap.Beatmapset;
-        
-        var selectedMode = mode ?? firstBeatmap.Mode;
+        var selectedMode = mode ?? respectiveBeatmap.Mode;
         
         var count = await scoreRepository.GetBeatmapScoreCount(id, selectedMode, cancellationToken);
         var pages = (int)Math.Ceiling(count / 100d);

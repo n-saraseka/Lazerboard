@@ -71,8 +71,8 @@ public class DataProcessorTests
         await _dataProcessor.ProcessBeatmapsetsAsync(data, CancellationToken.None);
         
         // Assert
-        _beatmapsetRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Beatmapset>>(dtos => 
-            dtos.Count() == 2 &&
+        _beatmapsetRepository.Verify(r => r.CreateBulk(It.Is<IList<Beatmapset>>(dtos => 
+            dtos.Count == 2 &&
             dtos.All(d => d.Id == 1 || d.Id == 2))), Times.Once);
     }
     
@@ -107,8 +107,8 @@ public class DataProcessorTests
         await _dataProcessor.ProcessBeatmapsAsync(data, CancellationToken.None);
         
         // Assert
-        _beatmapRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Beatmap>>(dtos => 
-            dtos.Count() == 2 &&
+        _beatmapRepository.Verify(r => r.CreateBulk(It.Is<IList<Beatmap>>(dtos => 
+            dtos.Count == 2 &&
             dtos.All(d => d.Id == 1 || d.Id == 2))), Times.Once);
     }
     
@@ -143,8 +143,8 @@ public class DataProcessorTests
         await _dataProcessor.ProcessUsersAsync(data, CancellationToken.None);
         
         // Assert
-        _userRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<User>>(dtos => 
-            dtos.Count() == 2 &&
+        _userRepository.Verify(r => r.CreateBulk(It.Is<IList<User>>(dtos => 
+            dtos.Count == 2 &&
             dtos.All(d => d.Id == 1 || d.Id == 2))), Times.Once);
     }
     
@@ -179,8 +179,8 @@ public class DataProcessorTests
         await _dataProcessor.ProcessCountriesAsync(data, CancellationToken.None);
         
         // Assert
-        _countryRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Country>>(dtos => 
-            dtos.Count() == 2 &&
+        _countryRepository.Verify(r => r.CreateBulk(It.Is<IList<Country>>(dtos => 
+            dtos.Count == 2 &&
             dtos.All(d => d.Id == "US" || d.Id == "GB"))), Times.Once);
     }
     
@@ -233,8 +233,8 @@ public class DataProcessorTests
         await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
         
         // Assert
-        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
-            dtos.Count() == 2 &&
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IList<Score>>(dtos => 
+            dtos.Count == 2 &&
             dtos.All(d => d.Id == 1 || d.Id == 2))), Times.Once);
     }
     
@@ -294,8 +294,8 @@ public class DataProcessorTests
         await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
         
         // Assert
-        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
-            dtos.Count() == 3 &&
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IList<Score>>(dtos => 
+            dtos.Count == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
     }
     
@@ -393,11 +393,11 @@ public class DataProcessorTests
         await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
         
         // Assert
-        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
-            dtos.Count() == 3 &&
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IList<Score>>(dtos => 
+            dtos.Count == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
-        _scoreRepository.Verify(r => r.UpdateBulk(It.Is<IEnumerable<Score>>(dtos => 
-            dtos.Count() == 3 &&
+        _scoreRepository.Verify(r => r.UpdateBulk(It.Is<IList<Score>>(dtos => 
+            dtos.Count == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
     }
     
@@ -479,10 +479,10 @@ public class DataProcessorTests
         await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
         
         // Assert
-        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
-            dtos.Count() == 3 &&
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IList<Score>>(dtos => 
+            dtos.Count == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
-        _scoreRepository.Verify(r => r.DeleteBulk(It.IsAny<IEnumerable<Score>>()), Times.Exactly(3));
-        _scoreRepository.Verify(r => r.UpdateBulk(It.IsAny<IEnumerable<Score>>()), Times.Never);
+        _scoreRepository.Verify(r => r.DeleteBulk(It.IsAny<IList<Score>>()), Times.Exactly(3));
+        _scoreRepository.Verify(r => r.UpdateBulk(It.IsAny<IList<Score>>()), Times.Never);
     }
 }

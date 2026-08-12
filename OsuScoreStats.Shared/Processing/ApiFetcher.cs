@@ -42,14 +42,14 @@ public class ApiFetcher : IApiFetcher
     /// <param name="userIds">IEnumerable containing user IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns></returns>
-    public async Task<List<APIUser>> GetUsersAsync(IEnumerable<int> userIds, CancellationToken ct = default)
+    public async Task<List<APIUser>> GetUsersAsync(IList<int> userIds, CancellationToken ct = default)
     {
         const int batchSize = 50;
         var users = new List<APIUser>();
         
-        if (userIds.Count() > 0)
+        if (userIds.Count > 0)
         {
-            for (int i = 0; i < userIds.Count(); i += batchSize)
+            for (int i = 0; i < userIds.Count; i += batchSize)
             {
                 var batch = userIds.Skip(i).Take(batchSize).ToList();
                 APIUser[] userData = await _osuApiService.GetUsersAsync(batch, ct);
@@ -67,12 +67,12 @@ public class ApiFetcher : IApiFetcher
     /// <param name="beatmapIds">IEnumerable containing beatmap IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns></returns>
-    public async Task<List<APIBeatmap>> GetBeatmapsAsync(IEnumerable<int> beatmapIds, CancellationToken ct = default)
+    public async Task<List<APIBeatmap>> GetBeatmapsAsync(IList<int> beatmapIds, CancellationToken ct = default)
     {
         const int batchSize = 50;
         var beatmaps = new List<APIBeatmap>();
         
-        for (int i = 0; i < beatmapIds.Count(); i += batchSize)
+        for (int i = 0; i < beatmapIds.Count; i += batchSize)
         {
             var batch = beatmapIds.Skip(i).Take(batchSize).ToList();
             APIBeatmap[] beatmapData = await _osuApiService.GetBeatmapsAsync(batch, ct);

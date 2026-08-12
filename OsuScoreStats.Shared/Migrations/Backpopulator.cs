@@ -29,12 +29,12 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         {
             logger.Log(LogLevel.Information, "Adding missing user attributes. Beatmapsets count: {count}", beatmapsets.Count);
             Console.WriteLine("Adding missing user attributes");
-            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
+            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), token);
             var apiBeatmapsets = apiBeatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
             
             var userIds = apiBeatmapsets.Select(b => b.UserId).Distinct().ToList();
             var apiUsers = await apiFetcher.GetUsersAsync(userIds, token);
-            var apiCountries = apiUsers.Select(u => u.Country).DistinctBy(c => c.Code);
+            var apiCountries = apiUsers.Select(u => u.Country).DistinctBy(c => c.Code).ToList();
             await dataProcessor.ProcessCountriesAsync(apiCountries, token);
             await dataProcessor.ProcessUsersAsync(apiUsers, token);
             
@@ -49,7 +49,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
             
             var existingUsers = await userRepo.GetBulkAsync(deletedOrRestrictedUserIds, token);
             var existingUserIds = existingUsers.Select(u => u.Id).ToList();
-            var newUsers = deletedOrRestrictedUsers.Where(u => !existingUserIds.Contains(u.Id));
+            var newUsers = deletedOrRestrictedUsers.Where(u => !existingUserIds.Contains(u.Id)).ToList();
             userRepo.CreateBulk(newUsers);
             try
             {
@@ -94,7 +94,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         if (beatmaps.Count > 0)
         {
             logger.Log(LogLevel.Information, "Adding missing health attributes. Beatmap count: {count}", beatmaps.Count);
-            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
+            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), token);
             foreach (var beatmap in beatmaps)
             {
                 var respectiveApiBeatmap = apiBeatmaps.FirstOrDefault(b => b.Id == beatmap.Id);

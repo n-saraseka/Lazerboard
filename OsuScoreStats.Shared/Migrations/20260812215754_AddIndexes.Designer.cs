@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OsuScoreStats.Shared.DbService;
@@ -10,12 +11,14 @@ using OsuScoreStats.Shared.OsuApi.Enums;
 
 #nullable disable
 
-namespace OsuScoreStats.Migrations
+namespace OsuScoreStats.Shared.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260812215754_AddIndexes")]
+    partial class AddIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,8 +218,17 @@ namespace OsuScoreStats.Migrations
                     b.HasKey("Id")
                         .HasName("pk_scores");
 
+                    b.HasIndex("Accuracy")
+                        .HasDatabaseName("ix_scores_accuracy");
+
                     b.HasIndex("BeatmapId")
                         .HasDatabaseName("ix_scores_beatmap_id");
+
+                    b.HasIndex("ClassicTotalScore")
+                        .HasDatabaseName("ix_scores_classic_total_score");
+
+                    b.HasIndex("Combo")
+                        .HasDatabaseName("ix_scores_combo");
 
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_scores_date");
@@ -230,8 +242,14 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("PP")
                         .HasDatabaseName("ix_scores_pp");
 
+                    b.HasIndex("Rank")
+                        .HasDatabaseName("ix_scores_rank");
+
                     b.HasIndex("SpeedChange")
                         .HasDatabaseName("ix_scores_speed_change");
+
+                    b.HasIndex("TotalScore")
+                        .HasDatabaseName("ix_scores_total_score");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_scores_user_id");

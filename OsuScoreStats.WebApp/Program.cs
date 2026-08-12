@@ -115,11 +115,6 @@ var app = builder.Build();
 
 app.UseRateLimiter();
 
-if (!Directory.Exists(builder.Configuration["CacheFolder"]))
-{
-    Directory.CreateDirectory(builder.Configuration["CacheFolder"]);
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -72,13 +72,6 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
         .ReadFrom.Services(services);
 });
 
-var baseDirectory = Directory.GetCurrentDirectory();
-
-if (!Directory.Exists($"{baseDirectory}/${builder.Configuration["CacheFolder"]}"))
-{
-    Directory.CreateDirectory($"{baseDirectory}/${builder.Configuration["CacheFolder"]}");
-}
-
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

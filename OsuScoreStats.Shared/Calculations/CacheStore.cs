@@ -21,7 +21,12 @@ public class CacheStore : ICacheStore
     {
         _osuApiService = osuApiService;
         _logger = logger;
-        _cachePath = config.GetValue<string>("CacheFolder");
+        var currentDir = Directory.GetCurrentDirectory();
+        _cachePath = $"{currentDir}/{config.GetValue<string>("CacheFolder")}";
+        if (!Directory.Exists(_cachePath))
+        {
+            Directory.CreateDirectory(_cachePath);
+        }
         _osuFileTTL = int.TryParse(config["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
         _deltaTime = TimeSpan.Zero;
         _startTime = DateTime.UtcNow;

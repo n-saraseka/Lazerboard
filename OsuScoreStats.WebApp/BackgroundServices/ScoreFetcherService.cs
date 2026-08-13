@@ -73,8 +73,8 @@ public class ScoreFetcherService : BackgroundService
             }
             else
             {
-                // 4.8 million scores is around a day of scores. These would get processed in around 1 hour and 20 minutes
-                var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 4800000;
+                // 800k scores is around 6 hours of scores. These would get processed in around 15-20 minutes
+                var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 800000;
                 _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {scoreId}}}"));
                 _postRestart = false;
             }

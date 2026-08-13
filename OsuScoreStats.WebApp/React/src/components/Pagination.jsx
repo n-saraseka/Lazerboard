@@ -1,5 +1,3 @@
-import {useState} from "react";
-
 function Pagination({pages, page, onPageChange}) {
     const windowSize = 2;
     const minPage = Math.max(1, page - windowSize);

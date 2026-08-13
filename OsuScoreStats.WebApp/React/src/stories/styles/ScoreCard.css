@@ -1,0 +1,260 @@
+.scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-column-gap: 1em;
+    grid-row-gap: 1em;
+    font-size: 0.8em;
+}
+
+.score-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.score {
+    flex: 1 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    background-blend-mode: darken;
+    background-size: cover;
+    justify-content: space-between;
+    padding: 1em;
+    border-radius: 1em 1em 0 0;
+    color: white;
+    text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
+}
+
+.score-total {
+    display: flex;
+    gap: 0.25em;
+    flex-wrap: wrap;
+}
+
+.score-secondary {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8em;
+}
+
+.score .mod {
+    font-weight: bold;
+    font-size: 1.25em;
+}
+
+.score-row-mods .mod {
+    font-weight: 400;
+}
+
+.scorecard-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.scorecard-row.title-row {
+    align-items: flex-start;
+}
+
+.scorecard-column.title-column {
+    flex : 2 1;
+}
+
+.scorecard-row .scorecard-column:first-child {
+    align-items: flex-start;
+}
+
+.scorecard-row .scorecard-column:last-child {
+    align-items: flex-end;
+}
+
+.scorecard-column {
+    flex: 1 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.score-song-name {
+    font-size: 1.3em;
+}
+
+
+.scores-table tr td a, .score a {
+    color: white;
+}
+
+.score-ranked-score {
+    font-weight: bold;
+}
+
+.score-difficulty-name:hover {
+    text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
+}
+
+.score-right-column {
+    text-align: right;
+    align-items: flex-end;
+}
+
+.score-player-img {
+    width: 3em;
+    height: 3em;
+    border-radius: 1em;
+    box-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.score-player-img:hover {
+    box-shadow: 0 0 1em rgba(255, 255, 255, 0.5);
+}
+
+.mod {
+    font-weight: bold;
+    padding: 0.25em;
+    border-radius: 0.25em;
+}
+
+.mods {
+    display: flex;
+    gap: 0.25em;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.mods .mod {
+    text-shadow: none;
+}
+
+.mod-difficultyDecrease {
+    background-color: rgb(179, 255, 102);
+    color: rgb(60, 89, 30);
+}
+
+.mod-difficultyIncrease {
+    background-color: rgb(255, 102, 102);
+    color: rgb(89, 30, 30);
+}
+
+.mod-conversion {
+    background-color: rgb(140, 102, 255);
+    color: rgb(45, 30, 89)
+}
+
+.mod-automation {
+    background-color: rgb(102, 204, 255);
+    color: rgb(30, 70, 89);
+}
+
+.mod-fun {
+    background-color: rgb(255, 102, 171);
+    color: rgb(89, 30, 57);
+}
+
+.mod-system {
+    background-color: rgb(255, 204, 34);
+    color: rgb(89, 70, 5);
+}
+
+.mod-unknown {
+    background-color: rgb(180, 180, 180);
+    color: rgb(50, 50, 50);
+}
+
+.mods-expand {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+.score-combo-misses {
+    display: flex;
+    gap: 0.5em;
+    justify-content: flex-end;
+}
+
+.score-misses {
+    color: red;
+}
+
+.scores-table {
+    font-weight: 350;
+    border-collapse: collapse;
+}
+
+.scores-table thead {
+    background-color: rgb(45, 45, 45);
+}
+
+.scores-table td {
+    padding: 0.1em 0.3em 0.1em 0.3em;
+}
+
+.score-row-map-image img {
+    height: 1em;
+    object-fit: cover;
+}
+
+.scores-table tbody tr:nth-child(odd) {
+    background-color: rgb(35, 35, 35);
+}
+
+.scores-table tbody tr:nth-child(even) {
+    background-color: rgb(40, 40, 40);
+}
+
+.score-mode {
+    flex: 1 1;
+    width: 100%;
+    padding: 0.5em 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 0 1em 1em;
+}
+
+.color-osu {
+    background-color: rgb(200, 120, 120);
+}
+
+.color-taiko {
+    background-color: rgb(200, 180, 60);
+}
+
+.color-fruits {
+    background-color: rgb(120, 200, 100);
+}
+
+.color-mania {
+    background-color: rgb(100, 100, 200);
+}
+
+.mode-icon {
+    height: 2em;
+    width: 2em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.mode-osu {
+    mask-image: url("../images/osu-std.svg");
+    -webkit-mask-image: url("../images/osu-std.svg");
+}
+
+.mode-taiko {
+    mask-image: url("../images/osu-taiko.svg");
+    -webkit-mask-image: url("../images/osu-taiko.svg");
+}
+
+.mode-fruits {
+    mask-image: url("../images/osu-catch.svg");
+    -webkit-mask-image: url("../images/osu-catch.svg");
+}
+
+.mode-mania {
+    mask-image: url("../images/osu-mania.svg");
+    -webkit-mask-image: url("../images/osu-mania.svg");
+}

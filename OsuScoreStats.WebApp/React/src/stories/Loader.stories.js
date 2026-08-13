@@ -1,6 +1,6 @@
 import Loader from '../components/Loader';
 
-import './Loader.css';
+import './styles/Loader.css';
 
 export default {
     title: 'Loader',

@@ -1,0 +1,19 @@
+.error-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    align-items: center;
+    text-align: center;
+}
+
+.error-icon {
+    width: 2em;
+    height: 2em;
+    background-color: hsl(0, 70%, 55%);
+    mask-image: url("../images/error.svg");
+    -webkit-mask-image: url("../images/error.svg");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: cover;
+    -webkit-mask-repeat: no-repeat;
+}

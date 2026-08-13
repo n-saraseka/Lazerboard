@@ -1,6 +1,6 @@
 import Error from '../components/Error';
 
-import './Error.css';
+import './styles/Error.css';
 
 export default {
     title: 'Error',

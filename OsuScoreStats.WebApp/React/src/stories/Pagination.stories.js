@@ -1,6 +1,6 @@
 import Pagination from '../components/Pagination';
 
-import './Pagination.css';
+import './styles/Pagination.css';
 
 export default {
     title: 'Pagination',

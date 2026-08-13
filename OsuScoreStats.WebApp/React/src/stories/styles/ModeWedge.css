@@ -1,0 +1,53 @@
+.score-mode {
+    width: 100%;
+    padding: 0.5em 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 0 1em 1em;
+}
+
+.color-osu {
+    background-color: rgb(200, 120, 120);
+}
+
+.color-taiko {
+    background-color: rgb(200, 180, 60);
+}
+
+.color-fruits {
+    background-color: rgb(120, 200, 100);
+}
+
+.color-mania {
+    background-color: rgb(100, 100, 200);
+}
+
+.mode-icon {
+    height: 2em;
+    width: 2em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.mode-osu {
+    mask-image: url("../images/osu-std.svg");
+    -webkit-mask-image: url("../images/osu-std.svg");
+}
+
+.mode-taiko {
+    mask-image: url("../images/osu-taiko.svg");
+    -webkit-mask-image: url("../images/osu-taiko.svg");
+}
+
+.mode-fruits {
+    mask-image: url("../images/osu-catch.svg");
+    -webkit-mask-image: url("../images/osu-catch.svg");
+}
+
+.mode-mania {
+    mask-image: url("../images/osu-mania.svg");
+    -webkit-mask-image: url("../images/osu-mania.svg");
+}

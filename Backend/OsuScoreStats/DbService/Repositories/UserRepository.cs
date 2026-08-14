@@ -17,7 +17,7 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
         trimmedQuery = trimmedQuery.ToLower();
         
         return Set
-            .Where(u => u.Username.ToLower().StartsWith(trimmedQuery))
+            .Where(u => u.Username.ToLower().StartsWith(trimmedQuery) && u.CountryCode != null)
             .Take(25)
             .AsSplitQuery()
             .Include(u => u.Country)

@@ -147,7 +147,6 @@ app.UseStatusCodePagesWithReExecute("/{0}");
 app.UseExceptionHandler("/500");
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
 app.UseHttpsRedirection();
 
 app.MapControllerRoute(

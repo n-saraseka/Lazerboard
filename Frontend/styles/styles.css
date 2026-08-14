@@ -85,8 +85,8 @@ header .react-app {
     width: 1em;
     height: 1em;
     content: "";
-    mask-image: url("images/search.svg");
-    -webkit-mask-image: url("images/search.svg");
+    mask-image: url("../images/search.svg");
+    -webkit-mask-image: url("../images/search.svg");
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
@@ -322,13 +322,13 @@ select {
 }
 
 .view-cards {
-    mask-image: url("images/card.svg");
-    -webkit-mask-image: url("images/card.svg");
+    mask-image: url("../images/card.svg");
+    -webkit-mask-image: url("../images/card.svg");
 }
 
 .view-table {
-    mask-image: url("images/table.svg");
-    -webkit-mask-image: url("images/table.svg");
+    mask-image: url("../images/table.svg");
+    -webkit-mask-image: url("../images/table.svg");
 }
 
 .options .sort-thingy {
@@ -664,23 +664,23 @@ select {
 }
 
 .mode-osu {
-    mask-image: url("images/osu-std.svg");
-    -webkit-mask-image: url("images/osu-std.svg");
+    mask-image: url("../images/osu-std.svg");
+    -webkit-mask-image: url("../images/osu-std.svg");
 }
 
 .mode-taiko {
-    mask-image: url("images/osu-taiko.svg");
-    -webkit-mask-image: url("images/osu-taiko.svg");
+    mask-image: url("../images/osu-taiko.svg");
+    -webkit-mask-image: url("../images/osu-taiko.svg");
 }
 
 .mode-fruits {
-    mask-image: url("images/osu-catch.svg");
-    -webkit-mask-image: url("images/osu-catch.svg");
+    mask-image: url("../images/osu-catch.svg");
+    -webkit-mask-image: url("../images/osu-catch.svg");
 }
 
 .mode-mania {
-    mask-image: url("images/osu-mania.svg");
-    -webkit-mask-image: url("images/osu-mania.svg");
+    mask-image: url("../images/osu-mania.svg");
+    -webkit-mask-image: url("../images/osu-mania.svg");
 }
 
 .mode-icon-wrapper.active, .mode-icon-wrapper.enabled:hover {
@@ -704,8 +704,8 @@ select {
     width: 100%;
     height: 100%;
     background-color: white;
-    mask-image: url("images/loader.svg");
-    -webkit-mask-image: url("images/loader.svg");
+    mask-image: url("../images/loader.svg");
+    -webkit-mask-image: url("../images/loader.svg");
     mask-size: contain;
     mask-repeat: no-repeat;
     -webkit-mask-size: cover;
@@ -736,8 +736,8 @@ body {
     width: 2em;
     height: 2em;
     background-color: hsl(0, 70%, 55%);
-    mask-image: url("images/error.svg");
-    -webkit-mask-image: url("images/error.svg");
+    mask-image: url("../images/error.svg");
+    -webkit-mask-image: url("../images/error.svg");
     mask-size: contain;
     mask-repeat: no-repeat;
     -webkit-mask-size: cover;
@@ -838,7 +838,7 @@ body {
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
-    mask-image: url("images/chevron.svg");
-    -webkit-mask-image: url("images/chevron.svg");
+    mask-image: url("../images/chevron.svg");
+    -webkit-mask-image: url("../images/chevron.svg");
     background-color: rgb(35, 35, 35);
 }

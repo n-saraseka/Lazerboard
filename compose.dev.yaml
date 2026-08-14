@@ -8,9 +8,9 @@ services:
       "db":
         condition: service_healthy
     ports:
-      - "5000"
+      - "5000:5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT
+      - ASPNETCORE_ENVIRONMENT=DEVELOPMENT
       - ASPNETCORE_URLS=http://*:5000
       - Database__Database=lazerleaderboards
       - Database__Host=db
@@ -19,7 +19,6 @@ services:
       - Database__Password=postgres
       - OsuApi__ClientId
       - OsuApi__ClientSecret
-      - FrontendUrl=http://127.0.0.1:3100
       - UseFirehose=false
       - EnableDatabaseSeeding=false
     volumes:
@@ -31,9 +30,9 @@ services:
       - main
   
   frontend:
-    build:
+    build: 
       context: ./Frontend
-      dockerfile: production.Dockerfile
+      dockerfile: dev.Dockerfile
     depends_on:
       - backend
     ports:

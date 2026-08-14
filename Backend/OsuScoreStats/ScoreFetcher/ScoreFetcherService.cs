@@ -29,7 +29,6 @@ public class ScoreFetcherService : BackgroundService
         _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
         _shouldUseFirehose = Environment.GetEnvironmentVariable("UseFirehose") == "true";
         _shouldSeedDatabase = Environment.GetEnvironmentVariable("EnableDatabaseSeeding") == "true";
-        Console.WriteLine(Environment.GetEnvironmentVariable("EnableDatabaseSeeding"));
         _catchUpAfterRestart = !_shouldSeedDatabase;
     }
     

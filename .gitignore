@@ -3,3 +3,4 @@ logs
 BeatmapCache
 keys
 .idea
+*.env

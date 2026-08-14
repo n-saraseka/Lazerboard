@@ -11,8 +11,7 @@ public class CacheStore : ICacheStore
     private string _cachePath;
     private int _osuFileTTL;
     private const int DefaultTTL = 10;
-    private TimeSpan _deltaTime;
-    private DateTime _startTime;
+    private DateTime _lastCleanUpTime = DateTime.UtcNow;
     private double _apiInterval;
 
     public CacheStore(IConfiguration config, OsuApiService osuApiService, ILogger<CacheStore> logger)
@@ -30,8 +29,6 @@ public class CacheStore : ICacheStore
         }
         
         _osuFileTTL = int.TryParse(cacheConfig["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
-        _deltaTime = TimeSpan.Zero;
-        _startTime = DateTime.UtcNow;
         
         var apiConfig = config.GetSection("OsuApi");
         _apiInterval = apiConfig.GetValue<double>("ApiInterval");
@@ -39,13 +36,10 @@ public class CacheStore : ICacheStore
 
     private bool ShouldCleanUp()
     {
-        _deltaTime += DateTime.UtcNow - _startTime;
-        if (_deltaTime >= TimeSpan.FromMinutes(_osuFileTTL / 2))
-        {
-            _deltaTime = TimeSpan.Zero;
-            _startTime = DateTime.UtcNow;
-        }
-        return _deltaTime == TimeSpan.Zero;
+        if (DateTime.UtcNow - _lastCleanUpTime < TimeSpan.FromMinutes(_osuFileTTL / 2)) return false;
+        _lastCleanUpTime = DateTime.UtcNow;
+        return true;
+
     }
     
     public void CheckCache()

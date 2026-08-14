@@ -210,6 +210,15 @@ export function assembleSearchParams(params, filters, pageNumber) {
             params.append("speedMax", filters.rateRange.max);
         }
     }
+
+    if (filters.starRange !== undefined) {
+        if (filters.starRange.min !== null) {
+            params.append("minStars", filters.starRange.min);
+        }
+        if (filters.starRange.max !== null) {
+            params.append("maxStars", filters.starRange.max);
+        }
+    }
     
     if (filters.country !== undefined) {
         if (filters.country.id !== "All") {

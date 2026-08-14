@@ -12,8 +12,10 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
     for (const key of Object.keys(allMods)) {
         allModData = allModData.concat(allMods[key]);
     }
+    
     const possibleIncludeMods = useMemo(() => {
         let arr = [];
+        if (isMania) return arr;
         const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
         matchingMods.forEach(m => {
             if (!filters.excludeMods.includes(m.acronym)) {
@@ -25,6 +27,7 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
 
     const possibleExcludeMods = useMemo(() => {
         let arr = [];
+        if (isMania) return arr;
         const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
         matchingMods.forEach(m => {
             if (!filters.includeMods.includes(m.acronym)) {

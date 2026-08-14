@@ -29,9 +29,9 @@ public class CacheStore : ICacheStore
             Directory.CreateDirectory(_cachePath);
         }
         
-        _osuFileTTL = int.TryParse(cacheConfig["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
+        _osuFileTTL = int.TryParse(cacheConfig["FileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
         
-        _cleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(_osuFileTTL / 2).TotalMilliseconds);
+        _cleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(_osuFileTTL).TotalMilliseconds);
         _cleanupTimer.Elapsed += OnCleanupTimerActivated;
         _cleanupTimer.AutoReset = true;
         _cleanupTimer.Enabled = true;

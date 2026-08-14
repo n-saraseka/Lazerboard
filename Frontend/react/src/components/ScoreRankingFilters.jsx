@@ -73,20 +73,20 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                                         <div className={`mode-icon-wrapper ${mode.enabled ? "enabled" : "disabled"}`} key={index}>
                                             <div className={`mode-icon mode-${modeEnumToString(index)}`} onClick={() => {
                                                 let legitMods = [];
-                                                for (const key of Object.keys(allMods)) {
-                                                    const matchingMods = allMods[key].filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
-                                                    matchingMods.forEach(m => {
-                                                        legitMods.push(m.acronym);
-                                                    });
-                                                }
-                                                const newMods = filters.mods.filter(m => legitMods.includes(m));
+                                                const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
+                                                matchingMods.forEach(m => {
+                                                    legitMods.push(m.acronym);
+                                                });
+                                                const newIncludeMods = filters.includeMods.filter(m => legitMods.includes(m));
+                                                const newExcludeMods = filters.excludeMods.filter(m => legitMods.includes(m));
                                                 const allFilters = {...filters, modes: filters.modes.map((m, i) => {
                                                         if (i === index) {
                                                             m.enabled = !m.enabled;
                                                         }
                                                         return m;
                                                     }),
-                                                    mods: newMods};
+                                                    includeMods: newIncludeMods,
+                                                    excludeMods: newExcludeMods};
                                                 setFilters(allFilters);
                                             }}></div>
                                         </div>

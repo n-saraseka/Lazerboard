@@ -10,12 +10,15 @@ public class ScoreFetcherService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ScoreFetcherService> _logger;
-    private string? _cursor;
     private readonly double _apiInterval;
-    private int _repeatExponent;
     private bool _shouldUseFirehose;
     private bool _shouldSeedDatabase;
     private bool _catchUpAfterRestart;
+    
+    private string? _leaderboardCursor;
+    private string? _firehoseCursor;
+    private int _repeatExponent;
+    private bool _dontCallFirehoseNextTime;
 
     public ScoreFetcherService(IServiceProvider serviceProvider, ILogger<ScoreFetcherService> logger)
     {
@@ -45,13 +48,17 @@ public class ScoreFetcherService : BackgroundService
             cacheStore.CheckCache();
             if (_shouldUseFirehose)
             {
-                _shouldSeedDatabase = false;
                 await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);
             }
 
             if (_shouldSeedDatabase)
             {
                 _shouldUseFirehose = await FetchLeaderboardsAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                if (_shouldUseFirehose)
+                {
+                    _repeatExponent = 0;
+                    _shouldSeedDatabase = false;
+                }
             }
         }
     }
@@ -67,9 +74,9 @@ public class ScoreFetcherService : BackgroundService
     private async Task<bool> FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
         ScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
-        _logger.Log(LogLevel.Information, "Searching beatmapsets. Cursor: {cursor}", _cursor);
-        var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
-        _cursor = beatmapsetsResponse.Cursor;
+        _logger.Log(LogLevel.Information, "Searching beatmapsets. Cursor: {cursor}", _leaderboardCursor);
+        var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_leaderboardCursor, stoppingToken);
+        _leaderboardCursor = beatmapsetsResponse.Cursor;
         await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
         
         var beatmapsets = beatmapsetsResponse.Beatmapsets;
@@ -98,8 +105,37 @@ public class ScoreFetcherService : BackgroundService
             foreach (var beatmapset in beatmapsets)
                 beatmaps.AddRange(beatmapset.Beatmaps);
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
-
+            
             var scores = new List<APIScore>();
+            
+            // We call the firehose to catch up with potentially missed scores on the older maps.
+            // It should be accurate even if we miss scores on beatmaps that haven't been scanned just yet.
+            // We will just catch up on those during the scan. I think?
+            if (!_dontCallFirehoseNextTime)
+            {
+                _logger.Log(LogLevel.Information, "Looking up scores from the firehose. Cursor: {cursor}", _firehoseCursor);
+                var firehoseScores = await apiFetcher.GetScoresAsync(_firehoseCursor, stoppingToken);
+                if (firehoseScores.Scores.Length == 0)
+                {
+                    // There are no scores, let the endpoint rest for the next round of scanning the leaderboards.
+                    _dontCallFirehoseNextTime = true;
+                }
+                else
+                {
+                    var beatmapIds = firehoseScores.Scores.Select(s => s.BeatmapId).Distinct().ToList();
+                    var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
+                    var existingBeatmapIds = existingBeatmaps.Select(s => s.Id);
+                    scores.AddRange(firehoseScores.Scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)));
+                    _firehoseCursor = firehoseScores.Cursor;
+                    _dontCallFirehoseNextTime = false;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
+            }
+            else
+            {
+                _dontCallFirehoseNextTime = false;
+            }
+            
             foreach (var beatmap in beatmaps)
             {
                 var beatmapScores = new List<BeatmapScores>();
@@ -117,6 +153,7 @@ public class ScoreFetcherService : BackgroundService
             }
         
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            significantScores = significantScores.DistinctBy(s => s.Id).ToList();
             _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 
             if (significantScores.Count > 0)
@@ -139,9 +176,9 @@ public class ScoreFetcherService : BackgroundService
     private async Task FetchFromFirehoseAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor,
         ScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
-        _logger.Log(LogLevel.Information, "Looking up scores. Cursor: {cursor}", _cursor);
+        _logger.Log(LogLevel.Information, "Looking up scores from the firehose. Cursor: {cursor}", _firehoseCursor);
             
-        var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
+        var scoresResponse = await apiFetcher.GetScoresAsync(_firehoseCursor, stoppingToken);
         var scores = scoresResponse.Scores;
 
         if (_catchUpAfterRestart)
@@ -156,14 +193,14 @@ public class ScoreFetcherService : BackgroundService
                 _repeatExponent = 0;
                 // 800k scores is around 6 hours of scores. These would get processed in around 15-20 minutes
                 var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 800000;
-                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {scoreId}}}"));
+                _firehoseCursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {scoreId}}}"));
                 _catchUpAfterRestart = false;
             }
         }
         else
         {
-            _cursor = scoresResponse.Cursor;
-            _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
+            _firehoseCursor = scoresResponse.Cursor;
+            _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _firehoseCursor);
             
             await Task.Delay(TimeSpan.FromSeconds(_apiInterval), stoppingToken);
             

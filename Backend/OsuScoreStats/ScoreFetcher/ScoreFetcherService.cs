@@ -10,6 +10,7 @@ public class ScoreFetcherService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ScoreFetcherService> _logger;
+    private readonly ICacheStore _cacheStore;
     private readonly double _apiInterval;
     private bool _shouldUseFirehose;
     private bool _shouldSeedDatabase;
@@ -20,10 +21,11 @@ public class ScoreFetcherService : BackgroundService
     private int _repeatExponent;
     private bool _dontCallFirehoseNextTime;
 
-    public ScoreFetcherService(IServiceProvider serviceProvider, ILogger<ScoreFetcherService> logger)
+    public ScoreFetcherService(IServiceProvider serviceProvider, ILogger<ScoreFetcherService> logger, ICacheStore cacheStore)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _cacheStore = cacheStore;
         
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -42,10 +44,8 @@ public class ScoreFetcherService : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
             var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
             var utils = scope.ServiceProvider.GetRequiredService<ScoreFetchingUtils>();
             
-            cacheStore.CheckCache();
             if (_shouldUseFirehose)
             {
                 await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);

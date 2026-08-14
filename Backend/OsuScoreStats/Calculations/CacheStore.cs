@@ -1,3 +1,4 @@
+using System.Timers;
 using osu.Game.IO;
 using osu.Game.Beatmaps;
 using OsuScoreStats.OsuApi;
@@ -11,8 +12,8 @@ public class CacheStore : ICacheStore
     private string _cachePath;
     private int _osuFileTTL;
     private const int DefaultTTL = 10;
-    private DateTime _lastCleanUpTime = DateTime.UtcNow;
     private double _apiInterval;
+    private System.Timers.Timer _cleanupTimer;
 
     public CacheStore(IConfiguration config, OsuApiService osuApiService, ILogger<CacheStore> logger)
     {
@@ -30,23 +31,17 @@ public class CacheStore : ICacheStore
         
         _osuFileTTL = int.TryParse(cacheConfig["osuFileTTL"], out var osuFileTTL) ? osuFileTTL : DefaultTTL;
         
+        _cleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(_osuFileTTL / 2).TotalMilliseconds);
+        _cleanupTimer.Elapsed += OnCleanupTimerActivated;
+        _cleanupTimer.AutoReset = true;
+        _cleanupTimer.Enabled = true;
+        
         var apiConfig = config.GetSection("OsuApi");
         _apiInterval = apiConfig.GetValue<double>("ApiInterval");
     }
 
-    private bool ShouldCleanUp()
+    private void OnCleanupTimerActivated(object? source, ElapsedEventArgs e)
     {
-        if (DateTime.UtcNow - _lastCleanUpTime < TimeSpan.FromMinutes(_osuFileTTL / 2)) return false;
-        _lastCleanUpTime = DateTime.UtcNow;
-        return true;
-
-    }
-    
-    public void CheckCache()
-    {
-        if (!ShouldCleanUp()) return;
-        
-        _logger.Log(LogLevel.Information, "Checking if any files in cache folder exceeded their TTL...");
         var deletedCount = 0;
         var files = Directory.EnumerateFiles(_cachePath);
         foreach (var file in files)

@@ -9,19 +9,8 @@ services:
         condition: service_healthy
     ports:
       - "5000"
-    environment:
-      - ASPNETCORE_ENVIRONMENT
-      - ASPNETCORE_URLS=http://*:5000
-      - Database__Database=lazerleaderboards
-      - Database__Host=db
-      - Database__Port=5432
-      - Database__Username=postgres
-      - Database__Password=postgres
-      - OsuApi__ClientId
-      - OsuApi__ClientSecret
-      - FrontendUrl=http://127.0.0.1:3100
-      - UseFirehose=false
-      - EnableDatabaseSeeding=false
+    env_file:
+      prod.env
     volumes:
       - ./logs/backend:/app/Logs
       - ./BeatmapCache:/app/BeatmapCache

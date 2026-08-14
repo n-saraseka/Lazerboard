@@ -6,7 +6,6 @@ using OsuScoreStats.OsuApi.Enums;
 using OsuScoreStats.OsuApi.OsuApiEntities;
 using OsuScoreStats.OsuEntityToDtoService;
 using OsuScoreStats.Processing;
-using OsuScoreStats.ScoreFetcher;
 
 namespace OsuScoreStats.Tests.ScoreFetcherTests;
 
@@ -298,6 +297,48 @@ public class DataProcessorTests
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
             dtos.Count() == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
+    }
+    
+    [Test]
+    public async Task ProcessScoresAsync_NoPreviousScoresAndMoreThan100_Only100AreSaved()
+    {
+        // Arrange
+        var data = new List<APIScore>();
+
+        for (int i = 0; i < 101; i++)
+        {
+            data.Add(new APIScore
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                Mode = Mode.Osu,
+                UserId = i + 1,
+                TotalScore = 1000000 - i * 1000,
+                Date = new DateTime(2020, 1, 1)
+            });
+        }
+
+        var dbData = new List<Score>();
+        
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+            .ReturnsAsync(dbData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
+            .Returns<APIScore>(api => new Score
+            {
+                Id = api.Id,
+                BeatmapId = api.BeatmapId,
+                TotalScore = api.TotalScore,
+                Date = api.Date,
+                UserId = api.UserId,
+                Mode = api.Mode
+            });
+
+        // Act
+        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        
+        // Assert
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
+            dtos.Count() == 100)), Times.Once);
     }
     
     [Test]

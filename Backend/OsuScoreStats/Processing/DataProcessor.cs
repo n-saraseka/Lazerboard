@@ -181,6 +181,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             if (matchingGroup == null)
             {
                 foreach (var score in groupScores) score.Rank = groupScores.IndexOf(score) + 1;
+                // This is to prevent edge cases where there are somehow more than 100 scores per mode and combination,
+                // even though there were none before. We can't verify scores ranked above 100.
+                groupScores = groupScores.Where(s => s.Rank <= 100).ToList();
                 scoreRepository.CreateBulk(groupScores);
                 createdCount += groupScores.Count;
             }

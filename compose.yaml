@@ -1,7 +1,47 @@
-﻿services:
-  osuscorestats:
-    image: osuscorestats
-    build:
-      context: .
-      dockerfile: Dockerfile
+networks:
+  main:
+  logs:
+    external: true
 
+services:
+  backend:
+    build: ./Backend
+    depends_on:
+      "db":
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3101:3001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT
+      - ASPNETCORE_URLS=http://*:3001
+      - Database__Database=lazerleaderboards
+      - Database__Host=db
+      - Database__Port=5432
+      - Database__Username=postgres
+      - Database__Password=postgres
+      - OsuApi__ClientId
+      - OsuApi__ClientSecret
+      - FrontendUrl=http://127.0.0.1:3100
+      - UseFirehose=false
+      - EnableDatabaseSeeding=false
+    volumes:
+      - ./logs/backend:/app/Logs
+      - ./BeatmapCache:/app/BeatmapCache
+      - ./keys:/root/.aspnet/DataProtection-Keys
+  
+  db:
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=lazerleaderboards
+      - POSTGRES_HOST=localhost
+      - PGDATA=/data/postgres
+    volumes:
+      - ./db:/data/postgres
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5

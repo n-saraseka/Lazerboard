@@ -8,7 +8,7 @@ RUN npm run build
 
 # Copy images to caddy server
 FROM caddy:2-alpine
-COPY ./Caddy/dev/Caddyfile /etc/caddy/Caddyfile
+COPY ./caddy/dev.Caddyfile /etc/caddy/Caddyfile
 COPY --from=react /app/build /srv/www/react/
 COPY ./images /srv/www/images/
 COPY ./styles /srv/www/styles/

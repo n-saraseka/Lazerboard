@@ -8,7 +8,7 @@ services:
       "db":
         condition: service_healthy
     ports:
-      - "5000:5000"
+      - "5000"
     env_file:
       dev.env
     volumes:
@@ -20,7 +20,7 @@ services:
       - main
   
   frontend:
-    build: 
+    build:
       context: ./Frontend
       dockerfile: dev.Dockerfile
     depends_on:

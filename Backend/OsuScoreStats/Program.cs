@@ -74,6 +74,7 @@ builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
+builder.Services.AddSingleton<ICentralizedRateLimiter, CentralizedRateLimiter>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
 builder.Services.AddScoped<ScoreFetchingUtils>();
 
@@ -119,7 +120,7 @@ builder.Services.AddRateLimiter(options =>
         }
 
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        await context.HttpContext.Response.WriteAsync($"Too many requests. Please try again later.", cancellationToken);
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken);
     };
 });
 

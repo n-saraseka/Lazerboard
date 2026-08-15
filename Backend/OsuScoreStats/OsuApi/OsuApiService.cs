@@ -9,6 +9,7 @@ public class OsuApiService
 {
     private readonly HttpClient _httpClient;
     private ILogger<OsuApiService> _logger;
+    private readonly ICentralizedRateLimiter _centralizedRateLimiter;
     private static TokenInfo? _token;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
     private const string BaseApiUrl = "https://osu.ppy.sh/api/v2";
@@ -18,13 +19,17 @@ public class OsuApiService
     private readonly string _apiClientSecret;
     private readonly string _cacheFolder;
     
-    public OsuApiService(HttpClient httpClient, ILogger<OsuApiService> logger, IConfiguration config)
+    public OsuApiService(HttpClient httpClient, 
+        ILogger<OsuApiService> logger, 
+        IConfiguration config, 
+        ICentralizedRateLimiter centralizedRateLimiter)
     {
         _httpClient = httpClient;
         _logger = logger;
         var osuApiConfig = config.GetSection("OsuApi");
         _apiClientId = osuApiConfig["ClientId"];
         _apiClientSecret = osuApiConfig["ClientSecret"];
+        _centralizedRateLimiter = centralizedRateLimiter;
         
         var currentDir = Directory.GetCurrentDirectory();
         var cacheConfig = config.GetSection("Caching");
@@ -56,7 +61,8 @@ public class OsuApiService
             requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
         }
         var responseText = "";
-        
+
+        await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         responseText = await response.Content.ReadAsStringAsync(ct);
         
@@ -166,11 +172,11 @@ public class OsuApiService
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, 
                 $"https://osu.ppy.sh/osu/{beatmapId}");
+            await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
             var response = await _httpClient.SendAsync(requestMessage, ct);
             var responseBytes = await response.Content.ReadAsByteArrayAsync(ct);
                     
             await File.WriteAllBytesAsync(mapPath, responseBytes, ct);
-                
         }
         catch (Exception ex)
         {

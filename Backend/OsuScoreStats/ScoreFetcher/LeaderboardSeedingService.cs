@@ -54,7 +54,7 @@ public class LeaderboardSeedingService : BackgroundService
     /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
     /// <param name="utils">A <see cref="ScoreFetchingUtils"/> service</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>False if there is no data after multiple retries, true otherwise</returns>
+    /// <returns>True if seeding should continue, false otherwise</returns>
     private async Task<bool> FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
         ScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
@@ -71,7 +71,7 @@ public class LeaderboardSeedingService : BackgroundService
             {
                 _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Database seeding is complete", 
                     _apiInterval * Math.Pow(2, _repeatExponent));
-                return true;
+                return false;
             }
             
             var interval = _apiInterval * Math.Pow(2, _repeatExponent);
@@ -115,6 +115,6 @@ public class LeaderboardSeedingService : BackgroundService
             }
         }
 
-        return false;
+        return true;
     }
 }

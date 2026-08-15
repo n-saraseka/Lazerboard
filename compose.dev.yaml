@@ -7,8 +7,6 @@ services:
     depends_on:
       "db":
         condition: service_healthy
-    ports:
-      - "5000"
     env_file:
       dev.env
     volumes:

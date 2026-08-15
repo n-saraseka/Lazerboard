@@ -198,8 +198,10 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     {
                         scoreRepository.DeleteBulk(matchingScores);
                         foreach (var s in matchingScores)
+                        {
                             beatmapScores.Remove(s);
-                        deletedCount++;
+                            deletedCount++;
+                        }
                     }
                 }
                 

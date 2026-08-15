@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using OsuScoreStats.DbService.Entities;
 using OsuScoreStats.DbService.Repositories.Interfaces;
@@ -243,5 +244,19 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         {
             logger.Log(LogLevel.Error, exception, "Method: ProcessScoresAsync | Scores: {@scores}", scores);
         }
+    }
+
+    /// <summary>
+    /// Remove beatmaps that have no scores from the database.
+    /// </summary>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <remarks>To be called ONLY before database seeding, if necessary.</remarks>
+    public async Task RemoveBeatmapsWithNoScoresAsync(CancellationToken ct)
+    {
+        var beatmapIds = await scoreRepository.GetAll().Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
+        var beatmapsWithNoScores = await beatmapRepository.GetAll().Where(s => !beatmapIds.Contains(s.Id)).ToListAsync(ct);
+        beatmapRepository.DeleteBulk(beatmapsWithNoScores);
+        await beatmapRepository.SaveChangesAsync(ct);
+        logger.Log(LogLevel.Information, "Removed: {deletedBeatmapsCount} beatmaps with no scores", beatmapsWithNoScores.Count);
     }
 }

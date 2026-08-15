@@ -94,6 +94,7 @@ public class FirehoseService : BackgroundService
                 _repeatExponent++;
                 var interval = _apiInterval * Math.Pow(2, _repeatExponent);
                 await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+                return;
             }
             else
             {

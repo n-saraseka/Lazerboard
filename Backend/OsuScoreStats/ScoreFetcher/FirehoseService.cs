@@ -76,6 +76,15 @@ public class FirehoseService : BackgroundService
         {
             _cursor = scoresResponse.Cursor;
             _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
+            
+            if (scores.Length == 0)
+            {
+                _logger.Log(LogLevel.Information, "No scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
+                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
+                _repeatExponent++;
+                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
+                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+            }
 
             // If we are in the middle of seeding the database, we only care for scores set on existing beatmaps
             // to catch up on new scores from already processed maps.
@@ -110,14 +119,6 @@ public class FirehoseService : BackgroundService
                 }
             
                 await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
-            }
-            else
-            {
-                _logger.Log(LogLevel.Information, "No significant scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
-                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
-                _repeatExponent++;
-                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
             }
         }
     }

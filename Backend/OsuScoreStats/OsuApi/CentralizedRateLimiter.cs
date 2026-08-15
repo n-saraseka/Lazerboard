@@ -17,7 +17,8 @@ public class CentralizedRateLimiter : ICentralizedRateLimiter
             ReplenishmentPeriod = TimeSpan.FromSeconds(apiInterval),
             TokenLimit = 1,
             TokensPerPeriod = 1,
-            QueueLimit = 10,
+            // This way, a situation where two requests from different services occur at the same second can't happen.
+            QueueLimit = 1,
             QueueProcessingOrder = QueueProcessingOrder.OldestFirst
         });
     }

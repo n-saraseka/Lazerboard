@@ -95,13 +95,16 @@ public class FirehoseService : BackgroundService
                 var interval = _apiInterval * Math.Pow(2, _repeatExponent);
                 await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
             }
+            else
+            {
+                _repeatExponent = 0;
+            }
             
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
             _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 
             if (significantScores.Count > 0)
             {
-                _repeatExponent = 0;
                 await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
                 
                 // We only need to catch up on new beatmaps in case we've finished seeding the database

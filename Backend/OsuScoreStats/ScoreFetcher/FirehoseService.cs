@@ -76,15 +76,6 @@ public class FirehoseService : BackgroundService
         {
             _cursor = scoresResponse.Cursor;
             _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
-            
-            if (scores.Length == 0)
-            {
-                _logger.Log(LogLevel.Information, "No scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
-                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
-                _repeatExponent++;
-                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
-            }
 
             // If we are in the middle of seeding the database, we only care for scores set on existing beatmaps
             // to catch up on new scores from already processed maps.
@@ -94,6 +85,15 @@ public class FirehoseService : BackgroundService
                 var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
                 var existingBeatmapIds = existingBeatmaps.Select(s => s.Id).ToList();
                 scores = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToArray();
+            }
+            
+            if (scores.Length == 0)
+            {
+                _logger.Log(LogLevel.Information, "No scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
+                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
+                _repeatExponent++;
+                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
+                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
             }
             
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);

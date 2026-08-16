@@ -9,11 +9,13 @@ using OsuScoreStats.Data.Database.Repositories.Interfaces;
 using OsuScoreStats.Data.OsuEntities.Enums;
 using OsuScoreStats.ScoreFetcher.BackgroundServices;
 using OsuScoreStats.ScoreFetcher.Calculations;
+using OsuScoreStats.ScoreFetcher.Jobs;
 using OsuScoreStats.ScoreFetcher.OsuApi;
 using OsuScoreStats.ScoreFetcher.OsuEntityToDtoService;
 using OsuScoreStats.ScoreFetcher.Processing;
 using Polly;
 using Polly.Extensions.Http;
+using Quartz;
 using Serilog;
 
 var builder = Host.CreateApplicationBuilder();
@@ -80,6 +82,16 @@ builder.Services.AddSingleton<ICacheStore, CacheStore>();
 // Background services
 builder.Services.AddHostedService<LeaderboardSeedingService>();
 builder.Services.AddHostedService<FirehoseService>();
+
+// Quartz job for removing restricted user scores and updating usernames
+builder.Services.AddQuartz(q =>
+{
+    q.ScheduleJob<UpdateUserAndScoreDataJob>(trigger => trigger
+        .WithIdentity("User and score check job")
+        .WithSchedule(CronScheduleBuilder
+            .DailyAtHourAndMinute(0, 0)
+            .InTimeZone(TimeZoneInfo.Utc)));
+});
 
 // Logs
 builder.Logging.ClearProviders();

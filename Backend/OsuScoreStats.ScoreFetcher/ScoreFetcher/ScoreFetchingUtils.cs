@@ -44,6 +44,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
     /// <returns>List of significant <see cref="APIScore"/>s</returns>
     public async Task<List<APIScore>> GetSignificantScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
+        if (scores.Count == 0) return [];
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
         var significantScores = scores.Where(s => checkResults[s.Id]).ToList();
         
@@ -64,6 +65,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     public async Task SaveUserDataFromScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
+        if (scores.Count == 0) return;
         List<APIUser> users;
 
         // If scores don't have user data, fetch it additionally (in case we use the firehose)

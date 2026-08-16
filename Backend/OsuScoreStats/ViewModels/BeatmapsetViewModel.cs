@@ -1,5 +1,5 @@
-using OsuScoreStats.DbService.Entities;
-using OsuScoreStats.OsuApi.Enums;
+using OsuScoreStats.Data.Database.Entities;
+using OsuScoreStats.Data.OsuEntities.Enums;
 
 namespace OsuScoreStats.ViewModels;
 

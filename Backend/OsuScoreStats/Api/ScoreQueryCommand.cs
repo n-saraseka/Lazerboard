@@ -1,5 +1,5 @@
-using OsuScoreStats.DbService.Entities;
-using OsuScoreStats.OsuApi.Enums;
+using OsuScoreStats.Data.Database.Entities;
+using OsuScoreStats.Data.OsuEntities.Enums;
 
 namespace OsuScoreStats.Api;
 
@@ -11,7 +11,7 @@ namespace OsuScoreStats.Api;
 public class ScoreQueryCommand
 {
     /// <summary>
-    /// An array with allowed <see cref="Score.Mode"/>s
+    /// An array with allowed <see cref="Mode"/>s
     /// </summary>
     public Mode[] Modes { get; set; } = [];
 

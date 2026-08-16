@@ -2,16 +2,44 @@ networks:
   main:
 
 services:
-  backend:
-    build: ./Backend
+  migrations:
+    build:
+      context: ./Backend
+      dockerfile: ./OsuScoreStats.Data/Dockerfile
     depends_on:
       "db":
         condition: service_healthy
     env_file:
+      - prod.env
+    restart: on-failure:1
+    networks:
+      - main
+  
+  scorefetcher:
+    build:
+      context: ./Backend
+      dockerfile: ./OsuScoreStats.ScoreFetcher/Dockerfile
+    depends_on:
+      - migrations
+    env_file:
+      prod.env
+    volumes:
+      - ./logs/scorefetcher:/app/Logs
+      - ./BeatmapCache:/app/BeatmapCache
+    restart: unless-stopped
+    networks:
+      - main
+  
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: ./OsuScoreStats/Dockerfile
+    depends_on:
+      - migrations
+    env_file:
       prod.env
     volumes:
       - ./logs/backend:/app/Logs
-      - ./BeatmapCache:/app/BeatmapCache
       - ./keys:/root/.aspnet/DataProtection-Keys
     restart: unless-stopped
     networks:
@@ -32,12 +60,8 @@ services:
   
   db:
     image: postgres:18
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=lazerleaderboards
-      - POSTGRES_HOST=localhost
-      - PGDATA=/data/postgres
+    env_file:
+      - dev.env
     volumes:
       - ./db:/data/postgres
     restart: unless-stopped

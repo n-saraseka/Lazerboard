@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OsuScoreStats.Api.Dtos;
-using OsuScoreStats.DbService.Repositories.Interfaces;
-using OsuScoreStats.OsuApi.Enums;
+using OsuScoreStats.Data.Database.Repositories.Interfaces;
+using OsuScoreStats.Data.OsuEntities.Enums;
 using OsuScoreStats.ViewModels;
 
 namespace OsuScoreStats.Controllers;

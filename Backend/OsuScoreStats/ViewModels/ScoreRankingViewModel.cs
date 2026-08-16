@@ -1,5 +1,5 @@
 using OsuScoreStats.Api.Dtos;
-using OsuScoreStats.DbService.Entities;
+using OsuScoreStats.Data.Database.Entities;
 
 namespace OsuScoreStats.ViewModels;
 

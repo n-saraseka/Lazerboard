@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OsuScoreStats.DbService.Repositories.Interfaces;
+using OsuScoreStats.Data.Database.Repositories.Interfaces;
 using OsuScoreStats.ViewModels;
 
 namespace OsuScoreStats.Controllers;

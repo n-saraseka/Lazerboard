@@ -1,4 +1,4 @@
-using OsuScoreStats.DbService.Entities;
+using OsuScoreStats.Data.Database.Entities;
 
 namespace OsuScoreStats.Api.Dtos;
 

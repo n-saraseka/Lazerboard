@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OsuScoreStats.Api.Dtos;
-using OsuScoreStats.DbService.Entities;
-using OsuScoreStats.DbService.Repositories.Interfaces;
-using OsuScoreStats.OsuApi.Enums;
+using OsuScoreStats.Data.Database.Repositories.Interfaces;
+using OsuScoreStats.Data.OsuEntities.Enums;
 
 namespace OsuScoreStats.Api;
 

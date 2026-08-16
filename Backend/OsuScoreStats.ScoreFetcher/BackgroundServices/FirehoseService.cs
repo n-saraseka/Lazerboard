@@ -3,9 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OsuScoreStats.Data.OsuEntities.OsuApiEntities;
 using OsuScoreStats.ScoreFetcher.Processing;
 
-namespace OsuScoreStats.ScoreFetcher.ScoreFetcher;
+namespace OsuScoreStats.ScoreFetcher.BackgroundServices;
 
 public class FirehoseService : BackgroundService
 {
@@ -39,9 +40,17 @@ public class FirehoseService : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
             var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            var utils = scope.ServiceProvider.GetRequiredService<ScoreFetchingUtils>();
+            var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
 
-            await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+            if (_seedingState.IsSeeding)
+            {
+                await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+            }
+            else
+            {
+                await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+            }
         }
     }
     
@@ -50,10 +59,10 @@ public class FirehoseService : BackgroundService
     /// </summary>
     /// <param name="apiFetcher">A <see cref="IApiFetcher"/> service</param>
     /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
-    /// <param name="utils">A <see cref="ScoreFetchingUtils"/> service</param>
+    /// <param name="utils">A <see cref="IScoreFetchingUtils"/> service</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FetchFromFirehoseAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor,
-        ScoreFetchingUtils utils, CancellationToken stoppingToken)
+        IScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
         _logger.Log(LogLevel.Information, "Looking up scores from the firehose. Cursor: {cursor}", _cursor);
             
@@ -80,10 +89,13 @@ public class FirehoseService : BackgroundService
         {
             _cursor = scoresResponse.Cursor;
             _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
-            
-            if (scores.Length == 0)
+
+            var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+            _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
+
+            if (significantScores.Count == 0)
             {
-                _logger.Log(LogLevel.Information, "No scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
+                _logger.Log(LogLevel.Information, "No significant scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
                     _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
                 _repeatExponent++;
                 var interval = _apiInterval * Math.Pow(2, _repeatExponent);
@@ -91,38 +103,65 @@ public class FirehoseService : BackgroundService
                 return;
             }
             _repeatExponent = 0;
-
-            // If we are in the middle of seeding the database, we only care for scores set on existing beatmaps
-            // to catch up on new scores from already processed maps.
-            if (_seedingState.IsSeeding)
-            {
-                var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-                var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
-                var existingBeatmapIds = existingBeatmaps.Select(s => s.Id).ToList();
-                scores = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToArray();
-            }
-
-            var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-            _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
-
-            if (significantScores.Count == 0) return;
             
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                
-            // We only need to catch up on new beatmaps in case we've finished seeding the database
-            if (!_seedingState.IsSeeding)
-            {
-                var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
-                var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
-                var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
-                _logger.Log(LogLevel.Information, "NewBeatmapIds: {ids}", newBeatmapIds);
-                var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
             
+            // Process new beatmaps and beatmapsets first if necessary
+            var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
+            var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
+            var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
+
+            if (newBeatmapIds.Count > 0)
+            {
+                var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
                 var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct().ToList();
                 await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
                 await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
             }
             
+            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+        }
+    }
+
+    /// <summary>
+    /// Get scores from the firehose endpoint and filter them to ones from maps that are already in the database
+    /// </summary>
+    /// <param name="apiFetcher">A <see cref="IApiFetcher"/> service</param>
+    /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
+    /// <param name="utils">A <see cref="IScoreFetchingUtils"/> service</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task FetchExistingBeatmapScoresAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor,
+        IScoreFetchingUtils utils, CancellationToken stoppingToken)
+    {
+        _logger.Log(LogLevel.Information, "Looking up scores from the firehose. Cursor: {cursor}", _cursor);
+            
+        var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
+        var scores = scoresResponse.Scores;
+
+        var scoresToProcess = new List<APIScore>();
+        
+        // Collect scores while there is a good amount of them in ScoresResponse.Scores
+        while (scoresResponse.Scores.Length > 100)
+        {
+            scoresToProcess.AddRange(scores);
+            _cursor = scoresResponse.Cursor;
+            _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
+            
+            scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
+            scores = scoresResponse.Scores;
+        }
+        
+        var beatmapIds = scoresToProcess.Select(s => s.BeatmapId).Distinct().ToList();
+        var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
+        var existingBeatmapIds = existingBeatmaps.Select(s => s.Id).ToList();
+        scoresToProcess = scoresToProcess.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
+        
+        var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
+        _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
+
+        if (significantScores.Count > 0)
+        {
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }
     }

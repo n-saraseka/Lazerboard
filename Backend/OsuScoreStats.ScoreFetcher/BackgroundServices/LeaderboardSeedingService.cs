@@ -6,7 +6,7 @@ using OsuScoreStats.Data.OsuEntities.Enums;
 using OsuScoreStats.Data.OsuEntities.OsuApiEntities;
 using OsuScoreStats.ScoreFetcher.Processing;
 
-namespace OsuScoreStats.ScoreFetcher.ScoreFetcher;
+namespace OsuScoreStats.ScoreFetcher.BackgroundServices;
 
 public class LeaderboardSeedingService : BackgroundService
 {
@@ -47,7 +47,7 @@ public class LeaderboardSeedingService : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
             var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            var utils = scope.ServiceProvider.GetRequiredService<ScoreFetchingUtils>();
+            var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
 
             var continueSeeding = await FetchLeaderboardsAsync(apiFetcher, dataProcessor, utils, stoppingToken);
             if (!continueSeeding)
@@ -63,11 +63,11 @@ public class LeaderboardSeedingService : BackgroundService
     /// </summary>
     /// <param name="apiFetcher">A <see cref="IApiFetcher"/> service</param>
     /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
-    /// <param name="utils">A <see cref="ScoreFetchingUtils"/> service</param>
+    /// <param name="utils">A <see cref="IScoreFetchingUtils"/> service</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>True if seeding should continue, false otherwise</returns>
     private async Task<bool> FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
-        ScoreFetchingUtils utils, CancellationToken stoppingToken)
+        IScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
         _logger.Log(LogLevel.Information, "Searching beatmapsets. Cursor: {cursor}", _cursor);
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);

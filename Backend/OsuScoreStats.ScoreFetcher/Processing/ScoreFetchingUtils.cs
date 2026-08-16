@@ -1,10 +1,9 @@
 using OsuScoreStats.Data.Database.Entities;
 using OsuScoreStats.Data.OsuEntities.OsuApiEntities;
-using OsuScoreStats.ScoreFetcher.Processing;
 
-namespace OsuScoreStats.ScoreFetcher.ScoreFetcher;
+namespace OsuScoreStats.ScoreFetcher.Processing;
 
-public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFetcher, IScoreProcessor scoreProcessor)
+public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFetcher, IScoreProcessor scoreProcessor) : IScoreFetchingUtils
 {
     /// <summary>
     /// Save all beatmapset data from <see cref="APIBeatmapset"/>s (beatmapset creators and beatmapsets)

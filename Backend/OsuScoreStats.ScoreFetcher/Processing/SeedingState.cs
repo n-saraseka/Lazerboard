@@ -1,4 +1,4 @@
-namespace OsuScoreStats.ScoreFetcher.ScoreFetcher;
+namespace OsuScoreStats.ScoreFetcher.Processing;
 
 public class SeedingState: ISeedingState
 {

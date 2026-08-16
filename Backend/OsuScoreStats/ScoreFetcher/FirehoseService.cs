@@ -101,26 +101,25 @@ public class FirehoseService : BackgroundService
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
             _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 
-            if (significantScores.Count > 0)
-            {
-                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+            if (significantScores.Count == 0) return;
+            
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
                 
-                // We only need to catch up on new beatmaps in case we've finished seeding the database
-                if (!_seedingState.IsSeeding)
-                {
-                    var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
-                    var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
-                    var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
-                    _logger.Log(LogLevel.Information, "NewBeatmapIds: {ids}", newBeatmapIds);
-                    var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
+            // We only need to catch up on new beatmaps in case we've finished seeding the database
+            if (!_seedingState.IsSeeding)
+            {
+                var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
+                var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
+                var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
+                _logger.Log(LogLevel.Information, "NewBeatmapIds: {ids}", newBeatmapIds);
+                var beatmaps = await apiFetcher.GetBeatmapsAsync(newBeatmapIds, stoppingToken);
             
-                    var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct().ToList();
-                    await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
-                    await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
-                }
-            
-                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                var beatmapsets = beatmaps.Select(b => b.Beatmapset).Distinct().ToList();
+                await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
+                await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
             }
+            
+            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }
     }
 }

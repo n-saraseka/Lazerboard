@@ -19,7 +19,7 @@ namespace OsuScoreStats.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
@@ -27,7 +27,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmap", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Beatmap", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -90,7 +90,7 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("beatmaps", (string)null);
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmapset", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Beatmapset", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -127,7 +127,7 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("beatmapsets", (string)null);
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Country", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Country", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text")
@@ -144,7 +144,7 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("countries", (string)null);
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Score", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Score", b =>
                 {
                     b.Property<decimal>("Id")
                         .ValueGeneratedOnAdd()
@@ -224,7 +224,7 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("scores", (string)null);
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.User", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -251,9 +251,9 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmap", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Beatmap", b =>
                 {
-                    b.HasOne("OsuScoreStats.DbService.Entities.Beatmapset", "Beatmapset")
+                    b.HasOne("OsuScoreStats.Data.Database.Entities.Beatmapset", "Beatmapset")
                         .WithMany()
                         .HasForeignKey("BeatmapsetId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -263,9 +263,9 @@ namespace OsuScoreStats.Migrations
                     b.Navigation("Beatmapset");
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Beatmapset", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Beatmapset", b =>
                 {
-                    b.HasOne("OsuScoreStats.DbService.Entities.User", "User")
+                    b.HasOne("OsuScoreStats.Data.Database.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .HasConstraintName("fk_beatmapsets_users_user_id");
@@ -273,16 +273,16 @@ namespace OsuScoreStats.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.Score", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.Score", b =>
                 {
-                    b.HasOne("OsuScoreStats.DbService.Entities.Beatmap", "Beatmap")
+                    b.HasOne("OsuScoreStats.Data.Database.Entities.Beatmap", "Beatmap")
                         .WithMany()
                         .HasForeignKey("BeatmapId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_scores_beatmaps_beatmap_id");
 
-                    b.HasOne("OsuScoreStats.DbService.Entities.User", "User")
+                    b.HasOne("OsuScoreStats.Data.Database.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -294,9 +294,9 @@ namespace OsuScoreStats.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("OsuScoreStats.DbService.Entities.User", b =>
+            modelBuilder.Entity("OsuScoreStats.Data.Database.Entities.User", b =>
                 {
-                    b.HasOne("OsuScoreStats.DbService.Entities.Country", "Country")
+                    b.HasOne("OsuScoreStats.Data.Database.Entities.Country", "Country")
                         .WithMany()
                         .HasForeignKey("CountryCode")
                         .HasConstraintName("fk_users_countries_country_code");

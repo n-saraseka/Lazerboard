@@ -76,16 +76,6 @@ public class FirehoseService : BackgroundService
         {
             _cursor = scoresResponse.Cursor;
             _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
-
-            // If we are in the middle of seeding the database, we only care for scores set on existing beatmaps
-            // to catch up on new scores from already processed maps.
-            if (_seedingState.IsSeeding)
-            {
-                var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-                var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
-                var existingBeatmapIds = existingBeatmaps.Select(s => s.Id).ToList();
-                scores = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToArray();
-            }
             
             if (scores.Length == 0)
             {
@@ -96,11 +86,18 @@ public class FirehoseService : BackgroundService
                 await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
                 return;
             }
-            else
+            _repeatExponent = 0;
+
+            // If we are in the middle of seeding the database, we only care for scores set on existing beatmaps
+            // to catch up on new scores from already processed maps.
+            if (_seedingState.IsSeeding)
             {
-                _repeatExponent = 0;
+                var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+                var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
+                var existingBeatmapIds = existingBeatmaps.Select(s => s.Id).ToList();
+                scores = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToArray();
             }
-            
+
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
             _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 

@@ -193,19 +193,16 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             {
                 var beatmapScores = matchingGroup.ToList();
 
+                var personalBests = new List<Score>();
+
                 foreach (var score in groupScores.ToList())
                 {
                     var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
-                    if (matchingScores.Count > 0)
-                    {
-                        scoreRepository.DeleteBulk(matchingScores);
-                        foreach (var s in matchingScores)
-                        {
-                            beatmapScores.Remove(s);
-                            deletedCount++;
-                        }
-                    }
+                    personalBests.AddRange(matchingScores);
                 }
+                scoreRepository.DeleteBulk(personalBests);
+                beatmapScores = beatmapScores.Where(s => !personalBests.Select(pb => pb.Id).Contains(s.Id)).ToList();
+                deletedCount += personalBests.Count;
                 
                 var newScores = 
                     groupScores.Where(b => !beatmapScores

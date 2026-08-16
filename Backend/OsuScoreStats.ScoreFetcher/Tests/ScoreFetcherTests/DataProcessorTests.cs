@@ -497,13 +497,6 @@ public class DataProcessorTests
         }).ToList();
         
         dbData.AddRange(copy);
-
-        var scoreRanks = new Dictionary<ulong, int>
-        {
-            { 4, 1 },
-            { 5, 2 },
-            { 6, 3 },
-        };
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -522,10 +515,102 @@ public class DataProcessorTests
         await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
         
         // Assert
+        var scoreRanks = new Dictionary<ulong, int>
+        {
+            { 4, 1 },
+            { 5, 2 },
+            { 6, 3 },
+        };
+
+        ulong[] deletedIds = [10, 11, 12];
+        
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
             dtos.Count() == 3 &&
             dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
-        _scoreRepository.Verify(r => r.DeleteBulk(It.IsAny<IEnumerable<Score>>()), Times.Exactly(3));
+        _scoreRepository.Verify(r => r.DeleteBulk(It.Is<IEnumerable<Score>>(dtos =>
+                dtos.Count() == 6 
+                && dtos.All(d => deletedIds.Contains(d.Id)))), Times.Once);
         _scoreRepository.Verify(r => r.UpdateBulk(It.IsAny<IEnumerable<Score>>()), Times.Never);
     }
+
+    [Test]
+    public async Task ProcessScoresAsync_PbsExist_OnlySameUserAndModeScoresAreRemoved()
+    {
+        var data = new List<APIScore>
+        {
+            new APIScore
+            {
+                Id = 5,
+                BeatmapId = 1,
+                UserId = 1,
+                TotalScore = 200,
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 6,
+                BeatmapId = 1,
+                UserId = 2,
+                TotalScore = 200,
+                Date = new DateTime(2020, 2, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 7,
+                BeatmapId = 1,
+                UserId = 3,
+                TotalScore = 150,
+                Date = new DateTime(2020, 3, 1),
+                Mode = Mode.Mania
+            },
+        };
+
+        var dbData = new List<Score>();
+        for (var i = 0; i < data.Count; i++)
+        {
+            dbData.Add(new Score
+            {
+                Id = data[i].Id - 4,
+                BeatmapId = data[i].BeatmapId,
+                UserId = data[i].UserId,
+                TotalScore = data[i].TotalScore - 1,
+                Date = new DateTime(2019, 1, i + 1),
+                Mode = data[i].Mode
+            });
+        }
+        dbData.Add(new Score
+        {
+            Id = 4,
+            BeatmapId = 1,
+            UserId = 3,
+            TotalScore = 149,
+            Date = new DateTime(2019, 1, 1),
+            Mode = Mode.Osu
+        });
+        
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+            .ReturnsAsync(dbData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
+            .Returns<APIScore>(api => new Score
+            {
+                Id = api.Id,
+                BeatmapId = api.BeatmapId,
+                TotalScore = api.TotalScore,
+                Date = api.Date,
+                UserId = api.UserId,
+                Mode = api.Mode
+            });
+        
+        // Act
+        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        
+        // Assert
+        ulong[] deletedIds = [1, 2, 3];
+        _scoreRepository.Verify(r => r.DeleteBulk(It.Is<IEnumerable<Score>>(dtos =>
+            dtos.All(d => deletedIds.Contains(d.Id)))), Times.Exactly(2));
+        _scoreRepository.Verify(r => r.DeleteBulk(It.Is<IEnumerable<Score>>(dtos =>
+            dtos.Any(d => d.Id == 4))), Times.Never);
+    } 
 }

@@ -30,7 +30,6 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <returns>A dictionary of results of checks for every score ID</returns>
     public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<APIScore> scores, CancellationToken cancellationToken)
     {
-        logger.Log(LogLevel.Information, "Checking if some of {@count} scores are significant", scores.Count());
         var dictionary = new Dictionary<ulong, bool>();
         var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
@@ -57,8 +56,12 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
             }
             else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
         }
-        logger.Log(LogLevel.Information, "Significant score IDs: {@scoreIds}", 
-            dictionary.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToList());
+
+        if (dictionary.Any(kvp => kvp.Value))
+        {
+            logger.Log(LogLevel.Information, "Significant score IDs: {@scoreIds}", 
+                dictionary.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToList());
+        }
         
         return dictionary;
     }

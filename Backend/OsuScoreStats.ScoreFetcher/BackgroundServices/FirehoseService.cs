@@ -87,11 +87,10 @@ public class FirehoseService : BackgroundService
         }
         else
         {
-            _cursor = scoresResponse.Cursor;
-            _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
+            _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores", 
+                scores.Length);
 
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-            _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 
             if (significantScores.Count == 0)
             {
@@ -133,8 +132,6 @@ public class FirehoseService : BackgroundService
     private async Task FetchExistingBeatmapScoresAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor,
         IScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
-        _logger.Log(LogLevel.Information, "Looking up scores from the firehose. Cursor: {cursor}", _cursor);
-            
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
 
@@ -145,7 +142,6 @@ public class FirehoseService : BackgroundService
         {
             scoresToProcess.AddRange(scores);
             _cursor = scoresResponse.Cursor;
-            _logger.Log(LogLevel.Information, "NewCursor: {cursor}", _cursor);
             
             scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
             scores = scoresResponse.Scores;
@@ -153,9 +149,10 @@ public class FirehoseService : BackgroundService
         
         var existingBeatmapIds = await dataProcessor.GetBetmapIdsWithScoresAsync(stoppingToken);
         scoresToProcess = scoresToProcess.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
+        _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores", 
+            scoresToProcess.Count);
         
         var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
-        _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
 
         if (significantScores.Count > 0)
         {

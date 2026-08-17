@@ -211,8 +211,6 @@ public class OsuApiService
 
         APIBeatmap[] beatmaps = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
 
-        _logger.Log(LogLevel.Information, "Beatmaps received: {beatmapsCount}", ids.Count);
-
         return beatmaps;
     }
 
@@ -240,8 +238,6 @@ public class OsuApiService
             ct);
 
         APIUser[] users = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
-
-        _logger.Log(LogLevel.Information, "Users received: {usersCount}", ids.Count);
 
         return users;
     }

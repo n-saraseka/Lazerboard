@@ -34,7 +34,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await beatmapsetRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New beatmapsets: {createdCount}", beatmapsetDtos.Count());
         }
         catch (NpgsqlException exception)
         {
@@ -60,7 +59,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await beatmapRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New beatmaps: {createdCount}", beatmapDtos.Count());
         }
         catch (NpgsqlException exception)
         {
@@ -93,7 +91,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await countryRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New countries: {createdCount}", countryDtos.Count());
         }
         catch (NpgsqlException exception)
         {
@@ -119,7 +116,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await userRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
         }
         catch (NpgsqlException exception)
         {
@@ -144,7 +140,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         try
         {
             await userRepository.SaveChangesAsync(ct);
-            logger.Log(LogLevel.Information, "New users: {createdCount}", newUsers.Count());
         }
         catch (NpgsqlException exception)
         {

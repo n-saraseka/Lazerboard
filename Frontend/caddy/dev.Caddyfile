@@ -1,8 +1,5 @@
-{
-    local_certs
-}
-
 osuscore.stats {
+    tls internal
     encode gzip
     
     handle /api/* {

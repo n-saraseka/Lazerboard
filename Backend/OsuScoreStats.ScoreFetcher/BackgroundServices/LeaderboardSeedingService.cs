@@ -35,13 +35,6 @@ public class LeaderboardSeedingService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!_seedingState.IsSeeding) return;
-        
-        using (var dataScope = _serviceProvider.CreateScope()) 
-        {
-            var dataProcessor = dataScope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            await dataProcessor.RemoveBeatmapsWithNoScoresAsync(stoppingToken);
-        }
-        
         while (!stoppingToken.IsCancellationRequested)
         {
             using var scope = _serviceProvider.CreateScope();

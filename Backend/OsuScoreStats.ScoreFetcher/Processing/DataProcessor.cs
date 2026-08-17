@@ -244,19 +244,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         }
     }
 
-    public Task<List<int>> GetBetmapIdsWithScoresAsync(CancellationToken ct) =>
-        scoreRepository.GetAll().Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
-    
-    /// Remove beatmaps that have no scores from the database.
+    /// <summary>
+    /// Get all <see cref="Score.BeatmapId"/>s from the scores table
     /// </summary>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <remarks>To be called ONLY before database seeding, if necessary.</remarks>
-    public async Task RemoveBeatmapsWithNoScoresAsync(CancellationToken ct)
-    {
-        var beatmapIds = await GetBetmapIdsWithScoresAsync(ct);
-        var beatmapsWithNoScores = await beatmapRepository.GetAll().Where(s => !beatmapIds.Contains(s.Id)).ToListAsync(ct);
-        beatmapRepository.DeleteBulk(beatmapsWithNoScores);
-        await beatmapRepository.SaveChangesAsync(ct);
-        logger.Log(LogLevel.Information, "Removed: {deletedBeatmapsCount} beatmaps with no scores", beatmapsWithNoScores.Count);
-    }
+    /// <returns>A <see cref="List{int}"/> with all beatmap IDs</returns>
+    public Task<List<int>> GetBetmapIdsWithScoresAsync(CancellationToken ct) =>
+        scoreRepository.GetAll().Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
 }

@@ -69,7 +69,6 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<bool> FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
         IScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
-        _logger.Log(LogLevel.Information, "Searching beatmapsets. Cursor: {cursor}", _cursor);
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
         _cursor = beatmapsetsResponse.Cursor;
         
@@ -77,7 +76,6 @@ public class LeaderboardSeedingService : BackgroundService
 
         if (beatmapsets.Count == 0)
         {
-            _logger.Log(LogLevel.Information, "No beatmapsets found.");
             if (_repeatExponent >= 4)
             {
                 _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Database seeding is complete", 
@@ -92,6 +90,8 @@ public class LeaderboardSeedingService : BackgroundService
         }
         else
         {
+            _logger.Log(LogLevel.Information, "Processing a batch of {beatmapsetCount} beatmapsets", 
+                beatmapsets.Count);
             await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
         
             var beatmaps = new List<APIBeatmap>();
@@ -99,30 +99,25 @@ public class LeaderboardSeedingService : BackgroundService
                 beatmaps.AddRange(beatmapset.Beatmaps);
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
             
-            var scores = new List<APIScore>();
-            
             foreach (var beatmap in beatmaps)
             {
-                var beatmapScores = new List<BeatmapScores>();
+                var scores = new List<APIScore>();
             
                 foreach (var val in Enum.GetValues<Mode>())
                 {
                     if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
-                    _logger.Log(LogLevel.Information, "Getting leaderboard scores. BeatmapID: {id}; Mode: {mode}", beatmap.Id, val);
-                    beatmapScores.Add(await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken));
+                    var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken);
+                    scores.AddRange(beatmapScores.Scores);
                 }
-            
-                scores.AddRange(beatmapScores.SelectMany(bs => bs.Scores));
-            }
-        
-            var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-            significantScores = significantScores.DistinctBy(s => s.Id).ToList();
-            _logger.Log(LogLevel.Information, "SignificantScoreCount: {count}", significantScores.Count);
+                
+                var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+                significantScores = significantScores.DistinctBy(s => s.Id).ToList();
 
-            if (significantScores.Count > 0)
-            {
-                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                if (significantScores.Count > 0)
+                {
+                    await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+                    await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                }
             }
         }
 

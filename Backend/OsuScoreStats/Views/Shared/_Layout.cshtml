@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>@ViewData["Title"] / OsuScoreStats</title>
+    <title>@ViewData["Title"] / Lazerboard</title>
     <link rel="stylesheet" href="/styles/styles.css">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
 <header>
     <div class="logo-navigation">
-        <strong>OsuScoreStats</strong>
+        <strong>Lazerboard</strong>
         <ul class="navigation">
             <li>
                 <a asp-controller="General" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>

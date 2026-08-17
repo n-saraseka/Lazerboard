@@ -151,9 +151,7 @@ public class FirehoseService : BackgroundService
             scores = scoresResponse.Scores;
         }
         
-        var beatmapIds = scoresToProcess.Select(s => s.BeatmapId).Distinct().ToList();
-        var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
-        var existingBeatmapIds = existingBeatmaps.Select(s => s.Id).ToList();
+        var existingBeatmapIds = await dataProcessor.GetBetmapIdsWithScoresAsync(stoppingToken);
         scoresToProcess = scoresToProcess.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
         
         var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);

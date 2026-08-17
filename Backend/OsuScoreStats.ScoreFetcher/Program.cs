@@ -103,8 +103,6 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ScoreDataContext>();
-    await db.Database.MigrateAsync();
     var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
     var cancellationToken = CancellationToken.None;
     await backpopulator.BackpopulateAsync(cancellationToken);

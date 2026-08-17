@@ -58,11 +58,13 @@ public class UpdateUserAndScoreDataJob : IJob
         
         var markedAt = DateTime.UtcNow;
         var scoresMarkedForDeletion = scoresToRemove.Select(s => new ScorePendingDeletion
-        {
-            MarkedAt = markedAt,
-            ScoreId = s.Id
-        });
+            {
+                MarkedAt = markedAt,
+                ScoreId = s.Id
+            })
+            .ToList();
         _scorePendingDeletionRepository.CreateBulk(scoresMarkedForDeletion);
+        _logger.Log(LogLevel.Information, "Marked {markedScoresCount} for deletion", scoresMarkedForDeletion.Count);
         
         var userDtos = apiUsers.Select(_entityToDtoService.UserEntityToDto).ToList();
         _userRepository.UpdateBulk(userDtos);
@@ -72,28 +74,49 @@ public class UpdateUserAndScoreDataJob : IJob
     private async Task CheckPendingRemovedScores()
     {
         var pendingScores = await _scorePendingDeletionRepository.GetAllWithUserData();
-        // We want to check users with pending scores that are past the confirmation threshold
-        pendingScores = pendingScores
+        
+        // If a score has a PP value this high, it's likely the user has been restricted for good, and we can check them ASAP.
+        // Hopefully top players won't push the boundaries of PP to this extreme...
+        var suspiciousScores = pendingScores
+            .Where(s =>
+                s.Score.PP >= 3000 
+                && DateTime.UtcNow - s.MarkedAt >= TimeSpan.FromDays(_confirmDeletionThreshold / 4))
+            .ToList();
+        // Otherwise procedure is the same.
+        var scoresPastTheThreshold = pendingScores
             .Where(s => DateTime.UtcNow - s.MarkedAt >= TimeSpan.FromDays(_confirmDeletionThreshold))
             .ToList();
-        var userIds = pendingScores.Select(s => s.Score.User.Id).Distinct().ToList();
+
+        var scoresToCheck = suspiciousScores
+            .Concat(scoresPastTheThreshold)
+            .DistinctBy(s => s.Id)
+            .ToList();
+        
+        var userIds = scoresToCheck.Select(s => s.Score.User.Id).Distinct().ToList();
         
         var apiUsers = await _apiFetcher.GetUsersAsync(userIds);
         var existingUserIds = apiUsers.Select(u => u.Id).ToList();
         
-        // Remove scores from users who are still restricted past the threshold.
-        var scoresToRemove = pendingScores
+        // Remove scores from users who are still restricted.
+        var scoresToRemove = scoresToCheck
             .Where(s => !existingUserIds.Contains(s.Score.UserId))
             .Select(s => s.Score)
             .ToList();
 
         // Leave scores from users who are not restricted anymore.
-        var scoresToLeave = pendingScores
+        var scoresToLeave = scoresToCheck
             .Where(s => existingUserIds.Contains(s.Score.UserId))
             .ToList();
         
         _scorePendingDeletionRepository.DeleteBulk(scoresToLeave);
         _scoreRepository.DeleteBulk(scoresToRemove);
+        
+        var usersIdsToRemove = scoresToRemove.Select(s => s.UserId).Distinct().ToList();
+        var usersToRemove = await _userRepository.GetBulkAsync(usersIdsToRemove);
+        _userRepository.DeleteBulk(usersToRemove);
+        
         await _scoreRepository.SaveChangesAsync();
+        _logger.Log(LogLevel.Information, "Removed {deletedScoresCount} scores from {deletedUsersCount} users", 
+            scoresToRemove.Count, usersToRemove.Count);
     }
 }

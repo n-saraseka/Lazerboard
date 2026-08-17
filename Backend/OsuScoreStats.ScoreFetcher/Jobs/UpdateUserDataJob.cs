@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OsuScoreStats.Data.Database.Entities;
 using OsuScoreStats.Data.Database.Repositories.Interfaces;
 using OsuScoreStats.ScoreFetcher.OsuEntityToDtoService;
@@ -15,6 +16,7 @@ public class UpdateUserAndScoreDataJob : IJob
     private IScoreRepository _scoreRepository;
     private IScorePendingDeletionRepository _scorePendingDeletionRepository;
     private IOsuEntityToDtoService _entityToDtoService;
+    private ILogger<UpdateUserAndScoreDataJob> _logger;
     private readonly double _confirmDeletionThreshold;
 
     public UpdateUserAndScoreDataJob(IApiFetcher apiFetcher,
@@ -22,6 +24,7 @@ public class UpdateUserAndScoreDataJob : IJob
         IScoreRepository scoreRepository,
         IScorePendingDeletionRepository scorePendingDeletionRepository,
         IOsuEntityToDtoService entityToDtoService,
+        ILogger<UpdateUserAndScoreDataJob> logger,
         IConfiguration configuration)
     {
         _apiFetcher = apiFetcher;
@@ -29,6 +32,7 @@ public class UpdateUserAndScoreDataJob : IJob
         _scoreRepository = scoreRepository;
         _scorePendingDeletionRepository = scorePendingDeletionRepository;
         _entityToDtoService = entityToDtoService;
+        _logger = logger;
         
         _confirmDeletionThreshold = configuration.GetValue<double>("DeleteScoresAfter");
     }
@@ -77,11 +81,18 @@ public class UpdateUserAndScoreDataJob : IJob
         var apiUsers = await _apiFetcher.GetUsersAsync(userIds);
         var existingUserIds = apiUsers.Select(u => u.Id).ToList();
         
+        // Remove scores from users who are still restricted past the threshold.
         var scoresToRemove = pendingScores
             .Where(s => !existingUserIds.Contains(s.Score.UserId))
             .Select(s => s.Score)
             .ToList();
+
+        // Leave scores from users who are not restricted anymore.
+        var scoresToLeave = pendingScores
+            .Where(s => existingUserIds.Contains(s.Score.UserId))
+            .ToList();
         
+        _scorePendingDeletionRepository.DeleteBulk(scoresToLeave);
         _scoreRepository.DeleteBulk(scoresToRemove);
         await _scoreRepository.SaveChangesAsync();
     }

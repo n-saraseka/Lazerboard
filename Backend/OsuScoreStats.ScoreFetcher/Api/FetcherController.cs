@@ -6,13 +6,13 @@ namespace OsuScoreStats.ScoreFetcher.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class FetcherStateController(ISeedingState seedingState) : ControllerBase
+public class FetcherController(ISeedingState seedingState) : ControllerBase
 {
     /// <summary>
     /// Get the fetcher state.
     /// </summary>
     /// <returns>True if seeding, false if seeding is complete</returns>
-    [HttpGet]
+    [HttpGet("seedingstate")]
     [AllowAnonymous]
     public IActionResult GetSeedingState()
     {

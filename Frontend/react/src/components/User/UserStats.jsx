@@ -34,7 +34,7 @@ function UserStats({data}) {
     }
     
     const rankStats = {
-        labels: data.rankStats.map((item) => `#${item.rankBound}`),
+        labels: data.rankStats.map((item) => `Top ${item.rankBound}`),
         datasets: [{
             label: 'Count',
             data: data.rankStats.map((item) => item.count),

@@ -7,6 +7,7 @@ import BeatmapsetPage from './components/Pages/BeatmapsetPage.jsx';
 import ScoreRankingPage from "./components/Pages/ScoreRankingPage.jsx";
 import ManiaRankingPage from "./components/Pages/ManiaRankingPage.jsx";
 import UserSearchBar from "./components/User/UserSearchBar.jsx";
+import DatabaseState from "./components/Misc/DatabaseState.jsx";
 
 const allComponents = {
     "ScoresPage": ScoresPage,
@@ -15,6 +16,7 @@ const allComponents = {
     "ScoreRankingPage": ScoreRankingPage,
     "ManiaRankingPage": ManiaRankingPage,
     "UserSearchBar": UserSearchBar,
+    "DatabaseState": DatabaseState,
 }
 
 document.querySelectorAll(".react-app").forEach((el) => {

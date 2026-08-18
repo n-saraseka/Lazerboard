@@ -1,9 +1,9 @@
 import "chart.js/auto";
 import { Line, Bar } from 'react-chartjs-2'
 import { defaults } from 'chart.js'
-import {YearMonthFromDateTime} from "../utils/datetime-things.js";
-import {getDifficultyColor} from "../utils/beatmap-things.js";
-import {getSpeedColor} from "../utils/score-things.js";
+import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
+import {getDifficultyColor} from "../../utils/beatmap-things.js";
+import {getSpeedColor} from "../../utils/score-things.js";
 
 defaults.font.family = "'Cascadia Mono', monospace";
 defaults.color = "white";

@@ -1,4 +1,4 @@
-import { getEncodedCountry } from "../utils/user-things.js";
+import { getEncodedCountry } from "../../utils/user-things.js";
 
 function UserCard({user, scoreCount}) {
     return (

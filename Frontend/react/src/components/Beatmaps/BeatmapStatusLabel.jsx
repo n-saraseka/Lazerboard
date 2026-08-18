@@ -1,4 +1,4 @@
-import {beatmapStatusEnumToText} from "../utils/beatmap-things.js";
+import {beatmapStatusEnumToText} from "../../utils/beatmap-things.js";
 
 function BeatmapStatusLabel({status}) {
     const labelText = beatmapStatusEnumToText(status);

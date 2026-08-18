@@ -1,7 +1,7 @@
 import ScoreMod from "./ScoreMod";
 import ModeWedge from "./ModeWedge.jsx";
 import {useState} from "react";
-import {dateFromDateTime} from "../utils/datetime-things.js";
+import {dateFromDateTime} from "../../utils/datetime-things.js";
 
 function ScoreCard({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);

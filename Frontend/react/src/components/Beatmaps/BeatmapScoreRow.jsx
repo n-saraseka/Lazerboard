@@ -1,7 +1,7 @@
-import ScoreMod from "./ScoreMod";
-import { dateStringFromDatetime, dateFromDateTime } from "../utils/datetime-things.js";
-import { gradeEnumToGradeLetter, gradeEnumToGradeClass } from "../utils/score-things.js";
-import {getEncodedCountry} from "../utils/user-things.js";
+import ScoreMod from "../Scores/ScoreMod";
+import { dateStringFromDatetime, dateFromDateTime } from "../../utils/datetime-things.js";
+import { gradeEnumToGradeLetter, gradeEnumToGradeClass } from "../../utils/score-things.js";
+import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 
 function BeatmapScoreRow({score, usingStandardized}) {

@@ -1,4 +1,4 @@
-import { modeEnumToString } from "../utils/beatmap-things.js";
+import { modeEnumToString } from "../../utils/beatmap-things.js";
 
 function ModeSelector({mode, allowedModes, selectedMode, onModeSwitch}) {
     return (<div className={`mode-icon-wrapper${allowedModes.includes(mode) ? ' enabled' : ' disabled'}${selectedMode === mode ? ' active' : ''}`}>

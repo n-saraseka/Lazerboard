@@ -1,12 +1,12 @@
-import ScoresGrid from './ScoresGrid';
-import ScoresTable from './ScoresTable';
-import ScoreFilters from './ScoreFilters';
+import ScoresGrid from '../Scores/ScoresGrid';
+import ScoresTable from '../Scores/ScoresTable';
+import ScoreFilters from '../Filters/ScoreFilters';
 import {useState} from "react";
-import Pagination from "./Pagination.jsx";
-import {dateStringFromDatetime} from "../utils/datetime-things.js";
-import Error from "./Error.jsx";
-import Loader from "./Loader.jsx";
-import {assembleSearchParams} from "../utils/score-things.js";
+import Pagination from "../Pagination.jsx";
+import {dateStringFromDatetime} from "../../utils/datetime-things.js";
+import Error from "../Error.jsx";
+import Loader from "../Loader.jsx";
+import {assembleSearchParams} from "../../utils/score-things.js";
 
 function ScoresPage({scores, pages, countries}) {
     const currentDate = new Date().toISOString().split("T")[0];

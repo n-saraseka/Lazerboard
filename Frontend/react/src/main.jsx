@@ -1,12 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import ScoresPage from './components/ScoresPage.jsx';
-import UserPage from './components/UserPage.jsx';
-import BeatmapsetPage from './components/BeatmapsetPage.jsx';
-import ScoreRankingPage from "./components/ScoreRankingPage.jsx";
-import ManiaRankingPage from "./components/ManiaRankingPage.jsx";
-import UserSearchBar from "./components/UserSearchBar.jsx";
+import ScoresPage from './components/Pages/ScoresPage.jsx';
+import UserPage from './components/Pages/UserPage.jsx';
+import BeatmapsetPage from './components/Pages/BeatmapsetPage.jsx';
+import ScoreRankingPage from "./components/Pages/ScoreRankingPage.jsx";
+import ManiaRankingPage from "./components/Pages/ManiaRankingPage.jsx";
+import UserSearchBar from "./components/User/UserSearchBar.jsx";
 
 const allComponents = {
     "ScoresPage": ScoresPage,

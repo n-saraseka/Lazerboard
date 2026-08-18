@@ -1,5 +1,5 @@
-import {getModData} from "../utils/score-things.js";
-import ScoreMod from "./ScoreMod.jsx";
+import {getModData} from "../../utils/score-things.js";
+import ScoreMod from "../Scores/ScoreMod.jsx";
 
 function ModSelectorRow({acronym, mods, setMods}) {
     const mod = getModData(acronym);

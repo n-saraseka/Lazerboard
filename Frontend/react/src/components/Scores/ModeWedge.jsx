@@ -1,4 +1,4 @@
-import {modeEnumToString} from "../utils/beatmap-things.js";
+import {modeEnumToString} from "../../utils/beatmap-things.js";
 
 function ModeWedge({mode}) {
     const modeString = modeEnumToString(mode);

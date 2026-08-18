@@ -1,4 +1,4 @@
-import {getModData} from "../utils/score-things.js";
+import {getModData} from "../../utils/score-things.js";
 
 function ScoreMod({acronym, speedChange}) {
     const mod = getModData(acronym);

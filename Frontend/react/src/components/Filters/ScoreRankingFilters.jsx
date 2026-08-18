@@ -1,9 +1,9 @@
-import {modeEnumToString} from "../utils/beatmap-things.js";
-import CountrySelector from "./CountrySelector.jsx";
-import ModSelector from "./ModSelector.jsx";
-import {allMods} from "../utils/score-things.js";
+import {modeEnumToString} from "../../utils/beatmap-things.js";
+import CountrySelector from "../Inputs/CountrySelector.jsx";
+import ModSelector from "../Inputs/ModSelector.jsx";
+import {allMods} from "../../utils/score-things.js";
 import {useMemo, useState} from "react";
-import CollapseUncollapseButton from "./CollapseUncollapseButton.jsx";
+import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 
 function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
     const [collapsed, setCollapsed] = useState(true);

@@ -1,10 +1,10 @@
 import {useState} from "react";
-import ScoreRankingFilters from "./ScoreRankingFilters.jsx";
-import ScoreRankingTable from "./ScoreRankingTable.jsx";
-import Pagination from "./Pagination.jsx";
-import Error from "./Error.jsx";
-import Loader from "./Loader.jsx";
-import {assembleSearchParams} from "../utils/score-things.js";
+import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
+import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
+import Pagination from "../Pagination.jsx";
+import Error from "../Error.jsx";
+import Loader from "../Loader.jsx";
+import {assembleSearchParams} from "../../utils/score-things.js";
 
 function ScoreRankingPage({countries}) {
     const [filters, setFilters] = useState({

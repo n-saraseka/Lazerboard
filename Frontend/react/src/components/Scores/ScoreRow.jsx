@@ -1,6 +1,6 @@
 import ScoreMod from "./ScoreMod";
-import {modeEnumToString} from "../utils/beatmap-things.js";
-import {getEncodedCountry} from "../utils/user-things.js";
+import {modeEnumToString} from "../../utils/beatmap-things.js";
+import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 
 function ScoreRow({score, usingStandardized}) {

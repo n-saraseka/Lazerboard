@@ -1,5 +1,5 @@
-import {getDifficultyColor, modeEnumToString} from "../utils/beatmap-things.js";
-import { timeSpanToString } from "../utils/datetime-things.js";
+import {getDifficultyColor, modeEnumToString} from "../../utils/beatmap-things.js";
+import { timeSpanToString } from "../../utils/datetime-things.js";
 import BeatmapStatusLabel from "./BeatmapStatusLabel.jsx";
 
 function BeatmapCard({beatmap, beatmapset, selectedMode}) {

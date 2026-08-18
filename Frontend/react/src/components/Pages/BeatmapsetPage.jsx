@@ -1,13 +1,13 @@
-import DifficultyIcon from "../components/DifficultyIcon.jsx";
-import BeatmapCard from "../components/BeatmapCard.jsx";
-import BeatmapScores from "../components/BeatmapScores.jsx";
-import ModeSelector from "../components/ModeSelector.jsx";
+import DifficultyIcon from "../Beatmaps/DifficultyIcon.jsx";
+import BeatmapCard from "../Beatmaps/BeatmapCard.jsx";
+import BeatmapScores from "../Beatmaps/BeatmapScores.jsx";
+import ModeSelector from "../Filters/ModeSelector.jsx";
 import {useState} from "react";
-import MappedBy from "./MappedBy.jsx";
-import {modeEnumToString} from "../utils/beatmap-things.js";
-import Error from "./Error.jsx";
-import Loader from "./Loader.jsx";
-import Pagination from "./Pagination.jsx";
+import MappedBy from "../Beatmaps/MappedBy.jsx";
+import {modeEnumToString} from "../../utils/beatmap-things.js";
+import Error from "../Error.jsx";
+import Loader from "../Loader.jsx";
+import Pagination from "../Pagination.jsx";
 
 function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores, selectedMode}) {
     const allModes = [0, 1, 2, 3];

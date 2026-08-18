@@ -1,9 +1,9 @@
-import {modeEnumToString} from "../utils/beatmap-things.js";
-import ModSelector from "./ModSelector.jsx";
-import CountrySelector from "./CountrySelector.jsx";
+import {modeEnumToString} from "../../utils/beatmap-things.js";
+import ModSelector from "../Inputs/ModSelector.jsx";
+import CountrySelector from "../Inputs/CountrySelector.jsx";
 import {useMemo, useState} from "react";
-import {allMods} from "../utils/score-things.js";
-import CollapseUncollapseButton from "./CollapseUncollapseButton.jsx";
+import {allMods} from "../../utils/score-things.js";
+import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 
 function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
     const [collapsed, setCollapsed] = useState(true);

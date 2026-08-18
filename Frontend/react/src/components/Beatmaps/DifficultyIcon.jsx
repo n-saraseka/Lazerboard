@@ -1,4 +1,4 @@
-import { getDifficultyColor, modeEnumToString } from "../utils/beatmap-things.js";
+import { getDifficultyColor, modeEnumToString } from "../../utils/beatmap-things.js";
 
 function DifficultyIcon({difficulty, name, mode, isActive, onDifficultySwitch}) {
     return (

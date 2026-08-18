@@ -1,15 +1,15 @@
-import ScoresGrid from './ScoresGrid';
-import ScoresTable from './ScoresTable';
-import ScoreFilters from './ScoreFilters';
+import ScoresGrid from '../Scores/ScoresGrid';
+import ScoresTable from '../Scores/ScoresTable';
+import ScoreFilters from '../Filters/ScoreFilters';
 import {useState, useEffect, useCallback} from "react";
-import Pagination from "./Pagination.jsx";
-import UserCard from "./UserCard.jsx";
-import {dateStringFromDatetime} from "../utils/datetime-things.js";
-import Error from "./Error.jsx";
-import Loader from "./Loader.jsx";
-import {assembleSearchParams} from "../utils/score-things.js";
-import UserStats from "./UserStats.jsx";
-import CollapseUncollapseButton from "./CollapseUncollapseButton.jsx";
+import Pagination from "../Pagination.jsx";
+import UserCard from "../User/UserCard.jsx";
+import {dateStringFromDatetime} from "../../utils/datetime-things.js";
+import Error from "../Error.jsx";
+import Loader from "../Loader.jsx";
+import {assembleSearchParams} from "../../utils/score-things.js";
+import UserStats from "../User/UserStats.jsx";
+import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 
 function UserPage({user, scores, count, pages}) {
     const currentDate = new Date().toISOString().split("T")[0];

@@ -1,0 +1,41 @@
+lazer.board {
+    tls internal
+    encode gzip
+    
+    handle /api/* {
+        reverse_proxy backend:8080 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-For {remote_host}
+        }
+    }
+
+    handle /styles/* {
+        root * /srv/www
+        file_server
+    }
+    
+    handle /react/* {
+        root * /srv/www
+        file_server
+    }
+    
+    handle /images/* {
+        root * /srv/www
+        file_server
+    }
+    
+    handle {
+        reverse_proxy backend:8080 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-For {remote_host}
+        }
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

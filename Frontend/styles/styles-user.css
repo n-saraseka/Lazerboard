@@ -1,0 +1,84 @@
+.user-card {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 1em;
+    background-color: rgb(30, 30, 30);
+    padding: 1em;
+    border-radius: 1em;
+}
+
+.user-card-row {
+    display: flex;
+    gap: 1em;
+}
+
+.user-data {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.user-card-name {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.user-data-name {
+    display: flex;
+    gap: 0.5em;
+    align-items: flex-start;
+}
+
+.country-img {
+    height: 1.5em;
+}
+
+.user-name {
+    color: white;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.card-stats {
+    display: flex;
+    align-items: flex-start;
+    gap: 1em;
+}
+
+.card-stats-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.card-stats .card-stats-column:first-child {
+    flex: 1 1;
+}
+
+.card-stats .card-stats-column:last-child {
+    flex: 4 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 1em;
+    max-width: 100000px;
+    max-height: 100000px;
+    transition: max-height 1s ease-in-out, max-width 1s ease-in-out;
+    overflow: hidden;
+}
+
+.card-stats:has(.card-stats-column.collapsed) .card-stats-column:first-child {
+    align-items: center;
+}
+
+.card-stats-column.collapsed {
+    display: none;
+}

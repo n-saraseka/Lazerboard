@@ -10,11 +10,11 @@ services:
       "db":
         condition: service_healthy
     env_file:
-      - prod.env
+      - dev.env
     restart: on-failure:1
     networks:
       - main
-  
+
   scorefetcher:
     build:
       context: ./Backend
@@ -22,14 +22,14 @@ services:
     depends_on:
       - migrations
     env_file:
-      prod.env
+      - dev.env
     volumes:
       - ./logs/scorefetcher:/app/Logs
       - ./BeatmapCache:/app/BeatmapCache
     restart: unless-stopped
     networks:
       - main
-  
+
   backend:
     build:
       context: ./Backend
@@ -37,7 +37,7 @@ services:
     depends_on:
       - migrations
     env_file:
-      prod.env
+      - dev.env
     volumes:
       - ./logs/backend:/app/Logs
       - ./keys:/root/.aspnet/DataProtection-Keys
@@ -48,7 +48,7 @@ services:
   frontend:
     build:
       context: ./Frontend
-      dockerfile: production.Dockerfile
+      dockerfile: dev.Dockerfile
     depends_on:
       - backend
     ports:

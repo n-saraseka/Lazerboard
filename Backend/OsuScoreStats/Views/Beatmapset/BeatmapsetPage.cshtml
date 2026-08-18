@@ -1,0 +1,14 @@
+@model OsuScoreStats.ViewModels.BeatmapsetViewModel
+
+@{
+    ViewBag.Title = $"{Model.Beatmapset.Artist} - {Model.Beatmapset.Title}";
+    ViewData["ActivePage"] = "beatmap";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="/styles/styles-beatmapset.css">
+}
+
+<div class="react-app" data-component="BeatmapsetPage" data-props='@Json.Serialize(Model)'></div>
+
+

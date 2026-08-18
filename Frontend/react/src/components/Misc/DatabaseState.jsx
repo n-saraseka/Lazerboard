@@ -1,38 +1,37 @@
-import {useState, useEffect, useCallback} from "react";
+import {useState, useEffect} from "react";
 
 function DatabaseState() {
-    const [fetcherState, setState] = useState("unavailable");
-
-    const getState = useCallback(async () => {
-
-        try {
-            const response = await fetch(`/api/fetcher/seedingstate`, {
-                method: "GET",
-                headers: { "Accept": "application/json" },
-            });
-
-            if (response.ok) {
-                const text = await response.text();
-                text === "true" ? setState("seeding") : setState("livescores");
-            }
-            else {
-                setState("unavailable");
-            }
-        }
-        catch (error) {
-            setState("unavailable");
-        }
-    }, [])
+    const [fetcherState, setFetcherState] = useState("loading");
 
     useEffect( () => {
+        const getState = async () => {
+            try {
+                const response = await fetch(`/api/fetcher/seedingstate`, {
+                    method: "GET",
+                    headers: { "Accept": "application/json" },
+                });
+
+                if (response.ok) {
+                    const text = await response.text();
+                    text === "true" ? setFetcherState("seeding") : setFetcherState("livescores");
+                }
+                else {
+                    setFetcherState("unavailable");
+                }
+            }
+            catch (error) {
+                setFetcherState("unavailable");
+            }
+        };
+        
         getState();
-    }, [getState]);
+    }, []);
 
     return (
         <span>Score fetcher state: <strong>
                 {
                     fetcherState === "unavailable" ? "unreachable"
-                        : fetcherState === "seeding" ? "fetching live scores" : "scanning existing leaderboards"
+                        : fetcherState === "seeding" ? "scanning existing leaderboards" : "fetching scores live"
                 }
             </strong>
         </span>

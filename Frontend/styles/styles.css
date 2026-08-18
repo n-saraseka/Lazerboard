@@ -42,6 +42,14 @@ header {
     list-style-type: none;
 }
 
+.footer-links li::after {
+    content: " | ";
+}
+
+.footer-links li:last-child::after {
+    content: "";
+}
+
 .navigation a {
     transition: color 0.3s ease;
     text-decoration: none;
@@ -63,8 +71,9 @@ header .react-app {
     width: auto;
 }
 
-.db-state {
-    align-items: center;
+.react-app.db-state {
+    display: block;
+    width: auto;
 }
 
 .search {

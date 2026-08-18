@@ -2,7 +2,7 @@
     email nicksaraseka43@gmail.com
 }
 
-lazerboard.com {
+lazerboard.melguy.com {
     encode gzip
     
     handle /api/* {

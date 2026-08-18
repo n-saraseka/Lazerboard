@@ -1,4 +1,4 @@
-osuscore.stats {
+lazer.board {
     tls internal
     encode gzip
     

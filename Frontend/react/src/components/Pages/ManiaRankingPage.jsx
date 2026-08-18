@@ -1,8 +1,8 @@
 import {useState} from "react";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
-import Pagination from "../Pagination.jsx";
-import Error from "../Error.jsx";
-import Loader from "../Loader.jsx";
+import Pagination from "../Misc/Pagination.jsx";
+import Error from "../Misc/Error.jsx";
+import Loader from "../Misc/Loader.jsx";
 import {assembleSearchParams} from "../../utils/score-things.js";
 import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
 

@@ -5,9 +5,9 @@ import ModeSelector from "../Filters/ModeSelector.jsx";
 import {useState} from "react";
 import MappedBy from "../Beatmaps/MappedBy.jsx";
 import {modeEnumToString} from "../../utils/beatmap-things.js";
-import Error from "../Error.jsx";
-import Loader from "../Loader.jsx";
-import Pagination from "../Pagination.jsx";
+import Error from "../Misc/Error.jsx";
+import Loader from "../Misc/Loader.jsx";
+import Pagination from "../Misc/Pagination.jsx";
 
 function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores, selectedMode}) {
     const allModes = [0, 1, 2, 3];

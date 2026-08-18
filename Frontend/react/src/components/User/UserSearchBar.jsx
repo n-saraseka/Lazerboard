@@ -1,6 +1,6 @@
 import {useState} from "react";
-import Error from "../Error.jsx";
-import Loader from "../Loader.jsx";
+import Error from "../Misc/Error.jsx";
+import Loader from "../Misc/Loader.jsx";
 import UserSearchResult from "./UserSearchResult.jsx";
 
 function UserSearchBar() {

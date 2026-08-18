@@ -2,10 +2,10 @@ import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
 import ScoreFilters from '../Filters/ScoreFilters';
 import {useState} from "react";
-import Pagination from "../Pagination.jsx";
+import Pagination from "../Misc/Pagination.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
-import Error from "../Error.jsx";
-import Loader from "../Loader.jsx";
+import Error from "../Misc/Error.jsx";
+import Loader from "../Misc/Loader.jsx";
 import {assembleSearchParams} from "../../utils/score-things.js";
 
 function ScoresPage({scores, pages, countries}) {

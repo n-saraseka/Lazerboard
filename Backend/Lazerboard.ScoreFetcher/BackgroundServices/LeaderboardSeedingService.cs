@@ -83,8 +83,11 @@ public class LeaderboardSeedingService : BackgroundService
         }
         else
         {
-            _logger.Log(LogLevel.Information, "Processing a batch of {beatmapsetCount} beatmapsets", 
-                beatmapsets.Count);
+            _logger.Log(LogLevel.Information, 
+                "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
+                beatmapsets.Count, 
+                DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate)),
+                DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
             await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
         
             var beatmaps = new List<APIBeatmap>();

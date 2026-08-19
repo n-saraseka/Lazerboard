@@ -1,5 +1,13 @@
 import {useState, useEffect} from "react";
 
+function getFetcherStateString(state) {
+    if (state === "loading") return "loading...";
+    if (state === "unavailable") return "unreachable";
+    if (state === "seeding") return "scanning existing leaderboards";
+    if (state === "livescores") return "fetching scores live";
+    return "unknown";
+}
+
 function DatabaseState() {
     const [fetcherState, setFetcherState] = useState("loading");
 
@@ -28,12 +36,7 @@ function DatabaseState() {
     }, []);
 
     return (
-        <span>Score fetcher state: <strong>
-                {
-                    fetcherState === "unavailable" ? "unreachable"
-                        : fetcherState === "seeding" ? "scanning existing leaderboards" : "fetching scores live"
-                }
-            </strong>
+        <span>Score fetcher state: <strong>{getFetcherStateString(fetcherState)}</strong>
         </span>
     )
 }

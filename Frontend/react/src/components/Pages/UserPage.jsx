@@ -1,7 +1,7 @@
 import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
 import ScoreFilters from '../Filters/ScoreFilters';
-import {useState, useEffect, useCallback} from "react";
+import {useState, useEffect, useCallback, useMemo} from "react";
 import Pagination from "../Misc/Pagination.jsx";
 import UserCard from "../User/UserCard.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
@@ -10,6 +10,7 @@ import Loader from "../Misc/Loader.jsx";
 import {assembleSearchParams} from "../../utils/score-things.js";
 import UserStats from "../User/UserStats.jsx";
 import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
+import {debounce} from "../../utils/server-things.js";
 
 function UserPage({user, scores, count, pages}) {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -137,6 +138,11 @@ function UserPage({user, scores, count, pages}) {
         setIsLoading(false);
     }
 
+    const debouncedGetScores = useMemo(
+        () => debounce(getScores, 500),
+        []
+    );
+
     return (<>
         <div className="card-stats">
             <div className="card-stats-column">
@@ -156,8 +162,8 @@ function UserPage({user, scores, count, pages}) {
         </div>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
-            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} refetchScores={ async (newFilters) =>
-                await getScores(newFilters, currentPage)}/>
+            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} 
+                          refetchScores={(newFilters) => debouncedGetScores(newFilters, currentPage)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
@@ -169,7 +175,7 @@ function UserPage({user, scores, count, pages}) {
                         ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                         : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
-        <Pagination page={currentPage} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
+        <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>
     </>)
 }
 

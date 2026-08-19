@@ -1,12 +1,13 @@
 import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
 import ScoreFilters from '../Filters/ScoreFilters';
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import Pagination from "../Misc/Pagination.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import {assembleSearchParams} from "../../utils/score-things.js";
+import {debounce} from "../../utils/server-things.js";
 
 function ScoresPage({scores, pages, countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -86,6 +87,11 @@ function ScoresPage({scores, pages, countries}) {
         setIsLoading(false);
     }
 
+    const debouncedGetScores = useMemo(
+        () => debounce(getScores, 500),
+        []
+    );
+
     let dateRangeString;
     if (filters.dateRange.min === '' && filters.dateRange.max === '') {
         dateRangeString = ' from today';
@@ -103,7 +109,7 @@ function ScoresPage({scores, pages, countries}) {
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
             <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}
-                          refetchScores={ async (newFilters) => await getScores(newFilters, currentPage)}/>
+                          refetchScores={(newFilters) => debouncedGetScores(newFilters, currentPage)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
@@ -115,7 +121,7 @@ function ScoresPage({scores, pages, countries}) {
                             ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                             : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>
-        <Pagination page={currentPage} pages={pageCount} onPageChange={async (newPage) => await getScores(filters, newPage)}/>
+        <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>
     </>)
 }
 

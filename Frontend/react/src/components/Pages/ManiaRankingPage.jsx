@@ -1,10 +1,11 @@
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import {assembleSearchParams} from "../../utils/score-things.js";
 import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
+import {debounce} from "../../utils/server-things.js";
 
 function ScoreRankingPage({countries, userRanking}) {
     const [filters, setFilters] = useState({
@@ -61,13 +62,19 @@ function ScoreRankingPage({countries, userRanking}) {
         
         setIsLoading(false);
     }
+    
+    const debouncedGetRankings = useMemo(
+        () => debounce(getRankings, 250),
+        [currentPage]
+    );
 
     return (<>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
             <ScoreRankingFilters isMania={true} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
-        <button className="calc-button" onClick={async () => await getRankings(filters, currentPage)}>
+        <button className="calc-button" disabled={isLoading} 
+                onClick={() => debouncedGetRankings(filters, currentPage)}>
             Get ranking
         </button>
         {userRankings.length > 0 && <h1 className="section-header">User rankings:</h1>}
@@ -82,7 +89,7 @@ function ScoreRankingPage({countries, userRanking}) {
                     </>
                 ))}
         </div>
-        <Pagination page={currentPage} pages={pageCount} onPageChange={async (newPage) => await getRankings(filters, newPage)}/>
+        <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetRankings(filters, newPage)}/>
     </>)
 }
 

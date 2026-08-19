@@ -2,6 +2,7 @@ import {useState} from "react";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import UserSearchResult from "./UserSearchResult.jsx";
+import {debounce} from "../../utils/server-things.js";
 
 function UserSearchBar() {
     const [isLoading, setIsLoading] = useState(false);
@@ -43,11 +44,13 @@ function UserSearchBar() {
 
         setIsLoading(false);
     }
+    
+    const debouncedGetUsers = debounce(getUsers, 250);
 
     return (
         <div className="search-bar">
             <div className="search">
-                <input type="text" className="search" placeholder="Search users..." onChange={(event) => getUsers(event.target.value)}/>
+                <input type="text" className="search" placeholder="Search users..." onChange={(event) => debouncedGetUsers(event.target.value)}/>
             </div>
             <div className="search-results">
                 {isError

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,6 +14,7 @@ using Lazerboard.ScoreFetcher.Jobs;
 using Lazerboard.ScoreFetcher.OsuApi;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
+using Microsoft.AspNetCore.Http;
 using Polly;
 using Polly.Extensions.Http;
 using Quartz;
@@ -93,6 +95,34 @@ builder.Services.AddQuartz(q =>
             .InTimeZone(TimeZoneInfo.Utc)));
 });
 
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "default",
+            factory: partition => new SlidingWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                Window = TimeSpan.FromSeconds(10),
+                PermitLimit = 10,
+                SegmentsPerWindow = 2,
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            }
+        ));
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers["Retry-After"] = $"{(int)retryAfter.TotalSeconds}";
+        }
+
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken);
+    };
+});
+
 // Logs
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(new LoggerConfiguration()
@@ -102,6 +132,8 @@ builder.Logging.AddSerilog(new LoggerConfiguration()
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+app.UseRateLimiter();
 
 app.MapControllers();
 

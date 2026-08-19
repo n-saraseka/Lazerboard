@@ -2,12 +2,13 @@ import DifficultyIcon from "../Beatmaps/DifficultyIcon.jsx";
 import BeatmapCard from "../Beatmaps/BeatmapCard.jsx";
 import BeatmapScores from "../Beatmaps/BeatmapScores.jsx";
 import ModeSelector from "../Filters/ModeSelector.jsx";
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import MappedBy from "../Beatmaps/MappedBy.jsx";
 import {modeEnumToString} from "../../utils/beatmap-things.js";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import Pagination from "../Misc/Pagination.jsx";
+import {debounce} from "../../utils/server-things.js";
 
 function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores, selectedMode}) {
     const allModes = [0, 1, 2, 3];
@@ -24,7 +25,7 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
     async function switchMode(mode) {
         if (!allowedModes.includes(mode)) return;
         setCurrentMode(mode);
-        await getBeatmapScores(selectedBeatmap.id, mode);
+        debouncedGetBeatmapScores(selectedBeatmap.id, mode);
     }
     
     async function switchBeatmap(id) {
@@ -36,7 +37,7 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
         if (newMode !== currentMode) {
             setCurrentMode(newMode);
         }
-        await getBeatmapScores(id, newMode);
+        debouncedGetBeatmapScores(id, newMode);
     }
 
     async function getBeatmapScores(id, mode, page = 1) {
@@ -80,6 +81,11 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
         setIsLoading(false);
     }
     
+    const debouncedGetBeatmapScores = useMemo(
+        () => debounce(getBeatmapScores, 250),
+        [currentPage]
+    );
+    
     return (<>
         <div className="beatmapset-modes">
             <div className="beatmapset-card" style={
@@ -93,7 +99,7 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
                                         mode={beatmap.mode}
                                         isActive={selectedBeatmap.id === beatmap.id}
                                         name={beatmap.difficultyName}
-                                        onDifficultySwitch={async () => await switchBeatmap(beatmap.id)}
+                                        onDifficultySwitch={() => switchBeatmap(beatmap.id)}
                                         key={index}/>))
                     }
                 </div>
@@ -104,21 +110,21 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
                     <ModeSelector mode={mode}
                                   allowedModes={allowedModes}
                                   selectedMode={currentMode}
-                                  onModeSwitch={async () => await switchMode(mode)}
+                                  onModeSwitch={() => switchMode(mode)}
                                   key={index}/>
                 ))}
             </div>
         </div>
         {isError 
             ? (<Error/>) 
-            : (isLoading 
+            : (isLoading
                 ? (<Loader/>)
                 : <>
-                    <Pagination key={currentPage} page={currentPage} pages={pageCount} onPageChange={(newPage) => 
-                        getBeatmapScores(selectedBeatmap.id, currentMode, newPage)}/>
+                    <Pagination key={currentPage} page={currentPage} pages={pageCount} onPageChange={(newPage) =>
+                        debouncedGetBeatmapScores(selectedBeatmap.id, currentMode, newPage)}/>
                     <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>
                     <Pagination key={currentPage} page={currentPage} pages={pageCount} onPageChange={(newPage) =>
-                        getBeatmapScores(selectedBeatmap.id, currentMode, newPage)}/>
+                        debouncedGetBeatmapScores(selectedBeatmap.id, currentMode, newPage)}/>
                 </>)}
         
     </>)

@@ -66,10 +66,10 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new SlidingWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                Window = TimeSpan.FromMinutes(1),
-                PermitLimit = 60,
-                SegmentsPerWindow = 10,
-                QueueLimit = 3,
+                Window = TimeSpan.FromSeconds(10),
+                PermitLimit = 10,
+                SegmentsPerWindow = 2,
+                QueueLimit = 0,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
             }
         ));

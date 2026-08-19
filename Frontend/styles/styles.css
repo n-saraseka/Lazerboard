@@ -42,6 +42,14 @@ header {
     list-style-type: none;
 }
 
+.footer-links li::after {
+    content: " | ";
+}
+
+.footer-links li:last-child::after {
+    content: "";
+}
+
 .navigation a {
     transition: color 0.3s ease;
     text-decoration: none;
@@ -60,6 +68,11 @@ header {
 }
 
 header .react-app {
+    width: auto;
+}
+
+.react-app.db-state {
+    display: block;
     width: auto;
 }
 

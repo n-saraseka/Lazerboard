@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using OsuScoreStats.Data.Database;
@@ -18,7 +18,7 @@ using Polly.Extensions.Http;
 using Quartz;
 using Serilog;
 
-var builder = Host.CreateApplicationBuilder();
+var builder = WebApplication.CreateBuilder();
 
 var dbConfig = builder.Configuration.GetSection("Database");
 
@@ -99,7 +99,11 @@ builder.Logging.AddSerilog(new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger());
 
+builder.Services.AddControllers();
+
 var app = builder.Build();
+
+app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {

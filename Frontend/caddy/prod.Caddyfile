@@ -5,12 +5,12 @@
 lazerboard.melguy.com {
     encode gzip
     
+    handle /api/fetcher/* {
+        reverse_proxy scorefetcher:8081
+    }
+    
     handle /api/* {
-        reverse_proxy backend:8080 {
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Host {host}
-            header_up X-Forwarded-For {remote_host}
-        }
+        reverse_proxy backend:8080
     }
 
     handle /styles/* {
@@ -29,11 +29,7 @@ lazerboard.melguy.com {
     }
     
     handle {
-        reverse_proxy backend:8080 {
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Host {host}
-            header_up X-Forwarded-For {remote_host}
-        }
+        reverse_proxy backend:8080
     }
 
     header {

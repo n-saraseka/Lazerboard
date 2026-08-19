@@ -5,7 +5,7 @@ services:
   migrations:
     build:
       context: ./Backend
-      dockerfile: ./OsuScoreStats.Data/Dockerfile
+      dockerfile: ./Lazerboard.Data/Dockerfile
     depends_on:
       "db":
         condition: service_healthy
@@ -18,7 +18,7 @@ services:
   scorefetcher:
     build:
       context: ./Backend
-      dockerfile: ./OsuScoreStats.ScoreFetcher/Dockerfile
+      dockerfile: ./Lazerboard.ScoreFetcher/Dockerfile
     depends_on:
       - migrations
     env_file:
@@ -35,7 +35,7 @@ services:
   backend:
     build:
       context: ./Backend
-      dockerfile: ./OsuScoreStats/Dockerfile
+      dockerfile: ./Lazerboard/Dockerfile
     depends_on:
       - migrations
     env_file:

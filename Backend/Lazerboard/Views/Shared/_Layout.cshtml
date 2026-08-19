@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>@ViewData["Title"] / Lazerboard</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+<header>
+    <div class="logo-navigation">
+        <strong>Lazerboard</strong>
+        <ul class="navigation">
+            <li>
+                <a asp-controller="General" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>
+            </li>
+            <li>
+                <a asp-controller="General" asp-action="About" class="@(ViewData["ActivePage"] == "about" ? "active" : "inactive")">About</a>
+            </li>
+            <li>
+                <a asp-controller="ScoreRanking" asp-action="ScoreRanking" class="@(ViewData["ActivePage"] == "scoreranking" ? "active" : "inactive")">Score ranking</a>
+            </li>
+            <li>
+                <a asp-controller="ScoreRanking" asp-action="ManiaMillions" class="@(ViewData["ActivePage"] == "maniamillions" ? "active" : "inactive")">Mania millions</a>
+            </li>
+        </ul>
+    </div>
+    <div class="react-app" data-component="UserSearchBar"></div>
+</header>
+<div class="container">
+    @RenderBody()
+</div>
+<footer>
+    <div>
+        <span></span>
+    </div>
+    <ul class="footer-links">
+        <li>Scores count: <strong>@await Component.InvokeAsync("ScoresCountComponent")</strong></li>
+        <li class="react-app db-state" data-component="DatabaseState"></li>
+    </ul>
+    <div>
+        <span>Made by <a href="https://osu.ppy.sh/users/8706541"><strong>SomeMelGuy</strong></a></span>
+    </div>
+    <ul class="footer-links">
+        <li><a href="https://github.com/n-saraseka/Lazerboard/"><strong>Source code</strong></a></li>
+    </ul>
+</footer>
+<script type="module" src="/react/assets/index.js"></script>
+</body>
+</html>

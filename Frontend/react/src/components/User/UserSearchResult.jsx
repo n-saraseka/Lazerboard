@@ -9,7 +9,7 @@ function UserSearchResult({user}) {
                 alt={user.country.name}
                 title={user.country.name}
                 className="country-img"/>
-            <span className="user-name">{user.username}</span>
+            <span className="search-name">{user.username}</span>
         </a>
     )
 }

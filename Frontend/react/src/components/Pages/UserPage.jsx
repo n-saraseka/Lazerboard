@@ -139,8 +139,8 @@ function UserPage({user, scores, count, pages}) {
     }
 
     const debouncedGetScores = useMemo(
-        () => debounce(getScores, 500),
-        []
+        () => debounce(getScores, 250),
+        [currentPage]
     );
 
     return (<>

@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
@@ -63,7 +63,10 @@ function ScoreRankingPage({countries, userRanking}) {
         setIsLoading(false);
     }
     
-    const debouncedGetRankings = debounce(getRankings, 500);
+    const debouncedGetRankings = useMemo(
+        () => debounce(getRankings, 250),
+        [currentPage]
+    );
 
     return (<>
         <h1 className="section-header">Score filters:</h1>

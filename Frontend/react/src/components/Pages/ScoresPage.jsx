@@ -88,8 +88,8 @@ function ScoresPage({scores, pages, countries}) {
     }
 
     const debouncedGetScores = useMemo(
-        () => debounce(getScores, 500),
-        []
+        () => debounce(getScores, 250),
+        [currentPage]
     );
 
     let dateRangeString;

@@ -3,9 +3,7 @@ networks:
 
 services:
   migrations:
-    build:
-      context: ./Backend
-      dockerfile: ./Lazerboard.Data/Dockerfile
+    image: ghcr.io/n-saraseka/lazerboard-backend:latest
     depends_on:
       "db":
         condition: service_healthy
@@ -16,9 +14,7 @@ services:
       - main
   
   scorefetcher:
-    build:
-      context: ./Backend
-      dockerfile: ./Lazerboard.ScoreFetcher/Dockerfile
+    image: ghcr.io/n-saraseka/lazerboard-scorefetcher:latest
     depends_on:
       - migrations
     env_file:
@@ -33,9 +29,7 @@ services:
       - main
   
   backend:
-    build:
-      context: ./Backend
-      dockerfile: ./Lazerboard/Dockerfile
+    image: ghcr.io/n-saraseka/lazerboard-backend:latest
     depends_on:
       - migrations
     env_file:
@@ -48,9 +42,7 @@ services:
       - main
   
   frontend:
-    build:
-      context: ./Frontend
-      dockerfile: production.Dockerfile
+    image: ghcr.io/n-saraseka/lazerboard-frontend:latest
     depends_on:
       - backend
     ports:

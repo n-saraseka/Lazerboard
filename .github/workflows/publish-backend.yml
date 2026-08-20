@@ -24,7 +24,7 @@ jobs:
     - name: Build and publish backend
       uses: docker/build-push-action@v5
       with:
-        context: ./Backend/Lazerboard.Data
+        context: ./Backend
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
   deploy:

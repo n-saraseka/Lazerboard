@@ -24,7 +24,7 @@ jobs:
     - name: Build and publish migrations
       uses: docker/build-push-action@v5
       with:
-        context: ./Backend/Lazerboard.Data
+        context: ./Backend
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.MIGRATIONS_IMAGE_NAME }}
   publish-scorefetcher:
@@ -42,7 +42,7 @@ jobs:
     - name: Build and publish score fetcher
       uses: docker/build-push-action@v5
       with:
-        context: ./Backend/Lazerboard.ScoreFetcher
+        context: ./Backend
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.SCOREFETCHER_IMAGE_NAME }}
   publish-backend:
@@ -60,7 +60,7 @@ jobs:
     - name: Build and publish backend
       uses: docker/build-push-action@v5
       with:
-        context: ./Backend/Lazerboard
+        context: ./Backend
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
   publish-frontend:

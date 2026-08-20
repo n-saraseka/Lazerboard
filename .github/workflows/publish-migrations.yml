@@ -10,7 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:latest
+  IMAGE_NAME: ${{ github.actor }}/lazerboard-migrations:latest
 
 jobs:
   publish:

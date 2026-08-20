@@ -3,7 +3,7 @@ name: Publish Score Fetcher Image
 on:
   push:
     branches: [ "master" ]
-    paths: "Frontend/**"
+    paths: "Backend/Lazerboard.ScoreFetcher/**"
 
 env:
   REGISTRY: ghcr.io

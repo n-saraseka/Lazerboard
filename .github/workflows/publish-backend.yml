@@ -49,7 +49,7 @@ jobs:
         echo "PGDATA=/data/postgres" >> prod.env &&
         echo "ASPNETCORE_ENVIRONMENT=Production" >> prod.env &&
         echo "Database__Database=${{ secrets.PSQL_DB }}" >> prod.env &&
-        echo "Database__Host=${{ secrets.PSQL_HOST }}" >> prod.env &&
+        echo "Database__Host=db" >> prod.env &&
         echo "Database__Port=${{ secrets.PSQL_PORT }}" >> prod.env &&
         echo "Database__Username=${{ secrets.PSQL_USER }}" >> prod.env &&
         echo "Database__Password=${{ secrets.PSQL_PASSWORD }}" >> prod.env &&

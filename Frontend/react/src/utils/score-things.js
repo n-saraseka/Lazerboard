@@ -156,94 +156,55 @@ export function getSpeedColor(speed) {
     return 'rgb(255, 204, 34)';
 }
 
-export function assembleSearchParams(params, filters, pageNumber) {
+export function createScoreQueryCommand(filters) {
+    let scoreQueryCommand = {};
+
     if (filters.modes !== undefined) {
-        filters.modes.forEach((mode) => {
-            if (mode.enabled) {
-                params.append("modes", mode.value.toString());
-            }
-        });
+        scoreQueryCommand.modes = filters.modes.filter(mode => mode.enabled).map(mode => mode.value);
     }
-    
+
     if (filters.dateRange !== undefined) {
-        if (filters.dateRange.min !== '') {
-            params.append("dateMin", filters.dateRange.min);
-        }
-        if (filters.dateRange.max !== '') {
-            params.append("dateMax", filters.dateRange.max);
-        }
+        scoreQueryCommand.dateRange = [filters.dateRange.min === '' ? null : filters.dateRange.min,
+            filters.dateRange.max === '' ? null : filters.dateRange.max];
     }
-    
-    if (filters.ppRange !== undefined) {
-        if (filters.rankRange.min !== null) {
-            params.append("rankMin", filters.rankRange.min);
-        }
-        if (filters.rankRange.max !== null) {
-            params.append("rankMax", filters.rankRange.max);
-        }
+
+    if (filters.rankRange !== undefined) {
+        scoreQueryCommand.rankRange = [filters.rankRange.min, filters.rankRange.max];
     }
 
     if (filters.ppRange !== undefined) {
-        if (filters.ppRange.min !== null) {
-            params.append("ppMin", filters.ppRange.min);
-        }
-        if (filters.ppRange.max !== null) {
-            params.append("ppMax", filters.ppRange.max);
-        }
+        scoreQueryCommand.ppRange = [filters.ppRange.min, filters.ppRange.max];
     }
-    
+
     if (filters.accRange !== undefined) {
-        if (filters.accRange.min !== null) {
-            params.append("accMin", filters.accRange.min);
-        }
-
-        if (filters.accRange.max !== null) {
-            params.append("accMax", filters.accRange.max);
-        }
+        scoreQueryCommand.accuracyRange = [filters.accRange.min, filters.accRange.max];
     }
-    
+
     if (filters.rateRange !== undefined) {
-        if (filters.rateRange.min !== null) {
-            params.append("speedMin", filters.rateRange.min);
-        }
-        if (filters.rateRange.max !== null) {
-            params.append("speedMax", filters.rateRange.max);
-        }
+        scoreQueryCommand.speedRange = [filters.rateRange.min, filters.rateRange.max];
     }
 
     if (filters.starRange !== undefined) {
-        if (filters.starRange.min !== null) {
-            params.append("minStars", filters.starRange.min);
-        }
-        if (filters.starRange.max !== null) {
-            params.append("maxStars", filters.starRange.max);
-        }
+        scoreQueryCommand.starRange = [filters.starRange.min, filters.starRange.max];
     }
-    
+
     if (filters.country !== undefined) {
-        if (filters.country.id !== "All") {
-            params.append("countryCode", filters.country.id);
-        }
+        scoreQueryCommand.countryCode = filters.country.id === "All" ? null : filters.country.id;
     }
-    
+
     if (filters.includeMods !== undefined) {
-        filters.includeMods.forEach((mod) => {
-            params.append("includeMods", mod);
-        })
-        params.append("lenientMode", filters.lenientMode.toString());
+        scoreQueryCommand.includeMods = filters.includeMods;
+        scoreQueryCommand.lenientMode = filters.lenientMode;
     }
 
     if (filters.excludeMods !== undefined) {
-        filters.excludeMods.forEach((mod) => {
-            params.append("excludeMods", mod);
-        })
+        scoreQueryCommand.excludeMods = filters.excludeMods;
     }
 
     if (filters.sortBy !== undefined) {
-        params.append("sort", filters.sortBy);
-        params.append("isDesc", (filters.sortDir === "desc").toString());
+        scoreQueryCommand.sortBy = filters.sortBy;
+        scoreQueryCommand.isDescending = (filters.sortDir === "desc");
     }
-
-    params.append("amount", filters.amount.toString());
-    params.append("page", pageNumber);
+    
+    return scoreQueryCommand;
 }

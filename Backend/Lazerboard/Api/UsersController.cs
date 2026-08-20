@@ -16,55 +16,26 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
     /// Get user scores
     /// </summary>
     /// <param name="userId">User ID</param>
-    /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
-    /// <param name="rankMin">Minimum map rank threshold</param>
-    /// <param name="rankMax">Maximum map rank threshold</param>
-    /// <param name="ppMin">Minimum PP threshold</param>
-    /// <param name="ppMax">Maximum PP threshold</param>
-    /// <param name="accMin">Minimum accuracy threshold</param>
-    /// <param name="accMax">Maximum accuracy threshold</param>
-    /// <param name="speedMin">Minimum speed threshold</param>
-    /// <param name="speedMax">Maximum speed threshold</param>
-    /// <param name="includeMods">Mod acronyms that should be included in all scores</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="includeMods"/></param>
-    /// <param name="excludeMods">Mod acronyms that should be excluded from all scores</param>
-    /// <param name="dateMin">Date to begin getting scores from (defaults to Unix epoch)</param>
-    /// <param name="dateMax">Date to end getting scores from (defaults to latest date in scores table)</param>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="amount">Amount of scores to return</param>
     /// <param name="page">Page (defaults to 1)</param>
-    /// <param name="sort">Parameter to sort by</param>
-    /// <param name="isDesc">Whether sort is descending or not</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>A <see cref="ScoresResponse"/></returns>
-    [HttpGet("{userId:int}/scores")]
+    [HttpPost("{userId:int}/scores")]
     [AllowAnonymous]
     public async Task<IActionResult> GetUserScoresAsync(
         int userId,
-        [FromQuery] Mode[] modes,
-        [FromQuery] int? rankMin,
-        [FromQuery] int? rankMax,
-        [FromQuery] int? ppMin,
-        [FromQuery] int? ppMax,
-        [FromQuery] double? accMin,
-        [FromQuery] double? accMax,
-        [FromQuery] double? speedMin,
-        [FromQuery] double? speedMax,
-        [FromQuery] string[] includeMods, 
-        [FromQuery] bool lenientMode, 
-        [FromQuery] string[] excludeMods,
-        [FromQuery] DateOnly? dateMin,
-        [FromQuery] DateOnly? dateMax,
+        [FromBody] ScoreQueryCommand command,
+        [FromQuery] int? page,
         [FromQuery] int? amount,
-        [FromQuery] int? page = 1,
-        [FromQuery] string? sort = "pp",
-        [FromQuery] bool isDesc = true,
         CancellationToken ct = default)
     {
         var scoresPage = page ?? 1;
         var scoresAmount = amount ?? 25;
 
         if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
-        if (includeMods.Intersect(excludeMods).Any()) return BadRequest($"{nameof(includeMods)} must not contain any mods from {nameof(excludeMods)}");
+        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
+            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         
         var user = await userRepository.GetByIdAsync(userId, ct);
         if (user == null) return NotFound("User not found");
@@ -72,25 +43,25 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         var query = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.UserId == userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
-        var targetStartDate = dateMin ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
-        var targetEndDate = dateMax ?? DateOnly.FromDateTime(latestDate);
+        var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
+        var targetEndDate = command.DateRange[1] ?? DateOnly.FromDateTime(latestDate);
         
-        var command = new ScoreQueryCommand
+        var filteredCommand = new ScoreQueryCommand
         {
-            Modes = modes,
+            Modes = command.Modes,
             DateRange = [targetStartDate, targetEndDate],
-            RankRange = [rankMin, rankMax],
-            PpRange = [ppMin, ppMax],
-            AccuracyRange = [accMin, accMax],
-            SpeedRange = [speedMin, speedMax],
-            IncludeMods = includeMods,
-            ExcludeMods = excludeMods,
-            LenientMode = lenientMode,
-            SortBy = sort,
-            IsDescending = isDesc
+            RankRange = command.RankRange,
+            PpRange = command.PpRange,
+            AccuracyRange = command.AccuracyRange,
+            SpeedRange = command.SpeedRange,
+            IncludeMods = command.IncludeMods,
+            ExcludeMods = command.ExcludeMods,
+            LenientMode = command.LenientMode,
+            SortBy = command.SortBy,
+            IsDescending = command.IsDescending
         };
         
-        query = FilterUtils.FilterScoreQuery(query, command);
+        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
         
         var count = await query.CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / scoresAmount);

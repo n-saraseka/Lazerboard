@@ -15,81 +15,48 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <summary>
     /// Get scores
     /// </summary>
-    /// <param name="modes">Gameplay modes to get scores from (Osu, Taiko, Fruits, Mania)</param>
-    /// <param name="rankMin">Minimum map rank threshold</param>
-    /// <param name="rankMax">Maximum map rank threshold</param>
-    /// <param name="ppMin">Minimum PP threshold</param>
-    /// <param name="ppMax">Maximum PP threshold</param>
-    /// <param name="accMin">Minimum accuracy threshold</param>
-    /// <param name="accMax">Maximum accuracy threshold</param>
-    /// <param name="speedMin">Minimum speed threshold</param>
-    /// <param name="speedMax">Maximum speed threshold</param>
-    /// <param name="includeMods">Mod acronyms that should be included in all scores</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="includeMods"/></param>
-    /// <param name="excludeMods">Mod acronyms that should be excluded from all scores</param>
-    /// <param name="dateMin">Date to begin getting scores from (defaults to today)</param>
-    /// <param name="dateMax">Date to end getting scores from (defaults to today)</param>
-    /// <param name="countryCode"><see cref="Country"/> code</param>
-    /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="page">Page (defaults to 1)</param>
-    /// <param name="sort">Parameter to sort by</param>
-    /// <param name="isDesc">Whether sort is descending or not</param>
-    /// <param name="ct">Cancellation token</param>
+    /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A <see cref="ScoresResponse"/></returns>
-    [HttpGet]
+    [HttpPost]
     [AllowAnonymous]
     public async Task<IActionResult> GetScoresAsync(
-        [FromQuery] Mode[] modes,
-        [FromQuery] int? rankMin,
-        [FromQuery] int? rankMax,
-        [FromQuery] int? ppMin,
-        [FromQuery] int? ppMax,
-        [FromQuery] double? accMin,
-        [FromQuery] double? accMax,
-        [FromQuery] double? speedMin,
-        [FromQuery] double? speedMax,
-        [FromQuery] string[] includeMods,
-        [FromQuery] bool lenientMode,
-        [FromQuery] string[] excludeMods,
-        [FromQuery] DateOnly? dateMin,
-        [FromQuery] DateOnly? dateMax,
-        [FromQuery] string? countryCode,
+        [FromBody] ScoreQueryCommand command,
+        [FromQuery] int? page,
         [FromQuery] int? amount,
-        [FromQuery] int? page = 1,
-        [FromQuery] string? sort = "pp",
-        [FromQuery] bool isDesc = true,
         CancellationToken ct = default)
     {
         var scoresPage = page ?? 1;
         var scoresAmount = amount ?? 25;
 
         if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
-        if (includeMods.Intersect(excludeMods).Any()) return BadRequest($"{nameof(includeMods)} must not contain any mods from {nameof(excludeMods)}");
+        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
+            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
 
         var query = scoreRepository.GetAllWithBeatmapAndUserData();
         
-        query = query.Where(s => modes.Contains(s.Mode));
-            
-        var targetStartDate = dateMin ?? DateOnly.FromDateTime(DateTime.Today);
-        var targetEndDate = dateMax ?? DateOnly.FromDateTime(DateTime.Today);
+        var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.Today);
+        var targetEndDate = command.DateRange[1] ?? DateOnly.FromDateTime(DateTime.Today);
 
-        var command = new ScoreQueryCommand
+        var filteredCommand = new ScoreQueryCommand
         {
-            Modes = modes,
+            Modes = command.Modes,
             DateRange = [targetStartDate, targetEndDate],
-            RankRange = [rankMin, rankMax],
-            PpRange = [ppMin, ppMax],
-            AccuracyRange = [accMin, accMax],
-            SpeedRange = [speedMin, speedMax],
-            IncludeMods = includeMods,
-            ExcludeMods = excludeMods,
-            LenientMode = lenientMode,
-            CountryCode = countryCode,
-            SortBy = sort,
-            IsDescending = isDesc
+            RankRange = command.RankRange,
+            PpRange = command.PpRange,
+            AccuracyRange = command.AccuracyRange,
+            SpeedRange = command.SpeedRange,
+            IncludeMods = command.IncludeMods,
+            ExcludeMods = command.ExcludeMods,
+            LenientMode = command.LenientMode,
+            CountryCode = command.CountryCode,
+            SortBy = command.SortBy,
+            IsDescending = command.IsDescending
         };
         
-        query = FilterUtils.FilterScoreQuery(query, command);
+        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
         
         var count = await query.CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / scoresAmount);
@@ -109,65 +76,42 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <summary>
     /// Get a user ranking by scores count
     /// </summary>
-    /// <param name="modes">Modes to count scores from</param>
-    /// <param name="rankMin">Minimum map rank threshold</param>
-    /// <param name="rankMax">Maximum map rank threshold</param>
-    /// <param name="ppMin">Minimum PP threshold</param>
-    /// <param name="ppMax">Maximum PP threshold</param>
-    /// <param name="accMin">Minimum accuracy threshold</param>
-    /// <param name="accMax">Maximum accuracy threshold</param>
-    /// <param name="speedMin">Minimum speed threshold</param>
-    /// <param name="speedMax">Maximum speed threshold</param>
-    /// <param name="includeMods">Mod acronyms that should be included in all scores</param>
-    /// <param name="lenientMode">Whether to allow other mods than <paramref name="includeMods"/></param>
-    /// <param name="excludeMods">Mod acronyms that should be excluded from all scores</param>
-    /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="page">Page (defaults to 1)</param>
-    /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A <see cref="UserRankingResponse"/></returns>
-    [HttpGet("ranking")]
+    [HttpPost("ranking")]
     [AllowAnonymous]
     public async Task<IActionResult> GetUserRankingAsync(
-        [FromQuery] Mode[] modes,
-        [FromQuery] int rankMin,
-        [FromQuery] int rankMax,
-        [FromQuery] int? ppMin,
-        [FromQuery] int? ppMax,
-        [FromQuery] double? accMin,
-        [FromQuery] double? accMax,
-        [FromQuery] double? speedMin,
-        [FromQuery] double? speedMax,
-        [FromQuery] string[] includeMods,
-        [FromQuery] bool lenientMode,
-        [FromQuery] string[] excludeMods,
-        [FromQuery] string? countryCode,
+        [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
         [FromQuery] int? amount,
-        CancellationToken cancellationToken)
+        CancellationToken ct = default)
     {
         var rankingPage = page ?? 1;
         var rankingAmount = amount ?? 10;
         
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
-        if (includeMods.Intersect(excludeMods).Any()) return BadRequest($"{nameof(includeMods)} must not contain any mods from {nameof(excludeMods)}");
+        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
+            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         
         var query = scoreRepository.GetAllWithUserData();
         
-        var command = new ScoreQueryCommand
+        var filteredCommand = new ScoreQueryCommand
         {
-            Modes = modes,
-            RankRange = [rankMin, rankMax],
-            PpRange = [ppMin, ppMax],
-            AccuracyRange = [accMin, accMax],
-            SpeedRange = [speedMin, speedMax],
-            IncludeMods = includeMods,
-            ExcludeMods = excludeMods,
-            LenientMode = lenientMode,
-            CountryCode = countryCode,
+            Modes = command.Modes,
+            RankRange = command.RankRange,
+            PpRange = command.PpRange,
+            AccuracyRange = command.AccuracyRange,
+            SpeedRange = command.SpeedRange,
+            IncludeMods = command.IncludeMods,
+            ExcludeMods = command.ExcludeMods,
+            LenientMode = command.LenientMode,
+            CountryCode = command.CountryCode,
         };
 
-        query = FilterUtils.FilterScoreQuery(query, command);
+        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
         var group = query
             .GroupBy(s => s.User)
@@ -178,14 +122,14 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             })
             .OrderByDescending(s => s.ScoresCount);
 
-        var count = await group.CountAsync(cancellationToken);
+        var count = await group.CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / rankingAmount);
         if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
 
         var result = await group
             .Skip((rankingPage - 1) * rankingAmount)
             .Take(rankingAmount)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
         result = result.OrderByDescending(r => r.ScoresCount).ToList();
         foreach (var userRanking in result)
         {
@@ -202,19 +146,15 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
     /// <summary>
     /// Get a user ranking by count of 1 million scores in <see cref="Mode.Mania"/>
     /// </summary>
-    /// <param name="minStars">Minimum beatmap star rating</param>
-    /// <param name="maxStars">Maximum beatmap star rating</param>
-    /// <param name="countryCode"><see cref="Country"/> to count user scores from</param>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="page">Page (defaults to 1)</param>
     /// <param name="amount">Amount of <see cref="UserRanking"/>s to return</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>A <see cref="UserRankingResponse"/></returns>
-    [HttpGet("millions")]
+    [HttpPost("millions")]
     [AllowAnonymous]
     public async Task<IActionResult> GetMillionsRankingAsync(
-        [FromQuery] double? minStars,
-        [FromQuery] double? maxStars,
-        [FromQuery] string? countryCode,
+        [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
         [FromQuery] int? amount,
         CancellationToken cancellationToken)
@@ -225,15 +165,16 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
         
         var query = scoreRepository.GetAllWithBeatmapAndUserData()
-            .Where(s => s.Mode == Mode.Mania && s.TotalScore == 1000000);
+            .Where(s => s.TotalScore == 1000000);
 
-        var command = new ScoreQueryCommand
+        var filteredCommand = new ScoreQueryCommand
         {
-            StarRange = [minStars, maxStars],
-            CountryCode = countryCode,
+            StarRange = command.StarRange,
+            CountryCode = command.CountryCode,
+            Modes = [Mode.Mania]
         };
         
-        query = FilterUtils.FilterScoreQuery(query, command);
+        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
         var group = query
             .GroupBy(s => s.User)

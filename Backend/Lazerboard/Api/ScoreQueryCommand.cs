@@ -18,32 +18,32 @@ public class ScoreQueryCommand
     /// <summary>
     /// A <see cref="List{DateOnly}"/> with two <see cref="Score.Date"/> values
     /// </summary>
-    public List<DateOnly?> DateRange { get; set; } = new();
+    public List<DateOnly?> DateRange { get; set; } = [null, null];
     
     /// <summary>
     /// A <see cref="List{int}"/> with two <see cref="Score.Rank"/> values
     /// </summary>
-    public List<int?> RankRange { get; set; } = new();
+    public List<int?> RankRange { get; set; } = [null, null];
     
     /// <summary>
     /// A <see cref="List{int}"/> with two <see cref="Score.PP"/> values
     /// </summary>
-    public List<int?> PpRange { get; set; } = new();
+    public List<int?> PpRange { get; set; } = [null, null];
     
     /// <summary>
     /// A <see cref="List{double}"/> with two <see cref="Score.Accuracy"/> values
     /// </summary>
-    public List<double?> AccuracyRange { get; set; } = new();
+    public List<double?> AccuracyRange { get; set; } = [null, null];
     
     /// <summary>
     /// A <see cref="List{double}"/> with two <see cref="Score.SpeedChange"/> values
     /// </summary>
-    public List<double?> SpeedRange { get; set; } = new();
+    public List<double?> SpeedRange { get; set; } = [null, null];
     
     /// <summary>
     /// A <see cref="List{double}"/> with two <see cref="Beatmap.Difficulty"/> values
     /// </summary>
-    public List<double?> StarRange { get; set; } = new();
+    public List<double?> StarRange { get; set; } = [null, null];
     
     /// <summary>
     /// An array of mod acronyms to include in <see cref="Score"/>s
@@ -64,11 +64,11 @@ public class ScoreQueryCommand
     /// The <see cref="Country"/> code to filter <see cref="Score"/>s by
     /// </summary>
     public string? CountryCode { get; set; }
-    
+
     /// <summary>
     /// Name of the field to sort <see cref="Score"/>s by
     /// </summary>
-    public string? SortBy { get; set; }
+    public string? SortBy { get; set; } = "PP";
     
     /// <summary>
     /// Whether sort is descending or not

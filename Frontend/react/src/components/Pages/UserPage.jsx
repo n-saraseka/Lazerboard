@@ -7,7 +7,7 @@ import UserCard from "../User/UserCard.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
-import {assembleSearchParams} from "../../utils/score-things.js";
+import {createScoreQueryCommand} from "../../utils/score-things.js";
 import UserStats from "../User/UserStats.jsx";
 import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 import {debounce} from "../../utils/server-things.js";
@@ -20,10 +20,7 @@ function UserPage({user, scores, count, pages}) {
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
-        dateRange: {
-            min: '',
-            max: ''
-        },
+        dateRange: {min: null, max: null},
         rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
@@ -81,7 +78,7 @@ function UserPage({user, scores, count, pages}) {
     const [statsError, setStatsError] = useState(false);
 
     let dateRangeString = '';
-    if (filters.dateRange.min !== '' || filters.dateRange.max !== '') {
+    if (filters.dateRange.min !== null || filters.dateRange.max !== null) {
         dateRangeString = ' from ';
         const dateStrings = [];
         dateStrings.push(filters.dateRange.min === '' ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
@@ -97,14 +94,21 @@ function UserPage({user, scores, count, pages}) {
     async function getScores(filterOptions, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
-        
+
+        const command = createScoreQueryCommand(filterOptions);
+
         const params = new URLSearchParams();
-        assembleSearchParams(params, filterOptions, pageNumber);
+        params.append("amount", filters.amount.toString());
+        params.append("page", pageNumber.toString());
         
         try {
             const response = await fetch(`/api/users/${user.id}/scores?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {

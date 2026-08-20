@@ -4,7 +4,7 @@ import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
-import {assembleSearchParams} from "../../utils/score-things.js";
+import {createScoreQueryCommand} from "../../utils/score-things.js";
 import {debounce} from "../../utils/server-things.js";
 
 function ScoreRankingPage({countries}) {
@@ -32,14 +32,21 @@ function ScoreRankingPage({countries}) {
     async function getRankings(filterOptions, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
-        
+
+        const command = createScoreQueryCommand(filterOptions);
+
         const params = new URLSearchParams();
-        assembleSearchParams(params, filterOptions, pageNumber);
+        params.append("amount", filters.amount.toString());
+        params.append("page", pageNumber.toString());
         
         try {
             const response = await fetch(`/api/scores/ranking?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {

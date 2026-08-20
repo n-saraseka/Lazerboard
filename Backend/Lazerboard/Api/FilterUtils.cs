@@ -13,49 +13,28 @@ public static class FilterUtils
     public static IQueryable<Score> FilterScoreQuery(IQueryable<Score> query,
         ScoreQueryCommand command)
     {
-        if (command.Modes.Length > 0)
-        {
-            query = query.Where(s => command.Modes.Contains(s.Mode));
-        }
+        query = query.Where(s => command.Modes.Contains(s.Mode));
         
-        if (command.DateRange.Count > 0)
-        {
-            if (command.DateRange[0] != null) query = query.Where(s => DateOnly.FromDateTime(s.Date) >= command.DateRange[0]);
-            if (command.DateRange[1] != null) query = query.Where(s => DateOnly.FromDateTime(s.Date) <= command.DateRange[1]);
-        }
+        if (command.DateRange[0] != null) query = query.Where(s => DateOnly.FromDateTime(s.Date) >= command.DateRange[0]);
+        if (command.DateRange[1] != null) query = query.Where(s => DateOnly.FromDateTime(s.Date) <= command.DateRange[1]);
         
-        if (command.RankRange.Count > 0)
-        {
-            if (command.RankRange[0] != null) query = query.Where(s => s.Rank >= command.RankRange[0]);
-            if (command.RankRange[1] != null) query = query.Where(s => s.Rank <= command.RankRange[1]);
-        }
+        if (command.RankRange[0] != null) query = query.Where(s => s.Rank >= command.RankRange[0]);
+        if (command.RankRange[1] != null) query = query.Where(s => s.Rank <= command.RankRange[1]);
 
-        if (command.PpRange.Count > 0)
-        {
-            if (command.PpRange[0] != null) query = query.Where(s => s.PP >= command.PpRange[0]);
-            if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]);
-        }
+        if (command.PpRange[0] != null) query = query.Where(s => s.PP >= command.PpRange[0]);
+        if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]);
 
-        if (command.AccuracyRange.Count > 0)
-        {
-            if (command.AccuracyRange[0] != null) query = query.Where(s => s.Accuracy >= command.AccuracyRange[0] / 100.0f);
-            if (command.AccuracyRange[1] != null) query = query.Where(s => s.Accuracy <= command.AccuracyRange[1] / 100.0f);
-        }
+        if (command.AccuracyRange[0] != null) query = query.Where(s => s.Accuracy >= command.AccuracyRange[0] / 100.0f);
+        if (command.AccuracyRange[1] != null) query = query.Where(s => s.Accuracy <= command.AccuracyRange[1] / 100.0f);
 
-        if (command.SpeedRange.Count > 0)
-        {
-            // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
-            // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
-            if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange != null);
-            if (command.SpeedRange[0] != null) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
-            if (command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
-        }
+        // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
+        // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
+        if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange != null);
+        if (command.SpeedRange[0] != null) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
+        if (command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
 
-        if (command.StarRange.Count > 0)
-        {
-            if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap.Difficulty >= command.StarRange[0]);
-            if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap.Difficulty <= command.StarRange[1]);
-        }
+        if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap.Difficulty >= command.StarRange[0]);
+        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap.Difficulty <= command.StarRange[1]);
 
         if (command.LenientMode != null)
         {

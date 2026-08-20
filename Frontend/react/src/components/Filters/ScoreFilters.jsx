@@ -94,14 +94,16 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                         <div className="filter-container">
                             <label htmlFor="rankMin">From: <input id="rankMin" name="rankMin" type="number" step={1}
                                                                   min={1} max={100} value={filters.rankRange.min ?? ''} onChange={(e) => {
-                                const allFilters = {...filters, rankRange: {...filters.rankRange, min: e.target.value}};
+                                const allFilters = {...filters, 
+                                    rankRange: {...filters.rankRange, min: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
                             </label>
                             <label htmlFor="rankMax">to: <input id="rankMax" name="rankMax" type="number" step={1}
                                                                 min={1} max={100} value={filters.rankRange.max ?? ''} onChange={(e) => {
-                                const allFilters = {...filters, rankRange: {...filters.rankRange, max: e.target.value}};
+                                const allFilters = {...filters, 
+                                    rankRange: {...filters.rankRange, max: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
@@ -115,14 +117,16 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                         <div className="filter-container">
                             <label htmlFor="ppMin">From: <input id="ppMin" name="ppMin" type="number" step={1}
                                                                 min={1} max={3000} value={filters.ppRange.min} onChange={(e) => {
-                                const allFilters = {...filters, ppRange: {...filters.ppRange, min: e.target.value}};
+                                const allFilters = {...filters, 
+                                    ppRange: {...filters.ppRange, min: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
                             </label>
                             <label htmlFor="ppMax">to: <input id="ppMax" name="ppMax" type="number" step={1}
                                                               min={1} max={3000} value={filters.ppRange.max} onChange={(e) => {
-                                const allFilters = {...filters, ppRange: {...filters.ppRange, max: e.target.value}};
+                                const allFilters = {...filters, 
+                                    ppRange: {...filters.ppRange, max: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
@@ -136,14 +140,16 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                         <div className="filter-container">
                             <label htmlFor="accMin">From: <input id="accMin" name="accMin" type="number" step={0.01}
                                                                  min={1} max={100} value={filters.accRange.min} onChange={(e) => {
-                                const allFilters = {...filters, accRange: {...filters.accRange, min: e.target.value}};
+                                const allFilters = {...filters, 
+                                    accRange: {...filters.accRange, min: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
                             </label>
                             <label htmlFor="accMax">to: <input id="accMax" name="accMax" type="number" step={0.01}
                                                                min={1} max={100} value={filters.accRange.max} onChange={(e) => {
-                                const allFilters = {...filters, accRange: {...filters.accRange, max: e.target.value}};
+                                const allFilters = {...filters, 
+                                    accRange: {...filters.accRange, max: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
@@ -157,14 +163,16 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                         <div className="filter-container">
                             <label htmlFor="rateMin">From: <input id="rateMin" name="rateMin" type="number" step={1}
                                                                   min={0} max={2} value={filters.rateRange.min} onChange={(e) => {
-                                const allFilters = {...filters, rateRange: {...filters.rateRange, min: e.target.value}};
+                                const allFilters = {...filters, 
+                                    rateRange: {...filters.rateRange, min: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
                             </label>
                             <label htmlFor="rateMax">to: <input id="rateMax" name="rateMax" type="number" step={1}
                                                                 min={0} max={2} value={filters.rateRange.max} onChange={(e) => {
-                                const allFilters = {...filters, rateRange: {...filters.rateRange, max: e.target.value}};
+                                const allFilters = {...filters, 
+                                    rateRange: {...filters.rateRange, max: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
@@ -178,14 +186,16 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                         <div className="filter-container">
                             <label htmlFor="dateStart">From: <input id="dateStart" name="dateStart" type="date"
                                                                     value={filters.dateRange.min} max={currentDate} onChange={(e) => {
-                                const allFilters = {...filters, dateRange: {...filters.dateRange, min: e.target.value}};
+                                const allFilters = {...filters, 
+                                    dateRange: {...filters.dateRange, min: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>
                             </label>
                             <label htmlFor="dateEnd">to: <input id="dateEnd" name="dateEnd" type="date"
                                                                 value={filters.dateRange.max} max={currentDate} onChange={(e) => {
-                                const allFilters = {...filters, dateRange: {...filters.dateRange, max: e.target.value}};
+                                const allFilters = {...filters, 
+                                    dateRange: {...filters.dateRange, max: e.target.value === '' ? null : e.target.value}};
                                 setFilters(allFilters);
                                 refetchScores(allFilters);
                             }}/>

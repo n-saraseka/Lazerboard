@@ -6,7 +6,7 @@ import Pagination from "../Misc/Pagination.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
-import {assembleSearchParams} from "../../utils/score-things.js";
+import {createScoreQueryCommand} from "../../utils/score-things.js";
 import {debounce} from "../../utils/server-things.js";
 
 function ScoresPage({scores, pages, countries}) {
@@ -17,10 +17,7 @@ function ScoresPage({scores, pages, countries}) {
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
-        dateRange: {
-            min: '',
-            max: ''
-        },
+        dateRange: {min: null, max: null},
         rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
@@ -44,16 +41,23 @@ function ScoresPage({scores, pages, countries}) {
     async function getScores(filterOptions, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
-        
+
+        const command = createScoreQueryCommand(filterOptions);
+
         const params = new URLSearchParams();
-        assembleSearchParams(params, filterOptions, pageNumber);
+        params.append("amount", filters.amount.toString());
+        params.append("page", pageNumber.toString());
 
         setIsLoading(true);
         
         try {
             const response = await fetch(`/api/scores?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {
@@ -93,7 +97,7 @@ function ScoresPage({scores, pages, countries}) {
     );
 
     let dateRangeString;
-    if (filters.dateRange.min === '' && filters.dateRange.max === '') {
+    if (filters.dateRange.min === null && filters.dateRange.max === null) {
         dateRangeString = ' from today';
     }
     else {

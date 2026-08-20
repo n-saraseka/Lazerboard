@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.actor }}/frontend:latest
+  IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:latest
 
 jobs:
   publish:

@@ -1,0 +1,28 @@
+name: Publish Migrations Image
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "Backend/Lazerboard.Data/Migrations"
+      - "Backend/Lazerboard.Data/Entities"
+      - "Backend/Lazerboard.Data/EntityConfigurations"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:latest
+
+jobs:
+  publish:
+    name: publish image
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login
+      run: |
+        echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    - name: Build and publish frontend
+      run: |
+        docker build ./Backend/Lazerboard.ScoreFetcher/Dockerfile --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}

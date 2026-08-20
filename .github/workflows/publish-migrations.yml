@@ -24,5 +24,5 @@ jobs:
         echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Build and publish frontend
       run: |
-        docker build ./Backend/Lazerboard.ScoreFetcher/Dockerfile --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        docker build ./Backend/Lazerboard.Data/Dockerfile --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}

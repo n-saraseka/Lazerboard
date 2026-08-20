@@ -22,9 +22,11 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Build and publish migrations
-      run: |
-        docker build ./Backend/Lazerboard.Data --tag ${{ env.REGISTRY }}/${{ env.MIGRATIONS_IMAGE_NAME }}
-        docker push ${{ env.REGISTRY }}/${{ env.MIGRATIONS_IMAGE_NAME }}
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Backend/Lazerboard.Data
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.MIGRATIONS_IMAGE_NAME }}
   publish-scorefetcher:
     needs: publish-migrations
     name: publish score fetcher image
@@ -38,9 +40,11 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Build and publish score fetcher
-      run: |
-        docker build ./Backend/Lazerboard.ScoreFetcher --tag ${{ env.REGISTRY }}/${{ env.SCOREFETCHER_IMAGE_NAME }}
-        docker push ${{ env.REGISTRY }}/${{ env.SCOREFETCHER_IMAGE_NAME }}
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Backend/Lazerboard.ScoreFetcher
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.SCOREFETCHER_IMAGE_NAME }}
   publish-backend:
     needs: publish-migrations
     name: publish backend image
@@ -54,9 +58,11 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Build and publish backend
-      run: |
-        docker build ./Backend/Lazerboard --tag ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
-        docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Backend/Lazerboard
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
   publish-frontend:
     needs: publish-backend
     name: publish frontend image
@@ -70,9 +76,12 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Build and publish frontend
-      run: |
-        docker build -f ./Frontend/production.Dockerfile . --tag ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
-        docker push ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Frontend
+        file: ./Frontend/production.Dockerfile
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
   deploy:
     needs: publish-frontend
     name: deploy container

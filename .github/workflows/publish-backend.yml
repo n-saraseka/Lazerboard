@@ -1,0 +1,25 @@
+name: Publish Backend Image
+
+on:
+  push:
+    branches: [ "master" ]
+    paths: "Backend/Lazerboard/**"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:latest
+
+jobs:
+  publish:
+    name: publish image
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login
+      run: |
+        echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    - name: Build and publish frontend
+      run: |
+        docker build ./Backend/Lazerboard/Dockerfile --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}

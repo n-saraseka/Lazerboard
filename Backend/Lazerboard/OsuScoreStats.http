@@ -1,6 +1,0 @@
-@OsuScoreStats_HostAddress = http://localhost:5019
-
-GET {{OsuScoreStats_HostAddress}}/recentscores/
-Accept: application/json
-
-###

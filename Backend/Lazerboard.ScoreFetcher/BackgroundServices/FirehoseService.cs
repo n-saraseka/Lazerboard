@@ -87,8 +87,8 @@ public class FirehoseService : BackgroundService
         }
         else
         {
-            var minDate = DateOnly.FromDateTime(scores.Min(s => s.Date));
-            var maxDate = DateOnly.FromDateTime(scores.Max(s => s.Date));
+            var minDate = scores.Min(s => s.Date);
+            var maxDate = scores.Max(s => s.Date);
             _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores between {minScoreDate} and {maxScoreDate}", 
                 scores.Length, minDate, maxDate);
 
@@ -154,8 +154,8 @@ public class FirehoseService : BackgroundService
 
         if (scoresToProcess.Count > 0)
         {
-            var minDate = DateOnly.FromDateTime(scoresToProcess.Min(s => s.Date));
-            var maxDate = DateOnly.FromDateTime(scoresToProcess.Max(s => s.Date));
+            var minDate = scoresToProcess.Min(s => s.Date);
+            var maxDate = scoresToProcess.Max(s => s.Date);
             _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores between {minScoreDate} and {maxScoreDate}", 
                 scoresToProcess.Count, minDate, maxDate);
             

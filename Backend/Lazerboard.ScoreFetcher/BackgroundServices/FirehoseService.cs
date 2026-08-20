@@ -87,8 +87,10 @@ public class FirehoseService : BackgroundService
         }
         else
         {
-            _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores", 
-                scores.Length);
+            var minDate = DateOnly.FromDateTime(scores.Min(s => s.Date));
+            var maxDate = DateOnly.FromDateTime(scores.Max(s => s.Date));
+            _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores between {minScoreDate} and {maxScoreDate}", 
+                scores.Length, minDate, maxDate);
 
             var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
 
@@ -149,15 +151,21 @@ public class FirehoseService : BackgroundService
         
         var existingBeatmapIds = await dataProcessor.GetBetmapIdsWithScoresAsync(stoppingToken);
         scoresToProcess = scoresToProcess.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
-        _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores", 
-            scoresToProcess.Count);
-        
-        var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
 
-        if (significantScores.Count > 0)
+        if (scoresToProcess.Count > 0)
         {
-            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            var minDate = DateOnly.FromDateTime(scoresToProcess.Min(s => s.Date));
+            var maxDate = DateOnly.FromDateTime(scoresToProcess.Max(s => s.Date));
+            _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores between {minScoreDate} and {maxScoreDate}", 
+                scoresToProcess.Count, minDate, maxDate);
+            
+            var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
+
+            if (significantScores.Count > 0)
+            {
+                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            }
         }
     }
 }

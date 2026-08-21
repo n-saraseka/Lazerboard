@@ -72,6 +72,9 @@ jobs:
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
         docker compose pull backend && docker compose up -d backend"
+    - name: Logout
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"
     - name: cleanup ssh
       if: always()
       run: rm -rf ~/.ssh

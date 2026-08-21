@@ -123,6 +123,9 @@ jobs:
         echo "DeleteScoresAfter=4" >> prod.env
         echo "EnableDatabaseSeeding=true" >> prod.env
         scp ./prod.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/prod.env
+    - name: Unlock GPG key for pass
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
     - name: Login
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
@@ -131,6 +134,9 @@ jobs:
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
         docker compose pull && docker compose up -d"
+    - name: Logout
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"
     - name: cleanup ssh
       if: always()
       run: rm -rf ~/.ssh

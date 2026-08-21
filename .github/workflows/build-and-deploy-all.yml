@@ -67,7 +67,9 @@ jobs:
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
   publish-frontend:
-    needs: publish-backend
+    needs: 
+      - publish-backend
+      - publish-scorefetcher
     name: publish frontend image
     runs-on: ubuntu-latest
 

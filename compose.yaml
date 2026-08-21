@@ -2,11 +2,25 @@ networks:
   main:
 
 services:
+  init:
+    image: alpine:latest
+    user: root
+    volumes:
+      - ./BeatmapCache:/app/BeatmapCache
+      - ./logs:/app/logs
+      - ./keys:/app/keys
+    command: |
+      sh -c "mkdir -p /app/BeatmapCache /app/logs/scorefetcher /app/logs/backend /app/keys &&
+             chown -R ${UID:-1000}:${GID:-1000} /app/BeatmapCache /app/logs /app/keys"
+    restart: "no"
+  
   migrations:
     image: ghcr.io/n-saraseka/lazerboard-migrations:latest
     depends_on:
       "db":
         condition: service_healthy
+      "init":
+        condition: service_completed_successfully
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - prod.env
@@ -18,6 +32,8 @@ services:
     image: ghcr.io/n-saraseka/lazerboard-scorefetcher:latest
     depends_on:
       "migrations":
+        condition: service_completed_successfully
+      "init":
         condition: service_completed_successfully
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
@@ -35,6 +51,8 @@ services:
     image: ghcr.io/n-saraseka/lazerboard-backend:latest
     depends_on:
       "migrations":
+        condition: service_completed_successfully
+      "init":
         condition: service_completed_successfully
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
@@ -76,6 +94,3 @@ services:
       retries: 5
     networks:
       - main
-
-volumes:
-  static:

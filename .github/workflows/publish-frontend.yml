@@ -41,7 +41,7 @@ jobs:
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: copy docker-compose to server
       run: |
-        scp compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
+        scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
     - name: create prod.env file
       run: |
         touch ./prod.env

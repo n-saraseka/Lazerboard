@@ -41,7 +41,7 @@ jobs:
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: copy docker-compose to server
       run: |
-        scp compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
+        scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
     - name: create prod.env file
       run: |
         touch ./prod.env
@@ -62,7 +62,7 @@ jobs:
         echo "Caching__FileTTL=120" >> prod.env
         echo "DeleteScoresAfter=4" >> prod.env
         echo "EnableDatabaseSeeding=true" >> prod.env
-        scp prod.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/prod.env
+        scp ./prod.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/prod.env
     - name: deploy backend
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&

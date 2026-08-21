@@ -34,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - uses: actions/checkout@v3
     - name: install ssh keys
       run: |
         install -m 600 -D /dev/null ~/.ssh/id_rsa
@@ -66,10 +67,10 @@ jobs:
     - name: deploy score fetcher
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
-        docker compose pull scorefetcher && docker compose up -d scorefetcher && exit"
+        docker compose pull scorefetcher && docker compose up -d scorefetcher"
     - name: cleanup ssh
       if: always()
       run: rm -rf ~/.ssh
     - name: cleanup prod.env
       if: always()
-      run: rm -f prod.env
+      run: rm -f ./prod.env

@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - uses: actions/checkout@v3
     - name: install ssh keys
       run: |
         install -m 600 -D /dev/null ~/.ssh/id_rsa
@@ -69,10 +70,10 @@ jobs:
     - name: deploy migrations
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
-        docker compose pull migrations && docker compose up -d migrations && exit"
+        docker compose pull migrations && docker compose up -d migrations"
     - name: cleanup ssh
       if: always()
       run: rm -rf ~/.ssh
     - name: cleanup prod.env
       if: always()
-      run: rm -f prod.env
+      run: rm -f ./prod.env

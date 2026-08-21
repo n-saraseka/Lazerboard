@@ -28,8 +28,6 @@ document.querySelectorAll(".react-app").forEach((el) => {
         const rawProps = el.getAttribute("data-props");
         const props = rawProps ? JSON.parse(rawProps) : {};
 
-        console.log("Props from Razor:", props);
-
         createRoot(el).render(
             <StrictMode>
                 <Component {...props} />

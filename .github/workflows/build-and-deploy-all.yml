@@ -29,7 +29,6 @@ jobs:
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.MIGRATIONS_IMAGE_NAME }}
   publish-scorefetcher:
-    needs: publish-migrations
     name: publish score fetcher image
     runs-on: ubuntu-latest
 
@@ -48,7 +47,6 @@ jobs:
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.SCOREFETCHER_IMAGE_NAME }}
   publish-backend:
-    needs: publish-migrations
     name: publish backend image
     runs-on: ubuntu-latest
 
@@ -67,9 +65,6 @@ jobs:
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
   publish-frontend:
-    needs: 
-      - publish-backend
-      - publish-scorefetcher
     name: publish frontend image
     runs-on: ubuntu-latest
 
@@ -88,7 +83,11 @@ jobs:
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
   deploy:
-    needs: publish-frontend
+    needs:
+      - publish-backend
+      - publish-scorefetcher
+      - publish-frontend
+      - publish-migrations
     name: deploy container
     runs-on: ubuntu-latest
     

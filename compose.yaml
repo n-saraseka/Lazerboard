@@ -3,7 +3,7 @@ networks:
 
 services:
   migrations:
-    image: ghcr.io/n-saraseka/lazerboard-backend:latest
+    image: ghcr.io/n-saraseka/lazerboard-migrations:latest
     depends_on:
       "db":
         condition: service_healthy

@@ -65,7 +65,7 @@ services:
       - ./Caddy/data:/data
       - ./Caddy/config:/config
       - static:/srv/www
-      - ./Caddy/prod.Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddy/Caddyfile:/etc/caddy/Caddyfile
     ports:
       - "80:80"
       - "443:443"

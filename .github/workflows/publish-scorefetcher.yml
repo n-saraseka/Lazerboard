@@ -3,7 +3,7 @@ name: Publish Score Fetcher Image
 on:
   push:
     branches: [ "master" ]
-    paths: "Backend/Lazerboard.ScoreFetcher/**"
+    paths: [ "Backend/Lazerboard.ScoreFetcher/**" ] 
 
 env:
   REGISTRY: ghcr.io
@@ -25,7 +25,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./Backend
-        file: ./Lazerboard.ScoreFetcher/Dockerfile
+        file: Lazerboard.ScoreFetcher/Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
   deploy:

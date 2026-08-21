@@ -2,6 +2,7 @@ db
 logs
 Caddy/data
 Caddy/config
+Caddy/prod.Caddyfile
 static
 BeatmapCache
 keys

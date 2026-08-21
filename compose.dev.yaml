@@ -57,26 +57,13 @@ services:
       "backend":
         condition: service_started
     volumes:
-      - static:/static
-    restart: on-failure:1
-    networks:
-      - main
-    
-  caddy:
-    image: caddy:2-alpine
-    depends_on:
-      "frontend":
-        condition: service_completed_successfully
-      "backend":
-        condition: service_started
-    volumes:
       - ./Caddy/data:/data
       - ./Caddy/config:/config
-      - static:/srv/www
       - ./Caddy/dev.Caddyfile:/etc/caddy/Caddyfile
     ports:
       - "80:80"
       - "443:443"
+    restart: unless-stopped
     networks:
       - main
   

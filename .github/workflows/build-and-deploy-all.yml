@@ -133,7 +133,7 @@ jobs:
     - name: deploy container
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
-        docker compose pull && docker compose up -d"
+        docker compose pull && UID=$(id -u) GID=$(id -g) docker compose up -d"
     - name: Logout
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"

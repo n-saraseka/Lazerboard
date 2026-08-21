@@ -74,7 +74,7 @@ jobs:
     - name: deploy migrations
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
-        docker compose pull migrations && docker compose up -d migrations"
+        docker compose pull migrations && UID=$(id -u) GID=$(id -g) docker compose up -d migrations"
     - name: Logout
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"

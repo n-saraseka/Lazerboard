@@ -71,7 +71,7 @@ jobs:
     - name: deploy score fetcher
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
-        docker compose pull scorefetcher && docker compose up -d scorefetcher"
+        docker compose pull scorefetcher && UID=$(id -u) GID=$(id -g) docker compose up -d scorefetcher"
     - name: Logout
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"

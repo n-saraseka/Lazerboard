@@ -71,7 +71,7 @@ jobs:
     - name: deploy frontend
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
-        docker compose pull frontend && docker compose up -d frontend"
+        docker compose pull frontend && UID=$(id -u) GID=$(id -g) docker compose up -d frontend"
     - name: Logout
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"

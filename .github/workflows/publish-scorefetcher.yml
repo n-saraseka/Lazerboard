@@ -67,7 +67,7 @@ jobs:
     - name: Login
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-        "echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+        "echo '${{ secrets.PAT }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
     - name: deploy score fetcher
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&

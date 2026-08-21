@@ -125,8 +125,8 @@ jobs:
         scp ./prod.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/prod.env
     - name: Login
       run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo ${{ secrets.PAT }} && 
-        docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+        "echo '${{ secrets.PAT }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
     - name: deploy container
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&

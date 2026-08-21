@@ -81,8 +81,8 @@ function UserPage({user, scores, count, pages}) {
     if (filters.dateRange.min !== null || filters.dateRange.max !== null) {
         dateRangeString = ' from ';
         const dateStrings = [];
-        dateStrings.push(filters.dateRange.min === '' ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
-        dateStrings.push((filters.dateRange.max === '' || filters.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateRange.max));
+        dateStrings.push(filters.dateRange.min === null ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
+        dateStrings.push((filters.dateRange.max === null || filters.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateRange.max));
         if (dateStrings[0] === '') {
             dateRangeString += `until ${dateStrings[1]}`;
         }

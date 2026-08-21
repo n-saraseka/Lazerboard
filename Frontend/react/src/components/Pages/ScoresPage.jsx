@@ -104,7 +104,7 @@ function ScoresPage({scores, pages, countries}) {
         dateRangeString = ' from ';
         const dateStrings = [];
         [filters.dateRange.min, filters.dateRange.max].forEach((dateFilter) => {
-            dateStrings.push((dateFilter === '' || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
+            dateStrings.push((dateFilter === null || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
         });
         dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
     }

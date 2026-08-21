@@ -46,7 +46,7 @@ function ScoreCard({score, usingStandardized}) {
             <div className="scorecard-row">
                 <div className="scorecard-column">
                     <strong className="score-rank">{`#${score.rank}`}</strong>
-                    <strong className="score-pp">{`${score.pp.toFixed(0)}pp`}</strong>
+                    <strong className="score-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
                 </div>
                 <div className="scorecard-column">
                     <div className="score-combo-misses">

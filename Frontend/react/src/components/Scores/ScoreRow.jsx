@@ -22,7 +22,7 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-player-name">
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
-        <td className="score-row-pp">{`${score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}

@@ -75,7 +75,7 @@ services:
   db:
     image: postgres:18-alpine
     env_file:
-      - dev.env
+      prod.env
     volumes:
       - ./db:/data/postgres
     restart: unless-stopped

@@ -2,7 +2,7 @@
 FROM node:alpine AS  react
 WORKDIR /app
 COPY ./react/package*.json  ./
-RUN npm ci --only=production
+RUN npm ci
 COPY ./react .
 RUN npm run build
 

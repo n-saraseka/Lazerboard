@@ -99,15 +99,15 @@ builder.Services.AddQuartz(q =>
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        RateLimitPartition.GetSlidingWindowLimiter(
+        RateLimitPartition.GetTokenBucketLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "default",
-            factory: partition => new SlidingWindowRateLimiterOptions
+            factory: partition => new TokenBucketRateLimiterOptions
             {
                 AutoReplenishment = true,
-                Window = TimeSpan.FromSeconds(10),
-                PermitLimit = 10,
-                SegmentsPerWindow = 2,
-                QueueLimit = 0,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+                TokenLimit = 15,
+                TokensPerPeriod = 1,
+                QueueLimit = 3,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
             }
         ));

@@ -25,7 +25,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./Backend
-        file: Lazerboard.ScoreFetcher/Dockerfile
+        file: ./Backend/Lazerboard.ScoreFetcher/Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
   deploy:

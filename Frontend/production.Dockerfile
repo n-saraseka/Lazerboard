@@ -6,9 +6,8 @@ RUN npm ci --only=production
 COPY ./react .
 RUN npm run build
 
-# Copy images to caddy server
-FROM caddy:2-alpine
-COPY ./caddy/prod.Caddyfile /etc/caddy/Caddyfile
-COPY --from=react /app/build /srv/www/react/
-COPY ./images /srv/www/images/
-COPY ./styles /srv/www/styles/
+# Copy all artifacts to a volume
+FROM alpine AS static
+COPY --from=react app/build /static/react
+COPY ./images /static/images/
+COPY ./styles /static/styles/

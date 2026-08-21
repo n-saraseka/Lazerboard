@@ -67,4 +67,8 @@ jobs:
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
         docker compose pull scorefetcher && docker compose up -d scorefetcher && exit"
     - name: cleanup ssh
+      if: always()
       run: rm -rf ~/.ssh
+    - name: cleanup prod.env
+      if: always()
+      run: rm -f prod.env

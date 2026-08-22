@@ -267,7 +267,6 @@ select {
     padding: 1em;
     border-radius: 0.5em;
     text-align: center;
-    text-decoration: underline;
     background-color: rgb(45, 45, 45);
     cursor: pointer;
 }

@@ -2,6 +2,7 @@ import ScoreMod from "./ScoreMod";
 import {modeEnumToString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
+import {getRankTierColor} from "../../utils/score-things.js";
 
 function ScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -11,7 +12,7 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-mode">
             <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}}></div>
         </td>
-        <td className="score-row-rank">{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-country">
             <img
                 src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}

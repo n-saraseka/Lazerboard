@@ -1,6 +1,6 @@
 import ScoresPage from '../../components/Pages/ScoresPage';
 
-import './styles/ScoreCard.css';
+import '../Scores/styles/ScoreCard.css';
 
 export default {
     title: 'ScoresPage',

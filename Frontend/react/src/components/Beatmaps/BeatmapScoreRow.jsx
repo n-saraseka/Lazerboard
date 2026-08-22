@@ -1,6 +1,6 @@
 import ScoreMod from "../Scores/ScoreMod";
 import { dateStringFromDatetime, dateFromDateTime } from "../../utils/datetime-things.js";
-import { gradeEnumToGradeLetter, gradeEnumToGradeClass } from "../../utils/score-things.js";
+import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor} from "../../utils/score-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 
@@ -8,7 +8,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
     
     return (<tr className="score-row">
-        <td className="score-row-rank">{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-country">
             <img
                 src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}

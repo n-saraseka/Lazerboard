@@ -1,3 +1,5 @@
+import * as d3 from 'd3';
+
 export function gradeEnumToGradeLetter(grade) {
     switch (grade) {
         case 0:
@@ -154,6 +156,18 @@ export function getSpeedColor(speed) {
     if (speed > 1) return 'rgb(255, 102, 102)';
     if (speed < 1) return 'rgb(179, 255, 102)';
     return 'rgb(255, 204, 34)';
+}
+
+const rankTierColorSpectrum = d3.scaleLinear()
+    .domain([1, 25, 50, 100])
+    .clamp(true)
+    .range(["hsl(45, 75%, 65%)", "hsl(150, 80%, 50%)", "hsl(200, 80%, 60%)", "hsl(0, 0%, 80%)"])
+    .interpolate(d3.interpolateRgb.gamma(2.2)); 
+
+export function getRankTierColor(rank) {
+    if (rank === 1) return "hsl(45, 75%, 65%)";
+    if (rank > 100) return "hsl(0, 0%, 80%)";
+    return rankTierColorSpectrum(rank);
 }
 
 export function createScoreQueryCommand(filters) {

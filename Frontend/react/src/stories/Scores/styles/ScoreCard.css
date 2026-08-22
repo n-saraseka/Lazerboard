@@ -26,6 +26,10 @@
     text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
 }
 
+.score-rank {
+    font-size: 1.3em;
+}
+
 .score-total {
     display: flex;
     gap: 0.25em;
@@ -40,6 +44,10 @@
 .score .mod {
     font-weight: bold;
     font-size: 1.25em;
+}
+
+.score-row-rank {
+    font-weight: bold;
 }
 
 .score-row-mods .mod {

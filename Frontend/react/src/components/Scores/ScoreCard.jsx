@@ -2,6 +2,7 @@ import ScoreMod from "./ScoreMod";
 import ModeWedge from "./ModeWedge.jsx";
 import {useState} from "react";
 import {dateFromDateTime} from "../../utils/datetime-things.js";
+import {getRankTierColor} from "../../utils/score-things.js";
 
 function ScoreCard({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -31,7 +32,7 @@ function ScoreCard({score, usingStandardized}) {
                 </div>
                 <div className="scorecard-column">
                     <div className="mods">
-                        {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
+                        {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod key={modAcronym} acronym={modAcronym} speedChange={score.speedChange}/>)}
                         {score.modAcronyms.length > 5 && (<>
                             {!isExpanded && (
                                 <span className="mod mod-unknown mods-expand" title="Click to expand" onClick={() => setIsExpanded(true)}>
@@ -45,7 +46,7 @@ function ScoreCard({score, usingStandardized}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-rank">{`#${score.rank}`}</strong>
+                    <strong className="score-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</strong>
                     <strong className="score-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
                 </div>
                 <div className="scorecard-column">

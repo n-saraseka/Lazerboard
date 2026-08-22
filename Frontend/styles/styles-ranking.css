@@ -12,7 +12,9 @@
 
 .calc-button {
     align-self: center;
-    font-family: "Cascadia Mono", monospace;
-    padding: 0.5em;
-    font-size: 1.1em;
+}
+
+.calc-button:hover {
+    background-color: rgb(180, 180, 180);
+    cursor: pointer;
 }

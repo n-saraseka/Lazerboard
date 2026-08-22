@@ -432,6 +432,10 @@ select {
     align-items: center;
 }
 
+.scorecard-row.score-data {
+    font-size: 1.25em;
+}
+
 .scorecard-row.title-row {
     align-items: flex-start;
 }

@@ -1,21 +1,18 @@
-
-
-/** @type { import('@storybook/react-vite').StorybookConfig } */
+import { defineMain } from '@storybook/react-vite/node';
 const config = {
-  "stories": [
+  stories: [
     "../src/**/*.mdx",
     "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
-  "addons": [
-    "@chromatic-com/storybook",
+  addons: [
     "@storybook/addon-vitest",
     "@storybook/addon-a11y",
     "@storybook/addon-docs",
     "@storybook/addon-onboarding",
   ],
-  "framework": "@storybook/react-vite",
+  framework: "@storybook/react-vite",
   core: {
     disableTelemetry: true,
   },
 };
-export default config;
+export default defineMain(config);

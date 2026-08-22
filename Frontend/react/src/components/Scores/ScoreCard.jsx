@@ -43,7 +43,7 @@ function ScoreCard({score, usingStandardized}) {
                     </div>
                 </div>
             </div>
-            <div className="scorecard-row">
+            <div className="scorecard-row score-data">
                 <div className="scorecard-column">
                     <strong className="score-rank">{`#${score.rank}`}</strong>
                     <strong className="score-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
@@ -60,7 +60,7 @@ function ScoreCard({score, usingStandardized}) {
                     <strong>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
                 </div>
             </div>
-            <div className="scorecard-row">
+            <div className="scorecard-row score-data">
                 <div className="scorecard-column">
                     <div className="score-total">
                         <a href={`https://osu.ppy.sh/scores/${score.id}`}

@@ -29,10 +29,6 @@ header {
     gap: 2em;
 }
 
-.logo {
-    font-size: 1.5em;
-}
-
 .navigation, .footer-links {
     display: flex;
     gap: 1em;
@@ -48,6 +44,10 @@ header {
 
 .footer-links li:last-child::after {
     content: "";
+}
+
+.logo {
+    text-decoration: none;
 }
 
 .navigation a {
@@ -467,7 +467,7 @@ select {
     color: white;
 }
 
-.scores-table tr td a, .score a, .navigation a.active, .navigation a.inactive:hover, footer a {
+.scores-table tr td a, .score a, .navigation a.active, .navigation a.inactive:hover, .logo, footer a {
     color: white;
 }
 
@@ -610,7 +610,7 @@ select {
     background-color: rgb(40, 40, 40);
 }
 
-.score-row-grade {
+.score-row-grade, .score-row-rank {
     font-weight: bold;
 }
 

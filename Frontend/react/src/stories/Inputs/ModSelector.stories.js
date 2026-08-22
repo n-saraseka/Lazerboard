@@ -1,7 +1,7 @@
 import ModSelector from '../../components/Inputs/ModSelector';
 
 import './styles/ModSelector.css';
-import {allMods} from "../utils/score-things.js";
+import {allMods} from "../../utils/score-things.js";
 
 export default {
     title: 'ModSelector',

@@ -1,6 +1,6 @@
 import ScoreMod from "../Scores/ScoreMod";
 import { dateStringFromDatetime, dateFromDateTime } from "../../utils/datetime-things.js";
-import { gradeEnumToGradeLetter, gradeEnumToGradeClass } from "../../utils/score-things.js";
+import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor, getPpColor} from "../../utils/score-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 
@@ -8,7 +8,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
     
     return (<tr className="score-row">
-        <td className="score-row-rank">{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-country">
             <img
                 src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}
@@ -30,10 +30,10 @@ function BeatmapScoreRow({score, usingStandardized}) {
                 {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
             </span>
         </td>
-        <td className="score-row-accuracy">{`${(score.accuracy * 100).toFixed(2)}%`}</td>
+        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className="score-row-combo">{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
-        <td className="score-row-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{dateStringFromDatetime(score.date)}</td>
         <td className="mods">
             <div className="mods">

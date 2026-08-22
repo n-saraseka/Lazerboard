@@ -2,6 +2,7 @@ import ScoreMod from "./ScoreMod";
 import {modeEnumToString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
+import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 
 function ScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -11,7 +12,7 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-mode">
             <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}}></div>
         </td>
-        <td className="score-row-rank">{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-country">
             <img
                 src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}
@@ -22,7 +23,7 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-player-name">
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
-        <td className="score-row-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
@@ -47,7 +48,7 @@ function ScoreRow({score, usingStandardized}) {
             </span>
         </td>
         <td className="score-row-combo">{`${score.combo.toLocaleString('en-US')}x`}</td>
-        <td className="score-row-accuracy">{`${(score.accuracy * 100).toFixed(2)}%`}</td>
+        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
         <td className="score-row-map-image">
             <a href={`/beatmapsets/${score.beatmap.beatmapset.id}?mode=${score.mode}`}>

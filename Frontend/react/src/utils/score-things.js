@@ -1,3 +1,5 @@
+import * as d3 from 'd3';
+
 export function gradeEnumToGradeLetter(grade) {
     switch (grade) {
         case 0:
@@ -154,6 +156,30 @@ export function getSpeedColor(speed) {
     if (speed > 1) return 'rgb(255, 102, 102)';
     if (speed < 1) return 'rgb(179, 255, 102)';
     return 'rgb(255, 204, 34)';
+}
+
+const rankTierColorSpectrum = d3.scaleLinear()
+    .domain([1, 2, 3, 4, 25, 50, 100])
+    .clamp(true)
+    .range(["hsl(45, 75%, 65%)", "hsl(180, 20% , 60%)", "hsl(20, 60% , 50%)", "hsl(100, 40%, 50%)", "hsl(150, 40%, 50%)", "hsl(200, 80%, 60%)", "hsl(0, 0%, 80%)"])
+    .interpolate(d3.interpolateRgb.gamma(2.2));
+
+export function getRankTierColor(rank) {
+    if (rank === 1) return "hsl(45, 75%, 65%)";
+    if (rank > 100) return "hsl(0, 0%, 80%)";
+    return rankTierColorSpectrum(rank);
+}
+
+const ppColorSpectrum = d3.scaleLinear()
+    .domain([0, 250, 500, 1000, 1500, 2000, 2500])
+    .clamp(true)
+    .range(["#ffffff", "hsl(180, 80%, 50%)", "hsl(210, 50%, 50%)", "hsl(240, 40%, 50%)", "hsl(270, 60%, 60%)", "hsl(300, 40%, 50%)", "hsl(330, 50%, 50%)"])
+    .interpolate(d3.interpolateRgb.gamma(2.2));
+
+export function getPpColor(pp) {
+    if (pp === null) return "rgb(150, 150, 150)";
+    if (pp > 2500) return "hsl(330, 50%, 50%)";
+    return ppColorSpectrum(pp);
 }
 
 export function createScoreQueryCommand(filters) {

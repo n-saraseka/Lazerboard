@@ -26,11 +26,7 @@ header {
 .logo-navigation {
     display: flex;
     align-items: center;
-    gap: 1.5em;
-}
-
-.logo {
-    font-size: 1.5em;
+    gap: 2em;
 }
 
 .navigation, .footer-links {
@@ -48,6 +44,10 @@ header {
 
 .footer-links li:last-child::after {
     content: "";
+}
+
+.logo {
+    text-decoration: none;
 }
 
 .navigation a {
@@ -179,7 +179,7 @@ footer {
     border-radius: 1em 1em 0 0;
 }
 
-input[type="number"], input[type="text"], input[type="date"], select {
+input[type="number"], input[type="text"], input[type="date"], select, .calc-button {
     font-size: 1em;
     padding: 0.5em;
     border-radius: 0.25em;
@@ -197,7 +197,11 @@ input[type="number"] {
 
 select {
     min-width: 4.5em;
-}   
+}
+
+input:focus, select:focus {
+    outline: none;
+}
 
 .component-container {
     display: flex;
@@ -267,7 +271,6 @@ select {
     padding: 1em;
     border-radius: 0.5em;
     text-align: center;
-    text-decoration: underline;
     background-color: rgb(45, 45, 45);
     cursor: pointer;
 }
@@ -403,6 +406,10 @@ select {
     text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
 }
 
+.score-perfect {
+    color: hsl(90, 80%, 50%);
+}
+
 .score-total {
     display: flex;
     gap: 0.25em;
@@ -430,11 +437,10 @@ select {
 .scorecard-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
-.scorecard-row.title-row {
-    align-items: flex-start;
+.scorecard-row.score-data {
+    font-size: 1.25em;
 }
 
 .scorecard-column.title-column {
@@ -461,7 +467,7 @@ select {
     color: white;
 }
 
-.scores-table tr td a, .score a, .navigation a.active, .navigation a.inactive:hover, footer a {
+.scores-table tr td a, .score a, .navigation a.active, .navigation a.inactive:hover, .logo, footer a {
     color: white;
 }
 
@@ -469,7 +475,7 @@ select {
     font-weight: bold;
 }
 
-.score-difficulty-name:hover {
+.score-difficulty-name:hover, .score-song-name:hover, .score-primary:hover, .score-row-player-name a:hover {
     text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
 }
 
@@ -604,7 +610,7 @@ select {
     background-color: rgb(40, 40, 40);
 }
 
-.score-row-grade {
+.score-row-grade, .score-row-rank {
     font-weight: bold;
 }
 

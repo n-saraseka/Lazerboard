@@ -10,7 +10,7 @@
 <body>
 <header>
     <div class="logo-navigation">
-        <strong>Lazerboard</strong>
+        <a asp-controller="General" asp-action="Index" class="logo"><strong>Lazerboard</strong></a>
         <ul class="navigation">
             <li>
                 <a asp-controller="General" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>

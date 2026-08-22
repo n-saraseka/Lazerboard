@@ -1,6 +1,6 @@
 import ScoreMod from "../Scores/ScoreMod";
 import { dateStringFromDatetime, dateFromDateTime } from "../../utils/datetime-things.js";
-import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor} from "../../utils/score-things.js";
+import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor, getPpColor} from "../../utils/score-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 
@@ -33,7 +33,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
         <td className="score-row-accuracy">{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className="score-row-combo">{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
-        <td className="score-row-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{dateStringFromDatetime(score.date)}</td>
         <td className="mods">
             <div className="mods">

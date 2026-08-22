@@ -2,7 +2,7 @@ import ScoreMod from "./ScoreMod";
 import {modeEnumToString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
-import {getRankTierColor} from "../../utils/score-things.js";
+import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 
 function ScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -23,7 +23,7 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-player-name">
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
-        <td className="score-row-pp">{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}

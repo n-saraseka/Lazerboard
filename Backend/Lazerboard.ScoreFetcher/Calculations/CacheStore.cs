@@ -14,6 +14,7 @@ public class CacheStore : ICacheStore
     private string _cachePath;
     private int _osuFileTTL;
     private const int DefaultTTL = 10;
+    private const int MaxDownloadAttempts = 5;
     private double _apiInterval;
     private System.Timers.Timer _cleanupTimer;
 
@@ -58,21 +59,38 @@ public class CacheStore : ICacheStore
     public async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, CancellationToken ct)
     {
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
-        if (!File.Exists(mapPath))
+        var attempts = 0;
+
+        while (attempts < MaxDownloadAttempts)
         {
+            if (!File.Exists(mapPath))
+            {
+                try
+                {
+                    await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
+                    await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log(LogLevel.Error, ex, "Download failed for Beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
+                    attempts++;
+                    continue;
+                }
+            }
             try
             {
-                await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
-                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
+                await using var stream = File.OpenRead(mapPath);
+                using var reader = new LineBufferedReader(stream);
+                return osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
             }
-            catch (Exception ex)
+            catch (FileNotFoundException ex)
             {
-                _logger.Log(LogLevel.Error, ex, "Method: OsuApiService.DownloadBeatmapsAsync | BeatmapID: {id}", beatmapId);
+                _logger.Log(LogLevel.Error, ex, "Failed to get .osu file for beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
+                attempts++;
             }
         }
         
-        await using var stream = File.OpenRead(mapPath);
-        using var reader = new LineBufferedReader(stream);
-        return osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
+        throw new InvalidOperationException(
+            $"Failed to get beatmap {beatmapId} after {MaxDownloadAttempts} attempts");
     }
 }

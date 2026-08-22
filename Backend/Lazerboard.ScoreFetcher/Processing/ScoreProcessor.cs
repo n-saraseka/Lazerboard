@@ -18,7 +18,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     {
         var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
         var scoresForMode = beatmapScores.Where(s => s.Mode == score.Mode).ToList();
-        if (scoresForMode.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 100) return false;
+        if (scoresForMode.All(s => s.TotalScore >= score.TotalScore) && beatmapScores.Count >= 100) return false;
         return !CheckIfBetterAlreadyExists(score, scoresForMode);
     }
     
@@ -48,7 +48,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                 var beatmapScores = respectiveGroup.ToList();
                 foreach (var score in scoresInGroup)
                 {
-                    if (beatmapScores.All(s => s.TotalScore > score.TotalScore) && beatmapScores.Count >= 100) 
+                    if (beatmapScores.All(s => s.TotalScore >= score.TotalScore) && beatmapScores.Count >= 100) 
                         dictionary[score.Id] = false;
                     else 
                         dictionary[score.Id] = !CheckIfBetterAlreadyExists(score, beatmapScores);

@@ -35,11 +35,11 @@ public class APIScore
     [JsonProperty("maximum_statistics")]
     public Statistics MaximumStatistics { get; set; } = null!;
     [JsonProperty("total_score")]
-    public long TotalScore { get; set; }
+    public int TotalScore { get; set; }
     [JsonProperty("classic_total_score")]
-    public int ClassicTotalScore { get; set; }
+    public long ClassicTotalScore { get; set; }
     [JsonProperty("legacy_total_score")]
-    public int LegacyTotalScore { get; set; }
+    public int? LegacyTotalScore { get; set; }
     [JsonProperty("pp")]
     public float? PP { get; set; }
 }

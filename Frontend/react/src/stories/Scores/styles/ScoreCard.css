@@ -61,15 +61,10 @@
 .scorecard-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
 .scorecard-row.score-data {
     font-size: 1.25em;
-}
-
-.scorecard-row.title-row {
-    align-items: flex-start;
 }
 
 .scorecard-column.title-column {
@@ -95,7 +90,6 @@
     font-size: 1.3em;
 }
 
-
 .scores-table tr td a, .score a {
     color: white;
 }
@@ -104,7 +98,7 @@
     font-weight: bold;
 }
 
-.score-difficulty-name:hover {
+.score-difficulty-name:hover, .score-song-name:hover, .score-primary:hover, .score-row-player-name a:hover {
     text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
 }
 

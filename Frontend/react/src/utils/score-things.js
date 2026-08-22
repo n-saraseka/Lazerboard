@@ -161,7 +161,7 @@ export function getSpeedColor(speed) {
 const rankTierColorSpectrum = d3.scaleLinear()
     .domain([1, 10, 25, 50, 100])
     .clamp(true)
-    .range(["hsl(45, 75%, 65%)", "hsl(100, 40%, 50%)", "hsl(150, 80%, 50%)", "hsl(200, 80%, 60%)", "hsl(0, 0%, 80%)"])
+    .range(["hsl(45, 75%, 65%)", "hsl(100, 40%, 50%)", "hsl(150, 40%, 50%)", "hsl(200, 80%, 60%)", "hsl(0, 0%, 80%)"])
     .interpolate(d3.interpolateRgb.gamma(2.2)); 
 
 export function getRankTierColor(rank) {

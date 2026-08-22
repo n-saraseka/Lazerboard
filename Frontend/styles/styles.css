@@ -197,7 +197,11 @@ input[type="number"] {
 
 select {
     min-width: 4.5em;
-}   
+}
+
+.input:focus, select:focus {
+    outline: none;
+}
 
 .component-container {
     display: flex;

@@ -199,7 +199,7 @@ select {
     min-width: 4.5em;
 }
 
-.input:focus, select:focus {
+input:focus, select:focus {
     outline: none;
 }
 

@@ -26,7 +26,7 @@ header {
 .logo-navigation {
     display: flex;
     align-items: center;
-    gap: 1.5em;
+    gap: 2em;
 }
 
 .logo {

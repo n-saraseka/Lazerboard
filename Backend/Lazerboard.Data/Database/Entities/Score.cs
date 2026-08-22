@@ -17,8 +17,8 @@ public class Score : IEntity<ulong>
     public float Accuracy { get; set; }
     public int Combo { get; set; }
     public int? Misses { get; set; }
-    public long TotalScore { get; set; }
-    public int ClassicTotalScore { get; set; }
+    public int TotalScore { get; set; }
+    public long ClassicTotalScore { get; set; }
     public int? LegacyTotalScore { get; set; }
     public float? PP { get; set; }
     public int Rank { get; set; }

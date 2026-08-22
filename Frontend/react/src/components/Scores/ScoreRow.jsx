@@ -48,7 +48,7 @@ function ScoreRow({score, usingStandardized}) {
             </span>
         </td>
         <td className="score-row-combo">{`${score.combo.toLocaleString('en-US')}x`}</td>
-        <td className="score-row-accuracy">{`${(score.accuracy * 100).toFixed(2)}%`}</td>
+        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
         <td className="score-row-map-image">
             <a href={`/beatmapsets/${score.beatmap.beatmapset.id}?mode=${score.mode}`}>

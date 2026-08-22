@@ -402,6 +402,10 @@ select {
     text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
 }
 
+.score-perfect {
+    color: hsl(90, 80%, 50%);
+}
+
 .score-total {
     display: flex;
     gap: 0.25em;

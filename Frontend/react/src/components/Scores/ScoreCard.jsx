@@ -58,7 +58,7 @@ function ScoreCard({score, usingStandardized}) {
                             </span>
                         }
                     </div>
-                    <strong>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
+                    <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
                 </div>
             </div>
             <div className="scorecard-row score-data">

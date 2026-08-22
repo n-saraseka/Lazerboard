@@ -30,6 +30,10 @@
     font-size: 1.3em;
 }
 
+.score-perfect {
+    color: hsl(90, 80%, 50%);
+}
+
 .score-total {
     display: flex;
     gap: 0.25em;

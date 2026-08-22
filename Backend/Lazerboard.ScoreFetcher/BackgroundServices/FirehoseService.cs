@@ -42,14 +42,22 @@ public class FirehoseService : BackgroundService
             var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
             var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
 
-            if (_seedingState.IsSeeding)
+            try
             {
-                await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                if (_seedingState.IsSeeding)
+                {
+                    await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                    await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                }
+                else
+                {
+                    await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await FetchFromFirehoseAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                _logger.Log(LogLevel.Critical, ex, "Firehose service failed!");
+                throw;
             }
         }
     }

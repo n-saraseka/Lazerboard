@@ -42,11 +42,19 @@ public class LeaderboardSeedingService : BackgroundService
             var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
             var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
 
-            var continueSeeding = await FetchLeaderboardsAsync(apiFetcher, dataProcessor, utils, stoppingToken);
-            if (!continueSeeding)
+            try
             {
-                _seedingState.IsSeeding = continueSeeding;
-                break;
+                var continueSeeding = await FetchLeaderboardsAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                if (!continueSeeding)
+                {
+                    _seedingState.IsSeeding = continueSeeding;
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "Leaderboard seeding service failed!");
+                throw;
             }
         }
     }

@@ -39,12 +39,20 @@ public class UpdateUserAndScoreDataJob : IJob
     
     public async Task Execute(IJobExecutionContext context)
     {
-        await CheckPendingRemovedScores();
-        await UpdateUserData();
+        try
+        {
+            await CheckPendingRemovedScores();
+            await UpdateUserData();
+        }
+        catch (Exception ex)
+        {
+            _logger.Log(LogLevel.Critical, ex, "Quartz job failed!");
+        }
     }
 
     private async Task UpdateUserData()
     {
+        _logger.Log(LogLevel.Information, "Updating user data...");
         var users = await _userRepository.GetAll().ToListAsync();
         var userIds = users.Select(u => u.Id).ToList();
 
@@ -73,6 +81,7 @@ public class UpdateUserAndScoreDataJob : IJob
 
     private async Task CheckPendingRemovedScores()
     {
+        _logger.Log(LogLevel.Information, "Checking scores marked for deletion...");
         var pendingScores = await _scorePendingDeletionRepository.GetAllWithUserData();
         
         // If a score has a PP value this high, it's likely the user has been restricted for good, and we can check them ASAP.

@@ -95,6 +95,8 @@ builder.Services.AddQuartz(q =>
             .InTimeZone(TimeZoneInfo.Utc)));
 });
 
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
 {

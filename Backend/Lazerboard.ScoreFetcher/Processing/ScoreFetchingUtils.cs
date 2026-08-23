@@ -44,7 +44,13 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
     public async Task<List<APIScore>> GetSignificantScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
         if (scores.Count == 0) return [];
-        var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
+        
+        var deduplicatedScores = scores
+            .GroupBy(s => new { s.BeatmapId, s.Mode, s.UserId })
+            .Select(group => group.OrderByDescending(s => s.TotalScore).First())
+            .ToList();
+        
+        var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(deduplicatedScores, stoppingToken);
         var significantScores = scores.Where(s => checkResults[s.Id]).ToList();
         
         // Calculate PP for scores that don't have it.

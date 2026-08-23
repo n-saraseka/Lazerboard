@@ -47,7 +47,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
         
         var deduplicatedScores = scores
             .GroupBy(s => new { s.BeatmapId, s.Mode, s.UserId })
-            .Select(group => group.OrderByDescending(s => s.TotalScore).First())
+            .Select(group => group.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).First())
             .ToList();
         
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(deduplicatedScores, stoppingToken);

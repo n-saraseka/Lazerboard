@@ -49,6 +49,7 @@ builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IScorePendingDeletionRepository, ScorePendingDeletionRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 

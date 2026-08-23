@@ -4,9 +4,10 @@ on:
   push:
     branches: [ "master" ]
     paths:
-      - "Backend/Lazerboard.Data/Migrations"
-      - "Backend/Lazerboard.Data/Entities"
-      - "Backend/Lazerboard.Data/EntityConfigurations"
+      - "Backend/Lazerboard.Data/Migrations/**"
+      - "Backend/Lazerboard.Data/Entities/**"
+      - "Backend/Lazerboard.Data/EntityConfigurations/**"
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io

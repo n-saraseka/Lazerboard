@@ -122,7 +122,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             })
             .OrderByDescending(s => s.ScoresCount);
 
-        var count = await group.CountAsync(ct);
+        var count = await query.Select(s => s.UserId).Distinct().CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / rankingAmount);
         if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
 
@@ -185,7 +185,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
             })
             .OrderByDescending(s => s.ScoresCount);
 
-        var count = await group.CountAsync(cancellationToken);
+        var count = await query.Select(s => s.UserId).Distinct().CountAsync(cancellationToken);
         var pages = (int)Math.Ceiling((double)count / rankingAmount);
         if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
 

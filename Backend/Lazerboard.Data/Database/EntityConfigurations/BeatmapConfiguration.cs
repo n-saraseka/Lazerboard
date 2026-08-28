@@ -12,5 +12,7 @@ public class BeatmapConfiguration : IEntityTypeConfiguration<Beatmap>
             .HasOne(b => b.Beatmapset)
             .WithMany()
             .HasForeignKey(b => b.BeatmapsetId);
+        builder
+            .HasIndex(b => b.Difficulty);
     }
 }

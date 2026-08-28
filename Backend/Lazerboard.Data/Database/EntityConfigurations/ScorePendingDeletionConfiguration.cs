@@ -12,5 +12,7 @@ public class ScorePendingDeletionConfiguration : IEntityTypeConfiguration<ScoreP
             .HasOne(s => s.Score)
             .WithOne()
             .HasForeignKey<ScorePendingDeletion>(s => s.ScoreId);
+        builder
+            .HasIndex(s => s.MarkedAt);
     }
 }

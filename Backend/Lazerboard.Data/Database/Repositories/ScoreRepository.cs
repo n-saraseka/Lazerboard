@@ -16,7 +16,6 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .OrderBy(s => s.Rank)
             .Skip(100 * (page - 1))
             .Take(100)
-            .AsSplitQuery()
             .Include(s => s.User)
             .ThenInclude(u => u.Country)
             .Include(s => s.Beatmap)
@@ -30,14 +29,12 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
         Set.Where(s => beatmapIds.Contains(s.BeatmapId)).ToListAsync(cancellationToken);
 
     public IQueryable<Score> GetAllWithBeatmapAndUserData() => GetAll()
-        .AsSplitQuery()
         .Include(s => s.User)
         .ThenInclude(u => u.Country)
         .Include(s => s.Beatmap)
         .ThenInclude(b => b.Beatmapset);
 
     public IQueryable<Score> GetAllWithUserData() => GetAll()
-        .AsSplitQuery()
         .Include(s => s.User)
         .ThenInclude(u => u.Country);
 }

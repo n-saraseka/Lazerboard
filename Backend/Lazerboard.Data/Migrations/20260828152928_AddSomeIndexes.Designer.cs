@@ -5,6 +5,7 @@ using Lazerboard.Data.Database;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260828152928_AddSomeIndexes")]
+    partial class AddSomeIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -229,6 +232,9 @@ namespace OsuScoreStats.Migrations
 
                     b.HasIndex("ModAcronyms")
                         .HasDatabaseName("ix_scores_mod_acronyms");
+
+                    b.HasIndex("Mode")
+                        .HasDatabaseName("ix_scores_mode");
 
                     b.HasIndex("PP")
                         .HasDatabaseName("ix_scores_pp");

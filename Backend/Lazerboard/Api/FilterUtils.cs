@@ -15,8 +15,18 @@ public static class FilterUtils
     {
         query = query.Where(s => command.Modes.Contains(s.Mode));
         
-        if (command.DateRange[0] != null) query = query.Where(s => DateOnly.FromDateTime(s.Date) >= command.DateRange[0]);
-        if (command.DateRange[1] != null) query = query.Where(s => DateOnly.FromDateTime(s.Date) <= command.DateRange[1]);
+        if (command.DateRange[0] != null)
+        {
+            var minDate = DateTime
+                .SpecifyKind(command.DateRange[0]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc);
+            query = query.Where(s => s.Date >= minDate);
+        }
+        if (command.DateRange[1] != null)
+        {
+            var maxDate = DateTime
+                .SpecifyKind(command.DateRange[1]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc).AddDays(1);
+            query = query.Where(s => s.Date < maxDate);
+        }
         
         if (command.RankRange[0] != null) query = query.Where(s => s.Rank >= command.RankRange[0]);
         if (command.RankRange[1] != null) query = query.Where(s => s.Rank <= command.RankRange[1]);

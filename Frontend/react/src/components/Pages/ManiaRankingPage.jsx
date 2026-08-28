@@ -1,4 +1,4 @@
-import {useState, useMemo} from "react";
+import {useState, useMemo, useCallback, useEffect} from "react";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
@@ -7,7 +7,7 @@ import {createScoreQueryCommand} from "../../utils/score-things.js";
 import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
 import {debounce} from "../../utils/server-things.js";
 
-function ScoreRankingPage({countries, userRanking}) {
+function ScoreRankingPage({countries}) {
     const [filters, setFilters] = useState({
         starRange: {min: null, max: null},
         country: {id: "All", name: "All countries"},
@@ -17,11 +17,10 @@ function ScoreRankingPage({countries, userRanking}) {
     const [isError, setIsError] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [usersCount, setUsersCount] = useState(0);
-    const [pageCount, setPageCount] = useState(Math.ceil(userRanking.count / 10));
-    const [userRankings, setUserRankings] = useState(userRanking.userRankings);
-
-    async function getRankings(filterOptions, pageNumber = 1) {
+    const [pageCount, setPageCount] = useState(1);
+    const [userRankings, setUserRankings] = useState([]);
+    
+    const getRankings = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
 
@@ -30,7 +29,7 @@ function ScoreRankingPage({countries, userRanking}) {
         const params = new URLSearchParams();
         params.append("amount", filters.amount.toString());
         params.append("page", pageNumber.toString());
-        
+
         try {
             const response = await fetch(`/api/scores/millions?` + params.toString(), {
                 method: "POST",
@@ -44,7 +43,6 @@ function ScoreRankingPage({countries, userRanking}) {
             if (response.ok) {
                 const json = await response.json();
                 setUserRankings(json.userRankings);
-                setUsersCount(json.count);
 
                 const pages = Math.ceil(json.count / filterOptions.amount);
                 if (pageNumber !== currentPage) {
@@ -56,19 +54,21 @@ function ScoreRankingPage({countries, userRanking}) {
                 setPageCount(pages);
             }
             else {
-                setUsersCount(0);
                 setPageCount(0);
                 setIsError(true);
             }
         }
         catch (error) {
-            setUsersCount(0);
             setPageCount(0);
             setIsError(true);
         }
-        
+
         setIsLoading(false);
-    }
+    }, [countries])
+
+    useEffect(() => {
+        getRankings(filters);
+    }, [countries]);
     
     const debouncedGetRankings = useMemo(
         () => debounce(getRankings, 250),

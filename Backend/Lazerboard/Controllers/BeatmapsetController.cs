@@ -5,7 +5,7 @@ using Lazerboard.Data.OsuEntities.Enums;
 
 namespace Lazerboard.Controllers;
 
-public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRepository scoreRepository) : Controller
+public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Controller
 {
     public async Task<IActionResult> BeatmapsetPage(int id, [FromQuery] Mode? mode, CancellationToken cancellationToken = default)
     {
@@ -16,20 +16,13 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         var beatmapset = firstBeatmap.Beatmapset;
         
         var selectedMode = mode ?? firstBeatmap.Mode;
-        
-        var count = await scoreRepository.GetBeatmapScoreCount(firstBeatmap.Id, selectedMode, cancellationToken);
-        var pages = (int)Math.Ceiling(count / 100d);
-        
-        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(firstBeatmap.Id, selectedMode,1, cancellationToken);
 
         var viewModel = new BeatmapsetViewModel
         {
             Beatmapset = beatmapset,
             Beatmaps = beatmaps,
             SelectedBeatmapId = firstBeatmap.Id,
-            Scores = scores,
             SelectedMode = selectedMode,
-            Pages = pages
         };
         
         return View(viewModel);
@@ -45,24 +38,18 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository, IScoreRe
         
         var respectiveBeatmap = beatmaps.First(b => b.Id == id);
         
-        var firstBeatmap = beatmaps.First();
-        var beatmapset = firstBeatmap.Beatmapset;
-        
-        var selectedMode = mode ?? firstBeatmap.Mode;
-        
-        var count = await scoreRepository.GetBeatmapScoreCount(id, selectedMode, cancellationToken);
-        var pages = (int)Math.Ceiling(count / 100d);
-        
-        var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, selectedMode, 1, cancellationToken);
+        var beatmapset = respectiveBeatmap.Beatmapset;
+
+        var selectedMode = respectiveBeatmap.Mode != Mode.Osu
+            ? respectiveBeatmap.Mode
+            : mode ?? respectiveBeatmap.Mode;
 
         var viewModel = new BeatmapsetViewModel
         {
             Beatmapset = beatmapset,
             Beatmaps = beatmaps,
             SelectedBeatmapId = id,
-            Scores = scores,
             SelectedMode = selectedMode,
-            Pages = pages
         };
         
         return View(viewModel);

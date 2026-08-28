@@ -2,7 +2,7 @@ import DifficultyIcon from "../Beatmaps/DifficultyIcon.jsx";
 import BeatmapCard from "../Beatmaps/BeatmapCard.jsx";
 import BeatmapScores from "../Beatmaps/BeatmapScores.jsx";
 import ModeSelector from "../Filters/ModeSelector.jsx";
-import {useState, useMemo} from "react";
+import {useState, useMemo, useCallback, useEffect} from "react";
 import MappedBy from "../Beatmaps/MappedBy.jsx";
 import {modeEnumToString} from "../../utils/beatmap-things.js";
 import Error from "../Misc/Error.jsx";
@@ -10,14 +10,14 @@ import Loader from "../Misc/Loader.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import {debounce} from "../../utils/server-things.js";
 
-function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores, selectedMode}) {
+function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode}) {
     const allModes = [0, 1, 2, 3];
     const firstBeatmap = beatmaps.find((beatmap) => beatmap.id === selectedBeatmapId);
     const [selectedBeatmap, setSelectedBeatmap] = useState(firstBeatmap);
-    const [beatmapScores, setBeatmapScores] = useState(scores);
+    const [beatmapScores, setBeatmapScores] = useState([]);
     const [allowedModes, setAllowedModes] = useState(firstBeatmap.mode !== 0 ? [firstBeatmap.mode] : allModes);
     const [currentMode, setCurrentMode] = useState(selectedMode);
-    const [pageCount, setPageCount] = useState(pages);
+    const [pageCount, setPageCount] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
@@ -39,15 +39,15 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
         }
         debouncedGetBeatmapScores(id, newMode);
     }
-
-    async function getBeatmapScores(id, mode, page = 1) {
+    
+    const getBeatmapScores = useCallback(async (id, mode, page = 1) => {
         setIsLoading(true);
         setIsError(false);
-        
+
         const params = new URLSearchParams();
         params.append("mode", mode.toString());
         params.append("page", page.toString());
-        
+
         try {
             const response = await fetch(`/api/beatmaps/${id}/scores?` + params.toString(), {
                 method: "GET",
@@ -56,7 +56,7 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
             if (response.ok) {
                 const json = await response.json();
                 setBeatmapScores(json.scores);
-                
+
                 const newPages = Math.ceil(json.count / 100);
                 if (page !== currentPage) {
                     setCurrentPage(page);
@@ -77,9 +77,13 @@ function BeatmapsetPage({beatmapset, beatmaps, pages, selectedBeatmapId, scores,
             setPageCount(1);
             setIsError(true);
         }
-        
+
         setIsLoading(false);
-    }
+    }, [beatmapset])
+
+    useEffect(() => {
+        getBeatmapScores(selectedBeatmapId, selectedMode);
+    }, [getBeatmapScores]);
     
     const debouncedGetBeatmapScores = useMemo(
         () => debounce(getBeatmapScores, 250),

@@ -114,10 +114,10 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
         var group = query
-            .GroupBy(s => s.UserId)
+            .GroupBy(s => s.User)
             .Select(g => new UserRanking 
             {
-                User = g.First().User,
+                User = g.Key,
                 ScoresCount = g.Count() 
             })
             .OrderByDescending(s => s.ScoresCount);

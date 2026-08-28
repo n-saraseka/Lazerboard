@@ -22,8 +22,6 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
         builder
             .HasIndex(s => s.Accuracy);
         builder
-            .HasIndex(s => s.Mode);
-        builder
             .HasIndex(s => s.SpeedChange);
         builder
             .HasIndex(s => s.PP);

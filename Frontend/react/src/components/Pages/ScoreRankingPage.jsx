@@ -1,4 +1,4 @@
-import {useState, useMemo} from "react";
+import {useState, useMemo, useCallback, useEffect} from "react";
 import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
@@ -26,10 +26,10 @@ function ScoreRankingPage({countries}) {
     const [isError, setIsError] = useState(false);
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageCount, setPageCount] = useState(0);
+    const [pageCount, setPageCount] = useState(1);
     const [userRankings, setUserRankings] = useState([]);
-
-    async function getRankings(filterOptions, pageNumber = 1) {
+    
+    const getRankings = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
 
@@ -38,7 +38,7 @@ function ScoreRankingPage({countries}) {
         const params = new URLSearchParams();
         params.append("amount", filters.amount.toString());
         params.append("page", pageNumber.toString());
-        
+
         try {
             const response = await fetch(`/api/scores/ranking?` + params.toString(), {
                 method: "POST",
@@ -71,9 +71,13 @@ function ScoreRankingPage({countries}) {
             setPageCount(0);
             setIsError(true);
         }
-        
+
         setIsLoading(false);
-    }
+    }, [countries])
+    
+    useEffect(() => {
+        getRankings(filters);
+    }, [countries]);
 
     const debouncedGetRankings = useMemo(
         () => debounce(getRankings, 250),

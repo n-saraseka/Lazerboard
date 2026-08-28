@@ -12,7 +12,7 @@ import UserStats from "../User/UserStats.jsx";
 import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 import {debounce} from "../../utils/server-things.js";
 
-function UserPage({user, scores, count, pages}) {
+function UserPage({user}) {
     const currentDate = new Date().toISOString().split("T")[0];
     
     const [filters, setFilters] = useState({
@@ -65,33 +65,7 @@ function UserPage({user, scores, count, pages}) {
         getUserStats();
     }, [getUserStats]);
     
-    const [currentPage, setCurrentPage] = useState(1);
-    const [scoresCount, setScoresCount] = useState(count);
-    const [pageCount, setPageCount] = useState(pages);
-    const [allScores, setAllScores] = useState(scores);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isError, setIsError] = useState(false);
-    
-    const [userData, setUserData] = useState(null);
-    const [showUserData, setShowUserData] = useState(true);
-    const [statsLoading, setStatsLoading] = useState(true);
-    const [statsError, setStatsError] = useState(false);
-
-    let dateRangeString = '';
-    if (filters.dateRange.min !== null || filters.dateRange.max !== null) {
-        dateRangeString = ' from ';
-        const dateStrings = [];
-        dateStrings.push(filters.dateRange.min === null ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
-        dateStrings.push((filters.dateRange.max === null || filters.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateRange.max));
-        if (dateStrings[0] === '') {
-            dateRangeString += `until ${dateStrings[1]}`;
-        }
-        else {
-            dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
-        }
-    }
-
-    async function getScores(filterOptions, pageNumber = 1) {
+    const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
 
@@ -100,7 +74,7 @@ function UserPage({user, scores, count, pages}) {
         const params = new URLSearchParams();
         params.append("amount", filters.amount.toString());
         params.append("page", pageNumber.toString());
-        
+
         try {
             const response = await fetch(`/api/users/${user.id}/scores?` + params.toString(), {
                 method: "POST",
@@ -138,8 +112,38 @@ function UserPage({user, scores, count, pages}) {
             setPageCount(0);
             setIsError(true);
         }
-        
+
         setIsLoading(false);
+    }, [user.id]);
+
+    useEffect( () => {
+        getScores(filters);
+    }, [getScores]);
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const [scoresCount, setScoresCount] = useState(0);
+    const [pageCount, setPageCount] = useState(1);
+    const [allScores, setAllScores] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isError, setIsError] = useState(false);
+    
+    const [userData, setUserData] = useState(null);
+    const [showUserData, setShowUserData] = useState(true);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [statsError, setStatsError] = useState(false);
+
+    let dateRangeString = '';
+    if (filters.dateRange.min !== null || filters.dateRange.max !== null) {
+        dateRangeString = ' from ';
+        const dateStrings = [];
+        dateStrings.push(filters.dateRange.min === null ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
+        dateStrings.push((filters.dateRange.max === null || filters.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateRange.max));
+        if (dateStrings[0] === '') {
+            dateRangeString += `until ${dateStrings[1]}`;
+        }
+        else {
+            dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
+        }
     }
 
     const debouncedGetScores = useMemo(
@@ -150,7 +154,7 @@ function UserPage({user, scores, count, pages}) {
     return (<>
         <div className="card-stats">
             <div className="card-stats-column">
-                <UserCard user={user} scoreCount={count}/>
+                <UserCard user={user} scoreCount={scoresCount}/>
                 <div className="component-container">
                     <CollapseUncollapseButton onCollapseUncollapse={() => setShowUserData(!showUserData)} isCollapsed={!showUserData} entityName="statistics"/>
                 </div>

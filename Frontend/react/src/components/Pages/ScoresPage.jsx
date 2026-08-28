@@ -1,7 +1,7 @@
 import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
 import ScoreFilters from '../Filters/ScoreFilters';
-import {useState, useMemo} from "react";
+import {useState, useMemo, useEffect, useCallback} from "react";
 import Pagination from "../Misc/Pagination.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
 import Error from "../Misc/Error.jsx";
@@ -9,7 +9,7 @@ import Loader from "../Misc/Loader.jsx";
 import {createScoreQueryCommand} from "../../utils/score-things.js";
 import {debounce} from "../../utils/server-things.js";
 
-function ScoresPage({scores, pages, countries}) {
+function ScoresPage({countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
 
     const [filters, setFilters] = useState({
@@ -32,13 +32,14 @@ function ScoresPage({scores, pages, countries}) {
     });
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [scoresCount, setScoresCount] = useState(scores.length);
-    const [pageCount, setPageCount] = useState(pages);
-    const [allScores, setAllScores] = useState(scores);
+    const [scoresCount, setScoresCount] = useState(0);
+    const [pageCount, setPageCount] = useState(1);
+    const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
 
-    async function getScores(filterOptions, pageNumber = 1) {
+
+    const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
 
@@ -49,12 +50,12 @@ function ScoresPage({scores, pages, countries}) {
         params.append("page", pageNumber.toString());
 
         setIsLoading(true);
-        
+
         try {
             const response = await fetch(`/api/scores?` + params.toString(), {
                 method: "POST",
                 body: JSON.stringify(command),
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
@@ -87,9 +88,13 @@ function ScoresPage({scores, pages, countries}) {
             setPageCount(0);
             setIsError(true);
         }
-        
+
         setIsLoading(false);
-    }
+    }, [countries])
+
+    useEffect( () => {
+        getScores(filters);
+    }, [getScores]);
 
     const debouncedGetScores = useMemo(
         () => debounce(getScores, 250),

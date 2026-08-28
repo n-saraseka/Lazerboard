@@ -18,8 +18,6 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .Take(100)
             .Include(s => s.User)
             .ThenInclude(u => u.Country)
-            .Include(s => s.Beatmap)
-            .ThenInclude(b => b.Beatmapset)
             .ToListAsync(cancellationToken);
     
     public Task<int> GetBeatmapScoreCount(int beatmapId, Mode mode, CancellationToken cancellationToken) => Set
@@ -27,14 +25,4 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
 
     public Task<List<Score>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
         Set.Where(s => beatmapIds.Contains(s.BeatmapId)).ToListAsync(cancellationToken);
-
-    public IQueryable<Score> GetAllWithBeatmapAndUserData() => GetAll()
-        .Include(s => s.User)
-        .ThenInclude(u => u.Country)
-        .Include(s => s.Beatmap)
-        .ThenInclude(b => b.Beatmapset);
-
-    public IQueryable<Score> GetAllWithUserData() => GetAll()
-        .Include(s => s.User)
-        .ThenInclude(u => u.Country);
 }

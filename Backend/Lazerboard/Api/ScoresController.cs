@@ -10,7 +10,9 @@ namespace Lazerboard.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
+public class ScoresController(IScoreRepository scoreRepository,
+    IBeatmapRepository beatmapRepository,
+    IUserRepository userRepository) : ControllerBase
 {
     /// <summary>
     /// Get scores
@@ -35,7 +37,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
 
-        var query = scoreRepository.GetAllWithBeatmapAndUserData();
+        var query = scoreRepository.GetAll();
         
         var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.Today);
         var targetEndDate = command.DateRange[1] ?? DateOnly.FromDateTime(DateTime.Today);
@@ -65,6 +67,18 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         query = query.Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
 
         var scores = await query.ToListAsync(ct);
+        
+        var beatmaps = await beatmapRepository
+            .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
+        
+        var users = await userRepository.GetBulkAsync(scores.Select(s => s.UserId).Distinct().ToList(), ct);
+
+        scores = scores.Select(s =>
+        {
+            s.Beatmap = beatmaps.First(b => b.Id == s.BeatmapId);
+            s.User = users.First(u => u.Id == s.UserId);
+            return s;
+        }).ToList();
 
         return Ok(new ScoresResponse
         {
@@ -96,7 +110,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         
-        var query = scoreRepository.GetAllWithUserData();
+        var query = scoreRepository.GetAll();
         
         var filteredCommand = new ScoreQueryCommand
         {
@@ -113,34 +127,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
 
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
-        var group = query
-            .GroupBy(s => s.User)
-            .Select(g => new UserRanking 
-            {
-                User = g.Key,
-                ScoresCount = g.Count() 
-            })
-            .OrderByDescending(s => s.ScoresCount);
-
-        var count = await query.Select(s => s.UserId).Distinct().CountAsync(ct);
-        var pages = (int)Math.Ceiling((double)count / rankingAmount);
-        if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
-
-        var result = await group
-            .Skip((rankingPage - 1) * rankingAmount)
-            .Take(rankingAmount)
-            .ToListAsync(ct);
-        result = result.OrderByDescending(r => r.ScoresCount).ToList();
-        foreach (var userRanking in result)
-        {
-            userRanking.Rank = result.IndexOf(userRanking) + 1 + (rankingPage - 1) * rankingAmount;
-        }
-
-        return Ok(new UserRankingResponse
-        {
-            UserRankings = result,
-            Count = count
-        });
+        return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, ct));
     }
     
     /// <summary>
@@ -164,8 +151,7 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
         
-        var query = scoreRepository.GetAllWithBeatmapAndUserData()
-            .Where(s => s.TotalScore == 1000000);
+        var query = scoreRepository.GetAll().Where(s => s.TotalScore == 1000000);
 
         var filteredCommand = new ScoreQueryCommand
         {
@@ -176,33 +162,44 @@ public class ScoresController(IScoreRepository scoreRepository) : ControllerBase
         
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
-        var group = query
-            .GroupBy(s => s.User)
-            .Select(g => new UserRanking 
-            {
-                User = g.Key,
-                ScoresCount = g.Count() 
-            })
-            .OrderByDescending(s => s.ScoresCount);
+        return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, cancellationToken));
+    }
 
+    private async Task<UserRankingResponse> GetRankingsFromQueryAsync(IQueryable<Score> query, 
+        int rankingAmount,
+        int rankingPage, 
+        CancellationToken cancellationToken = default)
+    {
         var count = await query.Select(s => s.UserId).Distinct().CountAsync(cancellationToken);
+        
         var pages = (int)Math.Ceiling((double)count / rankingAmount);
         if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
-
-        var result = await group
+        
+        var group = await query
+            .GroupBy(s => s.UserId)
+            .Select(g => new
+            {
+                g.First().UserId,
+                ScoresCount = g.Count()
+            })
+            .OrderByDescending(r => r.ScoresCount)
             .Skip((rankingPage - 1) * rankingAmount)
             .Take(rankingAmount)
             .ToListAsync(cancellationToken);
-        result = result.OrderByDescending(r => r.ScoresCount).ToList();
-        foreach (var userRanking in result)
-        {
-            userRanking.Rank = result.IndexOf(userRanking) + 1 + (rankingPage - 1) * rankingAmount;
-        }
+        
+        var users = await userRepository.GetBulkAsync(group.Select(g => g.UserId), cancellationToken);
 
-        return Ok(new UserRankingResponse
+        var rankings = group.Select(g => new UserRanking
         {
-            UserRankings = result,
+            Rank = group.IndexOf(g) + 1,
+            ScoresCount = g.ScoresCount,
+            User = users.First(u => u.Id == g.UserId)
+        }).ToList();
+
+        return new UserRankingResponse
+        {
+            UserRankings = rankings,
             Count = count
-        });
+        };
     }
 }

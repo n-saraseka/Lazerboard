@@ -10,7 +10,7 @@ namespace Lazerboard.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IScoreRepository scoreRepository, IUserRepository userRepository) : ControllerBase
+public class UsersController(IScoreRepository scoreRepository, IUserRepository userRepository, IBeatmapRepository beatmapRepository) : ControllerBase
 {
     /// <summary>
     /// Get user scores
@@ -40,7 +40,7 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         var user = await userRepository.GetByIdAsync(userId, ct);
         if (user == null) return NotFound("User not found");
         
-        var query = scoreRepository.GetAllWithBeatmapAndUserData().Where(s => s.UserId == userId);
+        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
         var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
@@ -71,6 +71,16 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
             .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
 
         var scores = await query.ToListAsync(ct);
+        
+        var beatmaps = await beatmapRepository
+            .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
+
+        scores = scores.Select(s =>
+        {
+            s.Beatmap = beatmaps.First(b => b.Id == s.BeatmapId);
+            s.User = user;
+            return s;
+        }).ToList();
 
         return Ok(new ScoresResponse
         {

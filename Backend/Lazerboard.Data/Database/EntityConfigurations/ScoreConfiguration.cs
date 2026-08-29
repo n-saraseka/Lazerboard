@@ -18,14 +18,6 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .WithMany()
             .HasForeignKey(s => s.UserId);
         builder
-            .HasIndex(s => s.Date);
-        builder
-            .HasIndex(s => s.Accuracy);
-        builder
-            .HasIndex(s => s.SpeedChange);
-        builder
-            .HasIndex(s => s.PP);
-        builder
             .HasIndex(s => s.ModAcronyms);
         builder
             .HasIndex(s => new { s.UserId, s.Mode });

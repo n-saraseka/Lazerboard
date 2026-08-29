@@ -25,5 +25,7 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => new { s.Date, s.Mode});
         builder
             .HasIndex(s => new { s.Rank, s.Mode });
+        builder
+            .HasIndex(s => new { s.TotalScore, s.Mode });
     }
 }

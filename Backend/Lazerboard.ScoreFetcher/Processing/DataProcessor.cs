@@ -240,10 +240,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     }
 
     /// <summary>
-    /// Get all <see cref="Score.BeatmapId"/>s from the scores table
+    /// Get all <see cref="Score.BeatmapId"/>s with scores matching the given IDs
     /// </summary>
+    /// <param name="beatmapIds">The <see cref="Beatmap"/> IDs</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A <see cref="List{int}"/> with all beatmap IDs</returns>
-    public Task<List<int>> GetBetmapIdsWithScoresAsync(CancellationToken ct) =>
-        scoreRepository.GetAll().Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
+    public Task<List<int>> GetBeatmapIdsWithScoresAsync(IList<int> beatmapIds, CancellationToken ct) =>
+        scoreRepository.GetAll().Where(s => beatmapIds.Contains(s.BeatmapId)).Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
 }

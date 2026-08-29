@@ -150,17 +150,16 @@ public class FirehoseService : BackgroundService
         // Collect scores while there is a good amount of them in ScoresResponse.Scores
         while (scoresResponse.Scores.Length > 100)
         {
-            scoresToProcess.AddRange(scores);
             _cursor = scoresResponse.Cursor;
             
             scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
             scores = scoresResponse.Scores;
+            
+            var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+            var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
+
+            scoresToProcess.AddRange(scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList());
         }
-        
-        var beatmapIds = scoresToProcess.Select(s => s.BeatmapId).Distinct().ToList();
-        
-        var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
-        scoresToProcess = scoresToProcess.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
 
         if (scoresToProcess.Count > 0)
         {

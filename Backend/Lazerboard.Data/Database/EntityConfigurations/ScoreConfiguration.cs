@@ -28,6 +28,6 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
         builder
             .HasIndex(s => s.ModAcronyms);
         builder
-            .HasIndex(s => new { s.Mode, s.UserId });
+            .HasIndex(s => new { s.UserId, s.Mode });
     }
 }

@@ -27,5 +27,7 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => s.PP);
         builder
             .HasIndex(s => s.ModAcronyms);
+        builder
+            .HasIndex(s => new { s.Mode, s.UserId });
     }
 }

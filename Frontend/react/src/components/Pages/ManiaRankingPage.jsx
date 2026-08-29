@@ -64,11 +64,11 @@ function ScoreRankingPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [countries])
+    }, [currentPage])
 
     useEffect(() => {
         getRankings(filters);
-    }, [countries]);
+    }, []);
     
     const debouncedGetRankings = useMemo(
         () => debounce(getRankings, 250),

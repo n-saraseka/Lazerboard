@@ -90,11 +90,11 @@ function ScoresPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [countries])
+    }, [currentPage])
 
     useEffect( () => {
         getScores(filters);
-    }, [getScores]);
+    }, []);
 
     const debouncedGetScores = useMemo(
         () => debounce(getScores, 250),

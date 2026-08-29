@@ -32,6 +32,18 @@ function UserPage({user}) {
         sortDir: 'desc',
         amount: 25,
     });
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const [scoresCount, setScoresCount] = useState(0);
+    const [pageCount, setPageCount] = useState(1);
+    const [allScores, setAllScores] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isError, setIsError] = useState(false);
+    
+    const [userData, setUserData] = useState(null);
+    const [showUserData, setShowUserData] = useState(true);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [statsError, setStatsError] = useState(false);
 
     const getUserStats = useCallback(async () => {
         setStatsLoading(true);
@@ -59,12 +71,12 @@ function UserPage({user}) {
         }
 
         setStatsLoading(false);
-    }, [user.id])
-    
+    }, [])
+
     useEffect( () => {
         getUserStats();
-    }, [getUserStats]);
-    
+    }, []);
+
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
@@ -114,23 +126,16 @@ function UserPage({user}) {
         }
 
         setIsLoading(false);
-    }, [user.id]);
+    }, [currentPage]);
 
     useEffect( () => {
         getScores(filters);
-    }, [getScores]);
-    
-    const [currentPage, setCurrentPage] = useState(1);
-    const [scoresCount, setScoresCount] = useState(0);
-    const [pageCount, setPageCount] = useState(1);
-    const [allScores, setAllScores] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isError, setIsError] = useState(false);
-    
-    const [userData, setUserData] = useState(null);
-    const [showUserData, setShowUserData] = useState(true);
-    const [statsLoading, setStatsLoading] = useState(true);
-    const [statsError, setStatsError] = useState(false);
+    }, []);
+
+    const debouncedGetScores = useMemo(
+        () => debounce(getScores, 250),
+        [currentPage]
+    );
 
     let dateRangeString = '';
     if (filters.dateRange.min !== null || filters.dateRange.max !== null) {
@@ -145,11 +150,6 @@ function UserPage({user}) {
             dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
         }
     }
-
-    const debouncedGetScores = useMemo(
-        () => debounce(getScores, 250),
-        [currentPage]
-    );
 
     return (<>
         <div className="card-stats">

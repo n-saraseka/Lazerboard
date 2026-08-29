@@ -79,11 +79,11 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
         }
 
         setIsLoading(false);
-    }, [beatmapset])
+    }, [currentPage])
 
     useEffect(() => {
         getBeatmapScores(selectedBeatmapId, selectedMode);
-    }, [getBeatmapScores]);
+    }, []);
     
     const debouncedGetBeatmapScores = useMemo(
         () => debounce(getBeatmapScores, 250),

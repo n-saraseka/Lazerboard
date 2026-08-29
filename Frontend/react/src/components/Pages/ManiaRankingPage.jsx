@@ -1,4 +1,4 @@
-import {useState, useMemo, useCallback, useEffect} from "react";
+import {useState, useMemo,} from "react";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
@@ -20,7 +20,7 @@ function ScoreRankingPage({countries}) {
     const [pageCount, setPageCount] = useState(1);
     const [userRankings, setUserRankings] = useState([]);
     
-    const getRankings = useCallback(async (filterOptions, pageNumber = 1) => {
+    async function getRankings(filterOptions, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
 
@@ -64,11 +64,7 @@ function ScoreRankingPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [currentPage])
-
-    useEffect(() => {
-        getRankings(filters);
-    }, []);
+    }
     
     const debouncedGetRankings = useMemo(
         () => debounce(getRankings, 250),
@@ -84,7 +80,7 @@ function ScoreRankingPage({countries}) {
                 onClick={() => debouncedGetRankings(filters, currentPage)}>
             Get ranking
         </button>
-        {userRankings.length > 0 && <h1 className="section-header">User rankings:</h1>}
+        <h1 className="section-header">User rankings:</h1>
         <div className="component-container">
             {isError
                 ? (<Error/>)

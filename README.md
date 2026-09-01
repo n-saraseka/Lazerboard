@@ -1,4 +1,4 @@
-# Lazerboard
+# [Lazerboard](https://lazerboard.melguy.com/)
 
 A database of all beatmap leaderboards as shown in [osu!lazer](https://osu.ppy.sh/wiki/en/Help_centre/Upgrading_to_lazer) with live updates using the [osu! API](https://osu.ppy.sh/docs/index.html#get-scores). 
 

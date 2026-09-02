@@ -20,4 +20,11 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
             Where(b => ids.Contains(b.Id)).
             Include(b => b.Beatmapset)
             .ToListAsync(ct);
+    
+    public Task<Beatmap?> GetWithBeatmapsetDataAsync(int id, CancellationToken ct = default) =>
+        Set
+            .Where(b => b.Id == id)
+            .Include(b => b.Beatmapset)
+            .ThenInclude(bs => bs.User)
+                    .FirstOrDefaultAsync(ct);
 }

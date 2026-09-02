@@ -25,4 +25,7 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
 
     public Task<List<Score>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
         Set.Where(s => beatmapIds.Contains(s.BeatmapId)).ToListAsync(cancellationToken);
+    
+    public Task<int> GetMaxBeatmapIdAsync(CancellationToken cancellationToken) =>
+        Set.MaxAsync(s => s.BeatmapId, cancellationToken);
 }

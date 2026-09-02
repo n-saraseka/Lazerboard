@@ -47,6 +47,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
                 _logger.Log(LogLevel.Error, ex, "Latest scanned map job failed!");
             }
 
+            // It'll be a few seconds late, but it's fine for what we're doing here. 
             await Task.Delay(_updateInterval, cancellationToken);
         }
     }

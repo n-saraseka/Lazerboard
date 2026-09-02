@@ -38,6 +38,9 @@ OsuApi__ClientSecret=abunchfofbase64
 Caching__FileTTL=15
 EnableDatabaseSeeding=true
 DeleteScoresAfter=1
+DiscordHooks__BeatmapScores__HookURL=https://discord.com
+DiscordHooks__BeatmapScores__Enabled=true
+DiscordHooks__BeatmapScores__UpdateIntervalMinutes=60
 ````
 
 ## Testing the project

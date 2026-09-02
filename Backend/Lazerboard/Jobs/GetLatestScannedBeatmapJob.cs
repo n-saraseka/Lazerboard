@@ -65,6 +65,7 @@ public class GetLatestScannedBeatmapJob : IJob
 
         var imageUrl = $"https://assets.ppy.sh/beatmaps/{beatmap.Beatmapset.Id}/covers/cover@2x.jpg";
         var thumbnailUrl = $"https://a.ppy.sh/{beatmap.Beatmapset.UserId}";
+        var beatmapUrl = $"https://osu.ppy.sh/b/{beatmap.Id}";
         
         var timestamp = DateTimeOffset.UtcNow;
         var color = GetModeColor(beatmap);
@@ -76,10 +77,11 @@ public class GetLatestScannedBeatmapJob : IJob
             Color = color,
             ImageUrl = imageUrl,
             ThumbnailUrl = thumbnailUrl,
+            Url = beatmapUrl,
             Timestamp = timestamp,
             Footer = new EmbedFooterBuilder
             {
-                Text = "Lazerboard - Beatmap scans"
+                Text = "Lazerboard: Beatmap scans"
             }
         };
         return builder.Build();

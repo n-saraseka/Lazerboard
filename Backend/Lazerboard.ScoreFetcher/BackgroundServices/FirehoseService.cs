@@ -46,7 +46,6 @@ public class FirehoseService : BackgroundService
                 if (_seedingState.IsSeeding)
                 {
                     await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
-                    await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
                 }
                 else
                 {
@@ -132,23 +131,12 @@ public class FirehoseService : BackgroundService
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
+        _cursor = scoresResponse.Cursor;
         
-        var scoresToProcess = new List<APIScore>();
-        
-        // Collect scores while there is a good amount of them in ScoresResponse.Scores
-        while (scoresResponse.Scores.Length > 100)
-        {
-            _cursor = scoresResponse.Cursor;
-            
-            scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
-            scores = scoresResponse.Scores;
-            
-            var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-            var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+        var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
 
-            scoresToProcess.AddRange(scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList());
-        }
-
+        var scoresToProcess = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
         if (scoresToProcess.Count > 0)
         {
             var minDate = scoresToProcess.Min(s => s.Date);
@@ -157,12 +145,20 @@ public class FirehoseService : BackgroundService
                 scoresToProcess.Count, minDate, maxDate);
             
             var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
-
-            if (significantScores.Count > 0)
+            
+            if (significantScores.Count == 0)
             {
-                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                _logger.Log(LogLevel.Information, "No significant scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
+                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
+                _repeatExponent++;
+                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
+                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+                return;
             }
+            
+            _repeatExponent = 0;
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }
     }
 

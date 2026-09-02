@@ -75,7 +75,10 @@ public class LeaderboardSeedingService : BackgroundService
         if (_catchUpAfterRestart)
         {
             var maxId = await dataProcessor.GetMaxBeatmapsetIdAsync(stoppingToken);
-            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
+            var beatmapset = await apiFetcher.GetBeatmapsetAsync(maxId, stoppingToken);
+            var approvedDate = beatmapset.RankedDate.ToUnixTimeMilliseconds();
+            
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{maxId}}}"));
             _catchUpAfterRestart = false;
         }
         
@@ -104,8 +107,8 @@ public class LeaderboardSeedingService : BackgroundService
         {
             _logger.Log(LogLevel.Information, 
                 "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
-                beatmapsets.Count, 
-                DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate)),
+                beatmapsets.Count,
+                DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                 DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
             await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
         

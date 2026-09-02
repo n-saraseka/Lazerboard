@@ -10,4 +10,5 @@ public interface IApiFetcher
     public Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default);
     public Task<List<APIUser>> GetUsersAsync(IEnumerable<int> userIds, CancellationToken ct = default);
     public Task<List<APIBeatmap>> GetBeatmapsAsync(IEnumerable<int> beatmapIds, CancellationToken ct = default);
+    public Task<APIBeatmapset> GetBeatmapsetAsync(int beatmapsetId, CancellationToken ct = default);
 }

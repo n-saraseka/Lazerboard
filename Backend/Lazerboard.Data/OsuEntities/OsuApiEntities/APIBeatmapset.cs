@@ -19,5 +19,5 @@ public class APIBeatmapset
     [JsonProperty("user_id")]
     public int UserId { get; set; }
     [JsonProperty("ranked_date")]
-    public DateTime RankedDate { get; set; }
+    public DateTimeOffset RankedDate { get; set; }
 }

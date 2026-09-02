@@ -138,11 +138,18 @@ public class FirehoseService : BackgroundService
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
         _cursor = scoresResponse.Cursor;
+
+        if (scores.Length < 100)
+        {
+            _catchUpOnExistingBeatmapScores = false;
+            return;
+        }
         
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
 
         var scoresToProcess = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
+        
         if (scoresToProcess.Count > 0)
         {
             var minDate = scoresToProcess.Min(s => s.Date);
@@ -151,12 +158,6 @@ public class FirehoseService : BackgroundService
                 scoresToProcess.Count, minDate, maxDate);
             
             var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
-
-            if (significantScores.Count == 0)
-            {
-                _catchUpOnExistingBeatmapScores = false;
-                return;
-            }
             
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);

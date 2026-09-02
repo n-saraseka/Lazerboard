@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
@@ -15,6 +14,7 @@ public class FirehoseService : BackgroundService
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
     private bool _catchUpAfterRestart = true;
+    private bool _catchUpOnExistingScores;
 
     private string? _cursor;
     private int _repeatExponent;
@@ -46,6 +46,10 @@ public class FirehoseService : BackgroundService
                 if (_seedingState.IsSeeding)
                 {
                     await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                    if (!_catchUpOnExistingScores)
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                    }
                 }
                 else
                 {
@@ -128,6 +132,8 @@ public class FirehoseService : BackgroundService
         {
             await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
+
+        _catchUpOnExistingScores = true;
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
@@ -145,18 +151,13 @@ public class FirehoseService : BackgroundService
                 scoresToProcess.Count, minDate, maxDate);
             
             var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
-            
+
             if (significantScores.Count == 0)
             {
-                _logger.Log(LogLevel.Information, "No significant scores found after {interval} seconds. Repeating in {nextInterval} seconds", 
-                    _apiInterval * Math.Pow(2, _repeatExponent), _apiInterval * Math.Pow(2, _repeatExponent + 1));
-                _repeatExponent++;
-                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+                _catchUpOnExistingScores = false;
                 return;
             }
             
-            _repeatExponent = 0;
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
             await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }

@@ -3,24 +3,22 @@ using Discord.Webhook;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
-using Quartz;
 
 namespace Lazerboard.Jobs;
 
-public class GetLatestScannedBeatmapJob : IJob
+public class GetLatestScannedBeatmapService : BackgroundService
 {
-    private IScoreRepository _scoreRepository;
-    private IBeatmapRepository _beatmapRepository;
-    private ILogger<GetLatestScannedBeatmapJob> _logger;
+    private IServiceProvider _serviceProvider;
+    private ILogger<GetLatestScannedBeatmapService> _logger;
     private readonly string _webhookUrl;
 
-    public GetLatestScannedBeatmapJob(IScoreRepository scoreRepository,
-        IBeatmapRepository beatmapRepository,
-        ILogger<GetLatestScannedBeatmapJob> logger,
-        IConfiguration config)
+    public GetLatestScannedBeatmapService(IServiceProvider serviceProvider, 
+        ILogger<GetLatestScannedBeatmapService> logger)
     {
-        _scoreRepository = scoreRepository;
-        _beatmapRepository = beatmapRepository;
+        _serviceProvider = serviceProvider;
+        using var scope = _serviceProvider.CreateScope();
+        
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         _logger = logger;
         
         var webhooksConfig = config.GetSection("DiscordHooks");
@@ -28,29 +26,41 @@ public class GetLatestScannedBeatmapJob : IJob
         _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
     }
 
-    public async Task Execute(IJobExecutionContext context)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        try
+        while (!cancellationToken.IsCancellationRequested)
         {
-            var beatmap = await GetBeatmapDataAsync(context.CancellationToken);
-            if (beatmap != null)
+            try
             {
-                var embed = BuildBeatmapEmbed(beatmap);
-                using var client = new DiscordWebhookClient(_webhookUrl);
-                await client.SendMessageAsync("Most recent scanned beatmap:", false, [embed]);
+                var beatmap = await GetBeatmapDataAsync(cancellationToken);
+                if (beatmap != null)
+                {
+                    var embed = BuildBeatmapEmbed(beatmap);
+                    using var client = new DiscordWebhookClient(_webhookUrl);
+                    await client.SendMessageAsync("Most recent scanned beatmap:", false, [embed]);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.Log(LogLevel.Error, ex, "Latest scanned map job failed!");
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, ex, "Latest scanned map job failed!");
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
         }
     }
 
-    private async Task<Beatmap?> GetBeatmapDataAsync(CancellationToken ct)
+    private async Task<Beatmap?> GetBeatmapDataAsync(CancellationToken cancellationToken)
     {
         _logger.Log(LogLevel.Information, "Getting most recent scanned beatmap...");
-        var beatmapId = await _scoreRepository.GetMaxBeatmapIdAsync(ct);
-        var beatmapData = await _beatmapRepository.GetWithBeatmapsetDataAsync(beatmapId, ct);
+        
+        using var scope = _serviceProvider.CreateScope();
+        
+        var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
+        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
+        
+        var beatmapId = await scoreRepository.GetMaxBeatmapIdAsync(cancellationToken);
+        var beatmapData = await beatmapRepository.GetWithBeatmapsetDataAsync(beatmapId, cancellationToken);
+        
         return beatmapData;
     }
 

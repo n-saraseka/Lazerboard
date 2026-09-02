@@ -7,7 +7,6 @@ using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Jobs;
-using Quartz;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,18 +86,8 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-// Quartz jobs
-builder.Services.AddQuartz(q =>
-{
-    q.ScheduleJob<GetLatestScannedBeatmapJob>(trigger => trigger
-        .WithIdentity("Latest scanned beatmap job")
-        .WithSchedule(SimpleScheduleBuilder.Create()
-            .WithIntervalInMinutes(5)
-            .RepeatForever())
-    );
-});
-
-builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+// Background jobs
+builder.Services.AddHostedService<GetLatestScannedBeatmapService>();
 
 var app = builder.Build();
 

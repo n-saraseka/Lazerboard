@@ -73,7 +73,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         
         var mapsetBy = $"**Mapset by**: [{beatmap.Beatmapset.Creator}](https://osu.ppy.sh/users/{beatmap.Beatmapset.UserId})";
         var mode = $"**Mode**: {GetModeText(beatmap)}";
-        var difficulty = $"**Difficulty**: {Math.Round(beatmap.Difficulty, 2)}";
+        var difficulty = $"**Difficulty**: {Math.Round(beatmap.Difficulty, 2)} :star:";
         var beatmapStatus = $"**Status**: {GetStatusText(beatmap)}";
 
         var imageUrl = $"https://assets.ppy.sh/beatmaps/{beatmap.Beatmapset.Id}/covers/cover@2x.jpg";

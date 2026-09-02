@@ -73,9 +73,7 @@ public class FirehoseService : BackgroundService
     {
         if (_catchUpAfterRestart)
         {
-            var maxId = await dataProcessor.GetMaxScoreIdAsync(stoppingToken);
-            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
-            _catchUpAfterRestart = false;
+            await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
             
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
@@ -129,9 +127,7 @@ public class FirehoseService : BackgroundService
     {
         if (_catchUpAfterRestart)
         {
-            var maxId = await dataProcessor.GetMaxScoreIdAsync(stoppingToken);
-            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
-            _catchUpAfterRestart = false;
+            await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
@@ -168,5 +164,12 @@ public class FirehoseService : BackgroundService
                 await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
             }
         }
+    }
+
+    private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)
+    {
+        var maxId = await dataProcessor.GetMaxScoreIdAsync(stoppingToken);
+        _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
+        _catchUpAfterRestart = false;
     }
 }

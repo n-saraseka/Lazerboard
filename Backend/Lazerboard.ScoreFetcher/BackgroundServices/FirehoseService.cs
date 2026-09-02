@@ -14,7 +14,7 @@ public class FirehoseService : BackgroundService
     private readonly ILogger<FirehoseService> _logger;
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
-    private bool _catchUpAfterRestart;
+    private bool _catchUpAfterRestart = true;
 
     private string? _cursor;
     private int _repeatExponent;
@@ -30,7 +30,6 @@ public class FirehoseService : BackgroundService
 
         var osuApiConfig = config.GetSection("OsuApi");
         _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
-        _catchUpAfterRestart = Environment.GetEnvironmentVariable("EnableDatabaseSeeding") == "false";
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -144,36 +143,55 @@ public class FirehoseService : BackgroundService
     {
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
-
-        var scoresToProcess = new List<APIScore>();
         
-        // Collect scores while there is a good amount of them in ScoresResponse.Scores
-        while (scoresResponse.Scores.Length > 100)
+        if (_catchUpAfterRestart)
         {
-            _cursor = scoresResponse.Cursor;
-            
-            scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
-            scores = scoresResponse.Scores;
-            
-            var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-            var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
-
-            scoresToProcess.AddRange(scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList());
-        }
-
-        if (scoresToProcess.Count > 0)
-        {
-            var minDate = scoresToProcess.Min(s => s.Date);
-            var maxDate = scoresToProcess.Max(s => s.Date);
-            _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores between {minScoreDate} and {maxScoreDate}", 
-                scoresToProcess.Count, minDate, maxDate);
-            
-            var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
-
-            if (significantScores.Count > 0)
+            if (scores.Length == 0)
             {
-                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                _logger.Log(LogLevel.Warning, "Couldn't get current max score ID");
+                _repeatExponent++;
+            }
+            else
+            {
+                _repeatExponent = 0;
+                // 800k scores is around 6 hours of scores. These would get processed in around 15-20 minutes
+                var scoreId = scores.OrderByDescending(s => s.Id).First().Id - 800000;
+                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {scoreId}}}"));
+                _catchUpAfterRestart = false;
+            }
+        }
+        else
+        {
+            var scoresToProcess = new List<APIScore>();
+        
+            // Collect scores while there is a good amount of them in ScoresResponse.Scores
+            while (scoresResponse.Scores.Length > 100)
+            {
+                _cursor = scoresResponse.Cursor;
+            
+                scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
+                scores = scoresResponse.Scores;
+            
+                var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+                var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
+
+                scoresToProcess.AddRange(scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList());
+            }
+
+            if (scoresToProcess.Count > 0)
+            {
+                var minDate = scoresToProcess.Min(s => s.Date);
+                var maxDate = scoresToProcess.Max(s => s.Date);
+                _logger.Log(LogLevel.Information, "Processing a batch of {scoresCount} scores between {minScoreDate} and {maxScoreDate}", 
+                    scoresToProcess.Count, minDate, maxDate);
+            
+                var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
+
+                if (significantScores.Count > 0)
+                {
+                    await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+                    await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                }
             }
         }
     }

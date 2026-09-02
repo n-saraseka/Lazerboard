@@ -28,4 +28,13 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
     
     public Task<int> GetMaxBeatmapIdAsync(CancellationToken cancellationToken) =>
         Set.MaxAsync(s => s.BeatmapId, cancellationToken);
+
+    public Task<int> GetMaxBeatmapsetIdAsync(CancellationToken cancellationToken) =>
+        Set
+            .Include(s => s.Beatmap)
+            .ThenInclude(s => s.Beatmapset)
+            .MaxAsync(s => s.Beatmap.BeatmapsetId, cancellationToken);
+
+    public Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken) =>
+        Set.MaxAsync(s => s.Id, cancellationToken);
 }

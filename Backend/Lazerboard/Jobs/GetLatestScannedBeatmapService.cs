@@ -11,6 +11,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
     private IServiceProvider _serviceProvider;
     private ILogger<GetLatestScannedBeatmapService> _logger;
     private readonly string _webhookUrl;
+    private readonly TimeSpan _updateInterval;
 
     public GetLatestScannedBeatmapService(IServiceProvider serviceProvider, 
         ILogger<GetLatestScannedBeatmapService> logger)
@@ -24,6 +25,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var webhooksConfig = config.GetSection("DiscordHooks");
         var beatmapScoresConfig = webhooksConfig.GetSection("BeatmapScores");
         _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
+        _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -45,7 +47,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
                 _logger.Log(LogLevel.Error, ex, "Latest scanned map job failed!");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+            await Task.Delay(_updateInterval, cancellationToken);
         }
     }
 

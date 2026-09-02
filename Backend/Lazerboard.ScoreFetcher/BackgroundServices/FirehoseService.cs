@@ -14,7 +14,7 @@ public class FirehoseService : BackgroundService
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
     private bool _catchUpAfterRestart = true;
-    private bool _catchUpOnExistingScores;
+    private bool _catchUpOnExistingBeatmapScores;
 
     private string? _cursor;
     private int _repeatExponent;
@@ -46,7 +46,7 @@ public class FirehoseService : BackgroundService
                 if (_seedingState.IsSeeding)
                 {
                     await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
-                    if (!_catchUpOnExistingScores)
+                    if (!_catchUpOnExistingBeatmapScores)
                     {
                         await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
                     }
@@ -133,7 +133,7 @@ public class FirehoseService : BackgroundService
             await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
 
-        _catchUpOnExistingScores = true;
+        _catchUpOnExistingBeatmapScores = true;
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
@@ -154,7 +154,7 @@ public class FirehoseService : BackgroundService
 
             if (significantScores.Count == 0)
             {
-                _catchUpOnExistingScores = false;
+                _catchUpOnExistingBeatmapScores = false;
                 return;
             }
             

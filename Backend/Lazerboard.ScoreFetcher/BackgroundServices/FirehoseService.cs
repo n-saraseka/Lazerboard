@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
@@ -15,6 +14,7 @@ public class FirehoseService : BackgroundService
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
     private bool _catchUpAfterRestart = true;
+    private bool _catchUpOnExistingBeatmapScores;
 
     private string? _cursor;
     private int _repeatExponent;
@@ -46,7 +46,10 @@ public class FirehoseService : BackgroundService
                 if (_seedingState.IsSeeding)
                 {
                     await FetchExistingBeatmapScoresAsync(apiFetcher, dataProcessor, utils, stoppingToken);
-                    await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                    if (!_catchUpOnExistingBeatmapScores)
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                    }
                 }
                 else
                 {
@@ -129,26 +132,17 @@ public class FirehoseService : BackgroundService
         {
             await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
+
+        _catchUpOnExistingBeatmapScores = true;
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
+        _cursor = scoresResponse.Cursor;
         
-        var scoresToProcess = new List<APIScore>();
-        
-        // Collect scores while there is a good amount of them in ScoresResponse.Scores
-        while (scoresResponse.Scores.Length > 100)
-        {
-            _cursor = scoresResponse.Cursor;
-            
-            scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
-            scores = scoresResponse.Scores;
-            
-            var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-            var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+        var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
 
-            scoresToProcess.AddRange(scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList());
-        }
-
+        var scoresToProcess = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
         if (scoresToProcess.Count > 0)
         {
             var minDate = scoresToProcess.Min(s => s.Date);
@@ -158,11 +152,14 @@ public class FirehoseService : BackgroundService
             
             var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
 
-            if (significantScores.Count > 0)
+            if (significantScores.Count == 0)
             {
-                await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                _catchUpOnExistingBeatmapScores = false;
+                return;
             }
+            
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
         }
     }
 

@@ -32,7 +32,6 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
     public Task<int> GetMaxBeatmapsetIdAsync(CancellationToken cancellationToken) =>
         Set
             .Include(s => s.Beatmap)
-            .ThenInclude(s => s.Beatmapset)
             .MaxAsync(s => s.Beatmap.BeatmapsetId, cancellationToken);
 
     public Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken) =>

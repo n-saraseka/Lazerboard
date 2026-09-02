@@ -64,7 +64,7 @@ public class GetLatestScannedBeatmapJob : IJob
         var beatmapStatus = $"**Status**: {GetStatusText(beatmap)}";
 
         var imageUrl = $"https://assets.ppy.sh/beatmaps/{beatmap.Beatmapset.Id}/covers/cover@2x.jpg";
-        var thumbnailUrl = $"https://a.ppy.sh/${beatmap.Beatmapset.UserId}";
+        var thumbnailUrl = $"https://a.ppy.sh/{beatmap.Beatmapset.UserId}";
         
         var timestamp = DateTimeOffset.UtcNow;
         var color = GetModeColor(beatmap);

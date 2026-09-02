@@ -240,6 +240,7 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                             }}>
                                 <option value="pp">PP</option>
                                 <option value="rank">Rank</option>
+                                <option value="stars">Stars</option>
                                 <option value="accuracy">Accuracy</option>
                                 <option value="combo">Combo</option>
                                 <option value="totalScore">Standardized score</option>

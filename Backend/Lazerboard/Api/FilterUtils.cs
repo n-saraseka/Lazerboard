@@ -89,6 +89,9 @@ public static class FilterUtils
                 case "combo":
                     query = castedDesc ? query.OrderByDescending(s => s.Combo) : query.OrderBy(s => s.Combo);
                     break;
+                case "stars":
+                    query = castedDesc ? query.OrderByDescending(s => s.Beatmap.Difficulty) : query.OrderBy(s => s.Beatmap.Difficulty);
+                    break;
                 default:
                     query = castedDesc ? query.OrderByDescending(s => s.PP) : query.OrderBy(s => s.PP);
                     break;

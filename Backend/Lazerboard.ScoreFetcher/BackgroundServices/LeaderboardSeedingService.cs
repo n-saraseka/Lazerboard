@@ -82,8 +82,6 @@ public class LeaderboardSeedingService : BackgroundService
             _catchUpAfterRestart = false;
         }
         
-        _logger.Log(LogLevel.Information, "Cursor string: {cursor}", _cursor);
-        
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
         _cursor = beatmapsetsResponse.Cursor;
         

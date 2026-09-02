@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,7 @@ public class LeaderboardSeedingService : BackgroundService
     private readonly ILogger<LeaderboardSeedingService> _logger;
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
+    private bool _catchUpAfterRestart = true;
     
     private string? _cursor;
     private int _repeatExponent;
@@ -70,6 +72,16 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<bool> FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
         IScoreFetchingUtils utils, CancellationToken stoppingToken)
     {
+        if (_catchUpAfterRestart)
+        {
+            var maxId = await dataProcessor.GetMaxBeatmapsetIdAsync(stoppingToken);
+            var beatmapset = await apiFetcher.GetBeatmapsetAsync(maxId, stoppingToken);
+            var approvedDate = beatmapset.RankedDate.ToUnixTimeMilliseconds();
+            
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{maxId}}}"));
+            _catchUpAfterRestart = false;
+        }
+        
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
         _cursor = beatmapsetsResponse.Cursor;
         
@@ -93,8 +105,8 @@ public class LeaderboardSeedingService : BackgroundService
         {
             _logger.Log(LogLevel.Information, 
                 "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
-                beatmapsets.Count, 
-                DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate)),
+                beatmapsets.Count,
+                DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                 DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
             await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
         

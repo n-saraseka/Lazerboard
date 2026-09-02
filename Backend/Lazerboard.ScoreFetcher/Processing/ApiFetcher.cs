@@ -83,4 +83,13 @@ public class ApiFetcher : IApiFetcher
 
         return beatmaps;
     }
+    
+    /// <summary>
+    /// Get beatmapset data from the API
+    /// </summary>
+    /// <param name="beatmapsetId">The <see cref="APIBeatmapset"/> ID</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="APIBeatmapset"/></returns>
+    public Task<APIBeatmapset> GetBeatmapsetAsync(int beatmapsetId, CancellationToken ct = default) =>
+        _osuApiService.GetBeatmapsetAsync(beatmapsetId, ct);
 }

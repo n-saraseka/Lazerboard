@@ -118,6 +118,25 @@ public class OsuApiService
     }
 
     /// <summary>
+    /// Get beatmapset data from the API
+    /// </summary>
+    /// <param name="id">The <see cref="APIBeatmapset"/> ID</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="APIBeatmapset"/></returns>
+    public async Task<APIBeatmapset> GetBeatmapsetAsync(int id, CancellationToken ct = default)
+    {
+        var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
+            $"{BaseApiUrl}/beatmapsets/{id}", 
+            null, 
+            false, 
+            ct);
+        
+        var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+        return beatmapset;
+    }
+
+    /// <summary>
     /// Get beatmap scores from the API
     /// </summary>
     /// <param name="beatmapId">Beatmap ID</param>

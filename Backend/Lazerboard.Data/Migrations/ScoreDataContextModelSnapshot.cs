@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Lazerboard.Data.Database;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -25,6 +26,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "score_source", new[] { "leaderboard_scan", "score_fetcher" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.Beatmap", b =>
@@ -203,8 +205,8 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("rank");
 
-                    b.Property<int>("ScoreSource")
-                        .HasColumnType("integer")
+                    b.Property<ScoreSource>("ScoreSource")
+                        .HasColumnType("score_source")
                         .HasColumnName("score_source");
 
                     b.Property<double?>("SpeedChange")

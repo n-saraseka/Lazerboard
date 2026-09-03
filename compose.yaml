@@ -10,7 +10,7 @@ services:
       - ./logs:/app/logs
       - ./keys:/app/keys
     command: |
-      sh -c "mkdir -p /app/BeatmapCache /app/logs/scorefetcher /app/logs/backend /app/keys &&
+      sh -c "mkdir -p /app/BeatmapCache /app/logs/scorefetcher /app/logs/backend /app/logs/discordhooks /app/keys &&
              chown -R ${UID:-1000}:${GID:-1000} /app/BeatmapCache /app/logs /app/keys"
     restart: "no"
   

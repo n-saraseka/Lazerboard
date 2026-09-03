@@ -28,7 +28,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
                     .MapEnum<ScoreSource>("score_source")
-                    .CommandTimeout(240))
+                    .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 
 var app = builder.Build();

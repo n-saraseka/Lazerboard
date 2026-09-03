@@ -32,6 +32,21 @@ services:
     restart: unless-stopped
     networks:
       - main
+  
+  discordhooks:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard.DiscordHooks/Dockerfile
+    depends_on:
+      "migrations":
+        condition: service_completed_successfully
+    env_file:
+      - dev.env
+    volumes:
+      - ./logs/discordhooks:/app/Logs
+    restart: unless-stopped
+    networks:
+      - main
 
   backend:
     build:

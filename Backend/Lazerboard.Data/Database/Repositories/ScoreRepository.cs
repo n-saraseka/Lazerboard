@@ -26,15 +26,18 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
 
     public Task<List<Score>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
         Set.Where(s => beatmapIds.Contains(s.BeatmapId)).ToListAsync(cancellationToken);
-    
-    public Task<int> GetMaxBeatmapIdAsync(CancellationToken cancellationToken) =>
-        Set.MaxAsync(s => s.BeatmapId, cancellationToken);
 
     // We have to do this because the generated LINQ by EF Core is literally 15 times more inefficient. (0.1s execution time vs 1.5s on a test DB)
     public Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken) =>
         GetDbContext()
             .Database
             .SqlQueryRaw<int>("SELECT DISTINCT b.beatmapset_id AS \"Value\"\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id\nORDER BY b.beatmapset_id DESC\nOFFSET 1\nLIMIT 1")
+            .FirstOrDefaultAsync(cancellationToken);
+    
+    public Task<int> GetMaxBeatmapsetIdAsync(CancellationToken cancellationToken) =>
+        GetDbContext()
+            .Database
+            .SqlQueryRaw<int>("SELECT MAX(b.beatmapset_id) AS \"Value\"\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id")
             .FirstOrDefaultAsync(cancellationToken);
 
     public Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken) =>

@@ -7,7 +7,6 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
-using Lazerboard.Jobs;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,9 +86,6 @@ builder.Services.AddRateLimiter(options =>
         await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken);
     };
 });
-
-// Background jobs
-builder.Services.AddHostedService<GetLatestScannedBeatmapService>();
 
 var app = builder.Build();
 

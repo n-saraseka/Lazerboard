@@ -1,5 +1,7 @@
 ﻿using Lazerboard.Data.Database;
 using Lazerboard.Data.Database.Entities.Enums;
+using Lazerboard.Data.Database.Repositories;
+using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.DiscordHooks.Services;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +35,10 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<ScoreSource>("score_source")
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
+
+// Repositories
+builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
+builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();
 
 // Hook services
 builder.Services.AddHostedService<GetLatestScannedBeatmapService>();

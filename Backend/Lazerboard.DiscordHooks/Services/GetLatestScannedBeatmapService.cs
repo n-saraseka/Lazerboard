@@ -43,12 +43,13 @@ public class GetLatestScannedBeatmapService : BackgroundService
                 {
                     var embed = BuildBeatmapEmbed(beatmap);
                     using var client = new DiscordWebhookClient(_webhookUrl);
+                    _logger.Log(LogLevel.Information, "Most recent scanned beatmap ID: {beatmapId}", beatmap.Id);
                     await client.SendMessageAsync("Most recent scanned beatmap:", false, [embed]);
                 }
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Error, ex, "Latest scanned map job failed!");
+                _logger.Log(LogLevel.Error, ex, "Latest scanned map service failed!");
             }
 
             // It'll be a few seconds late, but it's fine for what we're doing here. 

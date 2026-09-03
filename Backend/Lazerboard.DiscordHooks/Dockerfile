@@ -6,6 +6,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Lazerboard.DiscordHooks/Lazerboard.DiscordHooks.csproj", "Lazerboard.DiscordHooks/"]
+COPY ["Lazerboard.Data/Lazerboard.Data.csproj", "Lazerboard.Data/"]
 RUN dotnet restore "Lazerboard.DiscordHooks/Lazerboard.DiscordHooks.csproj"
 COPY . .
 WORKDIR "/src/Lazerboard.DiscordHooks"

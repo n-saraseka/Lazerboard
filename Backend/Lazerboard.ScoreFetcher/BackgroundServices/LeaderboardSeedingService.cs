@@ -113,30 +113,31 @@ public class LeaderboardSeedingService : BackgroundService
                 DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                 DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
             await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
-        
-            var beatmaps = new List<APIBeatmap>();
+            
             foreach (var beatmapset in beatmapsets)
-                beatmaps.AddRange(beatmapset.Beatmaps);
-            await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
-            
-            foreach (var beatmap in beatmaps)
             {
-                var scores = new List<APIScore>();
-            
-                foreach (var val in Enum.GetValues<Mode>())
-                {
-                    if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
-                    var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken);
-                    scores.AddRange(beatmapScores.Scores);
-                }
+                _logger.Log(LogLevel.Information, "Processing beatmapset ID {beatmapsetId}", beatmapset.Id);
+                await dataProcessor.ProcessBeatmapsAsync(beatmapset.Beatmaps, stoppingToken);
                 
-                var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-                significantScores = significantScores.DistinctBy(s => s.Id).ToList();
-
-                if (significantScores.Count > 0)
+                foreach (var beatmap in beatmapset.Beatmaps)
                 {
-                    await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                    await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
+                    var scores = new List<APIScore>();
+            
+                    foreach (var val in Enum.GetValues<Mode>())
+                    {
+                        if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
+                        var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken);
+                        scores.AddRange(beatmapScores.Scores);
+                    }
+                
+                    var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+                    significantScores = significantScores.DistinctBy(s => s.Id).ToList();
+
+                    if (significantScores.Count > 0)
+                    {
+                        await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+                        await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
+                    }
                 }
             }
         }

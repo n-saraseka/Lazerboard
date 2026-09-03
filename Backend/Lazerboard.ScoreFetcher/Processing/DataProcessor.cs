@@ -261,6 +261,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<int> GetMaxBeatmapsetIdAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetMaxBeatmapsetIdAsync(cancellationToken);
+    public Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken) =>
+        scoreRepository.GetSecondHighestBeatmapsetIdAsync(cancellationToken);
 }

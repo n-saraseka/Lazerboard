@@ -74,11 +74,11 @@ public class LeaderboardSeedingService : BackgroundService
     {
         if (_catchUpAfterRestart)
         {
-            var maxId = await dataProcessor.GetMaxBeatmapsetIdAsync(stoppingToken);
-            var beatmapset = await apiFetcher.GetBeatmapsetAsync(maxId, stoppingToken);
+            var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
+            var beatmapset = await apiFetcher.GetBeatmapsetAsync(beatmapsetId, stoppingToken);
             var approvedDate = beatmapset.RankedDate.ToUnixTimeMilliseconds();
             
-            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{maxId}}}"));
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{beatmapsetId}}}"));
             _catchUpAfterRestart = false;
         }
         

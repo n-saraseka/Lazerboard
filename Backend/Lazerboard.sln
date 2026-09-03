@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.Data", "Lazerboa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.ScoreFetcher", "Lazerboard.ScoreFetcher\Lazerboard.ScoreFetcher.csproj", "{2446A68C-23B4-4B6D-9D45-EA14073A3569}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.DiscordHooks", "Lazerboard.DiscordHooks\Lazerboard.DiscordHooks.csproj", "{267EA0D8-63A2-4BD5-97A7-1402EC1222A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,5 +31,9 @@ Global
 		{2446A68C-23B4-4B6D-9D45-EA14073A3569}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2446A68C-23B4-4B6D-9D45-EA14073A3569}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2446A68C-23B4-4B6D-9D45-EA14073A3569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{267EA0D8-63A2-4BD5-97A7-1402EC1222A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{267EA0D8-63A2-4BD5-97A7-1402EC1222A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{267EA0D8-63A2-4BD5-97A7-1402EC1222A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{267EA0D8-63A2-4BD5-97A7-1402EC1222A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

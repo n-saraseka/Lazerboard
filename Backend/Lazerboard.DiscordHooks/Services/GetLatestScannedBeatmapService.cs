@@ -2,9 +2,13 @@ using Discord;
 using Discord.Webhook;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.DiscordHooks.Utils;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace Lazerboard.Jobs;
+namespace Lazerboard.DiscordHooks.Services;
 
 public class GetLatestScannedBeatmapService : BackgroundService
 {
@@ -72,16 +76,16 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var title = $"{beatmap.Beatmapset.Artist} - {beatmap.Beatmapset.Title} [{beatmap.DifficultyName}]";
         
         var mapsetBy = $"**Mapset by**: [{beatmap.Beatmapset.Creator}](https://osu.ppy.sh/users/{beatmap.Beatmapset.UserId})";
-        var mode = $"**Mode**: {GetModeText(beatmap)}";
+        var mode = $"**Mode**: {EmbedUtils.GetModeText(beatmap.Mode)}";
         var difficulty = $"**Difficulty**: {Math.Round(beatmap.Difficulty, 2)} :star:";
-        var beatmapStatus = $"**Status**: {GetStatusText(beatmap)}";
+        var beatmapStatus = $"**Status**: {EmbedUtils.GetStatusText(beatmap.Status)}";
 
         var imageUrl = $"https://assets.ppy.sh/beatmaps/{beatmap.Beatmapset.Id}/covers/cover@2x.jpg";
         var thumbnailUrl = $"https://a.ppy.sh/{beatmap.Beatmapset.UserId}";
         var beatmapUrl = $"https://osu.ppy.sh/b/{beatmap.Id}";
         
         var timestamp = DateTimeOffset.UtcNow;
-        var color = GetModeColor(beatmap);
+        var color = EmbedUtils.GetModeColor(beatmap.Mode);
         
         var builder = new EmbedBuilder
         {
@@ -98,62 +102,5 @@ public class GetLatestScannedBeatmapService : BackgroundService
             }
         };
         return builder.Build();
-    }
-
-    private string GetModeText(Beatmap beatmap)
-    {
-        switch (beatmap.Mode)
-        {
-            case Mode.Osu:
-                return ":red_circle: osu!";
-            case Mode.Taiko:
-                return ":drum: osu!taiko";
-            case Mode.Fruits:
-                return ":green_apple: osu!catch";
-            case Mode.Mania:
-                return ":musical_keyboard: osu!mania";
-            default:
-                return "unknown";
-        }
-    }
-
-    private Color GetModeColor(Beatmap beatmap)
-    {
-        switch (beatmap.Mode)
-        {
-            case Mode.Osu:
-                return new Color(200, 120, 120);
-            case Mode.Taiko:
-                return new Color(200, 180, 60);
-            case Mode.Fruits:
-                return new Color(120, 200, 100);
-            case Mode.Mania:
-                return new Color(100, 100, 200);
-            default:
-                return new Color(200, 200, 200);
-        }
-    }
-
-    private string GetStatusText(Beatmap beatmap)
-    {
-        switch (beatmap.Status)
-        {
-            case BeatmapStatus.Graveyard:
-                return ":headstone: Graveyard";
-            case BeatmapStatus.Wip:
-                return ":construction: WIP";
-            case BeatmapStatus.Pending:
-                return ":timer: Pending";
-            case BeatmapStatus.Ranked:
-                return ":arrow_double_up: Ranked";
-            case BeatmapStatus.Approved:
-                return ":arrow_double_up: Approved";
-            case BeatmapStatus.Qualified:
-                return ":white_check_mark: Qualified";
-            case BeatmapStatus.Loved:
-                return ":heart: Loved";
-            default:
-                return "unknown";
-        }
     }
 }

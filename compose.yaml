@@ -47,6 +47,19 @@ services:
     networks:
       - main
   
+  discordhooks:
+    image: ghcr.io/n-saraseka/lazerboard-discordhooks:latest
+    depends_on:
+      "migrations":
+        condition: service_completed_successfully
+    env_file:
+      - dev.env
+    volumes:
+      - ./logs/discordhooks:/app/Logs
+    restart: unless-stopped
+    networks:
+      - main
+  
   backend:
     image: ghcr.io/n-saraseka/lazerboard-backend:latest
     depends_on:

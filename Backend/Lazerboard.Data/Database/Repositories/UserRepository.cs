@@ -21,7 +21,8 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
             .Where(u => u.Username.ToLower().StartsWith(trimmedQuery) && u.CountryCode != null)
             .Take(25)
             .Include(u => u.Country)
-            .OrderByDescending(u => u.Username)
+            .OrderBy(u => u.Username.Length)
+            .ThenByDescending(u => u.Username)
             .ToListAsync(cancellationToken);
     } 
 }

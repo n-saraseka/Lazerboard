@@ -33,7 +33,8 @@ builder.Services.AddDbContext<ScoreDataContext>(
                 .MapEnum<Mode>("mode")
                 .MapEnum<Grade>("grade")
                 .MapEnum<BeatmapStatus>("beatmap_status")
-                .MapEnum<ScoreSource>("score_source"))
+                .MapEnum<ScoreSource>("score_source")
+                .CommandTimeout(60))
                 .UseSnakeCaseNamingConvention());
 
 // Database related

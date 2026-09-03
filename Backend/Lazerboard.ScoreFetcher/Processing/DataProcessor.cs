@@ -205,23 +205,14 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 beatmapScores = beatmapScores.Where(s => !personalBests.Select(pb => pb.Id).Contains(s.Id)).ToList();
                 deletedCount += personalBests.Count;
                 
-                var newScores = 
-                    groupScores.Where(b => !beatmapScores
-                            .Select(s => s.Id)
-                            .Contains(b.Id))
-                        .ToList();
-                var oldScores = beatmapScores.Where(n => !newScores
-                    .Select(s => s.Id)
-                    .Contains(n.Id))
-                    .Select(s =>
-                    {
-                        s.ScoreSource = source;
-                        return s;
-                    })
+                var newScores = groupScores
+                    .Where(b => !beatmapScores
+                        .Select(s => s.Id)
+                        .Contains(b.Id))
                     .ToList();
                 
                 var merged = newScores
-                    .Concat(oldScores)
+                    .Concat(beatmapScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .ToList();
@@ -233,7 +224,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     scoreRepository.CreateBulk(newScores);
                 }
 
-                if (oldScores.Count > 0)
+                if (beatmapScores.Count > 0)
                 {
                     scoreRepository.UpdateBulk(beatmapScores);
                 }

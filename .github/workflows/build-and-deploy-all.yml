@@ -8,6 +8,7 @@ env:
   SCOREFETCHER_IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:latest
   BACKEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:latest
   FRONTEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:latest
+  DISCORDHOOKS_IMAGE_NAME: ${{ github.actor }}/lazerboard-discordhooks:latest
 
 jobs:
   publish-migrations:
@@ -82,12 +83,31 @@ jobs:
         file: ./Frontend/production.Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+  publish-discordhooks:
+    name: publish discord hooks image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.DiscordHooks/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.DISCORDHOOKS_IMAGE_NAME }}
   deploy:
     needs:
       - publish-backend
       - publish-scorefetcher
       - publish-frontend
       - publish-migrations
+      - publish-discordhooks
     name: deploy container
     runs-on: ubuntu-latest
     

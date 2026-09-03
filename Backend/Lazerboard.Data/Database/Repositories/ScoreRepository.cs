@@ -1,4 +1,5 @@
 ﻿using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,8 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .SqlQueryRaw<int>("SELECT DISTINCT b.beatmapset_id AS \"Value\"\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id\nORDER BY b.beatmapset_id DESC\nOFFSET 1\nLIMIT 1")
             .FirstOrDefaultAsync(cancellationToken);
 
-    public Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken) =>
-        Set.MaxAsync(s => s.Id, cancellationToken);
+    public Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken) =>
+        Set
+            .Where(s => s.ScoreSource == ScoreSource.ScoreFetcher)
+            .MaxAsync(s => s.Id, cancellationToken);
 }

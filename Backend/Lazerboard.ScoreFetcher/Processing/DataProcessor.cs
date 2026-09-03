@@ -249,12 +249,12 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         scoreRepository.GetAll().Where(s => beatmapIds.Contains(s.BeatmapId)).Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
 
     /// <summary>
-    /// Get max score ID from the database
+    /// Get max score ID with the ScoreFetcher <see cref="Score.ScoreSource"/> from the database
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetMaxScoreIdAsync(cancellationToken);
+    public Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken) =>
+        scoreRepository.GetMaxFirehoseScoreIdAsync(cancellationToken);
     
     /// <summary>
     /// Get max beatmapset ID from the database

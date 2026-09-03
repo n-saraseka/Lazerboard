@@ -166,7 +166,7 @@ public class FirehoseService : BackgroundService
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)
     {
-        var maxId = await dataProcessor.GetMaxScoreIdAsync(stoppingToken);
+        var maxId = await dataProcessor.GetMaxFirehoseScoreIdAsync(stoppingToken);
         _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
         _catchUpAfterRestart = false;
     }

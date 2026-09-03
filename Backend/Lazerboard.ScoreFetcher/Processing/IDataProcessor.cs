@@ -15,6 +15,6 @@ public interface IDataProcessor
     Task ProcessRemovedUsersAsync(IEnumerable<User> users, CancellationToken ct);
     Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct);
     Task<List<int>> GetBeatmapIdsWithScoresAsync(IList<int> beatmapIds, CancellationToken ct);
-    Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken);
+    Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken);
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken);
 }

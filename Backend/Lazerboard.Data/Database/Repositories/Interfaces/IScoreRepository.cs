@@ -11,5 +11,5 @@ public interface IScoreRepository : IRepository<Score, ulong>
     Task<int> GetBeatmapScoreCount(int beatmapId, Mode mode, CancellationToken cancellationToken = default);
     Task<int> GetMaxBeatmapIdAsync(CancellationToken cancellationToken = default);
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken = default);
-    Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken);
+    Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken);
 }

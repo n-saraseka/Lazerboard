@@ -198,7 +198,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 foreach (var score in groupScores)
                 {
-                    var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
+                    var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId 
+                                                                  && s.Mode == score.Mode 
+                                                                  && s.Id != score.Id).ToList();
                     personalBests.AddRange(matchingScores);
                 }
                 scoreRepository.DeleteBulk(personalBests);
@@ -211,8 +213,26 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         .Contains(b.Id))
                     .ToList();
                 
+                var oldScores = beatmapScores
+                    .Where(b => groupScores
+                        .Select(s => s.Id)
+                        .Contains(b.Id))
+                    .Select(s =>
+                    {
+                        s.ScoreSource = source;
+                        return s;
+                    })
+                    .ToList();
+                
+                var extraScores = beatmapScores
+                    .Where(b => !groupScores
+                        .Select(s => s.Id)
+                        .Contains(b.Id))
+                    .ToList();
+                
                 var merged = newScores
-                    .Concat(beatmapScores)
+                    .Concat(oldScores)
+                    .Concat(extraScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .ToList();
@@ -223,13 +243,18 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 {
                     scoreRepository.CreateBulk(newScores);
                 }
-
-                if (beatmapScores.Count > 0)
+                
+                if (oldScores.Count > 0)
                 {
-                    scoreRepository.UpdateBulk(beatmapScores);
+                    scoreRepository.UpdateBulk(oldScores);
+                }
+
+                if (extraScores.Count > 0)
+                {
+                    scoreRepository.UpdateBulk(extraScores);
                 }
             
-                updatedCount += beatmapScores.Count;
+                updatedCount += oldScores.Count + extraScores.Count;
                 createdCount += newScores.Count;
             }
         }

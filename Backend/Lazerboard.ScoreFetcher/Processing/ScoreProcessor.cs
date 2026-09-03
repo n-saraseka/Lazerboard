@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Calculations;
@@ -17,9 +16,17 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     public async Task<bool> CheckIfSignificantAsync(APIScore score, CancellationToken cancellationToken)
     {
         var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
-        var scoresForMode = beatmapScores.Where(s => s.Mode == score.Mode).ToList();
-        if (scoresForMode.All(s => s.TotalScore >= score.TotalScore) && beatmapScores.Count >= 100) return false;
-        return !CheckIfBetterAlreadyExists(score, scoresForMode);
+        var scoresForMode = 
+            beatmapScores
+                .Where(s => s.Mode == score.Mode)
+                .OrderByDescending(s => s.TotalScore)
+                .ThenBy(s => s.Date)
+                .ToList();
+        if (scoresForMode.Count == 0) return true;
+        var lastScore = scoresForMode.Last();
+        return !((lastScore.TotalScore > score.TotalScore 
+                  || lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)
+                 && scoresForMode.Count >= 100);
     }
     
     /// <summary>
@@ -45,13 +52,16 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                 g.Key.Mode == group.Key.Mode && g.Key.BeatmapId == group.Key.BeatmapId);
             if (respectiveGroup != null)
             {
-                var beatmapScores = respectiveGroup.ToList();
+                var beatmapScores = respectiveGroup
+                    .OrderByDescending(s => s.TotalScore)
+                    .ThenBy(s => s.Date)
+                    .ToList();
+                var lastScore = beatmapScores.Last();
                 foreach (var score in scoresInGroup)
                 {
-                    if (beatmapScores.All(s => s.TotalScore >= score.TotalScore) && beatmapScores.Count >= 100) 
-                        dictionary[score.Id] = false;
-                    else 
-                        dictionary[score.Id] = !CheckIfBetterAlreadyExists(score, beatmapScores);
+                    dictionary[score.Id] = !((lastScore.TotalScore > score.TotalScore 
+                                              || lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)
+                                             && beatmapScores.Count >= 100);
                 }
             }
             else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
@@ -75,18 +85,5 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     {
         if (score.PP != null) return;
         score.PP = await calculator.CalculateAsync(score, cancellationToken);
-    }
-
-    /// <summary>
-    /// Check if a better <see cref="Score"/> set by user already exists in the database
-    /// </summary>
-    /// <param name="score">The <see cref="APIScore"/> to check</param>
-    /// <param name="beatmapScores">The <see cref="Score"/>s set on the beatmap</param>
-    /// <returns>True if there is a score set by user that is higher or equal, false otherwise</returns>
-   public bool CheckIfBetterAlreadyExists(APIScore score, List<Score> beatmapScores)
-    {
-        var existingScores = beatmapScores.Where(s => s.UserId == score.UserId).ToList();
-        if (existingScores.Count == 0) return false;
-        return existingScores.Max(s => s.TotalScore) >= score.TotalScore;
     }
 }

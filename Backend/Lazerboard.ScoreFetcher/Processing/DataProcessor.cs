@@ -196,12 +196,25 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 var personalBests = new List<Score>();
 
-                foreach (var score in groupScores)
+                foreach (var score in groupScores.ToList())
                 {
                     var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId 
                                                                   && s.Mode == score.Mode 
                                                                   && s.Id != score.Id).ToList();
-                    personalBests.AddRange(matchingScores);
+                    if (matchingScores.Any())
+                    {
+                        var worsePbs = matchingScores.Where(s => 
+                            s.TotalScore < score.TotalScore 
+                            || s.TotalScore == score.TotalScore && s.Id > score.Id).ToList();
+                        if (worsePbs.Any())
+                        {
+                            personalBests.AddRange(worsePbs);
+                        }
+                        else
+                        {
+                            groupScores.Remove(score);
+                        }
+                    }
                 }
                 scoreRepository.DeleteBulk(personalBests);
                 beatmapScores = beatmapScores.Where(s => !personalBests.Select(pb => pb.Id).Contains(s.Id)).ToList();

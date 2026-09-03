@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
@@ -151,8 +152,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// Check for existing score data and save new score DTOs, assigning a rank to each one.
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
+    /// <param name="source">The <see cref="ScoreSource"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
+    public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, ScoreSource source, CancellationToken ct)
     {
         if (scores.Count() == 0) return;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
@@ -170,7 +172,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             var groupScores = group
                 .OrderByDescending(b => b.TotalScore)
                 .ThenBy(b => b.Date)
-                .Select(entityToDtoService.ScoreEntityToDto)
+                .Select(s =>
+                {
+                    var dto = entityToDtoService.ScoreEntityToDto(s, source);
+                    return dto;
+                })
                 .DistinctBy(s => s.Id)
                 .ToList();
             var matchingGroup = groupedExistingScores.FirstOrDefault(g => 
@@ -190,7 +196,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 var personalBests = new List<Score>();
 
-                foreach (var score in groupScores.ToList())
+                foreach (var score in groupScores)
                 {
                     var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
                     personalBests.AddRange(matchingScores);
@@ -202,27 +208,38 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 var newScores = 
                     groupScores.Where(b => !beatmapScores
                             .Select(s => s.Id)
-                            .Contains(b.Id));
-                var merged = beatmapScores
-                    .Concat(newScores)
+                            .Contains(b.Id))
+                        .ToList();
+                var oldScores = beatmapScores.Where(n => !newScores
+                    .Select(s => s.Id)
+                    .Contains(n.Id))
+                    .Select(s =>
+                    {
+                        s.ScoreSource = source;
+                        return s;
+                    })
+                    .ToList();
+                
+                var merged = newScores
+                    .Concat(oldScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .ToList();
             
                 foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
 
-                if (newScores.Count() > 0)
+                if (newScores.Count > 0)
                 {
                     scoreRepository.CreateBulk(newScores);
                 }
 
-                if (beatmapScores.Count > 0)
+                if (oldScores.Count > 0)
                 {
                     scoreRepository.UpdateBulk(beatmapScores);
                 }
             
                 updatedCount += beatmapScores.Count;
-                createdCount += newScores.Count();
+                createdCount += newScores.Count;
             }
         }
 

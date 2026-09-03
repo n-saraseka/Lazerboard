@@ -1,4 +1,5 @@
 using System.Text;
+using Lazerboard.Data.Database.Entities.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -132,7 +133,7 @@ public class LeaderboardSeedingService : BackgroundService
                 if (significantScores.Count > 0)
                 {
                     await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                    await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+                    await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
                 }
             }
         }

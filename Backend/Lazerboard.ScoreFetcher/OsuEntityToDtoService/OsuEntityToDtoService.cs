@@ -1,11 +1,12 @@
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 
 namespace Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 
 public class OsuEntityToDtoService : IOsuEntityToDtoService
 {
-    public Score ScoreEntityToDto(APIScore score)
+    public Score ScoreEntityToDto(APIScore score, ScoreSource source)
     {
         var dto = new Score
         {
@@ -21,7 +22,8 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             PP = score.PP,
             Grade = score.Grade,
             Mode = score.Mode,
-            UserId = score.UserId
+            UserId = score.UserId,
+            ScoreSource = source
         };
 
         var modAcronyms = score.Mods.Select(m => m.Acronym).ToList();

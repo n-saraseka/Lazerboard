@@ -1,4 +1,5 @@
 using System.Text;
+using Lazerboard.Data.Database.Entities.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -115,7 +116,7 @@ public class FirehoseService : BackgroundService
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
         }
             
-        await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+        await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.ScoreFetcher, stoppingToken);
     }
 
     /// <summary>
@@ -160,7 +161,7 @@ public class FirehoseService : BackgroundService
             var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
             
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.ScoreFetcher, stoppingToken);
         }
     }
 

@@ -14,7 +14,7 @@ public class FirehoseService : BackgroundService
     private readonly ILogger<FirehoseService> _logger;
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
-    private bool _catchUpAfterRestart = true;
+    private bool _catchUpAfterRestart;
     private bool _catchUpOnExistingBeatmapScores;
 
     private string? _cursor;
@@ -31,6 +31,9 @@ public class FirehoseService : BackgroundService
 
         var osuApiConfig = config.GetSection("OsuApi");
         _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
+        
+        var restartConfig = config.GetSection("RestartPolicy");
+        _catchUpAfterRestart = bool.Parse(restartConfig["FirehoseCatchUp"]);
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

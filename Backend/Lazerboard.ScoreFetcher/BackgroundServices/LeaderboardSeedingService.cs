@@ -16,7 +16,7 @@ public class LeaderboardSeedingService : BackgroundService
     private readonly ILogger<LeaderboardSeedingService> _logger;
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
-    private bool _catchUpAfterRestart = true;
+    private bool _catchUpAfterRestart;
     
     private string? _cursor;
     private int _repeatExponent;
@@ -33,6 +33,9 @@ public class LeaderboardSeedingService : BackgroundService
         _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
         _seedingState = seedingState;
         _seedingState.IsSeeding = Environment.GetEnvironmentVariable("EnableDatabaseSeeding") == "true";
+        
+        var restartConfig = config.GetSection("RestartPolicy");
+        _catchUpAfterRestart = bool.Parse(restartConfig["LeaderboardScanCatchUp"]);
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

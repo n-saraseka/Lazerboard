@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Lazerboard.Data.Database;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -26,6 +27,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Mode>("mode")
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
+                    .MapEnum<ScoreSource>("score_source")
                     .CommandTimeout(240))
             .UseSnakeCaseNamingConvention());
 

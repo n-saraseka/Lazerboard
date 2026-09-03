@@ -1,4 +1,5 @@
 using System.Text;
+using Lazerboard.Data.Database.Entities.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,7 @@ public class FirehoseService : BackgroundService
     private readonly ILogger<FirehoseService> _logger;
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
-    private bool _catchUpAfterRestart = true;
+    private bool _catchUpAfterRestart;
     private bool _catchUpOnExistingBeatmapScores;
 
     private string? _cursor;
@@ -30,6 +31,9 @@ public class FirehoseService : BackgroundService
 
         var osuApiConfig = config.GetSection("OsuApi");
         _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
+        
+        var restartConfig = config.GetSection("RestartPolicy");
+        _catchUpAfterRestart = bool.Parse(restartConfig["FirehoseCatchUp"]);
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -115,7 +119,7 @@ public class FirehoseService : BackgroundService
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
         }
             
-        await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+        await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.ScoreFetcher, stoppingToken);
     }
 
     /// <summary>
@@ -160,13 +164,13 @@ public class FirehoseService : BackgroundService
             var significantScores = await utils.GetSignificantScoresAsync(scoresToProcess, stoppingToken);
             
             await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-            await dataProcessor.ProcessScoresAsync(significantScores, stoppingToken);
+            await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.ScoreFetcher, stoppingToken);
         }
     }
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)
     {
-        var maxId = await dataProcessor.GetMaxScoreIdAsync(stoppingToken);
+        var maxId = await dataProcessor.GetMaxFirehoseScoreIdAsync(stoppingToken);
         _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
         _catchUpAfterRestart = false;
     }

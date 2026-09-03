@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Lazerboard.Data.Database;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
@@ -32,7 +33,8 @@ builder.Services.AddDbContext<ScoreDataContext>(
             o => o
                 .MapEnum<Mode>("mode")
                 .MapEnum<Grade>("grade")
-                .MapEnum<BeatmapStatus>("beatmap_status"))
+                .MapEnum<BeatmapStatus>("beatmap_status")
+                .MapEnum<ScoreSource>("score_source"))
                 .UseSnakeCaseNamingConvention());
 
 // Database related

@@ -41,6 +41,8 @@ DeleteScoresAfter=1
 DiscordHooks__BeatmapScores__HookURL=https://discord.com
 DiscordHooks__BeatmapScores__Enabled=true
 DiscordHooks__BeatmapScores__UpdateIntervalMinutes=60
+RestartPolicy__LeaderboardScanCatchUp=true
+RestartPolicy__FirehoseCatchUp=true
 ````
 
 ## Testing the project

@@ -67,6 +67,8 @@ jobs:
         echo "DiscordHooks__BeatmapScores__HookURL=${{ secrets.HOOKS_SCANHOOKURL }}" >> prod.env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> prod.env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> prod.env
+        echo "RestartPolicy__LeaderboardScanCatchUp=true" >> prod.env
+        echo "RestartPolicy__FirehoseCatchUp=true" >> prod.env
         echo "Caching__FileTTL=120" >> prod.env
         echo "DeleteScoresAfter=4" >> prod.env
         echo "EnableDatabaseSeeding=true" >> prod.env

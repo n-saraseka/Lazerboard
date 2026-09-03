@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
@@ -221,17 +222,18 @@ public class DataProcessorTests
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
-            .Returns<APIScore>(api => new Score
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
+            .Returns((APIScore api, ScoreSource source) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
-                Date = api.Date
+                Date = api.Date,
+                ScoreSource = source
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -282,17 +284,18 @@ public class DataProcessorTests
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
-            .Returns<APIScore>(api => new Score
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
+            .Returns((APIScore api, ScoreSource source) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
-                Date = api.Date
+                Date = api.Date,
+                ScoreSource = source
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -323,19 +326,20 @@ public class DataProcessorTests
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
-            .Returns<APIScore>(api => new Score
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
+            .Returns((APIScore api, ScoreSource source) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
                 Date = api.Date,
                 UserId = api.UserId,
-                Mode = api.Mode
+                Mode = api.Mode,
+                ScoreSource = source
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -423,17 +427,18 @@ public class DataProcessorTests
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
-            .Returns<APIScore>(api => new Score
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
+            .Returns((APIScore api, ScoreSource source) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
-                Date = api.Date
+                Date = api.Date,
+                ScoreSource = source
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -500,19 +505,20 @@ public class DataProcessorTests
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
-            .Returns<APIScore>(api => new Score
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
+            .Returns((APIScore api, ScoreSource source) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
                 Date = api.Date,
                 UserId = api.UserId,
-                Mode = api.Mode
+                Mode = api.Mode,
+                ScoreSource = source
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
         
         // Assert
         var scoreRanks = new Dictionary<ulong, int>
@@ -592,19 +598,20 @@ public class DataProcessorTests
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>()))
-            .Returns<APIScore>(api => new Score
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
+            .Returns((APIScore api, ScoreSource source) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
                 Date = api.Date,
                 UserId = api.UserId,
-                Mode = api.Mode
+                Mode = api.Mode,
+                ScoreSource = source
             });
         
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
         
         // Assert
         ulong[] deletedIds = [1, 2, 3];

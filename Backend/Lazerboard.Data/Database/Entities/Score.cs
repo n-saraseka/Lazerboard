@@ -1,3 +1,4 @@
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 
 namespace Lazerboard.Data.Database.Entities;
@@ -22,4 +23,5 @@ public class Score : IEntity<ulong>
     public int? LegacyTotalScore { get; set; }
     public float? PP { get; set; }
     public int Rank { get; set; }
+    public ScoreSource ScoreSource { get; set; } = ScoreSource.ScoreFetcher;
 }

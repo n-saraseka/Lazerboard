@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
@@ -151,8 +152,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// Check for existing score data and save new score DTOs, assigning a rank to each one.
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
+    /// <param name="source">The <see cref="ScoreSource"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, CancellationToken ct)
+    public async Task ProcessScoresAsync(IEnumerable<APIScore> scores, ScoreSource source, CancellationToken ct)
     {
         if (scores.Count() == 0) return;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
@@ -170,7 +172,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             var groupScores = group
                 .OrderByDescending(b => b.TotalScore)
                 .ThenBy(b => b.Date)
-                .Select(entityToDtoService.ScoreEntityToDto)
+                .Select(s =>
+                {
+                    var dto = entityToDtoService.ScoreEntityToDto(s, source);
+                    return dto;
+                })
                 .DistinctBy(s => s.Id)
                 .ToList();
             var matchingGroup = groupedExistingScores.FirstOrDefault(g => 
@@ -190,39 +196,66 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 var personalBests = new List<Score>();
 
-                foreach (var score in groupScores.ToList())
+                foreach (var score in groupScores)
                 {
-                    var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
+                    var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId 
+                                                                  && s.Mode == score.Mode 
+                                                                  && s.Id != score.Id).ToList();
                     personalBests.AddRange(matchingScores);
                 }
                 scoreRepository.DeleteBulk(personalBests);
                 beatmapScores = beatmapScores.Where(s => !personalBests.Select(pb => pb.Id).Contains(s.Id)).ToList();
                 deletedCount += personalBests.Count;
                 
-                var newScores = 
-                    groupScores.Where(b => !beatmapScores
-                            .Select(s => s.Id)
-                            .Contains(b.Id));
-                var merged = beatmapScores
-                    .Concat(newScores)
+                var newScores = groupScores
+                    .Where(b => !beatmapScores
+                        .Select(s => s.Id)
+                        .Contains(b.Id))
+                    .ToList();
+                
+                var oldScores = beatmapScores
+                    .Where(b => groupScores
+                        .Select(s => s.Id)
+                        .Contains(b.Id))
+                    .Select(s =>
+                    {
+                        s.ScoreSource = source;
+                        return s;
+                    })
+                    .ToList();
+                
+                var extraScores = beatmapScores
+                    .Where(b => !groupScores
+                        .Select(s => s.Id)
+                        .Contains(b.Id))
+                    .ToList();
+                
+                var merged = newScores
+                    .Concat(oldScores)
+                    .Concat(extraScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .ToList();
             
                 foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
 
-                if (newScores.Count() > 0)
+                if (newScores.Count > 0)
                 {
                     scoreRepository.CreateBulk(newScores);
                 }
-
-                if (beatmapScores.Count > 0)
+                
+                if (oldScores.Count > 0)
                 {
-                    scoreRepository.UpdateBulk(beatmapScores);
+                    scoreRepository.UpdateBulk(oldScores);
+                }
+
+                if (extraScores.Count > 0)
+                {
+                    scoreRepository.UpdateBulk(extraScores);
                 }
             
-                updatedCount += beatmapScores.Count;
-                createdCount += newScores.Count();
+                updatedCount += oldScores.Count + extraScores.Count;
+                createdCount += newScores.Count;
             }
         }
 
@@ -249,18 +282,18 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         scoreRepository.GetAll().Where(s => beatmapIds.Contains(s.BeatmapId)).Select(s => s.BeatmapId).Distinct().ToListAsync(ct);
 
     /// <summary>
-    /// Get max score ID from the database
+    /// Get max score ID with the ScoreFetcher <see cref="Score.ScoreSource"/> from the database
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<ulong> GetMaxScoreIdAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetMaxScoreIdAsync(cancellationToken);
+    public Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken) =>
+        scoreRepository.GetMaxFirehoseScoreIdAsync(cancellationToken);
     
     /// <summary>
     /// Get max beatmapset ID from the database
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<int> GetMaxBeatmapsetIdAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetMaxBeatmapsetIdAsync(cancellationToken);
+    public Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken) =>
+        scoreRepository.GetSecondHighestBeatmapsetIdAsync(cancellationToken);
 }

@@ -16,8 +16,8 @@ using Lazerboard.ScoreFetcher.OsuApi;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Http.Resilience;
 using Polly;
-using Polly.Extensions.Http;
 using Quartz;
 using Serilog;
 
@@ -56,24 +56,6 @@ builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
-static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(IServiceProvider services)
-{
-    return HttpPolicyExtensions
-        .HandleTransientHttpError()
-        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-        .WaitAndRetryAsync(4, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-            onRetry: (outcome, timespan, retryCount, context) =>
-            {
-                var logger = services.GetRequiredService<ILogger<OsuApiService>>();
-                
-                logger.Log(LogLevel.Warning, outcome.Exception ,"HTTP request error. Retry no. {attempt}. Next retry in {timespan}", 
-                    retryCount, timespan);
-            });
-}
-builder.Services.AddHttpClient<OsuApiService>()
-    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
-    .AddPolicyHandler((services, request) => GetRetryPolicy(services));
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
@@ -83,6 +65,34 @@ builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
 builder.Services.AddSingleton<ICentralizedRateLimiter, CentralizedRateLimiter>();
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
+
+// HTTP Client
+builder.Services.AddHttpClient<OsuApiService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
+    {
+        resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
+        {
+            ShouldHandle = static args => args.Outcome switch
+            {
+                { Result: { IsSuccessStatusCode: false } } => PredicateResult.True(),
+                _ => PredicateResult.False()
+            },
+            
+            MaxRetryAttempts = 5,
+            Delay = TimeSpan.FromSeconds(5),
+            
+            OnRetry = args =>
+            {
+                var logger = context.ServiceProvider.GetRequiredService<ILogger<OsuApiService>>();
+                
+                logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
+                    args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);
+                
+                return default;
+            }
+        });
+    });
 
 // Background services
 builder.Services.AddHostedService<LeaderboardSeedingService>();

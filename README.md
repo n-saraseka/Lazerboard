@@ -16,34 +16,10 @@ There are two build configurations:
 If you are looking to contribute, use the **dev** configuration. 
 It can be run with the following command:
 ````
-docker-compose -f compose.dev.yaml up
+docker-compose -f compose.dev.yaml up -d
 ````
 
-The configuration is edited through a .env file (called `dev.env` for the Dev configuration). An example of a .env file is provided below:
-
-````
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=lazerleaderboards
-POSTGRES_HOST=localhost
-PGDATA=/data/postgres
-ASPNETCORE_ENVIRONMENT=Development
-Database__Database=lazerleaderboards
-Database__Host=db
-Database__Port=5432
-Database__Username=postgres
-Database__Password=postgres
-OsuApi__ClientId=00000
-OsuApi__ClientSecret=abunchfofbase64
-Caching__FileTTL=15
-EnableDatabaseSeeding=true
-DeleteScoresAfter=1
-DiscordHooks__BeatmapScores__HookURL=https://discord.com
-DiscordHooks__BeatmapScores__Enabled=true
-DiscordHooks__BeatmapScores__UpdateIntervalMinutes=60
-RestartPolicy__LeaderboardScanCatchUp=true
-RestartPolicy__FirehoseCatchUp=true
-````
+The configuration is edited through a .env file. An example of a .env file with explanations is provided in the `.env.example` file.
 
 ## Testing the project
 

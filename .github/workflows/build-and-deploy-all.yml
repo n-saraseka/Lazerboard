@@ -121,32 +121,32 @@ jobs:
     - name: copy docker-compose to server
       run: |
         scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
-    - name: create prod.env file
+    - name: create .env file
       run: |
-        touch ./prod.env
-        echo "POSTGRES_USER=${{ secrets.PSQL_USER }}" >> prod.env
-        echo "POSTGRES_PASSWORD=${{ secrets.PSQL_PASSWORD }}" >> prod.env
-        echo "POSTGRES_DB=${{ secrets.PSQL_DB }}" >> prod.env
-        echo "POSTGRES_HOST=${{ secrets.PSQL_HOST }}" >> prod.env
-        echo "POSTGRES_PORT=${{ secrets.PSQL_PORT }}" >> prod.env
-        echo "PGDATA=/data/postgres" >> prod.env
-        echo "ASPNETCORE_ENVIRONMENT=Production" >> prod.env
-        echo "Database__Database=${{ secrets.PSQL_DB }}" >> prod.env
-        echo "Database__Host=db" >> prod.env
-        echo "Database__Port=${{ secrets.PSQL_PORT }}" >> prod.env
-        echo "Database__Username=${{ secrets.PSQL_USER }}" >> prod.env
-        echo "Database__Password=${{ secrets.PSQL_PASSWORD }}" >> prod.env
-        echo "OsuApi__ClientId=${{ secrets.OSUAPI_CLIENTID }}" >> prod.env
-        echo "OsuApi__ClientSecret=${{ secrets.OSUAPI_CLIENTSECRET }}" >> prod.env
-        echo "DiscordHooks__BeatmapScores__HookURL=${{ secrets.HOOKS_SCANHOOKURL }}" >> prod.env
-        echo "DiscordHooks__BeatmapScores__Enabled=true" >> prod.env
-        echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> prod.env
-        echo "RestartPolicy__LeaderboardScanCatchUp=true" >> prod.env
-        echo "RestartPolicy__FirehoseCatchUp=true" >> prod.env
-        echo "Caching__FileTTL=120" >> prod.env
-        echo "DeleteScoresAfter=4" >> prod.env
-        echo "EnableDatabaseSeeding=true" >> prod.env
-        scp ./prod.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/prod.env
+        touch ./.env
+        echo "POSTGRES_USER=${{ secrets.PSQL_USER }}" >> .env
+        echo "POSTGRES_PASSWORD=${{ secrets.PSQL_PASSWORD }}" >> .env
+        echo "POSTGRES_DB=${{ secrets.PSQL_DB }}" >> .env
+        echo "POSTGRES_HOST=${{ secrets.PSQL_HOST }}" >> .env
+        echo "POSTGRES_PORT=${{ secrets.PSQL_PORT }}" >> .env
+        echo "PGDATA=/data/postgres" >> .env
+        echo "ASPNETCORE_ENVIRONMENT=Production" >> .env
+        echo "Database__Database=${{ secrets.PSQL_DB }}" >> .env
+        echo "Database__Host=db" >> .env
+        echo "Database__Port=${{ secrets.PSQL_PORT }}" >> .env
+        echo "Database__Username=${{ secrets.PSQL_USER }}" >> .env
+        echo "Database__Password=${{ secrets.PSQL_PASSWORD }}" >> .env
+        echo "OsuApi__ClientId=${{ secrets.OSUAPI_CLIENTID }}" >> .env
+        echo "OsuApi__ClientSecret=${{ secrets.OSUAPI_CLIENTSECRET }}" >> .env
+        echo "DiscordHooks__BeatmapScores__HookURL=${{ secrets.HOOKS_SCANHOOKURL }}" >> .env
+        echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
+        echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env
+        echo "RestartPolicy__LeaderboardScanCatchUp=true" >> .env
+        echo "RestartPolicy__FirehoseCatchUp=true" >> .env
+        echo "Caching__FileTTL=120" >> .env
+        echo "DeleteScoresAfter=4" >> .env
+        echo "EnableDatabaseSeeding=true" >> .env
+        scp ./.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/.env
     - name: Unlock GPG key for pass
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
@@ -164,6 +164,6 @@ jobs:
     - name: cleanup ssh
       if: always()
       run: rm -rf ~/.ssh
-    - name: cleanup prod.env
+    - name: cleanup .env
       if: always()
-      run: rm -f ./prod.env
+      run: rm -f ./.env

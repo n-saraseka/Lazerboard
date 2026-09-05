@@ -76,6 +76,7 @@ jobs:
         echo "RestartPolicy__LeaderboardScanCatchUp=true" >> .env
         echo "RestartPolicy__FirehoseCatchUp=true" >> .env
         echo "Caching__FileTTL=120" >> .env
+        echo "ScoreCountUpdateIntervalMinutes=15" >> .env
         echo "DeleteScoresAfter=4" >> .env
         echo "EnableDatabaseSeeding=true" >> .env
         scp ./.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/.env

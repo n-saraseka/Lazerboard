@@ -22,7 +22,7 @@ public class ScoreCacheRepository (IConnectionMultiplexer connectionMultiplexer)
         var success = false;
         while (!success)
         {
-            success = await db.StringSetAsync(key, isCalculatable, TimeSpan.FromMinutes(5), false, When.NotExists);
+            success = await db.StringSetAsync(key, isCalculatable, TimeSpan.FromMinutes(2), false, When.NotExists);
         }
         
         var value = await db.StringGetAsync(key);

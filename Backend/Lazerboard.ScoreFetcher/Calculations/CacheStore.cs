@@ -101,14 +101,12 @@ public class CacheStore : ICacheStore
         _logger.Log(LogLevel.Information, "Removed {count} files from beatmap cache", deletedCount);
     }
     
-    public async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, CancellationToken ct)
+    public async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, IBeatmapCacheRepository beatmapCacheRepository, CancellationToken ct)
     {
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
         var attempts = 0;
         
         // Set / reset .osu file TTL in Redis
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
         var cachedFileName = await beatmapCacheRepository.GetCachedBeatmapFileNameAsync(beatmapId);
         if (cachedFileName is null)
         {

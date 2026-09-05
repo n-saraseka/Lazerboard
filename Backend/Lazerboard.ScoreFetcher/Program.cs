@@ -46,7 +46,8 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Mode>("mode")
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
-                    .MapEnum<ScoreSource>("score_source"))
+                    .MapEnum<ScoreSource>("score_source")
+                    .CommandTimeout(120))
             .UseSnakeCaseNamingConvention());
 
 // Database related
@@ -116,6 +117,7 @@ builder.Services.AddHttpClient<OsuApiService>()
 // Background services
 builder.Services.AddHostedService<LeaderboardSeedingService>();
 builder.Services.AddHostedService<FirehoseService>();
+builder.Services.AddHostedService<ScoresCountService>();
 
 // Quartz job for removing restricted user scores and updating usernames
 builder.Services.AddQuartz(q =>

@@ -19,7 +19,8 @@ namespace Lazerboard.ScoreFetcher.Calculations;
 
 public class ScoreCalculator(ICacheStore cacheStore, 
     ILogger<ScoreCalculator> logger, 
-    IScoreCacheRepository scoreCacheRepository) : ICalculator
+    IScoreCacheRepository scoreCacheRepository,
+    IBeatmapCacheRepository beatmapCacheRepository) : ICalculator
 {
     private static readonly TimeSpan CalculationTimeout = TimeSpan.FromSeconds(30);
 
@@ -35,7 +36,7 @@ public class ScoreCalculator(ICacheStore cacheStore,
         Beatmap beatmap;
         try
         {
-            beatmap = await cacheStore.GetBeatmapFileAsync(apiScore.BeatmapId, ct);
+            beatmap = await cacheStore.GetBeatmapFileAsync(apiScore.BeatmapId, beatmapCacheRepository, ct);
         }
         catch (Exception ex)
         {

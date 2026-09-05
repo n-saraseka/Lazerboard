@@ -1,5 +1,7 @@
+using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
 namespace Lazerboard.Data.Redis.Repositories;
@@ -19,14 +21,29 @@ public class ScoreCacheRepository (IConnectionMultiplexer connectionMultiplexer)
         var key = $"{beatmapId}:{mode}-iscalculatable";
         var db = connectionMultiplexer.GetDatabase();
 
-        var success = false;
-        while (!success)
-        {
-            success = await db.StringSetAsync(key, isCalculatable, TimeSpan.FromMinutes(2), false, When.NotExists);
-        }
+        await db.StringSetAsync(key, isCalculatable, TimeSpan.FromMinutes(2), false, When.NotExists);
         
         var value = await db.StringGetAsync(key);
         
         return (bool)value;
+    }
+
+    public async Task<int?> GetScoresCountAsync()
+    {
+        var key = "scores-count";
+        var db = connectionMultiplexer.GetDatabase();
+
+        var value = await db.StringGetAsync(key);
+        return (int?)value;
+    }
+
+    public async Task<int> SetScoresCountAsync(int scoreCount, TimeSpan ttl)
+    {
+        var key = "scores-count";
+        var db = connectionMultiplexer.GetDatabase();
+
+        var value = await db.StringSetAndGetAsync(key, scoreCount, ttl);
+
+        return (int)value;
     }
 }

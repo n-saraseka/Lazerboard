@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
 
 namespace Lazerboard.Components;
 
-public class ScoresCountComponent(IScoreRepository scoreRepository) : ViewComponent
+public class ScoresCountComponent(IScoreCacheRepository scoreCache) : ViewComponent
 {
-    public async Task<string> InvokeAsync(CancellationToken cancellationToken = default)
+    public async Task<string> InvokeAsync()
     {
-        var count = await scoreRepository.GetAll().CountAsync(cancellationToken);
-        return count.ToString();
+        var count = await scoreCache.GetScoresCountAsync();
+        return count.HasValue ? count.Value.ToString() : "not available";
     }
 }

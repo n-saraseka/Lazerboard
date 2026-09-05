@@ -7,7 +7,10 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.Redis.Repositories;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +55,20 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddRazorComponents();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Caching
+var redisConfig = builder.Configuration.GetSection("Redis");
+var host = redisConfig["Host"];
+var username = redisConfig["Username"];
+var password = redisConfig["Password"];
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ => 
+    ConnectionMultiplexer.Connect(new ConfigurationOptions
+    {
+        EndPoints = { { host, 6379 } },
+        User = username,
+        Password = password
+    }));
+builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 
 // Logs
 builder.Host.UseSerilog((context, services, configuration) =>

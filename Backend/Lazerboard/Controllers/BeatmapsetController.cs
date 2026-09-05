@@ -12,6 +12,11 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
         var beatmaps = await beatmapRepository.GetByBeatmapsetIdAsync(id, cancellationToken);
         if (beatmaps.Count == 0) return NotFound();
         
+        beatmaps = beatmaps
+            .OrderBy(b => (int)b.Mode)
+            .ThenBy(b => b.Difficulty)
+            .ToList();
+        
         var firstBeatmap = beatmaps.First();
         var beatmapset = firstBeatmap.Beatmapset;
         
@@ -35,6 +40,11 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
         
         var beatmaps = await beatmapRepository.GetByBeatmapsetIdAsync(beatmap.BeatmapsetId, cancellationToken);
         if (beatmaps.Count == 0) return NotFound();
+        
+        beatmaps = beatmaps
+            .OrderBy(b => (int)b.Mode)
+            .ThenBy(b => b.Difficulty)
+            .ToList();
         
         var respectiveBeatmap = beatmaps.First(b => b.Id == id);
         

@@ -82,9 +82,27 @@ public class FirehoseService : BackgroundService
         {
             await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
-            
+        
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
+        
+        if (_cursor is null && _catchUpAfterRestart)
+        {
+            if (scores.Length == 0)
+            {
+                _logger.Log(LogLevel.Warning, "Couldn't get max score ID from firehose!");
+                return;
+            }
+            
+            // 800k scores is around of 6 hours of missing scores
+            var catchUpScoreId = scores.Max(s => s.Id) - 800000;
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {catchUpScoreId}}}"));
+            _catchUpAfterRestart = false;
+            return;
+        }
+        
+        _catchUpAfterRestart = false;
+        _cursor = scoresResponse.Cursor;
 
         var minDate = scores.Min(s => s.Date);
         var maxDate = scores.Max(s => s.Date);
@@ -136,11 +154,28 @@ public class FirehoseService : BackgroundService
         {
             await GetRestartCursorAsync(dataProcessor, stoppingToken);
         }
-
+        
         _catchUpOnExistingBeatmapScores = true;
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
+        
+        if (_cursor is null && _catchUpAfterRestart)
+        {
+            if (scores.Length == 0)
+            {
+                _logger.Log(LogLevel.Warning, "Couldn't get max score ID from firehose!");
+                return;
+            }
+            
+            // 800k scores is around of 6 hours of missing scores
+            var catchUpScoreId = scores.Max(s => s.Id) - 800000;
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {catchUpScoreId}}}"));
+            _catchUpAfterRestart = false;
+            return;
+        }
+        
+        _catchUpAfterRestart = false;
         _cursor = scoresResponse.Cursor;
 
         if (scores.Length < 100)
@@ -170,8 +205,13 @@ public class FirehoseService : BackgroundService
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)
     {
-        var maxId = await dataProcessor.GetMaxFirehoseScoreIdAsync(stoppingToken);
-        _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxId}}}"));
-        _catchUpAfterRestart = false;
+        var maxFirehoseScore = await dataProcessor.GetMaxFirehoseScoreAsync(stoppingToken);
+        // Score is too old, use null cursor
+        if (DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromDays(1))
+        {
+            _cursor = null;
+            return;
+        }
+        _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxFirehoseScore.Id}}}"));
     }
 }

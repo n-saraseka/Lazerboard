@@ -1,4 +1,5 @@
-﻿using System.Threading.RateLimiting;
+﻿using System.Net;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,8 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.Redis.Repositories;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.BackgroundServices;
 using Lazerboard.ScoreFetcher.Calculations;
 using Lazerboard.ScoreFetcher.Jobs;
@@ -20,6 +23,7 @@ using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Quartz;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder();
 
@@ -64,6 +68,21 @@ builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
 
 builder.Services.AddSingleton<ICentralizedRateLimiter, CentralizedRateLimiter>();
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
+
+// Caching
+var redisConfig = builder.Configuration.GetSection("Redis");
+var host = redisConfig["Host"];
+var username = redisConfig["Username"];
+var password = redisConfig["Password"];
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ => 
+    ConnectionMultiplexer.Connect(new ConfigurationOptions
+    {
+        EndPoints = { { host, 6379 } },
+        User = username,
+        Password = password
+    }));
+builder.Services.AddScoped<IBeatmapCacheRepository, BeatmapCacheRepository>();
+builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
 
 // HTTP Client
@@ -75,7 +94,7 @@ builder.Services.AddHttpClient<OsuApiService>()
         {
             ShouldHandle = static args => args.Outcome switch
             {
-                { Result: { IsSuccessStatusCode: false } } => PredicateResult.True(),
+                { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
                 _ => PredicateResult.False()
             },
             
@@ -157,6 +176,15 @@ using (var scope = app.Services.CreateScope())
     var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
     var cancellationToken = CancellationToken.None;
     await backpopulator.BackpopulateAsync(cancellationToken);
+    var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+    try
+    {
+        await cacheStore.CleanupCacheAsync();
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Could not cleanup beatmap cache on startup");
+    }
 }
 
 try

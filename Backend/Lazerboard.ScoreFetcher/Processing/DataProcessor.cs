@@ -299,8 +299,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetMaxFirehoseScoreIdAsync(cancellationToken);
+    public Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken) =>
+        scoreRepository.GetMaxFirehoseScoreAsync(cancellationToken);
     
     /// <summary>
     /// Get max beatmapset ID from the database

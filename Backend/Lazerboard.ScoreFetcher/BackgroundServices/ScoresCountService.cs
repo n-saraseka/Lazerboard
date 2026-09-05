@@ -29,15 +29,22 @@ public class ScoresCountService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var scoresRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
-            var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
-            
-            var scoresCount = await scoresRepository.GetAll().CountAsync(stoppingToken);
-            _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
-            await scoreCacheRepository.SetScoresCountAsync(scoresCount, TimeSpan.FromMinutes(_updateInterval + 10));
-            
-            await Task.Delay(TimeSpan.FromMinutes(_updateInterval), stoppingToken);
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var scoresRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
+                var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
+
+                var scoresCount = await scoresRepository.GetAll().CountAsync(stoppingToken);
+                _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
+                await scoreCacheRepository.SetScoresCountAsync(scoresCount, TimeSpan.FromMinutes(_updateInterval + 10));
+
+                await Task.Delay(TimeSpan.FromMinutes(_updateInterval), stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Warning, ex, "Scores count service failed!");
+            }
         }
     }
 }

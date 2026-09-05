@@ -40,17 +40,48 @@ public class LeaderboardSeedingService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var continueSeeding = true;
         if (!_seedingState.IsSeeding) return;
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
-            var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-
             try
             {
-                var continueSeeding = await FetchLeaderboardsAsync(apiFetcher, dataProcessor, utils, stoppingToken);
+                var beatmapsets = await GetBeatmapsetsAsync(stoppingToken);
+                
+                if (beatmapsets.Count == 0)
+                {
+                    if (_repeatExponent > 4)
+                    {
+                        _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Database seeding is complete", 
+                            _apiInterval * Math.Pow(2, _repeatExponent));
+                        continueSeeding = false;
+                    }
+                    else
+                    {
+                        var interval = _apiInterval * Math.Pow(2, _repeatExponent);
+                        _logger.Log(LogLevel.Information, "Repeating beatmapset search after {seconds} seconds just to make sure", interval);
+                        
+                        await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+                        _repeatExponent++;
+                    }
+                }
+                else
+                {
+                    _repeatExponent = 0;
+                    _logger.Log(LogLevel.Information, 
+                        "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
+                        beatmapsets.Count,
+                        DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
+                        DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
+
+                    await SaveBeatmapsetDataAsync(beatmapsets, stoppingToken);
+                    
+                    foreach (var beatmapset in beatmapsets)
+                    {
+                        await ProcessBeatmapsetAsync(beatmapset, stoppingToken);
+                    }
+                }
+                
                 if (!continueSeeding)
                 {
                     _seedingState.IsSeeding = continueSeeding;
@@ -66,16 +97,16 @@ public class LeaderboardSeedingService : BackgroundService
     }
 
     /// <summary>
-    /// Scan scores from all existing beatmap leaderboards
+    /// Get <see cref="APIBeatmapset"/>s from the search API
     /// </summary>
-    /// <param name="apiFetcher">A <see cref="IApiFetcher"/> service</param>
-    /// <param name="dataProcessor">A <see cref="IDataProcessor"/> service</param>
-    /// <param name="utils">A <see cref="IScoreFetchingUtils"/> service</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>True if seeding should continue, false otherwise</returns>
-    private async Task<bool> FetchLeaderboardsAsync(IApiFetcher apiFetcher, IDataProcessor dataProcessor, 
-        IScoreFetchingUtils utils, CancellationToken stoppingToken)
+    /// <returns>List of <see cref="APIBeatmapset"/>s</returns>
+    private async Task<List<APIBeatmapset>> GetBeatmapsetsAsync(CancellationToken stoppingToken)
     {
+        using var scope = _serviceProvider.CreateScope();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+        
         if (_catchUpAfterRestart)
         {
             var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
@@ -89,58 +120,63 @@ public class LeaderboardSeedingService : BackgroundService
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
         _cursor = beatmapsetsResponse.Cursor;
         
-        var beatmapsets = beatmapsetsResponse.Beatmapsets;
+        return beatmapsetsResponse.Beatmapsets;
+    }
 
-        if (beatmapsets.Count == 0)
-        {
-            if (_repeatExponent >= 4)
-            {
-                _logger.Log(LogLevel.Information, "No beatmapsets found after {seconds} seconds. Database seeding is complete", 
-                    _apiInterval * Math.Pow(2, _repeatExponent));
-                return false;
-            }
-            
-            var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-            _logger.Log(LogLevel.Information, "Repeating beatmapset search after {seconds} seconds just to make sure", interval);
-            
-            _repeatExponent++;
-        }
-        else
-        {
-            _logger.Log(LogLevel.Information, 
-                "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
-                beatmapsets.Count,
-                DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
-                DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
-            await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
-            
-            foreach (var beatmapset in beatmapsets)
-            {
-                _logger.Log(LogLevel.Information, "Processing beatmapset ID {beatmapsetId}", beatmapset.Id);
-                await dataProcessor.ProcessBeatmapsAsync(beatmapset.Beatmaps, stoppingToken);
-                
-                foreach (var beatmap in beatmapset.Beatmaps)
-                {
-                    foreach (var val in Enum.GetValues<Mode>())
-                    {
-                        _logger.Log(LogLevel.Information, "Beatmap ID: {beatmapID}, mode: {mode}", beatmap.Id, val);
-                        if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
-                        
-                        var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken);
-                        
-                        var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
-                        significantScores = significantScores.DistinctBy(s => s.Id).ToList();
+    /// <summary>
+    /// Save <see cref="APIBeatmapset"/> data to the database
+    /// </summary>
+    /// <param name="beatmapsets">List of <see cref="APIBeatmapset"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task SaveBeatmapsetDataAsync(IReadOnlyCollection<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+        await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
+    }
 
-                        if (significantScores.Count > 0)
-                        {
-                            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                            await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
-                        }
-                    }
-                }
+    /// <summary>
+    /// Process beatmapset maps and save the data
+    /// </summary>
+    /// <param name="beatmapset">The <see cref="APIBeatmapset"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task ProcessBeatmapsetAsync(APIBeatmapset beatmapset, CancellationToken stoppingToken)
+    {
+        _logger.Log(LogLevel.Information, "Processing beatmapset ID: {beatmapsetID}", beatmapset.Id);
+        foreach (var beatmap in beatmapset.Beatmaps)
+        {
+            foreach (var val in Enum.GetValues<Mode>())
+            {
+                if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
+                await ProcessBeatmapScoresAsync(beatmap.Id, val, stoppingToken);
             }
         }
+    }
 
-        return true;
+    /// <summary>
+    /// Process <see cref="APIBeatmap"/> leaderboard scores and save significant ones to the database
+    /// </summary>
+    /// <param name="beatmapId">The <see cref="APIBeatmap"/> ID</param>
+    /// <param name="mode">The <see cref="Mode"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task ProcessBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+        
+        _logger.Log(LogLevel.Information, "Processing beatmap ID: {beatmapID}, mode: {mode}", beatmapId, mode);
+        
+        var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
+                        
+        var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
+        significantScores = significantScores.DistinctBy(s => s.Id).ToList();
+
+        if (significantScores.Count > 0)
+        {
+            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+            await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
+        }
     }
 }

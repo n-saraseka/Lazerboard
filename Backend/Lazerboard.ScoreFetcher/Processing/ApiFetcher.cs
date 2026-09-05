@@ -26,8 +26,16 @@ public class ApiFetcher : IApiFetcher
     public Task<BeatmapsetsResponse> SearchBeatmapsetsAsync(string? cursor, CancellationToken ct = default) =>
         _osuApiService.GetBeatmapsetsAsync(cursor, ct);
 
-    public Task<BeatmapScores> GetBeatmapScoresAsync(APIBeatmap beatmap, Mode? mode, int legacyOnly = 0, CancellationToken ct = default) =>
-        _osuApiService.GetBeatmapScoresAsync(beatmap.Id, mode, legacyOnly, ct);
+    /// <summary>
+    /// Get beatmap scores from the API
+    /// </summary>
+    /// <param name="beatmapId">Beatmap ID</param>
+    /// <param name="mode">Ruleset (osu, taiko, fruits, mania)</param>
+    /// <param name="legacyOnly">Whether to exclude lazer scores or not (0 = include, 1 = exclude)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Populated BeatmapScores object</returns>
+    public Task<BeatmapScores> GetBeatmapScoresAsync(int beatmapId, Mode? mode, int legacyOnly = 0, CancellationToken ct = default) =>
+        _osuApiService.GetBeatmapScoresAsync(beatmapId, mode, legacyOnly, ct);
     
     /// <summary>
     /// Get scores from the API firehose

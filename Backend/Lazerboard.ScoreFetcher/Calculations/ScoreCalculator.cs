@@ -22,7 +22,7 @@ public class ScoreCalculator(ICacheStore cacheStore,
     IScoreCacheRepository scoreCacheRepository,
     IBeatmapCacheRepository beatmapCacheRepository) : ICalculator
 {
-    private static readonly TimeSpan CalculationTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan CalculationTimeout = TimeSpan.FromMinutes(1);
 
     public async Task<float?> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {

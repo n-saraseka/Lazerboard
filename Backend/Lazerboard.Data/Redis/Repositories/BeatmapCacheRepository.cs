@@ -13,6 +13,22 @@ public class BeatmapCacheRepository(RedisContext context) : IBeatmapCacheReposit
         return value;
     }
 
+    public async Task<Dictionary<int, string?>> GetCachedBeatmapFileNamesAsync(IList<int> beatmapIds)
+    {
+        var keys = beatmapIds.Select(beatmapId => (RedisKey)$"{beatmapId}-beatmapfile").ToArray();
+        var db = context.ConnectionMultiplexer.GetDatabase();
+        var values = await db.StringGetAsync(keys);
+        
+        var dict = new Dictionary<int, string?>();
+
+        for (var i = 0; i < beatmapIds.Count; i++)
+        {
+            dict[beatmapIds[i]] = values[i];
+        }
+
+        return dict;
+    }
+
     public async Task ResetCachedBeatmapFileNameTtlAsync(int beatmapId, TimeSpan ttl)
     {
         var key = $"{beatmapId}-beatmapfile";

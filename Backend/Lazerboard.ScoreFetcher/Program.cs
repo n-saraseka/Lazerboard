@@ -157,6 +157,15 @@ using (var scope = app.Services.CreateScope())
     var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
     var cancellationToken = CancellationToken.None;
     await backpopulator.BackpopulateAsync(cancellationToken);
+    var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+    try
+    {
+        await cacheStore.CleanupCacheAsync();
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Could not cleanup beatmap cache on startup");
+    }
 }
 
 try

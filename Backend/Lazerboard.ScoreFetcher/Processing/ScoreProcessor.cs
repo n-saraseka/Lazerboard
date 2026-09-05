@@ -84,6 +84,13 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     public async Task CalculateScoreAsync(APIScore score, CancellationToken cancellationToken)
     {
         if (score.PP != null) return;
-        score.PP = await calculator.CalculateAsync(score, cancellationToken);
+        try {
+            var pp = await calculator.CalculateAsync(score, cancellationToken);
+            score.PP = pp;
+        }
+        catch (Exception ex) {
+            logger.Log(LogLevel.Warning, ex, "Score PP calculation failed!");
+            score.PP = null;
+        }
     }
 }

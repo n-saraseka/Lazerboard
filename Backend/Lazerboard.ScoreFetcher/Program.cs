@@ -82,6 +82,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         Password = password
     }));
 builder.Services.AddScoped<IBeatmapCacheRepository, BeatmapCacheRepository>();
+builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
 
 // HTTP Client

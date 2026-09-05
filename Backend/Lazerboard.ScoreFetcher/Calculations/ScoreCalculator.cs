@@ -13,13 +13,24 @@ using osu.Game.Rulesets.Taiko;
 using osu.Game.Scoring;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
-public class ScoreCalculator(ICacheStore cacheStore, ILogger<ScoreCalculator> logger) : ICalculator
+public class ScoreCalculator(ICacheStore cacheStore, 
+    ILogger<ScoreCalculator> logger, 
+    IScoreCacheRepository scoreCacheRepository) : ICalculator
 {
+    private static readonly TimeSpan CalculationTimeout = TimeSpan.FromSeconds(30);
+
     public async Task<float?> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {
+        var isCalculatable = await scoreCacheRepository.GetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode);
+        if (isCalculatable.HasValue)
+        {
+            if (!isCalculatable.Value) return null;
+        }
+        
         var ruleset = GetRulesetFromScore(apiScore);
         Beatmap beatmap;
         try
@@ -41,20 +52,36 @@ public class ScoreCalculator(ICacheStore cacheStore, ILogger<ScoreCalculator> lo
             // Performance calculation might fail on weird maps like Aspire.
             try
             {
-                var performanceAttributes = await performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
-                logger.Log(LogLevel.Information, "Score ID: {scoreId}, new PP: {pp}", apiScore.Id,
-                    (float)performanceAttributes.Total);
-                return (float)performanceAttributes.Total;
+                var performanceAttributesTask = performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
+                
+                if (await Task.WhenAny(performanceAttributesTask, Task.Delay(CalculationTimeout, ct)) ==
+                    performanceAttributesTask)
+                {
+                    
+                    await performanceAttributesTask;
+                    
+                    var performanceAttributes = performanceAttributesTask.Result;
+                    logger.Log(LogLevel.Information, "Score ID: {scoreId}, new PP: {pp}", apiScore.Id,
+                        (float)performanceAttributes.Total);
+
+                    await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, true);
+                    return (float)performanceAttributes.Total;
+                }
+                
+                await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
+                return null;
             }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Error, ex, "Score calculation failed! Score: {score};", 
                     apiScore.Id);
+                await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
                 return null;
             }
         }
         logger.Log(LogLevel.Error, "Score calculation failed! Score ID: {score}; Error: {error}", 
             apiScore.Id, $"{nameof(performanceCalculator)} is null");
+        await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
         return null;
     }
     

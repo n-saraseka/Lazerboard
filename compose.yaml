@@ -45,7 +45,7 @@ services:
     volumes:
       - ./logs/scorefetcher:/app/Logs
       - ./BeatmapCache:/app/BeatmapCache
-    restart: unless-stopped
+    restart: "no"
     networks:
       - main
   

@@ -14,14 +14,12 @@ using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.BackgroundServices;
 using Lazerboard.ScoreFetcher.Calculations;
-using Lazerboard.ScoreFetcher.Jobs;
 using Lazerboard.ScoreFetcher.OsuApi;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
-using Quartz;
 using Serilog;
 using StackExchange.Redis;
 
@@ -118,18 +116,6 @@ builder.Services.AddHttpClient<OsuApiService>()
 builder.Services.AddHostedService<LeaderboardSeedingService>();
 builder.Services.AddHostedService<FirehoseService>();
 builder.Services.AddHostedService<ScoresCountService>();
-
-// Quartz job for removing restricted user scores and updating usernames
-builder.Services.AddQuartz(q =>
-{
-    q.ScheduleJob<UpdateUserAndScoreDataJob>(trigger => trigger
-        .WithIdentity("User and score check job")
-        .WithSchedule(CronScheduleBuilder
-            .DailyAtHourAndMinute(0, 0)
-            .InTimeZone(TimeZoneInfo.Utc)));
-});
-
-builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>

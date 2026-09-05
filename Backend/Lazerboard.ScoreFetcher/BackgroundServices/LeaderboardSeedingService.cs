@@ -121,22 +121,21 @@ public class LeaderboardSeedingService : BackgroundService
                 
                 foreach (var beatmap in beatmapset.Beatmaps)
                 {
-                    var scores = new List<APIScore>();
-            
                     foreach (var val in Enum.GetValues<Mode>())
                     {
+                        _logger.Log(LogLevel.Information, "Beatmap ID: {beatmapID}, mode: {mode}", beatmap.Id, val);
                         if (beatmap.Mode != Mode.Osu && beatmap.Mode != val) continue;
+                        
                         var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmap, val, 0, stoppingToken);
-                        scores.AddRange(beatmapScores.Scores);
-                    }
-                
-                    var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-                    significantScores = significantScores.DistinctBy(s => s.Id).ToList();
+                        
+                        var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
+                        significantScores = significantScores.DistinctBy(s => s.Id).ToList();
 
-                    if (significantScores.Count > 0)
-                    {
-                        await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-                        await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
+                        if (significantScores.Count > 0)
+                        {
+                            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+                            await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
+                        }
                     }
                 }
             }

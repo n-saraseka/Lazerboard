@@ -40,8 +40,8 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .SqlQueryRaw<int>("SELECT MAX(b.beatmapset_id) AS \"Value\"\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id")
             .FirstOrDefaultAsync(cancellationToken);
 
-    public Task<ulong> GetMaxFirehoseScoreIdAsync(CancellationToken cancellationToken) =>
+    public Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken) =>
         Set
             .Where(s => s.ScoreSource == ScoreSource.ScoreFetcher)
-            .MaxAsync(s => s.Id, cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 }

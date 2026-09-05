@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -48,7 +49,7 @@ public class OsuApiService
     /// <param name="isTokenRequest">Whether the request is a token request or not</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Request response text</returns>
-    private async Task<string> SendRequestAsync(HttpMethod method, 
+    private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod method, 
         string requestString,
         HttpContent? content,
         bool isTokenRequest = false,
@@ -66,9 +67,8 @@ public class OsuApiService
 
         await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
         var response = await _httpClient.SendAsync(requestMessage, ct);
-        responseText = await response.Content.ReadAsStringAsync(ct);
         
-        return responseText;
+        return response;
     }
     
     /// <summary>
@@ -92,9 +92,11 @@ public class OsuApiService
             new StringContent(dataJson, Encoding.UTF8, "application/json"),
             true,
             ct);
+        
+        var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
 
         // writing new token data
-        _token = JsonConvert.DeserializeObject<TokenInfo>(tokenResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        _token = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         _token.ExpiresIn += seconds;
     }
 
@@ -112,7 +114,9 @@ public class OsuApiService
             false, 
             ct);
         
-        var beatmapsets = JsonConvert.DeserializeObject<BeatmapsetsResponse>(beatmapsetsResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        var beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
+        
+        var beatmapsets = JsonConvert.DeserializeObject<BeatmapsetsResponse>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return beatmapsets;
     }
@@ -131,7 +135,9 @@ public class OsuApiService
             false, 
             ct);
         
-        var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        var beatmapsetText = await beatmapsetResponse.Content.ReadAsStringAsync(ct);
+        
+        var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return beatmapset;
     }
@@ -156,7 +162,9 @@ public class OsuApiService
             false, 
             ct);
         
-        var scores = JsonConvert.DeserializeObject<BeatmapScores>(scoresResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+        
+        var scores = JsonConvert.DeserializeObject<BeatmapScores>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return scores;
     }
@@ -175,7 +183,18 @@ public class OsuApiService
             false, 
             ct);
 
-        var scores = JsonConvert.DeserializeObject<ScoresResponse>(scoresResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        if (scoresResponse.StatusCode == HttpStatusCode.UnprocessableEntity)
+        {
+            return new ScoresResponse
+            {
+                Scores = [],
+                Cursor = null
+            };
+        } 
+        
+        var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+
+        var scores = JsonConvert.DeserializeObject<ScoresResponse>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         
         return scores;
     }
@@ -219,16 +238,18 @@ public class OsuApiService
         if (count == 0) throw new ArgumentException("No beatmap IDs to process");
         if (count > 50) throw new ArgumentException("ID limit per call reached (more than 50)");
 
-        string queryString = string.Join("&", ids.Select(b => $"ids[]={b}"));
+        var queryString = string.Join("&", ids.Select(b => $"ids[]={b}"));
 
         // parse beatmaps
-        string beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
+        var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps?{queryString}", 
             null, 
             false, 
             ct);
+        
+        var beatmapsResponseText = await beatmapsResponse.Content.ReadAsStringAsync(ct);
 
-        APIBeatmap[] beatmaps = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
+        APIBeatmap[] beatmaps = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
 
         return beatmaps;
     }
@@ -247,16 +268,18 @@ public class OsuApiService
         if (count == 0) throw new ArgumentException("No user IDs to process");
         if (count > 50) throw new ArgumentException("ID limit per call reached (more than 50)");
 
-        string queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
+        var queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
         
         // parse users
-        string usersResponse = await SendRequestAsync(HttpMethod.Get, 
+        var usersResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/users?{queryString}", 
             null, 
             false, 
             ct);
+        
+        var usersResponseText = await usersResponse.Content.ReadAsStringAsync(ct);
 
-        APIUser[] users = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponse, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
+        APIUser[] users = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
 
         return users;
     }

@@ -3,12 +3,12 @@ using StackExchange.Redis;
 
 namespace Lazerboard.Data.Redis.Repositories;
 
-public class BeatmapCacheRepository(RedisContext context) : IBeatmapCacheRepository
+public class BeatmapCacheRepository(IConnectionMultiplexer connectionMultiplexer) : IBeatmapCacheRepository
 {
     public async Task<string?> GetCachedBeatmapFileNameAsync(int beatmapId)
     {
         var key = $"{beatmapId}-beatmapfile";
-        var db = context.ConnectionMultiplexer.GetDatabase();
+        var db = connectionMultiplexer.GetDatabase();
         var value = await db.StringGetAsync(key);
         return value;
     }
@@ -16,7 +16,7 @@ public class BeatmapCacheRepository(RedisContext context) : IBeatmapCacheReposit
     public async Task<Dictionary<int, string?>> GetCachedBeatmapFileNamesAsync(IList<int> beatmapIds)
     {
         var keys = beatmapIds.Select(beatmapId => (RedisKey)$"{beatmapId}-beatmapfile").ToArray();
-        var db = context.ConnectionMultiplexer.GetDatabase();
+        var db = connectionMultiplexer.GetDatabase();
         var values = await db.StringGetAsync(keys);
         
         var dict = new Dictionary<int, string?>();
@@ -32,14 +32,14 @@ public class BeatmapCacheRepository(RedisContext context) : IBeatmapCacheReposit
     public async Task ResetCachedBeatmapFileNameTtlAsync(int beatmapId, TimeSpan ttl)
     {
         var key = $"{beatmapId}-beatmapfile";
-        var db = context.ConnectionMultiplexer.GetDatabase();
+        var db = connectionMultiplexer.GetDatabase();
         await db.KeyExpireAsync(key, ttl);
     }
 
     public async Task SetCachedBeatmapFileNameAsync(int beatmapId, string fileName, TimeSpan ttl)
     {
         var key = $"{beatmapId}-beatmapfile";
-        var db = context.ConnectionMultiplexer.GetDatabase();
+        var db = connectionMultiplexer.GetDatabase();
         
         await db.StringSetAsync(key, fileName, ttl, false);
     }

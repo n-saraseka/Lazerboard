@@ -22,6 +22,8 @@ services:
     depends_on:
       "migrations":
         condition: service_completed_successfully
+      "redis":
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -78,6 +80,31 @@ services:
       - "80:80"
       - "443:443"
     restart: unless-stopped
+    networks:
+      - main
+  
+  redis:
+    image: redis:8-alpine
+    env_file:
+      - .env
+    volumes:
+      - ./redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: |
+      sh -c '
+        mkdir -p /usr/local/etc/redis &&
+        echo "requirepass $REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
+        echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
+        echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
+        redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
+      '
     networks:
       - main
   

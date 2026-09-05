@@ -5,3 +5,4 @@ BeatmapCache
 keys
 .idea
 .env
+redisdata

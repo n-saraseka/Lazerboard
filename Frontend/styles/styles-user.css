@@ -75,6 +75,12 @@
     overflow: hidden;
 }
 
+.chart-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .card-stats:has(.card-stats-column.collapsed) .card-stats-column:first-child {
     align-items: center;
 }

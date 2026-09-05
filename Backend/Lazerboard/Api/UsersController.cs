@@ -90,29 +90,48 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
     }
 
     /// <summary>
-    /// Get user data
+    /// Get <see cref="User"/>'s top 100 scores count history
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="mode">A <see cref="Mode"/> to get specific data from (returns data from all modes if not provided)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>A <see cref="UserDataResponse"/></returns>
-    [HttpGet("{userId:int}/data")]
+    /// <param name="userId">The <see cref="User"/> ID</param>
+    /// <param name="mode">The specified <see cref="Mode"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="UserHistory"/></returns>
+    [HttpGet("{userId:int}/history")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserDataAsync(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    public async Task<IActionResult> GetUserHistory(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
     {
         var user = await userRepository.GetByIdAsync(userId, ct);
         if (user == null) return NotFound("User not found");
         
         var context = scoreRepository.GetDbContext();
-
+        
         var historyQuery = mode == null
             ? context.Database.SqlQuery<UserHistory>(
                 $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND rank<=100\nGROUP BY month\nORDER BY month ASC)")
             : context.Database.SqlQuery<UserHistory>(
                 $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND rank<=100 AND mode={mode}\nGROUP BY month\nORDER BY month ASC)");
-        
-        var history = await historyQuery.ToListAsync(ct);
 
+        var history = await historyQuery.ToListAsync(ct);
+        
+        return Ok(new { History = history });
+    }
+    
+    /// <summary>
+    /// Get <see cref="User"/>'s star rating distribution across their saved scores
+    /// </summary>
+    /// <param name="userId">The <see cref="User"/> ID</param>
+    /// <param name="mode">The specified <see cref="Mode"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="UserStars"/></returns>
+    [HttpGet("{userId:int}/stardistribution")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetUserStarDistribution(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId, ct);
+        if (user == null) return NotFound("User not found");
+        
+        var context = scoreRepository.GetDbContext();
+        
         var starsQuery = mode == null
             ? context.Database.SqlQuery<UserStars>(
                 $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId}\nGROUP BY sr_bracket\nORDER BY sr_bracket")
@@ -120,7 +139,26 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
                 $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId} AND s.mode={mode}\nGROUP BY sr_bracket\nORDER BY sr_bracket");
         
         var starStats = await starsQuery.ToListAsync(ct);
-
+        
+        return Ok(new { StarStats = starStats });
+    }
+    
+    /// <summary>
+    /// Get <see cref="User"/>'s top 100 rank distribution across their saved scores
+    /// </summary>
+    /// <param name="userId">The <see cref="User"/> ID</param>
+    /// <param name="mode">The specified <see cref="Mode"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="RankStats"/></returns>
+    [HttpGet("{userId:int}/rankdistribution")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetUserRankDistribution(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId, ct);
+        if (user == null) return NotFound("User not found");
+        
+        var context = scoreRepository.GetDbContext();
+        
         var ranksQuery = mode == null
             ? context.Database.SqlQuery<RankStats>(
                 $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 5 UNION ALL\n\tSELECT 10 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound")
@@ -128,7 +166,26 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
                 $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 5 UNION ALL\n\tSELECT 10 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId} AND mode={mode})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound");
         
         var rankStats = await ranksQuery.ToListAsync(ct);
-
+        
+        return Ok(new { RankStats = rankStats });
+    }
+    
+    /// <summary>
+    /// Get <see cref="User"/>'s speed change distribution across their saved scores
+    /// </summary>
+    /// <param name="userId">The <see cref="User"/> ID</param>
+    /// <param name="mode">The specified <see cref="Mode"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="UserSpeedStats"/></returns>
+    [HttpGet("{userId:int}/speeddistribution")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetUserSpeedDistribution(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId, ct);
+        if (user == null) return NotFound("User not found");
+        
+        var context = scoreRepository.GetDbContext();
+        
         var speedQuery = mode == null
             ? context.Database.SqlQuery<UserSpeedStats>(
                 $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores\nWHERE user_id = {userId} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket")
@@ -136,19 +193,8 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
                 $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores \nWHERE user_id = {userId} AND mode = {mode} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket");
 
         var speedStats = await speedQuery.ToListAsync(ct);
-
-        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
-        if (mode != null) query = query.Where(s => s.Mode == mode);
-        var count = await query.CountAsync(ct);
-
-        return Ok(new UserDataResponse 
-        {
-            Count = count,
-            History = history,
-            StarStats = starStats,
-            RankStats = rankStats,
-            SpeedStats = speedStats
-        });
+        
+        return Ok(new { SpeedStats = speedStats });
     }
 
     /// <summary>

@@ -17,7 +17,10 @@ function UserCard({user, scoreCount}) {
                 </div>
             </div>
             <div className="user-card-row">
-                <span className="scores-amount">{`${scoreCount} ${scoreCount === 1 ? "score" : "scores"} stored in the database`}</span>
+                <span className="scores-amount">
+                    { scoreCount === null ? 'Loading scores...' : `${scoreCount} ${scoreCount === 1 
+                        ? "score" : "scores"} stored in the database`}
+                </span>
             </div>
         </div>
     )

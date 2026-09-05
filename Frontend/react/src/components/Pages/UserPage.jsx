@@ -34,47 +34,158 @@ function UserPage({user}) {
     });
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [scoresCount, setScoresCount] = useState(0);
+    const [scoresCount, setScoresCount] = useState(null);
     const [pageCount, setPageCount] = useState(1);
     const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
     
-    const [userData, setUserData] = useState(null);
+    const [userData, setUserData] = useState({
+        history: null,
+        ranks: null,
+        stars: null,
+        speed: null
+    });
     const [showUserData, setShowUserData] = useState(true);
-    const [statsLoading, setStatsLoading] = useState(true);
-    const [statsError, setStatsError] = useState(false);
-
-    const getUserStats = useCallback(async () => {
-        setStatsLoading(true);
-        setStatsError(false);
+    const [statsLoading, setStatsLoading] = useState({
+        history: true,
+        ranks: true,
+        stars: true,
+        speed: true
+    });
+    const [statsError, setStatsError] = useState({
+        history: false,
+        ranks: false,
+        stars: false,
+        speed: false,
+    });
+    
+    const getUserHistory = useCallback(async () => {
+        setStatsLoading(prevState => ({...prevState, history: true}));
+        setStatsError(prevState => ({...prevState, history: false}));
 
         const params = new URLSearchParams();
 
         try {
-            const response = await fetch(`/api/users/${user.id}/data?` + params.toString(), {
+            const response = await fetch(`/api/users/${user.id}/history?` + params.toString(), {
                 method: "GET",
                 headers: { "Accept": "application/json" },
             });
 
             if (response.ok) {
                 const json = await response.json();
-                setUserData(json);
+                setUserData(prevState => ({...prevState, history: json.history}));
             }
             else {
-                setStatsError(true);
+                setStatsError(prevState => ({...prevState, history: true}));
             }
         }
         catch (error) {
-            setUserData(null);
-            setStatsError(true);
+            setUserData(prevState => ({...prevState, history: null}));
+            setStatsError(prevState => ({...prevState, history: true}));
         }
 
-        setStatsLoading(false);
+        setStatsLoading(prevState => ({...prevState, history: false}));
     }, [])
 
     useEffect( () => {
-        getUserStats();
+        getUserHistory();
+    }, []);
+
+    const getUserRanks = useCallback(async () => {
+        setStatsLoading(prevState => ({...prevState, ranks: true}));
+        setStatsError(prevState => ({...prevState, ranks: false}));
+
+        const params = new URLSearchParams();
+
+        try {
+            const response = await fetch(`/api/users/${user.id}/rankdistribution?` + params.toString(), {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                setUserData(prevState => ({...prevState, ranks: json.rankStats}));
+            }
+            else {
+                setStatsError(prevState => ({...prevState, ranks: true}));
+            }
+        }
+        catch (error) {
+            setUserData(prevState => ({...prevState, ranks: null}));
+            setStatsError(prevState => ({...prevState, ranks: true}));
+        }
+
+        setStatsLoading(prevState => ({...prevState, ranks: false}));
+    }, [])
+
+    useEffect( () => {
+        getUserRanks();
+    }, []);
+
+    const getUserStars = useCallback(async () => {
+        setStatsLoading(prevState => ({...prevState, stars: true}));
+        setStatsError(prevState => ({...prevState, stars: false}));
+
+        const params = new URLSearchParams();
+
+        try {
+            const response = await fetch(`/api/users/${user.id}/stardistribution?` + params.toString(), {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                setUserData(prevState => ({...prevState, stars: json.starStats}));
+            }
+            else {
+                setStatsError(prevState => ({...prevState, stars: true}));
+            }
+        }
+        catch (error) {
+            setUserData(prevState => ({...prevState, stars: null}));
+            setStatsError(prevState => ({...prevState, stars: true}));
+        }
+
+        setStatsLoading(prevState => ({...prevState, stars: false}));
+    }, [])
+
+    useEffect( () => {
+        getUserStars();
+    }, []);
+
+    const getUserSpeed = useCallback(async () => {
+        setStatsLoading(prevState => ({...prevState, speed: true}));
+        setStatsError(prevState => ({...prevState, speed: false}));
+
+        const params = new URLSearchParams();
+
+        try {
+            const response = await fetch(`/api/users/${user.id}/speeddistribution?` + params.toString(), {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                setUserData(prevState => ({...prevState, speed: json.speedStats}));
+            }
+            else {
+                setStatsError(prevState => ({...prevState, speed: true}));
+            }
+        }
+        catch (error) {
+            setUserData(prevState => ({...prevState, speed: null}));
+            setStatsError(prevState => ({...prevState, speed: true}));
+        }
+
+        setStatsLoading(prevState => ({...prevState, speed: false}));
+    }, [])
+
+    useEffect( () => {
+        getUserSpeed();
     }, []);
 
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
@@ -160,12 +271,7 @@ function UserPage({user}) {
                 </div>
             </div>
             <div className={`card-stats-column ${!showUserData ? 'collapsed' : ''}`}>
-                {statsError
-                    ? (<Error/>)
-                    : (statsLoading
-                        ? (<Loader/>)
-                        : (<UserStats data={userData} isCollapsed={!showUserData}/>))
-                }
+                <UserStats data={userData} loadingData={statsLoading} errorData={statsError}/>
             </div>
         </div>
         <h1 className="section-header">Score filters:</h1>

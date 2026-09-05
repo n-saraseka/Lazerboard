@@ -143,6 +143,13 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task ProcessBeatmapsetAsync(APIBeatmapset beatmapset, CancellationToken stoppingToken)
     {
         _logger.Log(LogLevel.Information, "Processing beatmapset ID: {beatmapsetID}", beatmapset.Id);
+
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+            await dataProcessor.ProcessBeatmapsAsync(beatmapset.Beatmaps, stoppingToken);
+        }
+        
         foreach (var beatmap in beatmapset.Beatmaps)
         {
             foreach (var val in Enum.GetValues<Mode>())

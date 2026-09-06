@@ -163,15 +163,9 @@ public class LeaderboardSeedingService : BackgroundService
                 var scoresWithoutPp = scores.Where(s => s.PP == null).ToList();
                 var scoresWithPp = scores.Where(s => s.PP != null).ToList();
                         
-                var beatmapIds = scoresWithoutPp.Select(s => s.BeatmapId).Distinct().ToList();
-                var checkResults = await CheckBlacklistedBeatmapsAsync(beatmapIds, stoppingToken);
-                        
                 foreach (var score in scoresWithoutPp)
                 {
-                    if (!checkResults[score.BeatmapId])
-                    {
-                        await CalculateScorePpAsync(score, stoppingToken);
-                    }
+                    await CalculateScorePpAsync(score, stoppingToken);
                 }
                 
                 var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
@@ -199,20 +193,6 @@ public class LeaderboardSeedingService : BackgroundService
                         
         var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
         return significantScores.DistinctBy(s => s.Id).ToList();
-    }
-    
-    /// <summary>
-    /// Check if multiple beatmap IDs belong to the blacklist
-    /// </summary>
-    /// <param name="ids">The <see cref="Beatmap"/> IDs</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>A dictionary with check results</returns>
-    private async Task<Dictionary<int, bool>> CheckBlacklistedBeatmapsAsync(IList<int> ids, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var ppBlacklist = scope.ServiceProvider.GetRequiredService<IPpBlacklist>();
-        
-        return await ppBlacklist.CheckIfBlacklistedBulkAsync(ids, stoppingToken);
     }
 
     /// <summary>

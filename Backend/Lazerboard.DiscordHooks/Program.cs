@@ -33,7 +33,6 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
                     .MapEnum<ScoreSource>("score_source")
-                    .MapEnum<BlacklistReason>("blacklist_reason")
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 

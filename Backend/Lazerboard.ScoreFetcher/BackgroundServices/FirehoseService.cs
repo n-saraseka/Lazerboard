@@ -53,15 +53,9 @@ public class FirehoseService : BackgroundService
                         var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                         var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
                         
-                        var beatmapIds = scoresWithoutPp.Select(s => s.BeatmapId).Distinct().ToList();
-                        var checkResults = await CheckBlacklistedBeatmapsAsync(beatmapIds, stoppingToken);
-                        
                         foreach (var score in scoresWithoutPp)
                         {
-                            if (!checkResults[score.BeatmapId])
-                            {
-                                await CalculateScorePpAsync(score, stoppingToken);
-                            }
+                            await CalculateScorePpAsync(score, stoppingToken);
                         }
                         
                         var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
@@ -81,16 +75,10 @@ public class FirehoseService : BackgroundService
                     var significantScores = await GetFirehoseScoresAsync(scores, stoppingToken);
                     var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                     var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
-                        
-                    var beatmapIds = scoresWithoutPp.Select(s => s.BeatmapId).Distinct().ToList();
-                    var checkResults = await CheckBlacklistedBeatmapsAsync(beatmapIds, stoppingToken);
-                        
+
                     foreach (var score in scoresWithoutPp)
                     {
-                        if (!checkResults[score.BeatmapId])
-                        {
-                            await CalculateScorePpAsync(score, stoppingToken);
-                        }
+                        await CalculateScorePpAsync(score, stoppingToken);
                     }
                     
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
@@ -306,20 +294,6 @@ public class FirehoseService : BackgroundService
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         
         await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
-    }
-
-    /// <summary>
-    /// Check if multiple beatmap IDs belong to the blacklist
-    /// </summary>
-    /// <param name="ids">The <see cref="Beatmap"/> IDs</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>A dictionary with check results</returns>
-    private async Task<Dictionary<int, bool>> CheckBlacklistedBeatmapsAsync(IList<int> ids, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var ppBlacklist = scope.ServiceProvider.GetRequiredService<IPpBlacklist>();
-        
-        return await ppBlacklist.CheckIfBlacklistedBulkAsync(ids, stoppingToken);
     }
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)

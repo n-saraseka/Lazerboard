@@ -36,17 +36,13 @@ public class ScoreCalculator(ICacheStore cacheStore,
         
         logger.Log(LogLevel.Information, "Getting the ruleset...");
         var ruleset = GetRulesetFromScore(apiScore);
-        logger.Log(LogLevel.Information, "Getting the beatmap file...");
+        logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap...");
 
         var filename = await cacheStore.GetBeatmapFileStringAsync(apiScore.BeatmapId, beatmapCacheRepository, ct);
-        await using var stream = File.OpenRead(filename);
-        using var reader = new LineBufferedReader(stream);
-        var beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
+        var flatWorkingBeatmap = new FlatWorkingBeatmap(filename);
         
         logger.Log(LogLevel.Information, "Getting the score info...");
-        var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);
-        logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap...");
-        var flatWorkingBeatmap = new FlatWorkingBeatmap(beatmap);
+        var scoreInfo = GetScoreInfo(apiScore, flatWorkingBeatmap.Beatmap, ruleset);
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeoutCts.CancelAfter(CalculationTimeout);

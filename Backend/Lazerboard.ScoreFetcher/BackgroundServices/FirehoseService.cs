@@ -60,7 +60,6 @@ public class FirehoseService : BackgroundService
                         
                         var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
                         await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
-                        await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }
                     if (!_catchUpOnExistingBeatmapScores)
                     {

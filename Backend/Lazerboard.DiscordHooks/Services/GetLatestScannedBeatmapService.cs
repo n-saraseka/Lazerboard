@@ -131,19 +131,21 @@ public class GetLatestScannedBeatmapService : BackgroundService
     private Embed BuildBeatmapsetEmbed(IList<Beatmap> beatmaps)
     {
         var firstBeatmap = beatmaps.First();
-        var title = $"{firstBeatmap.Beatmapset.Artist} - {firstBeatmap.Beatmapset.Title}";
+        var beatmapset = firstBeatmap.Beatmapset;
+        var title = $"{beatmapset.Artist} - {beatmapset.Title}";
         
         var mainMode = GetMainMode(beatmaps);
         var beatmapsetModes = GetModesString(beatmaps);
         var beatmapStatuses = GetStatusesString(beatmaps);
         
-        var mapsetBy = $"**Mapset by**: [{firstBeatmap.Beatmapset.Creator}](https://osu.ppy.sh/users/{firstBeatmap.Beatmapset.UserId})";
+        var mapsetBy = $"**Mapset by**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
         var mode = $"**Beatmapset modes**: {beatmapsetModes}";
         var beatmapStatus = $"**Beatmap statuses**: {beatmapStatuses}";
+        var lazerboardLink = $"**[Lazerboard link](https://lazerboard.melguy.com/beatmapsets/{beatmapset.Id}**";
 
-        var imageUrl = $"https://assets.ppy.sh/beatmaps/{firstBeatmap.Beatmapset.Id}/covers/cover@2x.jpg";
-        var thumbnailUrl = $"https://a.ppy.sh/{firstBeatmap.Beatmapset.UserId}";
-        var beatmapUrl = $"https://osu.ppy.sh/beatmapsets/{firstBeatmap.Beatmapset.Id}";
+        var imageUrl = $"https://assets.ppy.sh/beatmaps/{beatmapset.Id}/covers/cover@2x.jpg";
+        var thumbnailUrl = $"https://a.ppy.sh/{beatmapset.UserId}";
+        var beatmapUrl = $"https://osu.ppy.sh/beatmapsets/{beatmapset.Id}";
         
         var timestamp = DateTimeOffset.UtcNow;
         var color = EmbedUtils.GetModeColor(mainMode);
@@ -151,7 +153,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var builder = new EmbedBuilder
         {
             Title = title,
-            Description = $"{mapsetBy}\n{mode}\n{beatmapStatus}",
+            Description = $"{mapsetBy}\n{mode}\n{beatmapStatus}\n\n{lazerboardLink}",
             Color = color,
             ImageUrl = imageUrl,
             ThumbnailUrl = thumbnailUrl,

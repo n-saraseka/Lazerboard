@@ -18,7 +18,7 @@ using Lazerboard.Data.Redis.Repositories.Interfaces;
 namespace Lazerboard.ScoreFetcher.Calculations;
 
 public class ScoreCalculator(ICacheStore cacheStore, 
-    ILogger<ScoreCalculator> logger, 
+    ILogger<ScoreCalculator> logger,
     IScoreCacheRepository scoreCacheRepository,
     IBeatmapCacheRepository beatmapCacheRepository) : ICalculator
 {

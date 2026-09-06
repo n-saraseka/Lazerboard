@@ -11,6 +11,7 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
     public DbSet<Country> Countries { get; set; }
     public DbSet<Score> Scores { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<PpBlacklistBeatmap> PpBlacklist { get; set; }
     public DbSet<ScorePendingDeletion> ScoresPendingDeletion { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -20,6 +21,7 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new BeatmapConfiguration());
         modelBuilder.ApplyConfiguration(new BeatmapsetConfiguration());
         modelBuilder.ApplyConfiguration(new ScorePendingDeletionConfiguration());
+        modelBuilder.ApplyConfiguration(new PpBlacklistConfiguration());
     }
 }
     

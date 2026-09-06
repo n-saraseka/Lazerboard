@@ -8,19 +8,22 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
 {
     public Task<List<Beatmap>> GetByBeatmapsetIdAsync(int beatmapsetId, CancellationToken ct) =>
         Set
+            .AsNoTracking()
             .Where(b => b.BeatmapsetId == beatmapsetId)
             .Include(b => b.Beatmapset)
             .ThenInclude(bs => bs.User)
             .ToListAsync(ct);
     
     public Task<List<Beatmap>> GetBulkWithBeatmapsetsAsync(IList<int> ids, CancellationToken ct) =>
-        Set.
-            Where(b => ids.Contains(b.Id)).
-            Include(b => b.Beatmapset)
+        Set
+            .AsNoTracking()
+            .Where(b => ids.Contains(b.Id))
+            .Include(b => b.Beatmapset)
             .ToListAsync(ct);
     
     public Task<Beatmap?> GetWithBeatmapsetDataAsync(int id, CancellationToken ct = default) =>
         Set
+            .AsNoTracking()
             .Where(b => b.Id == id)
             .Include(b => b.Beatmapset)
             .ThenInclude(bs => bs.User)

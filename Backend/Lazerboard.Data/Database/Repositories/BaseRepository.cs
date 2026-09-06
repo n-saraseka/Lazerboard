@@ -14,7 +14,7 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// Get all items
     /// </summary>
     /// <returns>An <see cref="IQueryable"/> that can be used to query all items of class <see cref="T"/></returns>
-    public IQueryable<T> GetAll() => Set.AsQueryable();
+    public IQueryable<T> GetAll() => Set.AsNoTracking().AsQueryable();
     
     /// <summary>
     /// Get the <see cref="ScoreDataContext"/>
@@ -41,6 +41,7 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// <exception cref="OperationCanceledException">If the <see cref="CancellationToken"/> is canceled</exception>
     public Task<List<T>> GetBulkAsync(IEnumerable<TKey> ids, CancellationToken cancellationToken = default) =>
         Set
+            .AsNoTracking()
             .Where(i => ids.Contains(i.Id)) 
             .ToListAsync(cancellationToken);
     

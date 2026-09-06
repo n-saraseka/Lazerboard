@@ -7,6 +7,7 @@ namespace Lazerboard.Data.Database.Repositories;
 public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db), IUserRepository
 {
     public Task<User?> GetByIdWithCountryAsync(int id, CancellationToken cancellationToken) => Set
+        .AsNoTracking()
         .Where(u => u.Id == id)
         .AsSplitQuery()
         .Include(u => u.Country)
@@ -18,6 +19,7 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
         trimmedQuery = trimmedQuery.ToLower();
         
         return Set
+            .AsNoTracking()
             .Where(u => u.Username.ToLower().StartsWith(trimmedQuery) && u.CountryCode != null)
             .Take(25)
             .Include(u => u.Country)

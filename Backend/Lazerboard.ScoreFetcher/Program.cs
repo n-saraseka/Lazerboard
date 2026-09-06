@@ -18,6 +18,7 @@ using Lazerboard.ScoreFetcher.OsuApi;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Serilog;
@@ -45,6 +46,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
                     .MapEnum<ScoreSource>("score_source")
+                    .MapEnum<BlacklistReason>("blacklist_reason")
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 
@@ -55,6 +57,7 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IScorePendingDeletionRepository, ScorePendingDeletionRepository>();
+builder.Services.AddScoped<IPpBlacklistRepository, PpBlacklistRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
@@ -64,6 +67,7 @@ builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
+builder.Services.AddScoped<IPpBlacklist, PpBlacklist>();
 
 builder.Services.AddSingleton<ICentralizedRateLimiter, CentralizedRateLimiter>();
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
@@ -164,6 +168,7 @@ using (var scope = app.Services.CreateScope())
     var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
     var cancellationToken = CancellationToken.None;
     await backpopulator.BackpopulateAsync(cancellationToken);
+    
     var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
     try
     {
@@ -173,6 +178,17 @@ using (var scope = app.Services.CreateScope())
     {
         Log.Error(ex, "Could not cleanup beatmap cache on startup");
     }
+
+    var blacklist = scope.ServiceProvider.GetRequiredService<IPpBlacklist>();
+    var blacklistConfig = builder.Configuration.GetSection("PpBlacklist").Get<List<int>>();
+
+    var dict = new Dictionary<int, BlacklistReason>();
+    foreach (var id in blacklistConfig)
+    {
+        dict[id] = BlacklistReason.RedFlag;
+    }
+    
+    await blacklist.AddToBlacklistBulkAsync(dict, cancellationToken);
 }
 
 try

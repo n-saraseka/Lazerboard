@@ -1,4 +1,5 @@
 using System.Text;
+using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +21,6 @@ public class FirehoseService : BackgroundService
 
     private string? _cursor;
     private int _repeatExponent;
-    private const int BatchSize = 50;
     
     public FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseService> logger, ISeedingState seedingState)
     {
@@ -52,12 +52,21 @@ public class FirehoseService : BackgroundService
                         var significantScores = await GetExistingBeatmapScoresAsync(scores, stoppingToken);
                         var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                         var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
+                        
+                        var beatmapIds = scoresWithoutPp.Select(s => s.BeatmapId).Distinct().ToList();
+                        var checkResults = await CheckBlacklistedBeatmapsAsync(beatmapIds, stoppingToken);
+                        
                         foreach (var score in scoresWithoutPp)
                         {
-                            await CalculateScorePpAsync(score, stoppingToken);
+                            if (!checkResults[score.BeatmapId])
+                            {
+                                await CalculateScorePpAsync(score, stoppingToken);
+                            }
                         }
+                        
                         var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
                         await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
+                        await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }
                     if (!_catchUpOnExistingBeatmapScores)
                     {
@@ -68,16 +77,25 @@ public class FirehoseService : BackgroundService
                 {
                     var scores = await FetchFromFirehoseAsync(stoppingToken);
                     if (scores.Length == 0) continue;
+                    
                     var significantScores = await GetFirehoseScoresAsync(scores, stoppingToken);
-
                     var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                     var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
+                        
+                    var beatmapIds = scoresWithoutPp.Select(s => s.BeatmapId).Distinct().ToList();
+                    var checkResults = await CheckBlacklistedBeatmapsAsync(beatmapIds, stoppingToken);
+                        
                     foreach (var score in scoresWithoutPp)
                     {
-                        await CalculateScorePpAsync(score, stoppingToken);
+                        if (!checkResults[score.BeatmapId])
+                        {
+                            await CalculateScorePpAsync(score, stoppingToken);
+                        }
                     }
+                    
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
                     await SaveFirehoseDataAsync(mergedScores, stoppingToken);
+                    await Task.Delay(100, stoppingToken);
                 }
             }
             catch (Exception ex)
@@ -288,6 +306,20 @@ public class FirehoseService : BackgroundService
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         
         await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
+    }
+
+    /// <summary>
+    /// Check if multiple beatmap IDs belong to the blacklist
+    /// </summary>
+    /// <param name="ids">The <see cref="Beatmap"/> IDs</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A dictionary with check results</returns>
+    private async Task<Dictionary<int, bool>> CheckBlacklistedBeatmapsAsync(IList<int> ids, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var ppBlacklist = scope.ServiceProvider.GetRequiredService<IPpBlacklist>();
+        
+        return await ppBlacklist.CheckIfBlacklistedBulkAsync(ids, stoppingToken);
     }
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)

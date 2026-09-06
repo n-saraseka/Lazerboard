@@ -87,7 +87,7 @@ public class OsuApiService
         var dataJson = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore});
         
         // getting the token
-        var tokenResponse = await SendRequestAsync(HttpMethod.Post, 
+        using var tokenResponse = await SendRequestAsync(HttpMethod.Post, 
             ApiTokenUrl, 
             new StringContent(dataJson, Encoding.UTF8, "application/json"),
             true,
@@ -108,7 +108,7 @@ public class OsuApiService
     /// <returns>Populated BeatmapsetsResponse object</returns>
     public async Task<BeatmapsetsResponse> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
-        var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}", 
             null, 
             false, 
@@ -129,7 +129,7 @@ public class OsuApiService
     /// <returns>The <see cref="APIBeatmapset"/></returns>
     public async Task<APIBeatmapset> GetBeatmapsetAsync(int id, CancellationToken ct = default)
     {
-        var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/{id}", 
             null, 
             false, 
@@ -156,7 +156,7 @@ public class OsuApiService
         var queryString = $"limit=100&legacy_only={legacyOnly}";
         if (mode != null) queryString += $"&mode={mode.ToString().ToLower()}";
         
-        var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
             null, 
             false, 
@@ -177,7 +177,7 @@ public class OsuApiService
     /// <returns>Populated ScoresResponse object with the cursor string and array of Scores</returns>
     public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
-        var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/scores?cursor_string={cursor}", 
             null, 
             false, 
@@ -210,7 +210,7 @@ public class OsuApiService
         var mapPath = $"{_cacheFolder}/{beatmapId}.osu";
         try
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Get, 
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, 
                 $"https://osu.ppy.sh/osu/{beatmapId}");
             await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
             var response = await _httpClient.SendAsync(requestMessage, ct);
@@ -233,7 +233,6 @@ public class OsuApiService
     /// <returns>List with populated APIBeatmap objects</returns>
     public async Task<APIBeatmap[]> GetBeatmapsAsync(List<int> ids, CancellationToken ct = default)
     {
-
         int count = ids.Count;
         if (count == 0) throw new ArgumentException("No beatmap IDs to process");
         if (count > 50) throw new ArgumentException("ID limit per call reached (more than 50)");
@@ -241,7 +240,7 @@ public class OsuApiService
         var queryString = string.Join("&", ids.Select(b => $"ids[]={b}"));
 
         // parse beatmaps
-        var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps?{queryString}", 
             null, 
             false, 
@@ -271,7 +270,7 @@ public class OsuApiService
         var queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
         
         // parse users
-        var usersResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/users?{queryString}", 
             null, 
             false, 

@@ -43,54 +43,38 @@ public class ScoreCalculator(ICacheStore cacheStore,
         }
         catch (Exception ex)
         {
-            logger.Log(LogLevel.Error, ex, "Method: ScoreCalculator.CalculateAsync | Score: {score}, Beatmap ID: {beatmapId}", apiScore, apiScore.BeatmapId);
+            logger.Log(LogLevel.Error, ex, "Failed to get the beatmap file! Beatmap ID: {beatmapId}", apiScore.BeatmapId);
             return null;
         }
+        
         logger.Log(LogLevel.Information, "Getting the score info...");
         var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);
         logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap...");
         var flatWorkingBeatmap = new FlatWorkingBeatmap(beatmap);
-        
-        logger.Log(LogLevel.Information, "Calculating the difficulty attributes...");
-        var difficultyAttributes = ruleset.CreateDifficultyCalculator(flatWorkingBeatmap).Calculate(scoreInfo.Mods, ct);
-        var performanceCalculator = ruleset.CreatePerformanceCalculator();
-        logger.Log(LogLevel.Information, "Calculating performance attributes...");
-        if (performanceCalculator != null)
-        {
-            // Performance calculation might fail on weird maps like Aspire.
-            try
-            {
-                var performanceAttributesTask = performanceCalculator.CalculateAsync(scoreInfo, difficultyAttributes, ct);
-                
-                if (await Task.WhenAny(performanceAttributesTask, Task.Delay(CalculationTimeout, ct)) ==
-                    performanceAttributesTask)
-                {
-                    
-                    await performanceAttributesTask;
-                    
-                    var performanceAttributes = performanceAttributesTask.Result;
-                    logger.Log(LogLevel.Information, "Score ID: {scoreId}, new PP: {pp}", apiScore.Id,
-                        (float)performanceAttributes.Total);
 
-                    await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, true);
-                    return (float)performanceAttributes.Total;
-                }
-                
-                await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Score calculation failed! Score: {score};", 
-                    apiScore.Id);
-                await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
-                return null;
-            }
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(CalculationTimeout);
+
+        try
+        {
+            // Difficulty attributes calculation might fail on weird maps.
+            logger.Log(LogLevel.Information, "Calculating the difficulty attributes...");
+            var difficultyAttributes = ruleset.CreateDifficultyCalculator(flatWorkingBeatmap)
+                .Calculate(scoreInfo.Mods, timeoutCts.Token);
+
+            logger.Log(LogLevel.Information, "Calculating performance attributes...");
+            var performanceCalculator = ruleset.CreatePerformanceCalculator();
+            var performanceAttributes = await performanceCalculator!.CalculateAsync(scoreInfo, difficultyAttributes, ct);
+            await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, true);
+            return (float)performanceAttributes.Total;
         }
-        logger.Log(LogLevel.Error, "Score calculation failed! Score ID: {score}; Error: {error}", 
-            apiScore.Id, $"{nameof(performanceCalculator)} is null");
-        await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
-        return null;
+        catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            logger.Log(LogLevel.Error, ex, "Score calculation failed! Score: {score};",
+                apiScore.Id);
+            await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, false);
+            return null;
+        }
     }
     
     /// <summary>

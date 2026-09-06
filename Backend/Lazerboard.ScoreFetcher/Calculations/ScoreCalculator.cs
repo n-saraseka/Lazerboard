@@ -66,7 +66,10 @@ public class ScoreCalculator(ICacheStore cacheStore,
             var performanceCalculator = ruleset.CreatePerformanceCalculator();
             var performanceAttributes = await performanceCalculator!.CalculateAsync(scoreInfo, difficultyAttributes, ct);
             await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, true);
-            return (float)performanceAttributes.Total;
+            
+            var pp = (float)performanceAttributes.Total;
+            logger.Log(LogLevel.Information, "Score ID: {scoreID}, PP: {pp}", apiScore.Id, pp);
+            return pp;
         }
         catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
         {

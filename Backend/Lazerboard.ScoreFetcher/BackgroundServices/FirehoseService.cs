@@ -49,11 +49,15 @@ public class FirehoseService : BackgroundService
                     var scores = await FetchExistingBeatmapScoresAsync(stoppingToken);
                     if (scores.Count > 0)
                     {
-                        for (var i = 0; i < scores.Count; i += BatchSize)
+                        var significantScores = await GetExistingBeatmapScoresAsync(scores, stoppingToken);
+                        var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
+                        var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
+                        foreach (var score in scoresWithoutPp)
                         {
-                            var batch = scores.Skip(i * BatchSize).Take(BatchSize).ToList();
-                            await ProcessExistingBeatmapScoresAsync(batch, stoppingToken);
+                            await CalculateScorePpAsync(score, stoppingToken);
                         }
+                        var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
+                        await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
                     }
                     if (!_catchUpOnExistingBeatmapScores)
                     {
@@ -64,11 +68,16 @@ public class FirehoseService : BackgroundService
                 {
                     var scores = await FetchFromFirehoseAsync(stoppingToken);
                     if (scores.Length == 0) continue;
-                    for (var i = 0; i < scores.Length; i += BatchSize)
+                    var significantScores = await GetFirehoseScoresAsync(scores, stoppingToken);
+
+                    var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
+                    var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
+                    foreach (var score in scoresWithoutPp)
                     {
-                        var batch = scores.Skip(i * BatchSize).Take(BatchSize).ToList();
-                        await ProcessFirehoseScoresAsync(batch, stoppingToken);
+                        await CalculateScorePpAsync(score, stoppingToken);
                     }
+                    var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
+                    await SaveFirehoseDataAsync(mergedScores, stoppingToken);
                 }
             }
             catch (Exception ex)
@@ -139,16 +148,35 @@ public class FirehoseService : BackgroundService
         return scoresToProcess;
     }
 
-    private async Task ProcessExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    /// <summary>
+    /// Get existing beatmap scores from the firehose endpoint
+    /// </summary>
+    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>List of <see cref="APIScore"/>s</returns>
+    private async Task<List<APIScore>> GetExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+        
+        var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
+
+        return significantScores;
+    }
+
+    /// <summary>
+    /// Save data from existing beatmap scores
+    /// </summary>
+    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task SaveExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
         
-        var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-            
-        await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-        await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.ScoreFetcher, stoppingToken);
+        await utils.SaveUserDataFromScoresAsync(scores,  stoppingToken);
+        await dataProcessor.ProcessScoresAsync(scores, ScoreSource.ScoreFetcher, stoppingToken);
     }
     
     /// <summary>
@@ -195,12 +223,16 @@ public class FirehoseService : BackgroundService
         return scores;
     }
 
-    private async Task ProcessFirehoseScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    /// <summary>
+    /// Get significant <see cref="APIScore"/>s from the general firehose
+    /// </summary>
+    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>List of significant <see cref="APIScore"/>s</returns>
+    private async Task<List<APIScore>> GetFirehoseScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
         
         var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
         
@@ -211,14 +243,26 @@ public class FirehoseService : BackgroundService
             _repeatExponent++;
             var interval = _apiInterval * Math.Pow(2, _repeatExponent);
             await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
-            return;
+            return [];
         }
         _repeatExponent = 0;
-        
-        await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
+        return significantScores;
+    }
+
+    /// <summary>
+    /// Save score data from the general firehose
+    /// </summary>
+    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task SaveFirehoseDataAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
             
         // Process new beatmaps and beatmapsets first if necessary
-        var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         var existingBeatmaps = await dataProcessor.GetExistingBeatmapsAsync(beatmapIds, stoppingToken);
         var newBeatmapIds = beatmapIds.Where(id => !existingBeatmaps.Select(b => b.Id).Contains(id)).ToList();
 
@@ -230,7 +274,20 @@ public class FirehoseService : BackgroundService
             await dataProcessor.ProcessBeatmapsAsync(beatmaps, stoppingToken);
         }
             
-        await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.ScoreFetcher, stoppingToken);
+        await SaveExistingBeatmapScoresAsync(scores, stoppingToken);
+    }
+    
+    /// <summary>
+    /// Calculate <see cref="APIScore"/>'s PP value and save it to the <see cref="APIScore.PP"/> field
+    /// </summary>
+    /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task CalculateScorePpAsync(APIScore score, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
+        
+        await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
     }
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)

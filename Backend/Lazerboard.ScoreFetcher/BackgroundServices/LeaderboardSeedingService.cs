@@ -155,22 +155,34 @@ public class LeaderboardSeedingService : BackgroundService
             foreach (var val in Enum.GetValues<Mode>())
             {
                 if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
-                await ProcessBeatmapScoresAsync(beatmap.Id, val, stoppingToken);
+                var scores = await GetBeatmapScoresAsync(beatmap.Id, val, stoppingToken);
+
+                if (scores.Count == 0) continue;
+                
+                var scoresWithoutPp = scores.Where(s => s.PP == null).ToList();
+                var scoresWithPp = scores.Where(s => s.PP != null).ToList();
+
+                foreach (var score in scoresWithoutPp)
+                {
+                    await CalculateScorePpAsync(score, stoppingToken);
+                }
+                
+                var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
+                await SaveScoreDataAsync(mergedScores, stoppingToken);
             }
         }
     }
 
     /// <summary>
-    /// Process <see cref="APIBeatmap"/> leaderboard scores and save significant ones to the database
+    /// Get significant <see cref="APIBeatmap"/> leaderboard scores
     /// </summary>
     /// <param name="beatmapId">The <see cref="APIBeatmap"/> ID</param>
     /// <param name="mode">The <see cref="Mode"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task ProcessBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
+    private async Task<List<APIScore>> GetBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
-        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
         
         _logger.Log(LogLevel.Information, "Processing beatmap ID: {beatmapID}, mode: {mode}", beatmapId, mode);
@@ -178,12 +190,34 @@ public class LeaderboardSeedingService : BackgroundService
         var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
                         
         var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
-        significantScores = significantScores.DistinctBy(s => s.Id).ToList();
+        return significantScores.DistinctBy(s => s.Id).ToList();
+    }
 
-        if (significantScores.Count > 0)
-        {
-            await utils.SaveUserDataFromScoresAsync(significantScores,  stoppingToken);
-            await dataProcessor.ProcessScoresAsync(significantScores, ScoreSource.LeaderboardScan, stoppingToken);
-        }
+    /// <summary>
+    /// Calculate <see cref="APIScore"/>'s PP value and save it to the <see cref="APIScore.PP"/> field
+    /// </summary>
+    /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task CalculateScorePpAsync(APIScore score, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
+        
+        await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
+    }
+
+    /// <summary>
+    /// Save data from scores to the database
+    /// </summary>
+    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task SaveScoreDataAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+        
+        await utils.SaveUserDataFromScoresAsync(scores,  stoppingToken);
+        await dataProcessor.ProcessScoresAsync(scores, ScoreSource.LeaderboardScan, stoppingToken);
     }
 }

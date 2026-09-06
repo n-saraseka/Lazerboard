@@ -54,14 +54,6 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
         logger.Log(LogLevel.Information, "Getting significant scores..");
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(deduplicatedScores, stoppingToken);
         var significantScores = deduplicatedScores.Where(s => checkResults[s.Id]).ToList();
-        
-        // Calculate PP for scores that don't have it.
-        logger.Log(LogLevel.Information, "Calclating PP for scores..");
-        var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
-        foreach (var score in scoresWithoutPp)
-        {
-            await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
-        }
 
         return significantScores;
     }

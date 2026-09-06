@@ -170,7 +170,6 @@ public class LeaderboardSeedingService : BackgroundService
                 
                 var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
                 await SaveScoreDataAsync(mergedScores, stoppingToken);
-                await Task.Delay(100, stoppingToken);
             }
         }
     }

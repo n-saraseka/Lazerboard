@@ -83,7 +83,6 @@ public class FirehoseService : BackgroundService
                     
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
                     await SaveFirehoseDataAsync(mergedScores, stoppingToken);
-                    await Task.Delay(100, stoppingToken);
                 }
             }
             catch (Exception ex)

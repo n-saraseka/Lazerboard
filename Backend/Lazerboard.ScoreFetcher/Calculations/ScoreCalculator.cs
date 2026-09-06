@@ -14,6 +14,7 @@ using osu.Game.Scoring;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using osu.Game.IO;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
@@ -35,17 +36,12 @@ public class ScoreCalculator(ICacheStore cacheStore,
         
         logger.Log(LogLevel.Information, "Getting the ruleset...");
         var ruleset = GetRulesetFromScore(apiScore);
-        Beatmap beatmap;
         logger.Log(LogLevel.Information, "Getting the beatmap file...");
-        try
-        {
-            beatmap = await cacheStore.GetBeatmapFileAsync(apiScore.BeatmapId, beatmapCacheRepository, ct);
-        }
-        catch (Exception ex)
-        {
-            logger.Log(LogLevel.Error, ex, "Failed to get the beatmap file! Beatmap ID: {beatmapId}", apiScore.BeatmapId);
-            return null;
-        }
+
+        var filename = await cacheStore.GetBeatmapFileStringAsync(apiScore.BeatmapId, beatmapCacheRepository, ct);
+        await using var stream = File.OpenRead(filename);
+        using var reader = new LineBufferedReader(stream);
+        var beatmap = osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
         
         logger.Log(LogLevel.Information, "Getting the score info...");
         var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);

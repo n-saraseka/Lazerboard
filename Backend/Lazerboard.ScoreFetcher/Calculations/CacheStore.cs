@@ -101,7 +101,7 @@ public class CacheStore : ICacheStore
         _logger.Log(LogLevel.Information, "Removed {count} files from beatmap cache", deletedCount);
     }
     
-    public async Task<Beatmap> GetBeatmapFileAsync(int beatmapId, IBeatmapCacheRepository beatmapCacheRepository, CancellationToken ct)
+    public async Task<string> GetBeatmapFileStringAsync(int beatmapId, IBeatmapCacheRepository beatmapCacheRepository, CancellationToken ct)
     {
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
         var attempts = 0;
@@ -137,18 +137,8 @@ public class CacheStore : ICacheStore
                     continue;
                 }
             }
-            try
-            {
-                _logger.Log(LogLevel.Information, "Reading the beatmap file...");
-                await using var stream = File.OpenRead(mapPath);
-                using var reader = new LineBufferedReader(stream);
-                return osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);
-            }
-            catch (FileNotFoundException ex)
-            {
-                _logger.Log(LogLevel.Error, ex, "Failed to get .osu file for beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
-                attempts++;
-            }
+
+            return mapPath;
         }
         
         throw new InvalidOperationException(

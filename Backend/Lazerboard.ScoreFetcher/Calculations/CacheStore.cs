@@ -107,6 +107,7 @@ public class CacheStore : ICacheStore
         var attempts = 0;
         
         // Set / reset .osu file TTL in Redis
+        _logger.Log(LogLevel.Information, "Checking the redis cache for beatmap file...");
         var cachedFileName = await beatmapCacheRepository.GetCachedBeatmapFileNameAsync(beatmapId);
         if (cachedFileName is null)
         {
@@ -123,6 +124,7 @@ public class CacheStore : ICacheStore
         {
             if (!File.Exists(mapPath))
             {
+                _logger.Log(LogLevel.Information, "Downloading the beatmap file...");
                 try
                 {
                     await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
@@ -137,6 +139,7 @@ public class CacheStore : ICacheStore
             }
             try
             {
+                _logger.Log(LogLevel.Information, "Reading the beatmap file...");
                 await using var stream = File.OpenRead(mapPath);
                 using var reader = new LineBufferedReader(stream);
                 return osu.Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(reader).Decode(reader);

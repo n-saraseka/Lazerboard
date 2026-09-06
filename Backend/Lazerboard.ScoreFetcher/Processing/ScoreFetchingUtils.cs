@@ -1,9 +1,10 @@
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFetcher, IScoreProcessor scoreProcessor) : IScoreFetchingUtils
+public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFetcher, IScoreProcessor scoreProcessor, ILogger<IScoreFetchingUtils> logger) : IScoreFetchingUtils
 {
     /// <summary>
     /// Save all beatmapset data from <see cref="APIBeatmapset"/>s (beatmapset creators and beatmapsets)
@@ -50,10 +51,12 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFet
             .Select(group => group.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).First())
             .ToList();
         
+        logger.Log(LogLevel.Information, "Getting significant scores..");
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(deduplicatedScores, stoppingToken);
         var significantScores = deduplicatedScores.Where(s => checkResults[s.Id]).ToList();
         
         // Calculate PP for scores that don't have it.
+        logger.Log(LogLevel.Information, "Calclating PP for scores..");
         var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
         foreach (var score in scoresWithoutPp)
         {

@@ -26,14 +26,17 @@ public class ScoreCalculator(ICacheStore cacheStore,
 
     public async Task<float?> CalculateAsync(APIScore apiScore, CancellationToken ct)
     {
+        logger.Log(LogLevel.Information, "Checking if score is calculatable...");
         var isCalculatable = await scoreCacheRepository.GetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode);
         if (isCalculatable.HasValue)
         {
             if (!isCalculatable.Value) return null;
         }
         
+        logger.Log(LogLevel.Information, "Getting the ruleset...");
         var ruleset = GetRulesetFromScore(apiScore);
         Beatmap beatmap;
+        logger.Log(LogLevel.Information, "Getting the beatmap file...");
         try
         {
             beatmap = await cacheStore.GetBeatmapFileAsync(apiScore.BeatmapId, beatmapCacheRepository, ct);
@@ -43,11 +46,15 @@ public class ScoreCalculator(ICacheStore cacheStore,
             logger.Log(LogLevel.Error, ex, "Method: ScoreCalculator.CalculateAsync | Score: {score}, Beatmap ID: {beatmapId}", apiScore, apiScore.BeatmapId);
             return null;
         }
+        logger.Log(LogLevel.Information, "Getting the score info...");
         var scoreInfo = GetScoreInfo(apiScore, beatmap, ruleset);
+        logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap...");
         var flatWorkingBeatmap = new FlatWorkingBeatmap(beatmap);
         
+        logger.Log(LogLevel.Information, "Calculating the difficulty attributes...");
         var difficultyAttributes = ruleset.CreateDifficultyCalculator(flatWorkingBeatmap).Calculate(scoreInfo.Mods, ct);
         var performanceCalculator = ruleset.CreatePerformanceCalculator();
+        logger.Log(LogLevel.Information, "Calculating performance attributes...");
         if (performanceCalculator != null)
         {
             // Performance calculation might fail on weird maps like Aspire.

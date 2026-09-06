@@ -25,7 +25,7 @@ public class ScoreCalculator(ICacheStore cacheStore,
 {
     private static readonly TimeSpan CalculationTimeout = TimeSpan.FromMinutes(1);
 
-    public async Task<float?> CalculateAsync(APIScore apiScore, CancellationToken ct)
+    public async Task<float?> CalculateAsync(APIScore apiScore, FlatWorkingBeatmap flatWorkingBeatmap, CancellationToken ct)
     {
         logger.Log(LogLevel.Information, "Checking if score is calculatable...");
         var isCalculatable = await scoreCacheRepository.GetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode);
@@ -36,10 +36,6 @@ public class ScoreCalculator(ICacheStore cacheStore,
         
         logger.Log(LogLevel.Information, "Getting the ruleset...");
         var ruleset = GetRulesetFromScore(apiScore);
-        logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap...");
-
-        var filename = await cacheStore.GetBeatmapFileStringAsync(apiScore.BeatmapId, beatmapCacheRepository, ct);
-        var flatWorkingBeatmap = new FlatWorkingBeatmap(filename);
         
         logger.Log(LogLevel.Information, "Getting the score info...");
         var scoreInfo = GetScoreInfo(apiScore, flatWorkingBeatmap.Beatmap, ruleset);

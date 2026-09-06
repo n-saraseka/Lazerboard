@@ -1,12 +1,14 @@
 using System.Text;
-using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Lazerboard.ScoreFetcher.Calculations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Lazerboard.ScoreFetcher.Processing;
+using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
@@ -52,10 +54,16 @@ public class FirehoseService : BackgroundService
                         var significantScores = await GetExistingBeatmapScoresAsync(scores, stoppingToken);
                         var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                         var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
-                        
-                        foreach (var score in scoresWithoutPp)
+
+                        var groupedByBeatmapId = scoresWithoutPp.GroupBy(s => s.BeatmapId).ToList();
+                        foreach (var group in groupedByBeatmapId)
                         {
-                            await CalculateScorePpAsync(score, stoppingToken);
+                            var flatWorkingBeatmap = await GetFlatWorkingBeatmapAsync(group.Key, stoppingToken);
+                            var groupScores = group.ToList();
+                            foreach (var score in groupScores)
+                            {
+                                await CalculateScorePpAsync(score, flatWorkingBeatmap, stoppingToken);
+                            }
                         }
                         
                         var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
@@ -75,9 +83,15 @@ public class FirehoseService : BackgroundService
                     var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                     var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
 
-                    foreach (var score in scoresWithoutPp)
+                    var groupedByBeatmapId = scoresWithoutPp.GroupBy(s => s.BeatmapId).ToList();
+                    foreach (var group in groupedByBeatmapId)
                     {
-                        await CalculateScorePpAsync(score, stoppingToken);
+                        var flatWorkingBeatmap = await GetFlatWorkingBeatmapAsync(group.Key, stoppingToken);
+                        var groupScores = group.ToList();
+                        foreach (var score in groupScores)
+                        {
+                            await CalculateScorePpAsync(score, flatWorkingBeatmap, stoppingToken);
+                        }
                     }
                     
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
@@ -285,13 +299,31 @@ public class FirehoseService : BackgroundService
     /// Calculate <see cref="APIScore"/>'s PP value and save it to the <see cref="APIScore.PP"/> field
     /// </summary>
     /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="flatWorkingBeatmap">The <see cref="FlatWorkingBeatmap"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task CalculateScorePpAsync(APIScore score, CancellationToken stoppingToken)
+    private async Task CalculateScorePpAsync(APIScore score, FlatWorkingBeatmap flatWorkingBeatmap, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         
-        await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
+        await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+    }
+
+    /// <summary>
+    /// Get the <see cref="FlatWorkingBeatmap"/> for <see cref="APIBeatmap"/> ID
+    /// </summary>
+    /// <param name="beatmapId">The <see cref="APIBeatmap"/> ID</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="FlatWorkingBeatmap"/></returns>
+    private async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
+    {
+        _logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap for beatmap ID {beatmapId}...", beatmapId);
+        using var scope = _serviceProvider.CreateScope();
+        var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+        var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
+        
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
+        return new FlatWorkingBeatmap(filename);
     }
 
     private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)

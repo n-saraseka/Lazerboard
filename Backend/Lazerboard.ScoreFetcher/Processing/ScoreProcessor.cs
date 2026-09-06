@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Calculations;
+using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
@@ -80,12 +81,13 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// Calculate PP for a score
     /// </summary>
     /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="flatWorkingBeatmap">The <see cref="FlatWorkingBeatmap"/></param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    public async Task CalculateScoreAsync(APIScore score, CancellationToken cancellationToken)
+    public async Task CalculateScoreAsync(APIScore score, FlatWorkingBeatmap flatWorkingBeatmap, CancellationToken cancellationToken)
     {
         if (score.PP != null) return;
         try {
-            var pp = await calculator.CalculateAsync(score, cancellationToken);
+            var pp = await calculator.CalculateAsync(score, flatWorkingBeatmap, cancellationToken);
             score.PP = pp;
         }
         catch (Exception ex) {

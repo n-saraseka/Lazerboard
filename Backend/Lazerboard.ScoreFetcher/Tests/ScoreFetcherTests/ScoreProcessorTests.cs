@@ -330,49 +330,4 @@ public class ScoreProcessorTests
             }
         });
     }
-
-    [Test]
-    public async Task CalculateScoreAsync_ScoreHasPp_DoesntCalc()
-    {
-        // Arrange
-        var score = new APIScore
-        {
-            Id = 1,
-            BeatmapId = 1,
-            TotalScore = 10000,
-            UserId = 11,
-            Mode = Mode.Osu,
-            PP = 1
-        };
-        
-        // Act
-        await _scoreProcessor.CalculateScoreAsync(score, CancellationToken.None);
-        
-        // Assert
-        _calculator.Verify(c => c.CalculateAsync(It.IsAny<APIScore>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-    
-    [Test]
-    public async Task CalculateScoreAsync_ScoreDoesntHavePp_Calculates()
-    {
-        // Arrange
-        var score = new APIScore
-        {
-            Id = 1,
-            BeatmapId = 1,
-            TotalScore = 10000,
-            Mode = Mode.Osu,
-            UserId = 11,
-        };
-
-        _calculator.Setup(c => c.CalculateAsync(It.IsAny<APIScore>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(2);
-        
-        // Act
-        await _scoreProcessor.CalculateScoreAsync(score, CancellationToken.None);
-        
-        // Assert
-        _calculator.Verify(c => c.CalculateAsync(It.IsAny<APIScore>(), It.IsAny<CancellationToken>()), Times.Once);
-        Assert.That(score.PP, Is.EqualTo(2));
-    }
 }

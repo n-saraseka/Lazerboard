@@ -7,7 +7,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Lazerboard.ScoreFetcher.Calculations;
 using Lazerboard.ScoreFetcher.Processing;
+using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
@@ -153,6 +156,7 @@ public class LeaderboardSeedingService : BackgroundService
         
         foreach (var beatmap in beatmapset.Beatmaps)
         {
+            var flatWorkingBeatmap = await GetFlatWorkingBeatmapAsync(beatmap.Id, stoppingToken);
             foreach (var val in Enum.GetValues<Mode>())
             {
                 if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
@@ -165,7 +169,7 @@ public class LeaderboardSeedingService : BackgroundService
                         
                 foreach (var score in scoresWithoutPp)
                 {
-                    await CalculateScorePpAsync(score, stoppingToken);
+                    await CalculateScorePpAsync(score, flatWorkingBeatmap, stoppingToken);
                 }
                 
                 var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
@@ -193,20 +197,38 @@ public class LeaderboardSeedingService : BackgroundService
         var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
         return significantScores.DistinctBy(s => s.Id).ToList();
     }
+    
+    /// <summary>
+    /// Get the <see cref="FlatWorkingBeatmap"/> for <see cref="APIBeatmap"/> ID
+    /// </summary>
+    /// <param name="beatmapId">The <see cref="APIBeatmap"/> ID</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="FlatWorkingBeatmap"/></returns>
+    private async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
+    {
+        _logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap for beatmap ID {beatmapId}...", beatmapId);
+        using var scope = _serviceProvider.CreateScope();
+        var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
+        var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
+        
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
+        return new FlatWorkingBeatmap(filename);
+    }
 
     /// <summary>
     /// Calculate <see cref="APIScore"/>'s PP value and save it to the <see cref="APIScore.PP"/> field
     /// </summary>
     /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="flatWorkingBeatmap">The <see cref="FlatWorkingBeatmap"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task CalculateScorePpAsync(APIScore score, CancellationToken stoppingToken)
+    private async Task CalculateScorePpAsync(APIScore score, FlatWorkingBeatmap flatWorkingBeatmap, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
         
-        await scoreProcessor.CalculateScoreAsync(score, stoppingToken);
+        await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
     }
-
+    
     /// <summary>
     /// Save data from scores to the database
     /// </summary>

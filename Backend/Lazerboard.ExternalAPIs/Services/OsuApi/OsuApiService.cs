@@ -26,7 +26,9 @@ public class OsuApiService
     {
         _httpClient = httpClient;
         _logger = logger;
-        var osuApiConfig = config.GetSection("OsuApi");
+        
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         _apiClientId = osuApiConfig["ClientId"];
         _apiClientSecret = osuApiConfig["ClientSecret"];
         _centralizedRateLimiter = centralizedRateLimiter;

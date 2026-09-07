@@ -9,8 +9,9 @@ public class OsuRateLimiter : ICentralizedRateLimiter
 
     public OsuRateLimiter(IConfiguration config)
     {
-        var apiConfig = config.GetSection("OsuApi");
-        var apiInterval = apiConfig.GetValue<double>("ApiInterval");
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
+        var apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         _rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
         {
             AutoReplenishment = true,

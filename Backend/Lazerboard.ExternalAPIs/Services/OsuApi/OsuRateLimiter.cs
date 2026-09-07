@@ -1,6 +1,6 @@
 using System.Threading.RateLimiting;
 
-namespace Lazerboard.ExternalAPIs.Services.OsuApi;
+namespace Lazerboard.ExternalApis.Services.OsuApi;
 
 
 public class OsuRateLimiter : ICentralizedRateLimiter

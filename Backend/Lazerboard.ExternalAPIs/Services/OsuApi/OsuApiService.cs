@@ -4,7 +4,7 @@ using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Newtonsoft.Json;
 
-namespace Lazerboard.ExternalAPIs.Services.OsuApi;
+namespace Lazerboard.ExternalApis.Services.OsuApi;
 
 public class OsuApiService
 {

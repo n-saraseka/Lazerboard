@@ -1,6 +1,7 @@
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Lazerboard.Data.ApiFetchers;
@@ -10,8 +11,9 @@ public class OsuApiFetcher : IOsuApiFetcher
     private readonly double _apiInterval;
     private readonly HttpClient _httpClient;
     private readonly string _apiUrl;
+    private readonly ILogger<IOsuApiFetcher> _logger;
     
-    public OsuApiFetcher(HttpClient httpClient, IConfiguration config)
+    public OsuApiFetcher(HttpClient httpClient, IConfiguration config, ILogger<IOsuApiFetcher> logger)
     {
         _httpClient = httpClient;
         
@@ -32,6 +34,8 @@ public class OsuApiFetcher : IOsuApiFetcher
         };
         
         _apiUrl = builder.Uri.ToString();
+
+        _logger = logger;
     }
     
     /// <summary>
@@ -69,6 +73,7 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
+        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", beatmapsetsText);
         var beatmapsets = JsonConvert.DeserializeObject<BeatmapsetsResponse>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return beatmapsets;
@@ -95,6 +100,7 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", scoresResponseText);
         
         var scores = JsonConvert.DeserializeObject<BeatmapScores>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
@@ -115,6 +121,7 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", scoresResponseText);
 
         var scores = JsonConvert.DeserializeObject<ScoresResponse>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         
@@ -145,6 +152,7 @@ public class OsuApiFetcher : IOsuApiFetcher
                     ct);
         
                 var usersResponseText = await usersResponse.Content.ReadAsStringAsync(ct);
+                _logger.Log(LogLevel.Information, "Response from gateway: {Response}", usersResponseText);
 
                 var userData = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
                 
@@ -179,6 +187,7 @@ public class OsuApiFetcher : IOsuApiFetcher
                 ct);
         
             var beatmapsResponseText = await beatmapsResponse.Content.ReadAsStringAsync(ct);
+            _logger.Log(LogLevel.Information, "Response from gateway: {Response}", beatmapsResponseText);
 
             APIBeatmap[] beatmapData = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
             beatmaps.AddRange(beatmapData);
@@ -202,6 +211,7 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var beatmapsetText = await beatmapsetResponse.Content.ReadAsStringAsync(ct);
+        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", beatmapsetText);
         var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         return beatmapset;
     }

@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.ScoreFetcher", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.DiscordHooks", "Lazerboard.DiscordHooks\Lazerboard.DiscordHooks.csproj", "{267EA0D8-63A2-4BD5-97A7-1402EC1222A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.ExternalAPIs", "Lazerboard.ExternalAPIs\Lazerboard.ExternalAPIs.csproj", "{0EA86019-656C-4B66-BEF1-1873148D5E05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazerboard.ExternalApis", "Lazerboard.ExternalApis\Lazerboard.ExternalApis.csproj", "{0EA86019-656C-4B66-BEF1-1873148D5E05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

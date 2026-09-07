@@ -1,6 +1,6 @@
 using System.Net;
 using Lazerboard.Data.ApiFetchers;
-using Lazerboard.ExternalAPIs.Services.OsuApi;
+using Lazerboard.ExternalApis.Services.OsuApi;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Serilog;

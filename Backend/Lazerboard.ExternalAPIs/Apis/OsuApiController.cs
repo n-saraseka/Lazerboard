@@ -1,9 +1,9 @@
 using Lazerboard.Data.OsuEntities.Enums;
-using Lazerboard.ExternalAPIs.Services.OsuApi;
-using Microsoft.AspNetCore.Mvc;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.ExternalApis.Services.OsuApi;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Lazerboard.ExternalAPIs.Apis;
+namespace Lazerboard.ExternalApis.Apis;
 
 [ApiController]
 [Route("osuapi")]

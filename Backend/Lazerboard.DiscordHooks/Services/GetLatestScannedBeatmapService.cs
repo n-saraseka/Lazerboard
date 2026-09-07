@@ -141,7 +141,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var mapsetBy = $"**Mapset by**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
         var mode = $"**Beatmapset modes**: {beatmapsetModes}";
         var beatmapStatus = $"**Beatmap statuses**: {beatmapStatuses}";
-        var lazerboardLink = $"**[Lazerboard link](https://lazerboard.melguy.com/beatmapsets/{beatmapset.Id}**";
+        var lazerboardLink = $"**[Lazerboard link](https://lazerboard.melguy.com/beatmapsets/{beatmapset.Id})**";
 
         var imageUrl = $"https://assets.ppy.sh/beatmaps/{beatmapset.Id}/covers/cover@2x.jpg";
         var thumbnailUrl = $"https://a.ppy.sh/{beatmapset.UserId}";

@@ -78,17 +78,6 @@ function UserStats({data, loadingData, errorData}) {
             }]
         }
     }
-
-    console.log('Data:')
-    console.log(data.history);
-    console.log(data.ranks);
-    console.log(data.speed);
-    console.log(data.stars);
-    console.log('Processed data:')
-    console.log(history);
-    console.log(rankStats);
-    console.log(speedStats);
-    console.log(starStats);
     
     return (
         <div className="player-stats">

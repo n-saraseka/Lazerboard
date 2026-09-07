@@ -68,12 +68,11 @@ public class OsuApiFetcher : IOsuApiFetcher
     public async Task<BeatmapsetsResponse> SearchBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
         using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}", 
+            $"{_apiUrl}/beatmapsets?cursor={cursor}",
             null,
             ct);
         
         var beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
-        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", beatmapsetsText);
         var beatmapsets = JsonConvert.DeserializeObject<BeatmapsetsResponse>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return beatmapsets;
@@ -100,7 +99,6 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
-        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", scoresResponseText);
         
         var scores = JsonConvert.DeserializeObject<BeatmapScores>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
@@ -121,7 +119,6 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
-        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", scoresResponseText);
 
         var scores = JsonConvert.DeserializeObject<ScoresResponse>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         
@@ -152,7 +149,6 @@ public class OsuApiFetcher : IOsuApiFetcher
                     ct);
         
                 var usersResponseText = await usersResponse.Content.ReadAsStringAsync(ct);
-                _logger.Log(LogLevel.Information, "Response from gateway: {Response}", usersResponseText);
 
                 var userData = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
                 
@@ -187,7 +183,6 @@ public class OsuApiFetcher : IOsuApiFetcher
                 ct);
         
             var beatmapsResponseText = await beatmapsResponse.Content.ReadAsStringAsync(ct);
-            _logger.Log(LogLevel.Information, "Response from gateway: {Response}", beatmapsResponseText);
 
             APIBeatmap[] beatmapData = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
             beatmaps.AddRange(beatmapData);
@@ -211,7 +206,6 @@ public class OsuApiFetcher : IOsuApiFetcher
             ct);
         
         var beatmapsetText = await beatmapsetResponse.Content.ReadAsStringAsync(ct);
-        _logger.Log(LogLevel.Information, "Response from gateway: {Response}", beatmapsetText);
         var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         return beatmapset;
     }

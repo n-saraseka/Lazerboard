@@ -1,3 +1,4 @@
+using System.Timers;
 using Discord;
 using Discord.Webhook;
 using Lazerboard.Data.Database.Entities;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Lazerboard.DiscordHooks.Services;
+namespace Lazerboard.DiscordHooks.BackgroundServices;
 
 public class GetLatestScannedBeatmapService : BackgroundService
 {
@@ -17,6 +18,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
     private ILogger<GetLatestScannedBeatmapService> _logger;
     private readonly string _webhookUrl;
     private readonly TimeSpan _updateInterval;
+    private System.Timers.Timer _updateTimer;
 
     public GetLatestScannedBeatmapService(IServiceProvider serviceProvider, 
         ILogger<GetLatestScannedBeatmapService> logger)
@@ -31,34 +33,61 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var beatmapScoresConfig = webhooksConfig.GetSection("BeatmapScores");
         _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
         _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
+        
+        _updateTimer = new System.Timers.Timer(_updateInterval.TotalMilliseconds);
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        _updateTimer.Elapsed += OnUpdateTimerActivated;
+        _updateTimer.AutoReset = true;
+        _updateTimer.Enabled = true;
+        try
+        {
+            await GetLatestScannedBeatmapsetAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Log(LogLevel.Error, ex, "Latest scanned map service failed!");
+        }
         while (!cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(_updateInterval, cancellationToken);
+        }
+    }
+    
+    private void OnUpdateTimerActivated(object? source, ElapsedEventArgs e)
+    {
+        Task.Run(async () =>
         {
             try
             {
-                var beatmaps = await GetBeatmapsDataAsync(cancellationToken);
-                if (beatmaps.Count > 0)
-                {
-                    var embed = BuildBeatmapsetEmbed(beatmaps);
-                    
-                    using var client = new DiscordWebhookClient(_webhookUrl);
-                    
-                    var beatmapsetId = beatmaps.First().BeatmapsetId;
-                    _logger.Log(LogLevel.Information, "Most recent scanned beatmapset ID: {beatmapId}", beatmapsetId);
-                    
-                    await client.SendMessageAsync("Most recent scanned beatmapset:", false, [embed]);
-                }
+                await GetLatestScannedBeatmapsetAsync();
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.Log(LogLevel.Error, ex, "Latest scanned map service failed!");
+                _logger.Log(LogLevel.Error, exception, "Failed to retrieve latest scanned map!");
             }
+        });
+    }
 
-            // It'll be a few seconds late, but it's fine for what we're doing here. 
-            await Task.Delay(_updateInterval, cancellationToken);
+    /// <summary>
+    /// Get the latest scanned beatmapset and post it via the Discord webhook
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    private async Task GetLatestScannedBeatmapsetAsync(CancellationToken cancellationToken = default)
+    {
+        var beatmaps = await GetBeatmapsDataAsync(cancellationToken);
+        if (beatmaps.Count > 0)
+        {
+            var embed = BuildBeatmapsetEmbed(beatmaps);
+                    
+            using var client = new DiscordWebhookClient(_webhookUrl);
+                    
+            var beatmapsetId = beatmaps.First().BeatmapsetId;
+            _logger.Log(LogLevel.Information, "Most recent scanned beatmapset ID: {beatmapId}", beatmapsetId);
+                    
+            await client.SendMessageAsync("Most recent scanned beatmapset:", false, [embed]);
         }
     }
     

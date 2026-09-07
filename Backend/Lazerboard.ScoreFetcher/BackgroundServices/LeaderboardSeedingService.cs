@@ -34,8 +34,10 @@ public class LeaderboardSeedingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var osuApiConfig = config.GetSection("OsuApi");
-        _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
+        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
+        
         _seedingState = seedingState;
         _seedingState.IsSeeding = Environment.GetEnvironmentVariable("EnableDatabaseSeeding") == "true";
         

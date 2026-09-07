@@ -17,12 +17,21 @@ public class OsuApiFetcher : IOsuApiFetcher
         
         var externalApisConfig = config.GetSection("ExternalApis");
         var host = externalApisConfig.GetValue<string>("Host");
+        var port = externalApisConfig.GetValue<int>("Port");
         
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         var baseUrl = osuApiConfig.GetValue<string>("BaseAddress");
+
+        var builder = new UriBuilder
+        {
+            Scheme = "http",
+            Host = host,
+            Port = port,
+            Path = baseUrl
+        };
         
-        _apiUrl = $"{host}/{baseUrl}";
+        _apiUrl = builder.Uri.ToString();
     }
     
     /// <summary>

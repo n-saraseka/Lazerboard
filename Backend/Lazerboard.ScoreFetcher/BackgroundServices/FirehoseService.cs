@@ -34,8 +34,9 @@ public class FirehoseService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var osuApiConfig = config.GetSection("OsuApi");
-        _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
+        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         
         var restartConfig = config.GetSection("RestartPolicy");
         _catchUpAfterRestart = bool.Parse(restartConfig["FirehoseCatchUp"]);

@@ -1,14 +1,13 @@
 using System.Threading.RateLimiting;
-using Microsoft.Extensions.Configuration;
 
-namespace Lazerboard.ScoreFetcher.OsuApi;
+namespace Lazerboard.ExternalAPIs.Services.OsuApi;
 
 
-public class CentralizedRateLimiter : ICentralizedRateLimiter
+public class OsuRateLimiter : ICentralizedRateLimiter
 {
     private readonly RateLimiter _rateLimiter;
 
-    public CentralizedRateLimiter(IConfiguration config)
+    public OsuRateLimiter(IConfiguration config)
     {
         var apiConfig = config.GetSection("OsuApi");
         var apiInterval = apiConfig.GetValue<double>("ApiInterval");

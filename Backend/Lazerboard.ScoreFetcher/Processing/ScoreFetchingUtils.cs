@@ -1,10 +1,11 @@
+using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class ScoreFetchingUtils(IDataProcessor dataProcessor, IApiFetcher apiFetcher, IScoreProcessor scoreProcessor, ILogger<IScoreFetchingUtils> logger) : IScoreFetchingUtils
+public class ScoreFetchingUtils(IDataProcessor dataProcessor, IOsuApiFetcher apiFetcher, IScoreProcessor scoreProcessor, ILogger<IScoreFetchingUtils> logger) : IScoreFetchingUtils
 {
     /// <summary>
     /// Save all beatmapset data from <see cref="APIBeatmapset"/>s (beatmapset creators and beatmapsets)

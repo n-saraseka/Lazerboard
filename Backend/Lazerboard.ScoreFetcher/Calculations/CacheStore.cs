@@ -1,18 +1,15 @@
 using System.Timers;
+using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
-using Lazerboard.ScoreFetcher.OsuApi;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using osu.Game.Beatmaps;
-using osu.Game.IO;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
 public class CacheStore : ICacheStore
 {
     private readonly IServiceProvider _serviceProvider;
-    private OsuApiService _osuApiService;
     private ILogger<CacheStore> _logger;
     private string _cachePath;
     private int _osuFileTtl;
@@ -22,10 +19,9 @@ public class CacheStore : ICacheStore
     private System.Timers.Timer _cleanupTimer;
     private readonly SemaphoreSlim _cleanupSemaphore = new(1, 1);
 
-    public CacheStore(IConfiguration config, OsuApiService osuApiService, ILogger<CacheStore> logger, IServiceProvider serviceProvider)
+    public CacheStore(IConfiguration config, ILogger<CacheStore> logger, IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _osuApiService = osuApiService;
         _logger = logger;
         
         var cacheConfig = config.GetSection("Caching");
@@ -101,7 +97,10 @@ public class CacheStore : ICacheStore
         _logger.Log(LogLevel.Information, "Removed {count} files from beatmap cache", deletedCount);
     }
     
-    public async Task<string> GetBeatmapFileStringAsync(int beatmapId, IBeatmapCacheRepository beatmapCacheRepository, CancellationToken ct)
+    public async Task<string> GetBeatmapFileStringAsync(int beatmapId, 
+        IOsuApiFetcher osuApiFetcher, 
+        IBeatmapCacheRepository beatmapCacheRepository,
+        CancellationToken ct)
     {
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
         var attempts = 0;
@@ -127,7 +126,10 @@ public class CacheStore : ICacheStore
                 _logger.Log(LogLevel.Information, "Downloading the beatmap file...");
                 try
                 {
-                    await _osuApiService.DownloadBeatmapAsync(beatmapId, ct);
+                    var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
+                    await using var fileStream = new FileStream(mapPath, FileMode.Create);
+                    await stream.CopyToAsync(fileStream, ct);
+                    
                     await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
                 }
                 catch (Exception ex)

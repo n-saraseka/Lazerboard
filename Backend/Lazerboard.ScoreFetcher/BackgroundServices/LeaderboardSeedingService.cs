@@ -1,4 +1,5 @@
 using System.Text;
+using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Microsoft.Extensions.Configuration;
@@ -108,7 +109,7 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<List<APIBeatmapset>> GetBeatmapsetsAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         
         if (_catchUpAfterRestart)
@@ -187,7 +188,7 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<List<APIScore>> GetBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
         
         _logger.Log(LogLevel.Information, "Processing beatmap ID: {beatmapID}, mode: {mode}", beatmapId, mode);
@@ -210,8 +211,9 @@ public class LeaderboardSeedingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
         var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
+        var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         
-        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, osuApiFetcher, beatmapCacheRepository, stoppingToken);
         return new FlatWorkingBeatmap(filename);
     }
 

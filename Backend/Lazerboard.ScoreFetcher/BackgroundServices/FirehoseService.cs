@@ -1,4 +1,5 @@
 using System.Text;
+using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
@@ -114,7 +115,7 @@ public class FirehoseService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         
         if (_catchUpAfterRestart)
         {
@@ -205,7 +206,7 @@ public class FirehoseService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         
         if (_catchUpAfterRestart)
         {
@@ -277,7 +278,7 @@ public class FirehoseService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
             
         // Process new beatmaps and beatmapsets first if necessary
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
@@ -321,8 +322,9 @@ public class FirehoseService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
         var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
+        var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         
-        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, osuApiFetcher, beatmapCacheRepository, stoppingToken);
         return new FlatWorkingBeatmap(filename);
     }
 

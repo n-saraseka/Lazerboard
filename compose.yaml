@@ -10,7 +10,7 @@ services:
       - ./logs:/app/logs
       - ./keys:/app/keys
     command: |
-      sh -c "mkdir -p /app/BeatmapCache /app/logs/scorefetcher /app/logs/backend /app/logs/discordhooks /app/keys &&
+      sh -c "mkdir -p /app/BeatmapCache /app/logs/scorefetcher /app/logs/backend /app/logs/discordhooks /app/logs/externalapis /app/keys &&
              chown -R ${UID:-1000}:${GID:-1000} /app/BeatmapCache /app/logs /app/keys"
     restart: "no"
   
@@ -31,12 +31,14 @@ services:
   scorefetcher:
     image: ghcr.io/n-saraseka/lazerboard-scorefetcher:latest
     depends_on:
-      "migrations":
-        condition: service_completed_successfully
       "init":
+        condition: service_completed_successfully
+      "migrations":
         condition: service_completed_successfully
       "redis":
         condition: service_healthy
+      "externalapis":
+        condition: service_started
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
       .env
@@ -91,6 +93,16 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    restart: unless-stopped
+    networks:
+      - main
+  
+  externalapis:
+    image: ghcr.io/n-sarasake/lazerboard-externalapis:latest
+    env_file:
+      - .env
+    volumes:
+      - ./logs/externalapis:/app/Logs
     restart: unless-stopped
     networks:
       - main

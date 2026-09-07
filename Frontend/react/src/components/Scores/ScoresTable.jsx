@@ -9,6 +9,7 @@ function ScoresTable({scores, usingStandardized}) {
                     <td>Mode</td>
                     <td>Rank</td>
                     <td colSpan="2">Player</td>
+                    <td>Date</td>
                     <td>PP</td>
                     <td>Mods</td>
                     <td>Score</td>

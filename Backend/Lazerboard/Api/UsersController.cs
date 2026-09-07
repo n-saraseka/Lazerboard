@@ -37,10 +37,10 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         
-        var user = await userRepository.GetByIdAsync(userId, ct);
+        var user = await userRepository.GetByIdWithCountryAsync(userId, ct);
         if (user == null) return NotFound("User not found");
         
-        var query = scoreRepository.GetAll().Where(s => s.UserId == userId);
+        var query = scoreRepository.GetByUserId(userId);
         
         var latestDate = await query.MaxAsync(s => s.Date, ct);
         var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.UnixEpoch);

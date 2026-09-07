@@ -71,7 +71,7 @@ public class ScoresController(IScoreRepository scoreRepository,
         var beatmaps = await beatmapRepository
             .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
         
-        var users = await userRepository.GetBulkAsync(scores.Select(s => s.UserId).Distinct().ToList(), ct);
+        var users = await userRepository.GetBulkWithCountriesAsync(scores.Select(s => s.UserId).Distinct().ToList(), ct);
 
         scores = scores.Select(s =>
         {
@@ -187,7 +187,8 @@ public class ScoresController(IScoreRepository scoreRepository,
             .Take(rankingAmount)
             .ToListAsync(cancellationToken);
         
-        var users = await userRepository.GetBulkAsync(group.Select(g => g.UserId), cancellationToken);
+        var users = await userRepository.GetBulkWithCountriesAsync(group.Select(g => g.UserId).ToList(),
+            cancellationToken);
 
         var rankings = group.Select(g => new UserRanking
         {

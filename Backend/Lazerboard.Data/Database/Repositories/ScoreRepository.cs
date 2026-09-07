@@ -51,4 +51,8 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .AsNoTracking()
             .Where(s => s.ScoreSource == ScoreSource.ScoreFetcher)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public IQueryable<Score> GetByUserId(int userId) => Set
+        .AsNoTracking()
+        .Where(s => s.UserId == userId);
 }

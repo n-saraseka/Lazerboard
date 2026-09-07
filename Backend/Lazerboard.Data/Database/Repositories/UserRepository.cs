@@ -6,10 +6,15 @@ namespace Lazerboard.Data.Database.Repositories;
 
 public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db), IUserRepository
 {
+    public Task<List<User>> GetBulkWithCountriesAsync(IList<int> ids, CancellationToken cancellationToken) => Set
+        .AsNoTracking()
+        .Where(u => ids.Contains(u.Id))
+        .Include(u => u.Country)
+        .ToListAsync(cancellationToken);
+
     public Task<User?> GetByIdWithCountryAsync(int id, CancellationToken cancellationToken) => Set
         .AsNoTracking()
         .Where(u => u.Id == id)
-        .AsSplitQuery()
         .Include(u => u.Country)
         .FirstOrDefaultAsync(cancellationToken);
 

@@ -465,6 +465,8 @@ input:focus, select:focus {
 .score-song-name {
     font-size: 1.3em;
     color: white;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .scores-table tr td a, .score a, .navigation a.active, .navigation a.inactive:hover, .logo, footer a {

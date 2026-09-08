@@ -47,6 +47,21 @@ jobs:
           scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
       - name: create .env file
         uses: ./.github/actions/create-env
+        with:
+          psql_user: ${{ secrets.PSQL_USER }}
+          psql_password: ${{ secrets.PSQL_PASSWORD }}
+          psql_db: ${{ secrets.PSQL_DB }}
+          psql_host: ${{ secrets.PSQL_HOST }}
+          psql_port: ${{ secrets.PSQL_PORT }}
+          redis_password: ${{ secrets.REDIS_PASSWORD }}
+          redis_user: ${{ secrets.REDIS_USER }}
+          redis_user_password: ${{ secrets.REDIS_USER_PASSWORD }}
+          osuapi_clientid: ${{ secrets.OSUAPI_CLIENTID }}
+          osuapi_clientsecret: ${{ secrets.OSUAPI_CLIENTSECRET }}
+          hooks_scanhookurl: ${{ secrets.HOOKS_SCANHOOKURL }}
+          ssh_user: ${{ secrets.SSH_USER }}
+          ssh_host: ${{ secrets.SSH_HOST }}
+          work_dir: ${{ secrets.WORK_DIR }}
       - name: Login
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
@@ -61,3 +76,7 @@ jobs:
       - name: Cleanup
         if: always()
         uses: ./.github/actions/cleanup-post-deploy
+        with:
+          ssh_user: ${{ secrets.SSH_USER }}
+          ssh_host: ${{ secrets.SSH_HOST }}
+          work_dir: ${{ secrets.WORK_DIR }}

@@ -1,6 +1,49 @@
 name: Create .env file
 author: SomeMelGuy
 description: Create .env file from secrets
+inputs:
+  psql_user:
+    description: 'PostgreSQL user'
+    required: true
+  psql_password:
+    description: 'PostgreSQL password'
+    required: true
+  psql_db:
+    description: 'PostgreSQL database name'
+    required: true
+  psql_host:
+    description: 'PostgreSQL host address'
+    required: true
+  psql_port:
+    description: 'PostgreSQL port'
+    required: true
+  redis_password:
+    description: 'Redis password'
+    required: true
+  redis_user:
+    description: 'Redis user'
+    required: true
+  redis_user_password:
+    description: 'Redis user password'
+    required: true
+  osuapi_clientid:
+    description: 'osu! API client ID'
+    required: true
+  osuapi_clientsecret:
+    description: 'osu! API client secret'
+    required: true
+  hooks_scanhookurl:
+    description: 'Beatmap scans discord hook URL'
+    required: true
+  ssh_user:
+    description: 'SSH username'
+    required: true
+  ssh_host:
+    description: 'SSH host address'
+    required: true
+  work_dir:
+    description: 'The work directory'
+    required: true
 runs:
   using: composite
   steps:
@@ -8,36 +51,36 @@ runs:
       shell: bash
       run: |
         touch ./.env
-        echo "POSTGRES_USER=${{ secrets.PSQL_USER }}" >> .env
-        echo "POSTGRES_PASSWORD=${{ secrets.PSQL_PASSWORD }}" >> .env
-        echo "POSTGRES_DB=${{ secrets.PSQL_DB }}" >> .env
-        echo "POSTGRES_HOST=${{ secrets.PSQL_HOST }}" >> .env
-        echo "POSTGRES_PORT=${{ secrets.PSQL_PORT }}" >> .env
+        echo "POSTGRES_USER=${{ inputs.psql_user }}" >> .env
+        echo "POSTGRES_PASSWORD=${{ inputs.psql_password }}" >> .env
+        echo "POSTGRES_DB=${{ inputs.psql_db }}" >> .env
+        echo "POSTGRES_HOST=${{ inputs.psql_host }}" >> .env
+        echo "POSTGRES_PORT=${{ inputs.psql_port }}" >> .env
         echo "PGDATA=/data/postgres" >> .env
-        echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
-        echo "REDIS_USER=${{ secrets.REDIS_USER }}" >> .env
-        echo "REDIS_USER_PASSWORD=${{ secrets.REDIS_USER_PASSWORD }}" >> .env
+        echo "REDIS_PASSWORD=${{ inputs.redis_password }}" >> .env
+        echo "REDIS_USER=${{ inputs.redis_user }}" >> .env
+        echo "REDIS_USER_PASSWORD=${{ inputs.redis_user_password }}" >> .env
         echo "ASPNETCORE_ENVIRONMENT=Production" >> .env
-        echo "Database__Database=${{ secrets.PSQL_DB }}" >> .env
+        echo "Database__Database=${{ inputs.psql_db }}" >> .env
         echo "Database__Host=db" >> .env
-        echo "Database__Port=${{ secrets.PSQL_PORT }}" >> .env
-        echo "Database__Username=${{ secrets.PSQL_USER }}" >> .env
-        echo "Database__Password=${{ secrets.PSQL_PASSWORD }}" >> .env
+        echo "Database__Port=${{ inputs.psql_port }}" >> .env
+        echo "Database__Username=${{ inputs.psql_user }}" >> .env
+        echo "Database__Password=${{ inputs.psql_password }}" >> .env
         echo "Redis__Host=redis" >> .env
-        echo "Redis__Username=${{ secrets.REDIS_USER }}" >> .env
-        echo "Redis__Password=${{ secrets.REDIS_USER_PASSWORD }}" >> .env
+        echo "Redis__Username=${{ inputs.redis_user }}" >> .env
+        echo "Redis__Password=${{ inputs.redis_user_password }}" >> .env
         echo "ExternalApis__Host=externalapis" >> .env
         echo "ExternalApis__Port=8080" >> .env
-        echo "ExternalApis__OsuApi__ClientId=${{ secrets.OSUAPI_CLIENTID }}" >> .env
-        echo "ExternalApis__OsuApi__ClientSecret=${{ secrets.OSUAPI_CLIENTSECRET }}" >> .env
+        echo "ExternalApis__OsuApi__ClientId=${{ inputs.osuapi_clientid }}" >> .env
+        echo "ExternalApis__OsuApi__ClientSecret=${{ inputs.osuapi_clientsecret }}" >> .env
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
         echo "EnableDatabaseSeeding=true" >> .env
         echo "RestartPolicy__LeaderboardScanCatchUp=true" >> .env
         echo "RestartPolicy__FirehoseCatchUp=true" >> .env
-        echo "DiscordHooks__BeatmapScores__HookURL=${{ secrets.HOOKS_SCANHOOKURL }}" >> .env
+        echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_scanhookurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env
         echo "DeleteScoresAfter=4" >> .env
-        scp ./.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/.env
+        scp ./.env ${{ inputs.ssh_user }}@${{ inputs.ssh_host }}:${{ inputs.work_dir }}/.env
         

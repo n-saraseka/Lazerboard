@@ -1,5 +1,5 @@
 using System.Text;
-using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,8 +33,10 @@ public class LeaderboardSeedingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var osuApiConfig = config.GetSection("OsuApi");
-        _apiInterval = double.Parse(osuApiConfig["ApiInterval"]);
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
+        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
+        
         _seedingState = seedingState;
         _seedingState.IsSeeding = Environment.GetEnvironmentVariable("EnableDatabaseSeeding") == "true";
         
@@ -108,7 +110,7 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<List<APIBeatmapset>> GetBeatmapsetsAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         
         if (_catchUpAfterRestart)
@@ -187,7 +189,7 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<List<APIScore>> GetBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IApiFetcher>();
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
         
         _logger.Log(LogLevel.Information, "Processing beatmap ID: {beatmapID}, mode: {mode}", beatmapId, mode);
@@ -206,12 +208,12 @@ public class LeaderboardSeedingService : BackgroundService
     /// <returns>The <see cref="FlatWorkingBeatmap"/></returns>
     private async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
     {
-        _logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap for beatmap ID {beatmapId}...", beatmapId);
         using var scope = _serviceProvider.CreateScope();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
         var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
+        var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         
-        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, osuApiFetcher, beatmapCacheRepository, stoppingToken);
         return new FlatWorkingBeatmap(filename);
     }
 

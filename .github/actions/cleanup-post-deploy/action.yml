@@ -1,0 +1,12 @@
+name: Cleanup post deploy
+author: SomeMelGuy
+description: Remove .env file and ssh
+runs:
+  using: composite
+  steps:
+    - name: Cleanup ssh
+      shell: bash
+      run: rm -rf ~/.ssh
+    - name: Cleanup .env
+      shell: bash
+      run: rm -f ./.env

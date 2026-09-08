@@ -1,18 +1,15 @@
-using System.Net;
 using System.Text;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Newtonsoft.Json;
 
-namespace Lazerboard.ScoreFetcher.OsuApi;
+namespace Lazerboard.ExternalApis.Services.OsuApi;
 
 public class OsuApiService
 {
     private readonly HttpClient _httpClient;
     private ILogger<OsuApiService> _logger;
-    private readonly ICentralizedRateLimiter _centralizedRateLimiter;
+    private readonly OsuRateLimiter _centralizedRateLimiter;
     private static TokenInfo? _token;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
     private const string BaseApiUrl = "https://osu.ppy.sh/api/v2";
@@ -20,24 +17,20 @@ public class OsuApiService
     private const int ApiVersion = 20220705;
     private readonly string _apiClientId;
     private readonly string _apiClientSecret;
-    private readonly string _cacheFolder;
     
     public OsuApiService(HttpClient httpClient, 
         ILogger<OsuApiService> logger, 
         IConfiguration config, 
-        ICentralizedRateLimiter centralizedRateLimiter)
+        OsuRateLimiter centralizedRateLimiter)
     {
         _httpClient = httpClient;
         _logger = logger;
-        var osuApiConfig = config.GetSection("OsuApi");
+        
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         _apiClientId = osuApiConfig["ClientId"];
         _apiClientSecret = osuApiConfig["ClientSecret"];
         _centralizedRateLimiter = centralizedRateLimiter;
-        
-        var currentDir = Directory.GetCurrentDirectory();
-        var cacheConfig = config.GetSection("Caching");
-        var folder = cacheConfig["Folder"];
-        _cacheFolder = $"{currentDir}/{folder}";
     }
     
     /// <summary>
@@ -63,9 +56,9 @@ public class OsuApiService
             requestMessage.Headers.Add("Authorization", "Bearer " + tokenData.AccessToken);
             requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
         }
-        var responseText = "";
 
         await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
+        _logger.Log(LogLevel.Information, "Request: {requestString}", requestString);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         
         return response;
@@ -105,20 +98,16 @@ public class OsuApiService
     /// </summary>
     /// <param name="cursor">Cursor string</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Populated BeatmapsetsResponse object</returns>
-    public async Task<BeatmapsetsResponse> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
+    /// <returns>The JSON string</returns>
+    public async Task<string> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
         using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}", 
             null, 
             false, 
             ct);
-        
-        var beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
-        
-        var beatmapsets = JsonConvert.DeserializeObject<BeatmapsetsResponse>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
-        return beatmapsets;
+        return await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
     }
 
     /// <summary>
@@ -126,8 +115,8 @@ public class OsuApiService
     /// </summary>
     /// <param name="id">The <see cref="APIBeatmapset"/> ID</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="APIBeatmapset"/></returns>
-    public async Task<APIBeatmapset> GetBeatmapsetAsync(int id, CancellationToken ct = default)
+    /// <returns>The JSON string</returns>
+    public async Task<string> GetBeatmapsetAsync(int id, CancellationToken ct = default)
     {
         using var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/{id}", 
@@ -135,11 +124,7 @@ public class OsuApiService
             false, 
             ct);
         
-        var beatmapsetText = await beatmapsetResponse.Content.ReadAsStringAsync(ct);
-        
-        var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-
-        return beatmapset;
+        return await beatmapsetResponse.Content.ReadAsStringAsync(ct);
     }
 
     /// <summary>
@@ -149,8 +134,8 @@ public class OsuApiService
     /// <param name="mode">Ruleset (osu, taiko, fruits, mania)</param>
     /// <param name="legacyOnly">Whether to exclude lazer scores or not (0 = include, 1 = exclude)</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Populated BeatmapScores object</returns>
-    public async Task<BeatmapScores> GetBeatmapScoresAsync(int beatmapId, Mode? mode, int legacyOnly = 0, CancellationToken ct = default)
+    /// <returns>The JSON string</returns>
+    public async Task<string> GetBeatmapScoresAsync(int beatmapId, Mode? mode, int legacyOnly = 0, CancellationToken ct = default)
     {
         legacyOnly = (legacyOnly < 0 || legacyOnly > 1) ? 0 : legacyOnly;
         var queryString = $"limit=100&legacy_only={legacyOnly}";
@@ -162,11 +147,7 @@ public class OsuApiService
             false, 
             ct);
         
-        var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
-        
-        var scores = JsonConvert.DeserializeObject<BeatmapScores>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-
-        return scores;
+        return await scoresResponse.Content.ReadAsStringAsync(ct);
     }
     
     /// <summary>
@@ -174,53 +155,36 @@ public class OsuApiService
     /// </summary>
     /// <param name="cursor">Cursor string (used to fetch new scores since last call)</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Populated ScoresResponse object with the cursor string and array of Scores</returns>
-    public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default)
+    /// <returns>The JSON string</returns>
+    public async Task<string> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
         using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/scores?cursor_string={cursor}", 
             null, 
             false, 
             ct);
-
-        if (scoresResponse.StatusCode == HttpStatusCode.UnprocessableEntity)
-        {
-            return new ScoresResponse
-            {
-                Scores = [],
-                Cursor = null
-            };
-        } 
         
-        var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
-
-        var scores = JsonConvert.DeserializeObject<ScoresResponse>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-        
-        return scores;
+        return await scoresResponse.Content.ReadAsStringAsync(ct);
     }
     
     /// <summary>
-    /// Download a map from the API and save it to the cache folder
+    /// Download a map from the API
     /// </summary>
     /// <param name="beatmapId">The beatmap ID</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Parsed Beatmap object</returns>
-    public async Task DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default)
+    /// <returns>The beatmap file <see cref="Stream"/></returns>
+    public async Task<Stream> DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default)
     {
-        var mapPath = $"{_cacheFolder}/{beatmapId}.osu";
         try
         {
-            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, 
-                $"https://osu.ppy.sh/osu/{beatmapId}");
             await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
-            var response = await _httpClient.SendAsync(requestMessage, ct);
-            var responseBytes = await response.Content.ReadAsByteArrayAsync(ct);
-                    
-            await File.WriteAllBytesAsync(mapPath, responseBytes, ct);
+            var requestString = $"https://osu.ppy.sh/osu/{beatmapId}";
+            _logger.Log(LogLevel.Information, "Request: {requestString}", requestString);
+            return await _httpClient.GetStreamAsync(requestString, ct);
         }
         catch (Exception ex)
         {
-            _logger.Log(LogLevel.Error, ex, "Method: DownloadBeatmapAsync");
+            _logger.Log(LogLevel.Error, ex, "Failed to download the beatmap");
             throw;
         }
     }
@@ -230,10 +194,10 @@ public class OsuApiService
     /// </summary>
     /// <param name="ids">List containing beatmap IDs</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List with populated APIBeatmap objects</returns>
-    public async Task<APIBeatmap[]> GetBeatmapsAsync(List<int> ids, CancellationToken ct = default)
+    /// <returns>The JSON string</returns>
+    public async Task<string> GetBeatmapsAsync(IList<int> ids, CancellationToken ct = default)
     {
-        int count = ids.Count;
+        var count = ids.Count;
         if (count == 0) throw new ArgumentException("No beatmap IDs to process");
         if (count > 50) throw new ArgumentException("ID limit per call reached (more than 50)");
 
@@ -246,11 +210,7 @@ public class OsuApiService
             false, 
             ct);
         
-        var beatmapsResponseText = await beatmapsResponse.Content.ReadAsStringAsync(ct);
-
-        APIBeatmap[] beatmaps = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
-
-        return beatmaps;
+        return await beatmapsResponse.Content.ReadAsStringAsync(ct);
     }
 
     /// <summary>
@@ -258,29 +218,23 @@ public class OsuApiService
     /// </summary>
     /// <param name="ids">List containing user IDs</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List with populated APIUser objects</returns>
+    /// <returns>The JSON string</returns>
     /// <exception cref="ArgumentException"></exception>
-    public async Task<APIUser[]> GetUsersAsync(List<int> ids, CancellationToken ct = default)
+    public async Task<string> GetUsersAsync(IList<int> ids, CancellationToken ct = default)
     {
-
-        int count = ids.Count;
+        var count = ids.Count;
         if (count == 0) throw new ArgumentException("No user IDs to process");
         if (count > 50) throw new ArgumentException("ID limit per call reached (more than 50)");
 
         var queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
         
-        // parse users
         using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/users?{queryString}", 
             null, 
             false, 
             ct);
         
-        var usersResponseText = await usersResponse.Content.ReadAsStringAsync(ct);
-
-        APIUser[] users = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
-
-        return users;
+        return await usersResponse.Content.ReadAsStringAsync(ct);
     }
 
     /// <summary>

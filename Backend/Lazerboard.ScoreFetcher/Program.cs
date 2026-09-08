@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Threading.RateLimiting;
+using Lazerboard.Data.ApiFetchers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,6 @@ using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.BackgroundServices;
 using Lazerboard.ScoreFetcher.Calculations;
-using Lazerboard.ScoreFetcher.OsuApi;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.AspNetCore.Http;
@@ -60,12 +60,11 @@ builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
-builder.Services.AddScoped<IApiFetcher, ApiFetcher>();
+builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
 
-builder.Services.AddSingleton<ICentralizedRateLimiter, CentralizedRateLimiter>();
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
 
 // Caching
@@ -85,7 +84,7 @@ builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
 
 // HTTP Client
-builder.Services.AddHttpClient<OsuApiService>()
+builder.Services.AddHttpClient<OsuApiFetcher>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5))
     .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
     {
@@ -102,7 +101,7 @@ builder.Services.AddHttpClient<OsuApiService>()
             
             OnRetry = args =>
             {
-                var logger = context.ServiceProvider.GetRequiredService<ILogger<OsuApiService>>();
+                var logger = context.ServiceProvider.GetRequiredService<ILogger<OsuApiFetcher>>();
                 
                 logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
                     args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);

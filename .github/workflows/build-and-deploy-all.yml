@@ -9,6 +9,7 @@ env:
   BACKEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:latest
   FRONTEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:latest
   DISCORDHOOKS_IMAGE_NAME: ${{ github.actor }}/lazerboard-discordhooks:latest
+  EXTERNALAPIS_IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:latest
 
 jobs:
   publish-migrations:
@@ -100,6 +101,24 @@ jobs:
           file: ./Backend/Lazerboard.DiscordHooks/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.DISCORDHOOKS_IMAGE_NAME }}
+  publish-externalapis:
+    name: publish external apis image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.DiscordHooks/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.EXTERNALAPIS_IMAGE_NAME }}
+    
   deploy:
     needs:
       - publish-backend
@@ -121,38 +140,7 @@ jobs:
       run: |
         scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
     - name: create .env file
-      run: |
-        touch ./.env
-        echo "POSTGRES_USER=${{ secrets.PSQL_USER }}" >> .env
-        echo "POSTGRES_PASSWORD=${{ secrets.PSQL_PASSWORD }}" >> .env
-        echo "POSTGRES_DB=${{ secrets.PSQL_DB }}" >> .env
-        echo "POSTGRES_HOST=${{ secrets.PSQL_HOST }}" >> .env
-        echo "POSTGRES_PORT=${{ secrets.PSQL_PORT }}" >> .env
-        echo "PGDATA=/data/postgres" >> .env
-        echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
-        echo "REDIS_USER=${{ secrets.REDIS_USER }}" >> .env
-        echo "REDIS_USER_PASSWORD=${{ secrets.REDIS_USER_PASSWORD }}" >> .env
-        echo "ASPNETCORE_ENVIRONMENT=Production" >> .env
-        echo "Database__Database=${{ secrets.PSQL_DB }}" >> .env
-        echo "Database__Host=db" >> .env
-        echo "Database__Port=${{ secrets.PSQL_PORT }}" >> .env
-        echo "Database__Username=${{ secrets.PSQL_USER }}" >> .env
-        echo "Database__Password=${{ secrets.PSQL_PASSWORD }}" >> .env
-        echo "Redis__Host=redis" >> .env
-        echo "Redis__Username=${{ secrets.REDIS_USER }}" >> .env
-        echo "Redis__Password=${{ secrets.REDIS_USER_PASSWORD }}" >> .env
-        echo "OsuApi__ClientId=${{ secrets.OSUAPI_CLIENTID }}" >> .env
-        echo "OsuApi__ClientSecret=${{ secrets.OSUAPI_CLIENTSECRET }}" >> .env
-        echo "DiscordHooks__BeatmapScores__HookURL=${{ secrets.HOOKS_SCANHOOKURL }}" >> .env
-        echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
-        echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env
-        echo "RestartPolicy__LeaderboardScanCatchUp=true" >> .env
-        echo "RestartPolicy__FirehoseCatchUp=true" >> .env
-        echo "Caching__FileTTL=120" >> .env
-        echo "ScoreCountUpdateIntervalMinutes=15" >> .env
-        echo "DeleteScoresAfter=4" >> .env
-        echo "EnableDatabaseSeeding=true" >> .env
-        scp ./.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/.env
+      uses: ./.github/actions/create-env
     - name: Unlock GPG key for pass
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
@@ -167,9 +155,6 @@ jobs:
     - name: Logout
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"
-    - name: cleanup ssh
+    - name: Cleanup
       if: always()
-      run: rm -rf ~/.ssh
-    - name: cleanup .env
-      if: always()
-      run: rm -f ./.env
+      uses: ./.github/actions/cleanup-post-deploy

@@ -1,4 +1,4 @@
-namespace Lazerboard.ScoreFetcher.OsuApi;
+namespace Lazerboard.ExternalApis.Services.OsuApi;
 
 public interface ICentralizedRateLimiter
 {

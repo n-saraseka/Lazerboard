@@ -1,3 +1,4 @@
+using Lazerboard.Data.ApiFetchers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -9,7 +10,7 @@ namespace Lazerboard.ScoreFetcher.Processing;
 public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
     IBeatmapRepository beatmapRepo,
     IUserRepository userRepo, 
-    IApiFetcher apiFetcher, 
+    IOsuApiFetcher apiFetcher, 
     IDataProcessor dataProcessor,
     ILogger<IBackpopulator> logger): IBackpopulator
 {
@@ -28,7 +29,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         {
             logger.Log(LogLevel.Information, "Adding missing user attributes. Beatmapsets count: {count}", beatmapsets.Count);
             Console.WriteLine("Adding missing user attributes");
-            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
+            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), token);
             var apiBeatmapsets = apiBeatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
             
             var userIds = apiBeatmapsets.Select(b => b.UserId).Distinct().ToList();
@@ -93,7 +94,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         if (beatmaps.Count > 0)
         {
             logger.Log(LogLevel.Information, "Adding missing health attributes. Beatmap count: {count}", beatmaps.Count);
-            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id), token);
+            var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), token);
             foreach (var beatmap in beatmaps)
             {
                 var respectiveApiBeatmap = apiBeatmaps.FirstOrDefault(b => b.Id == beatmap.Id);

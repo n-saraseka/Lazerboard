@@ -1,17 +1,17 @@
 using System.Threading.RateLimiting;
-using Microsoft.Extensions.Configuration;
 
-namespace Lazerboard.ScoreFetcher.OsuApi;
+namespace Lazerboard.ExternalApis.Services.OsuApi;
 
 
-public class CentralizedRateLimiter : ICentralizedRateLimiter
+public class OsuRateLimiter : ICentralizedRateLimiter
 {
     private readonly RateLimiter _rateLimiter;
 
-    public CentralizedRateLimiter(IConfiguration config)
+    public OsuRateLimiter(IConfiguration config)
     {
-        var apiConfig = config.GetSection("OsuApi");
-        var apiInterval = apiConfig.GetValue<double>("ApiInterval");
+        var externalApisConfig = config.GetSection("ExternalApis");
+        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
+        var apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         _rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
         {
             AutoReplenishment = true,

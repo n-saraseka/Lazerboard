@@ -208,7 +208,6 @@ public class LeaderboardSeedingService : BackgroundService
     /// <returns>The <see cref="FlatWorkingBeatmap"/></returns>
     private async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
     {
-        _logger.Log(LogLevel.Information, "Getting the FlatWorkingBeatmap for beatmap ID {beatmapId}...", beatmapId);
         using var scope = _serviceProvider.CreateScope();
         var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
         var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();

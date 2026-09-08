@@ -14,7 +14,6 @@ using osu.Game.Scoring;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
-using osu.Game.IO;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
@@ -27,17 +26,14 @@ public class ScoreCalculator(ICacheStore cacheStore,
 
     public async Task<float?> CalculateAsync(APIScore apiScore, FlatWorkingBeatmap flatWorkingBeatmap, CancellationToken ct)
     {
-        logger.Log(LogLevel.Information, "Checking if score is calculatable...");
         var isCalculatable = await scoreCacheRepository.GetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode);
         if (isCalculatable.HasValue)
         {
             if (!isCalculatable.Value) return null;
         }
         
-        logger.Log(LogLevel.Information, "Getting the ruleset...");
         var ruleset = GetRulesetFromScore(apiScore);
         
-        logger.Log(LogLevel.Information, "Getting the score info...");
         var scoreInfo = GetScoreInfo(apiScore, flatWorkingBeatmap.Beatmap, ruleset);
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -46,11 +42,9 @@ public class ScoreCalculator(ICacheStore cacheStore,
         try
         {
             // Difficulty attributes calculation might fail on weird maps.
-            logger.Log(LogLevel.Information, "Calculating the difficulty attributes...");
             var difficultyAttributes = ruleset.CreateDifficultyCalculator(flatWorkingBeatmap)
                 .Calculate(scoreInfo.Mods, timeoutCts.Token);
-
-            logger.Log(LogLevel.Information, "Calculating performance attributes...");
+            
             var performanceCalculator = ruleset.CreatePerformanceCalculator();
             var performanceAttributes = await performanceCalculator!.CalculateAsync(scoreInfo, difficultyAttributes, ct);
             await scoreCacheRepository.SetScoreCalculatableAsync(apiScore.BeatmapId, apiScore.Mode, true);

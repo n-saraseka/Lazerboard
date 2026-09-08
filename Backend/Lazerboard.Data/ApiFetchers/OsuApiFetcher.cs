@@ -141,7 +141,7 @@ public class OsuApiFetcher : IOsuApiFetcher
             for (int i = 0; i < userIds.Count; i += batchSize)
             {
                 var batch = userIds.Skip(i).Take(batchSize).ToList();
-                var queryString = string.Join("&", batch.Select(u => $"ids[]={u}"));
+                var queryString = string.Join("&", batch.Select(u => $"ids={u}"));
         
                 using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
                     $"{_apiUrl}/users?{queryString}", 
@@ -174,7 +174,7 @@ public class OsuApiFetcher : IOsuApiFetcher
         for (int i = 0; i < beatmapIds.Count; i += batchSize)
         {
             var batch = beatmapIds.Skip(i).Take(batchSize).ToList();
-            var queryString = string.Join("&", batch.Select(b => $"ids[]={b}"));
+            var queryString = string.Join("&", batch.Select(b => $"ids={b}"));
 
             // parse beatmaps
             using var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 

@@ -127,7 +127,7 @@ public class CacheStore : ICacheStore
                 _logger.Log(LogLevel.Information, "Downloading the beatmap file...");
                 try
                 {
-                    var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
+                    await using var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
 
                     var bytes = await stream.ReadAllRemainingBytesToArrayAsync(ct);
                     await File.WriteAllBytesAsync(mapPath, bytes, ct);

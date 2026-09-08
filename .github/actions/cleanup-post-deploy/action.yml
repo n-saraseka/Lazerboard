@@ -20,7 +20,7 @@ runs:
     - name: Cleanup .env from the server
       shell: bash
       run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
+        ssh ${{ inputs.ssh_user }}@${{ inputs.ssh_host }} "cd ${{ inputs.work_dir }} &&
         rm -f .env
     - name: Cleanup ssh
       shell: bash

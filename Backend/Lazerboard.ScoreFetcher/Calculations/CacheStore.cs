@@ -4,6 +4,7 @@ using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using osu.Framework.Extensions;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
@@ -127,8 +128,9 @@ public class CacheStore : ICacheStore
                 try
                 {
                     var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
-                    await using var fileStream = new FileStream(mapPath, FileMode.Create);
-                    await stream.CopyToAsync(fileStream, ct);
+
+                    var bytes = await stream.ReadAllRemainingBytesToArrayAsync(ct);
+                    await File.WriteAllBytesAsync(mapPath, bytes, ct);
                     
                     await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
                 }

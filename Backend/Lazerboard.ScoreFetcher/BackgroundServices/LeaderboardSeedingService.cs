@@ -124,7 +124,6 @@ public class LeaderboardSeedingService : BackgroundService
         }
         
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
-        _logger.Log(LogLevel.Information, "response: {@beatmapsetsResponse}", beatmapsetsResponse);
         _cursor = beatmapsetsResponse.Cursor;
         
         return beatmapsetsResponse.Beatmapsets;

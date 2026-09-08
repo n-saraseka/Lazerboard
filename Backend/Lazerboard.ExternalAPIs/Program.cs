@@ -27,10 +27,12 @@ builder.Services.AddHttpClient<OsuApiService>()
             ShouldHandle = static args => args.Outcome switch
             {
                 { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
+                { Exception: System.Net.Sockets.SocketException } => PredicateResult.True(),
+                { Exception.InnerException: System.Net.Sockets.SocketException } => PredicateResult.True(),
                 _ => PredicateResult.False()
             },
             
-            MaxRetryAttempts = 5,
+            MaxRetryAttempts = 7,
             Delay = TimeSpan.FromSeconds(5),
             
             OnRetry = args =>

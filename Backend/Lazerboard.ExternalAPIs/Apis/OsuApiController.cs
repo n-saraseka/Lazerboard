@@ -7,7 +7,7 @@ namespace Lazerboard.ExternalApis.Apis;
 
 [ApiController]
 [Route("osuapi")]
-public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiController> logger) : ControllerBase
+public class OsuApiController(OsuApiService osuApiService) : ControllerBase
 {
     /// <summary>
     /// Get beatmapsets from the API beatmapsets search endpoint (sorted by date ranked, ascending)
@@ -38,18 +38,18 @@ public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiControl
     /// <summary>
     /// Get beatmap scores from the API
     /// </summary>
-    /// <param name="beatmapId">Beatmap ID</param>
+    /// <param name="id">Beatmap ID</param>
     /// <param name="mode">Ruleset (osu, taiko, fruits, mania)</param>
     /// <param name="legacyOnly">Whether to exclude lazer scores or not (0 = include, 1 = exclude)</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Populated BeatmapScores object</returns>
     [HttpGet("beatmaps/{id:int}/scores")]
-    public async Task<IActionResult> GetBeatmapScoresAsync(int beatmapId, 
+    public async Task<IActionResult> GetBeatmapScoresAsync(int id, 
         [FromQuery] Mode? mode, 
         [FromQuery] int legacyOnly = 0,
         CancellationToken ct = default)
     {
-        var scores = await osuApiService.GetBeatmapScoresAsync(beatmapId, mode, legacyOnly, ct);
+        var scores = await osuApiService.GetBeatmapScoresAsync(id, mode, legacyOnly, ct);
         return Ok(scores);
     }
 
@@ -72,6 +72,7 @@ public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiControl
     /// <param name="ids">Array containing beatmap IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Array with populated APIBeatmap objects</returns>
+    [HttpGet("beatmaps")]
     public async Task<IActionResult> GetBeatmapsAsync([FromQuery] int[] ids, CancellationToken ct = default)
     {
         var beatmaps = await osuApiService.GetBeatmapsAsync(ids, ct);
@@ -84,6 +85,7 @@ public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiControl
     /// <param name="ids">List containing user IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Array with populated APIUser objects</returns>
+    [HttpGet("users")]
     public async Task<IActionResult> GetUsersAsync([FromQuery] int[] ids, CancellationToken ct = default)
     {
         var users = await osuApiService.GetUsersAsync(ids, ct);
@@ -99,6 +101,6 @@ public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiControl
     public async Task<IActionResult> DownloadBeatmapAsync(int id, CancellationToken ct = default)
     {
         var stream = await osuApiService.DownloadBeatmapAsync(id, ct);
-        return File(stream, "octet-stream", $"{id}.osu");
+        return File(stream, "text/plain", $"{id}.osu");
     }
 }

@@ -171,7 +171,7 @@ public class OsuApiFetcher : IOsuApiFetcher
         const int batchSize = 50;
         var beatmaps = new List<APIBeatmap>();
         
-        for (int i = 0; i < beatmapIds.Count(); i += batchSize)
+        for (int i = 0; i < beatmapIds.Count; i += batchSize)
         {
             var batch = beatmapIds.Skip(i).Take(batchSize).ToList();
             var queryString = string.Join("&", batch.Select(b => $"ids[]={b}"));
@@ -216,13 +216,6 @@ public class OsuApiFetcher : IOsuApiFetcher
     /// <param name="beatmapId">The beatmap ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The beatmap file <see cref="Stream"/></returns>
-    public async Task<Stream> DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default)
-    {
-        using var beatmapFileResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/beatmaps/{beatmapId}/download", 
-            null,
-            ct);
-        
-        return await beatmapFileResponse.Content.ReadAsStreamAsync(ct);
-    }
+    public async Task<Stream> DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default) =>
+        await _httpClient.GetStreamAsync($"{_apiUrl}/beatmaps/{beatmapId}/download", ct);
 }

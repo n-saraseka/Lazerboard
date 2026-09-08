@@ -19,7 +19,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 );
 
 builder.Services.AddHttpClient<OsuApiService>()
-    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2))
     .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
     {
         resilienceBuilder.AddRetry(new HttpRetryStrategyOptions

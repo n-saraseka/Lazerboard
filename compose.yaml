@@ -98,7 +98,7 @@ services:
       - main
   
   externalapis:
-    image: ghcr.io/n-sarasake/lazerboard-externalapis:latest
+    image: ghcr.io/n-saraseka/lazerboard-externalapis:latest
     env_file:
       - .env
     volumes:

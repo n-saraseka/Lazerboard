@@ -114,7 +114,7 @@ public class OsuApiFetcher : IOsuApiFetcher
     public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
         using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/scores?cursor_string={cursor}", 
+            $"{_apiUrl}/scores?cursor={cursor}", 
             null,
             ct);
         

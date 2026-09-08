@@ -141,8 +141,6 @@ public class OsuApiService
         var queryString = $"limit=100&legacy_only={legacyOnly}";
         if (mode != null) queryString += $"&mode={mode.ToString().ToLower()}";
         
-        _logger.Log(LogLevel.Information, "Query: {query}", $"{BaseApiUrl}/beatmaps/{beatmapId}/scores?{queryString}");
-        
         using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
             null, 

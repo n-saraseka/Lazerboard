@@ -21,7 +21,7 @@ runs:
       shell: bash
       run: |
         ssh ${{ inputs.ssh_user }}@${{ inputs.ssh_host }} "cd ${{ inputs.work_dir }} &&
-        rm -f .env
+        rm -f .env"
     - name: Cleanup ssh
       shell: bash
       run: rm -rf ~/.ssh

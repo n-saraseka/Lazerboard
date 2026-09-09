@@ -64,6 +64,7 @@ builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
+builder.Services.AddScoped<IBeatmapUtils, BeatmapUtils>();
 
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
 

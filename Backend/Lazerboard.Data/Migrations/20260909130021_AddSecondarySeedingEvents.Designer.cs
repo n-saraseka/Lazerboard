@@ -29,7 +29,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "main_seeding_finished", "main_seeding_started", "rescan_finished", "rescan_started", "secondary_seeding_finished", "secondary_seeding_started" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "rescan_finished", "rescan_started", "main_seeding_finished", "main_seeding_started", "secondary_seeding_finished", "secondary_seeding_started" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "score_source", new[] { "leaderboard_scan", "score_fetcher" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 

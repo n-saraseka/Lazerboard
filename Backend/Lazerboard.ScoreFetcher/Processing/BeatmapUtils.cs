@@ -22,6 +22,7 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task<List<APIScore>> GetBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
     {
+        logger.Log(LogLevel.Information, "Processing beatmap {beatmapId}, mode: {mode}", beatmapId, mode);
         var beatmapScores = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
                         
         var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);

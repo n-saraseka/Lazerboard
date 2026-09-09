@@ -39,9 +39,10 @@ builder.Services.AddDbContext<ScoreDataContext>(
 // Repositories
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();
+builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 
 // Hook services
-builder.Services.AddHostedService<GetLatestScannedBeatmapService>();
+builder.Services.AddHostedService<GetLatestProcessedBeatmapsetService>();
 
 // Logs
 builder.Logging.ClearProviders();

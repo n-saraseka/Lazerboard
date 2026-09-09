@@ -32,8 +32,11 @@ inputs:
   osuapi_clientsecret:
     description: 'osu! API client secret'
     required: true
-  hooks_scanhookurl:
-    description: 'Beatmap scans discord hook URL'
+  hooks_latestmapurl:
+    description: 'Latest beatmapset discord hook URL'
+    required: true
+  hooks_rescansurl:
+    description: 'Beatmapset rescans discord hook URL'
     required: true
   ssh_user:
     description: 'SSH username'
@@ -75,12 +78,16 @@ runs:
         echo "ExternalApis__OsuApi__ClientSecret=${{ inputs.osuapi_clientsecret }}" >> .env
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
-        echo "EnableDatabaseSeeding=true" >> .env
-        echo "RestartPolicy__LeaderboardScanCatchUp=true" >> .env
-        echo "RestartPolicy__FirehoseCatchUp=true" >> .env
-        echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_scanhookurl }}" >> .env
+        echo "FetcherServices__MainSeeding=true" >> .env
+        echo "FetcherServices__SecondarySeeding=false" >> .env
+        echo "FetcherServices__Firehose=true" >> .env
+        echo "FetcherServices__Rescans=false" >> .env
+        echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env
+        echo "DiscordHooks__Rescans__HookURL=${{ inputs.hooks_rescansurl }}" >> .env
+        echo "DiscordHooks__Rescans__Enabled=true" >> .env
+        echo "DiscordHooks__Rescans__UpdateIntervalMinutes=30" >> .env
         echo "DeleteScoresAfter=4" >> .env
         scp ./.env ${{ inputs.ssh_user }}@${{ inputs.ssh_host }}:${{ inputs.work_dir }}/.env
         

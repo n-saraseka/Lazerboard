@@ -70,7 +70,7 @@ public class DataProcessorTests
             .Returns<APIBeatmapset>(api => new Beatmapset { Id = api.Id });
 
         // Act
-        await _dataProcessor.ProcessBeatmapsetsAsync(data, CancellationToken.None);
+        await _dataProcessor.ProcessBeatmapsetsAsync(data, ScanEventType.RescanStarted, CancellationToken.None);
         
         // Assert
         _beatmapsetRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Beatmapset>>(dtos => 

@@ -78,4 +78,23 @@ public class BeatmapsetScanLogRepository(ScoreDataContext db) : BaseRepository<B
             .Where(b => b.EventType == ScanEventType.SecondarySeedingFinished)
             .OrderByDescending(b => b.LoggedAt)
             .FirstOrDefaultAsync(cancellationToken);
+
+    /// <summary>
+    /// Save a new <see cref="BeatmapsetScanLog"/> event with current timestamp
+    /// </summary>
+    /// <param name="type">The <see cref="ScanEventType"/></param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>Number of rows inserted into the DB</returns>
+    public async Task<int> SaveEventAsync(ScanEventType type, CancellationToken cancellationToken = default)
+    {
+        var currentDateTime = DateTime.UtcNow;
+        var newRow = new BeatmapsetScanLog
+        {
+            EventType = type,
+            LoggedAt = currentDateTime
+        };
+        
+        Create(newRow);
+        return await SaveChangesAsync(cancellationToken);
+    }
 }

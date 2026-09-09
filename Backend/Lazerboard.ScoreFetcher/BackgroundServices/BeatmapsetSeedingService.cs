@@ -3,26 +3,26 @@ using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Lazerboard.Data.OsuEntities.OsuApiEntities;
-using Lazerboard.ScoreFetcher.Processing;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
-public class BeatmapsetUpdatesService : BackgroundService
+public class BeatmapsetSeedingService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<BeatmapsetUpdatesService> _logger;
+    private ISeedingState _seedingState;
     private readonly double _apiInterval;
     private bool _catchUpAfterRestart = true;
     
     private string? _cursor;
-    private int _repeatExponent;
-
-    public BeatmapsetUpdatesService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger)
+    
+    public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger, ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -33,6 +33,9 @@ public class BeatmapsetUpdatesService : BackgroundService
         var externalApisConfig = config.GetSection("ExternalApis");
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
+        
+        _seedingState = seedingState;
+        _seedingState.IsSeeding = true;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,37 +45,32 @@ public class BeatmapsetUpdatesService : BackgroundService
             try
             {
                 var beatmapsets = await GetBeatmapsetsAsync(stoppingToken);
-                
+
                 if (beatmapsets.Count == 0)
                 {
-                    var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-                    _logger.Log(LogLevel.Information, "No new beatmapsets found. Repeating after {seconds}", interval);
-                        
-                    await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
-                    // Exponential backoff exponent is capped to 10 (~17 minute intervals)
-                    _repeatExponent = _repeatExponent == 10 ? _repeatExponent : _repeatExponent + 1;
+                    using var scope = _serviceProvider.CreateScope();
+                    var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
+                    await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
+                    break;
                 }
-                else
-                {
-                    _repeatExponent = 0;
-                    _logger.Log(LogLevel.Information, 
-                        "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
-                        beatmapsets.Count,
-                        DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
-                        DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
+                
+                _logger.Log(LogLevel.Information, 
+                    "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
+                    beatmapsets.Count,
+                    DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
+                    DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
 
-                    using (var scope = _serviceProvider.CreateScope())
-                    {
-                        var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-                        await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.MainSeedingStarted, stoppingToken);
-                    }
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+                    await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.RescanStarted, stoppingToken);
+                }
                     
-                    foreach (var beatmapset in beatmapsets)
-                    {
-                        using var scope = _serviceProvider.CreateScope();
-                        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.MainSeedingStarted, stoppingToken);
-                    }
+                foreach (var beatmapset in beatmapsets)
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+                    await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
                 }
             }
             catch (Exception ex)
@@ -116,20 +114,24 @@ public class BeatmapsetUpdatesService : BackgroundService
         
         return beatmapsetsResponse.Beatmapsets;
     }
-
+    
     private async Task<Beatmapset?> GetStartingBeatmapsetAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        var startingBeatmapset = await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
-
-        if (startingBeatmapset is null)
+        
+        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
+        var latestStartTimestamp = await scanLogsRepository.GetLatestStartedScanAsync(stoppingToken);
+        var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedScanAsync(stoppingToken);
+            
+        if (latestStartTimestamp is null 
+            || (latestFinishTimeStamp != null && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
-            var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
-            startingBeatmapset = await beatmapsetRepository.GetByIdAsync(beatmapsetId, stoppingToken);
+            // Start seeding from the first beatmapset (DISCO PRINCE)
+            await scanLogsRepository.SaveEventAsync(ScanEventType.RescanStarted, stoppingToken);
+            return await beatmapsetRepository.GetByIdAsync(1, stoppingToken);
         }
         
-        return startingBeatmapset;
+        return await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
     }
 }

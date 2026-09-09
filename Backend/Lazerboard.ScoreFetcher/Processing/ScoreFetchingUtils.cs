@@ -1,5 +1,6 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IOsuApiFetcher api
     /// </summary>
     /// <param name="beatmapsets">A populated <see cref="IReadOnlyCollection{APIBeatmapset}"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task SaveAllBeatmapsetDataAsync(IReadOnlyCollection<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
+    public async Task SaveAllBeatmapsetDataAsync(IList<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
     {
         var beatmapsetUserIds = beatmapsets.Select(bs => bs.UserId).Distinct().ToList();
         
@@ -89,5 +90,17 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor, IOsuApiFetcher api
             
         await dataProcessor.ProcessCountriesAsync(countries, stoppingToken);
         await dataProcessor.ProcessUsersAsync(users, stoppingToken);
+    }
+    
+    /// <summary>
+    /// Save data from scores to the database
+    /// </summary>
+    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="source">The <see cref="ScoreSource"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    public async Task SaveScoreDataAsync(IList<APIScore> scores, ScoreSource source, CancellationToken stoppingToken)
+    {
+        await SaveUserDataFromScoresAsync(scores,  stoppingToken);
+        await dataProcessor.ProcessScoresAsync(scores, source, stoppingToken);
     }
 }

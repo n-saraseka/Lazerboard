@@ -7,17 +7,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
-using Lazerboard.Data.Redis.Repositories.Interfaces;
-using Lazerboard.ScoreFetcher.Calculations;
 using Lazerboard.ScoreFetcher.Processing;
 using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
-public class LeaderboardSeedingService : BackgroundService
+public class BeatmapsetUpdatesService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<LeaderboardSeedingService> _logger;
+    private readonly ILogger<BeatmapsetUpdatesService> _logger;
     private ISeedingState _seedingState;
     private readonly double _apiInterval;
     private bool _catchUpAfterRestart;
@@ -25,7 +23,7 @@ public class LeaderboardSeedingService : BackgroundService
     private string? _cursor;
     private int _repeatExponent;
 
-    public LeaderboardSeedingService(IServiceProvider serviceProvider, ILogger<LeaderboardSeedingService> logger, ISeedingState seedingState)
+    public BeatmapsetUpdatesService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger, ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -37,8 +35,10 @@ public class LeaderboardSeedingService : BackgroundService
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         
+        var servicesConfig = config.GetSection("FetcherServices");
+        
         _seedingState = seedingState;
-        _seedingState.IsSeeding = Environment.GetEnvironmentVariable("EnableDatabaseSeeding") == "true";
+        _seedingState.IsSeeding = bool.Parse(servicesConfig["MainSeeding"]);
         
         var restartConfig = config.GetSection("RestartPolicy");
         _catchUpAfterRestart = bool.Parse(restartConfig["LeaderboardScanCatchUp"]);
@@ -80,7 +80,11 @@ public class LeaderboardSeedingService : BackgroundService
                         DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                         DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
 
-                    await SaveBeatmapsetDataAsync(beatmapsets, stoppingToken);
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
+                        await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
+                    }
                     
                     foreach (var beatmapset in beatmapsets)
                     {
@@ -127,18 +131,6 @@ public class LeaderboardSeedingService : BackgroundService
         _cursor = beatmapsetsResponse.Cursor;
         
         return beatmapsetsResponse.Beatmapsets;
-    }
-
-    /// <summary>
-    /// Save <see cref="APIBeatmapset"/> data to the database
-    /// </summary>
-    /// <param name="beatmapsets">List of <see cref="APIBeatmapset"/>s</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task SaveBeatmapsetDataAsync(IReadOnlyCollection<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        await utils.SaveAllBeatmapsetDataAsync(beatmapsets, stoppingToken);
     }
 
     /// <summary>
@@ -189,15 +181,8 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<List<APIScore>> GetBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
-        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        
-        _logger.Log(LogLevel.Information, "Processing beatmap ID: {beatmapID}, mode: {mode}", beatmapId, mode);
-        
-        var beatmapScores = await apiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
-                        
-        var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
-        return significantScores.DistinctBy(s => s.Id).ToList();
+        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+        return await beatmapUtils.GetBeatmapScoresAsync(beatmapId, mode, stoppingToken);
     }
     
     /// <summary>
@@ -209,12 +194,8 @@ public class LeaderboardSeedingService : BackgroundService
     private async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
-        var beatmapCacheRepository = scope.ServiceProvider.GetRequiredService<IBeatmapCacheRepository>();
-        var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
-        
-        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, osuApiFetcher, beatmapCacheRepository, stoppingToken);
-        return new FlatWorkingBeatmap(filename);
+        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+        return await beatmapUtils.GetFlatWorkingBeatmapAsync(beatmapId, stoppingToken);
     }
 
     /// <summary>
@@ -240,9 +221,7 @@ public class LeaderboardSeedingService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         
-        await utils.SaveUserDataFromScoresAsync(scores,  stoppingToken);
-        await dataProcessor.ProcessScoresAsync(scores, ScoreSource.LeaderboardScan, stoppingToken);
+        await utils.SaveScoreDataAsync(scores, ScoreSource.LeaderboardScan, stoppingToken);
     }
 }

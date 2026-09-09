@@ -112,7 +112,7 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
     });
 
 // Background services
-builder.Services.AddHostedService<LeaderboardSeedingService>();
+builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 builder.Services.AddHostedService<FirehoseService>();
 builder.Services.AddHostedService<ScoresCountService>();
 

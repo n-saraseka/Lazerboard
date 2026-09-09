@@ -2,8 +2,10 @@ namespace Lazerboard.Data.Database.Entities.Enums;
 
 public enum ScanEventType
 {
-    SeedingStarted,
-    SeedingFinished,
+    MainSeedingStarted,
+    MainSeedingFinished,
     RescanStarted,
-    RescanFinished
+    RescanFinished,
+    SecondarySeedingStarted,
+    SecondarySeedingFinished
 }

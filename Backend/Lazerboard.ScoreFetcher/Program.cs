@@ -45,6 +45,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
                     .MapEnum<ScoreSource>("score_source")
+                    .MapEnum<ScanEventType>("scan_event_type")
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 
@@ -55,6 +56,7 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IScorePendingDeletionRepository, ScorePendingDeletionRepository>();
+builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
@@ -64,6 +66,7 @@ builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
+builder.Services.AddScoped<IBeatmapUtils, BeatmapUtils>();
 
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
 
@@ -112,8 +115,16 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
     });
 
 // Background services
-builder.Services.AddHostedService<LeaderboardSeedingService>();
-builder.Services.AddHostedService<FirehoseService>();
+var servicesConfig = builder.Configuration.GetSection("FetcherServices");
+builder.Services.AddHostedService<BeatmapsetUpdatesService>();
+if (bool.Parse(servicesConfig["MainSeeding"]))
+{
+    builder.Services.AddHostedService<BeatmapsetSeedingService>();
+}
+if (bool.Parse(servicesConfig["Firehose"]))
+{
+    builder.Services.AddHostedService<FirehoseService>();
+}
 builder.Services.AddHostedService<ScoresCountService>();
 
 // Rate limiting

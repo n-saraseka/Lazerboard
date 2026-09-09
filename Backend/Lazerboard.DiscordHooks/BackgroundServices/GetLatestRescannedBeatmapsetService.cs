@@ -3,7 +3,6 @@ using Discord;
 using Discord.Webhook;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.DiscordHooks.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,16 +11,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.DiscordHooks.BackgroundServices;
 
-public class GetLatestScannedBeatmapService : BackgroundService
+public class GetLatestRescannedBeatmapsetService : BackgroundService
 {
     private IServiceProvider _serviceProvider;
-    private ILogger<GetLatestScannedBeatmapService> _logger;
+    private ILogger<GetLatestRescannedBeatmapsetService> _logger;
     private readonly string _webhookUrl;
     private readonly TimeSpan _updateInterval;
     private System.Timers.Timer _updateTimer;
 
-    public GetLatestScannedBeatmapService(IServiceProvider serviceProvider, 
-        ILogger<GetLatestScannedBeatmapService> logger)
+    public GetLatestRescannedBeatmapsetService(IServiceProvider serviceProvider, 
+        ILogger<GetLatestRescannedBeatmapsetService> logger)
     {
         _serviceProvider = serviceProvider;
         using var scope = _serviceProvider.CreateScope();
@@ -30,7 +29,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         _logger = logger;
         
         var webhooksConfig = config.GetSection("DiscordHooks");
-        var beatmapScoresConfig = webhooksConfig.GetSection("BeatmapScores");
+        var beatmapScoresConfig = webhooksConfig.GetSection("Rescans");
         _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
         _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
         
@@ -48,7 +47,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.Log(LogLevel.Error, ex, "Latest scanned map service failed!");
+            _logger.Log(LogLevel.Error, ex, "Latest rescanned map service failed!");
         }
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -85,76 +84,31 @@ public class GetLatestScannedBeatmapService : BackgroundService
             using var client = new DiscordWebhookClient(_webhookUrl);
                     
             var beatmapsetId = beatmaps.First().BeatmapsetId;
-            _logger.Log(LogLevel.Information, "Most recent scanned beatmapset ID: {beatmapId}", beatmapsetId);
-                    
-            await client.SendMessageAsync("Most recent scanned beatmapset:", false, [embed]);
+            _logger.Log(LogLevel.Information, "Latest rescanned beatmapset ID: {beatmapId}", beatmapsetId);
+            
+            await client.SendMessageAsync("Latest rescanned beatmapset:", false, [embed]);
         }
     }
     
     /// <summary>
-    /// Get <see cref="Beatmap"/> data from the most recent <see cref="Beatmapset"/>
+    /// Get <see cref="Beatmap"/> data from the latest <see cref="Beatmapset"/>
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="Beatmap"/>s</returns>
     private async Task<List<Beatmap>> GetBeatmapsDataAsync(CancellationToken cancellationToken)
     {
-        _logger.Log(LogLevel.Information, "Getting most recent scanned beatmapset...");
+        _logger.Log(LogLevel.Information, "Getting latest rescanned beatmapset...");
         
         using var scope = _serviceProvider.CreateScope();
         
-        var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
-        
-        var beatmapsetId = await scoreRepository.GetMaxBeatmapsetIdAsync(cancellationToken);
+        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+
+        var latestRescannedBeatmapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(cancellationToken);
+        var beatmapsetId = latestRescannedBeatmapset?.Id ?? 1;
         var beatmapsData = await beatmapRepository.GetByBeatmapsetIdAsync(beatmapsetId, cancellationToken);
         
         return beatmapsData;
-    }
-
-    /// <summary>
-    /// Get the main <see cref="Mode"/> from a list of <see cref="Beatmap"/>s
-    /// </summary>
-    /// <param name="beatmaps">The List of <see cref="Beatmap"/>s</param>
-    /// <returns>The main <see cref="Mode"/></returns>
-    private Mode GetMainMode(IList<Beatmap> beatmaps) =>
-        beatmaps
-            .OrderBy(b => b.Mode)
-            .GroupBy(b => b.Mode)
-            .Select(g => new { Mode = g.Key, Count = g.Count() })
-            .OrderByDescending(b => b.Count)
-            .ThenBy(b => b.Mode)
-            .First().Mode;
-
-    /// <summary>
-    /// Get <see cref="Mode"/>s string from a list of <see cref="Beatmap"/>s
-    /// </summary>
-    /// <param name="beatmaps">The List of <see cref="Beatmap"/>s</param>
-    /// <returns>The <see cref="Mode"/>s string</returns>
-    private string GetModesString(IList<Beatmap> beatmaps)
-    {
-        var modes = beatmaps
-            .Select(b => b.Mode)
-            .Distinct()
-            .ToList();
-        
-        var modeStrings = modes.Select(EmbedUtils.GetModeText).ToList();
-        return string.Join(", ", modeStrings);
-    }
-
-    /// <summary>
-    /// Get a list of <see cref="BeatmapStatus"/>es from a list of <see cref="Beatmap"/>s
-    /// </summary>
-    /// <param name="beatmaps">The List of <see cref="Beatmap"/>s</param>
-    /// <returns>The list of <see cref="BeatmapStatus"/>es</returns>
-    private string GetStatusesString(IList<Beatmap> beatmaps)
-    {
-        var statuses = beatmaps
-            .Select(b => b.Status)
-            .Distinct()
-            .ToList();
-        
-        var statusStrings = statuses.Select(EmbedUtils.GetStatusText).ToList();
-        return string.Join(", ", statusStrings);
     }
 
     private Embed BuildBeatmapsetEmbed(IList<Beatmap> beatmaps)
@@ -163,10 +117,11 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var beatmapset = firstBeatmap.Beatmapset;
         var title = $"{beatmapset.Artist} - {beatmapset.Title}";
         
-        var mainMode = GetMainMode(beatmaps);
-        var beatmapsetModes = GetModesString(beatmaps);
-        var beatmapStatuses = GetStatusesString(beatmaps);
-        
+        var mainMode = EmbedUtils.GetMainMode(beatmaps);
+        var beatmapsetModes = EmbedUtils.GetModesString(beatmaps);
+        var beatmapStatuses = EmbedUtils.GetStatusesString(beatmaps);
+
+        var rankedAt = beatmapset.RankedDate == null ? "" : $"**Ranked at**: <t:{beatmapset.RankedDate.Value.ToUnixTimeSeconds()}:f>\n";
         var mapsetBy = $"**Mapset by**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
         var mode = $"**Beatmapset modes**: {beatmapsetModes}";
         var beatmapStatus = $"**Beatmap statuses**: {beatmapStatuses}";
@@ -182,7 +137,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
         var builder = new EmbedBuilder
         {
             Title = title,
-            Description = $"{mapsetBy}\n{mode}\n{beatmapStatus}\n\n{lazerboardLink}",
+            Description = $"{rankedAt}{mapsetBy}\n{mode}\n{beatmapStatus}\n\n{lazerboardLink}",
             Color = color,
             ImageUrl = imageUrl,
             ThumbnailUrl = thumbnailUrl,
@@ -190,7 +145,7 @@ public class GetLatestScannedBeatmapService : BackgroundService
             Timestamp = timestamp,
             Footer = new EmbedFooterBuilder
             {
-                Text = "Lazerboard: Beatmap scans"
+                Text = "Lazerboard: Beatmap rescans"
             }
         };
         return builder.Build();

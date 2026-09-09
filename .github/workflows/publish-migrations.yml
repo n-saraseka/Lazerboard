@@ -60,7 +60,8 @@ jobs:
         redis_user_password: ${{ secrets.REDIS_USER_PASSWORD }}
         osuapi_clientid: ${{ secrets.OSUAPI_CLIENTID }}
         osuapi_clientsecret: ${{ secrets.OSUAPI_CLIENTSECRET }}
-        hooks_scanhookurl: ${{ secrets.HOOKS_SCANHOOKURL }}
+        hooks_latestmapurl: ${{ secrets.HOOKS_SCANHOOKURL }}
+        hooks_rescansurl: ${{ secrets.HOOKS_RESCANHOOKURL }}
         ssh_user: ${{ secrets.SSH_USER }}
         ssh_host: ${{ secrets.SSH_HOST }}
         work_dir: ${{ secrets.WORK_DIR }}

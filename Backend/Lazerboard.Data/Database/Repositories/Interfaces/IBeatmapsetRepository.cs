@@ -4,5 +4,8 @@ namespace Lazerboard.Data.Database.Repositories.Interfaces;
 
 public interface IBeatmapsetRepository : IRepository<Beatmapset, int>
 {
-    // Only exists to keep things the same as other repositories for now.
+    Task<Beatmapset?> GetLatestMainProcessedMapsetAsync(CancellationToken cancellationToken = default);
+    Task<Beatmapset?> GetLatestSecondaryProcessedMapsetAsync(CancellationToken cancellationToken = default);
+    Task<Beatmapset?> GetLatestRescannedMapsetAsync(CancellationToken cancellationToken = default);
+    Task<Beatmapset?> GetLatestBeatmapsetWithNullRankAsync(CancellationToken cancellationToken = default);
 }

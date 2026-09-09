@@ -34,7 +34,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
             
             var userIds = apiBeatmapsets.Select(b => b.UserId).Distinct().ToList();
             var apiUsers = await apiFetcher.GetUsersAsync(userIds, token);
-            var apiCountries = apiUsers.Select(u => u.Country).DistinctBy(c => c.Code);
+            var apiCountries = apiUsers.Select(u => u.Country).DistinctBy(c => c.Code).ToList();
             await dataProcessor.ProcessCountriesAsync(apiCountries, token);
             await dataProcessor.ProcessUsersAsync(apiUsers, token);
             

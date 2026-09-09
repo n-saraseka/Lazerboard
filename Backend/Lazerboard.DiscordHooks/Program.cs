@@ -39,9 +39,20 @@ builder.Services.AddDbContext<ScoreDataContext>(
 // Repositories
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();
+builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 
 // Hook services
-builder.Services.AddHostedService<GetLatestScannedBeatmapService>();
+var webhooksConfig = builder.Configuration.GetSection("DiscordHooks");
+var beatmapScoresConfig = webhooksConfig.GetSection("BeatmapScores");
+if (bool.Parse(beatmapScoresConfig["Enabled"]))
+{
+    builder.Services.AddHostedService<GetLatestProcessedBeatmapsetService>();
+}
+var rescansConfig = webhooksConfig.GetSection("Rescans");
+if (bool.Parse(rescansConfig["Enabled"]))
+{
+    builder.Services.AddHostedService<GetLatestRescannedBeatmapsetService>();
+}
 
 // Logs
 builder.Logging.ClearProviders();

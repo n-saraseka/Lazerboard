@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260909122023_AddBeatmapsetScanLogs")]
+    partial class AddBeatmapsetScanLogs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,7 +29,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "main_seeding_finished", "main_seeding_started", "rescan_finished", "rescan_started", "secondary_seeding_finished", "secondary_seeding_started" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "rescan_finished", "rescan_started", "seeding_finished", "seeding_started" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "score_source", new[] { "leaderboard_scan", "score_fetcher" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
@@ -115,34 +118,6 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("text")
                         .HasColumnName("creator");
 
-                    b.Property<DateTimeOffset?>("FinishedScanningAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("finished_scanning_at");
-
-                    b.Property<DateTimeOffset?>("MainFinishedProcessingAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("main_finished_processing_at");
-
-                    b.Property<DateTimeOffset?>("MainStartedProcessingAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("main_started_processing_at");
-
-                    b.Property<DateTimeOffset?>("RankedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ranked_date");
-
-                    b.Property<DateTimeOffset?>("SecondaryFinishedProcessingAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("secondary_finished_processing_at");
-
-                    b.Property<DateTimeOffset?>("SecondaryStartedProcessingAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("secondary_started_processing_at");
-
-                    b.Property<DateTimeOffset?>("StartedScanningAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("started_scanning_at");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text")
@@ -154,21 +129,6 @@ namespace OsuScoreStats.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_beatmapsets");
-
-                    b.HasIndex("FinishedScanningAt")
-                        .HasDatabaseName("ix_beatmapsets_finished_scanning_at");
-
-                    b.HasIndex("MainStartedProcessingAt")
-                        .HasDatabaseName("ix_beatmapsets_main_started_processing_at");
-
-                    b.HasIndex("SecondaryFinishedProcessingAt")
-                        .HasDatabaseName("ix_beatmapsets_secondary_finished_processing_at");
-
-                    b.HasIndex("SecondaryStartedProcessingAt")
-                        .HasDatabaseName("ix_beatmapsets_secondary_started_processing_at");
-
-                    b.HasIndex("StartedScanningAt")
-                        .HasDatabaseName("ix_beatmapsets_started_scanning_at");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_beatmapsets_user_id");

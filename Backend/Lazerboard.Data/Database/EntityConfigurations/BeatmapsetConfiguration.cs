@@ -12,5 +12,17 @@ public class BeatmapsetConfiguration : IEntityTypeConfiguration<Beatmapset>
             .HasOne(b => b.User)
             .WithMany()
             .HasForeignKey(b => b.UserId);
+        builder
+            .HasIndex(b => b.MainStartedProcessingAt);
+        builder
+            .HasIndex(b => b.SecondaryStartedProcessingAt);
+        builder
+            .HasIndex(b => b.SecondaryStartedProcessingAt);
+        builder
+            .HasIndex(b => b.SecondaryFinishedProcessingAt);
+        builder
+            .HasIndex(b => b.StartedScanningAt);
+        builder
+            .HasIndex(b => b.FinishedScanningAt);
     }
 }

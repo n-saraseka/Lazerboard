@@ -146,7 +146,7 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
             Timestamp = timestamp,
             Footer = new EmbedFooterBuilder
             {
-                Text = "Lazerboard: Beatmap scans"
+                Text = "Lazerboard: new beatmaps"
             }
         };
         return builder.Build();

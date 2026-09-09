@@ -13,8 +13,8 @@ public class BeatmapsetRepository(ScoreDataContext db) : BaseRepository<Beatmaps
     /// <returns>The <see cref="Beatmapset"/> or null</returns>
     public Task<Beatmapset?> GetLatestMainProcessedMapsetAsync(CancellationToken cancellationToken = default) =>
         Set
-            .Where(bs => bs.MainStartedProcessingAt != null)
-            .OrderByDescending(bs => bs.MainStartedProcessingAt)
+            .Where(bs => bs.MainFinishedProcessingAt != null)
+            .OrderByDescending(bs => bs.MainFinishedProcessingAt)
             .FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>
@@ -24,8 +24,8 @@ public class BeatmapsetRepository(ScoreDataContext db) : BaseRepository<Beatmaps
     /// <returns>The <see cref="Beatmapset"/> or null</returns>
     public Task<Beatmapset?> GetLatestSecondaryProcessedMapsetAsync(CancellationToken cancellationToken = default) =>
         Set
-            .Where(bs => bs.SecondaryStartedProcessingAt != null)
-            .OrderByDescending(bs => bs.SecondaryStartedProcessingAt)
+            .Where(bs => bs.SecondaryFinishedProcessingAt != null)
+            .OrderByDescending(bs => bs.SecondaryFinishedProcessingAt)
             .FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>
@@ -34,28 +34,6 @@ public class BeatmapsetRepository(ScoreDataContext db) : BaseRepository<Beatmaps
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The <see cref="Beatmapset"/> or null</returns>
     public Task<Beatmapset?> GetLatestRescannedMapsetAsync(CancellationToken cancellationToken = default) =>
-        Set
-            .Where(bs => bs.StartedScanningAt != null)
-            .OrderByDescending(bs => bs.StartedScanningAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-    /// <summary>
-    /// Get the <see cref="Beatmapset"/> with the largest <see cref="Beatmapset.MainFinishedProcessingAt"/> value
-    /// </summary>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="Beatmapset"/> or null</returns>
-    public Task<Beatmapset?> GetLatestFinishedProcessingMapsetAsync(CancellationToken cancellationToken = default) =>
-        Set
-            .Where(bs => bs.MainFinishedProcessingAt != null || bs.SecondaryFinishedProcessingAt != null)
-            .OrderByDescending(bs => bs.MainFinishedProcessingAt)
-            .FirstOrDefaultAsync(cancellationToken);
-    
-    /// <summary>
-    /// Get the <see cref="Beatmapset"/> with the largest <see cref="Beatmapset.FinishedScanningAt"/> value
-    /// </summary>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="Beatmapset"/> or null</returns>
-    public Task<Beatmapset?> GetLatestFinishedRescanningMapsetAsync(CancellationToken cancellationToken = default) =>
         Set
             .Where(bs => bs.FinishedScanningAt != null)
             .OrderByDescending(bs => bs.FinishedScanningAt)

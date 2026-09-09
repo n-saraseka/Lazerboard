@@ -5,7 +5,6 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,6 @@ public class BeatmapsetSeedingService : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<BeatmapsetUpdatesService> _logger;
     private ISeedingState _seedingState;
-    private readonly double _apiInterval;
     private bool _catchUpAfterRestart = true;
     
     private string? _cursor;
@@ -26,13 +24,6 @@ public class BeatmapsetSeedingService : BackgroundService
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
-        
-        using var scope = _serviceProvider.CreateScope();
-        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-
-        var externalApisConfig = config.GetSection("ExternalApis");
-        var osuApiConfig = externalApisConfig.GetSection("OsuApi");
-        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         
         _seedingState = seedingState;
         _seedingState.IsSeeding = true;
@@ -162,6 +153,7 @@ public class BeatmapsetSeedingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
         await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
+        _seedingState.IsSeeding = false;
         _logger.Log(LogLevel.Information, "Database seeding complete");
     }
 }

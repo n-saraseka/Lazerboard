@@ -101,6 +101,9 @@ services:
     image: ghcr.io/n-saraseka/lazerboard-externalapis:latest
     env_file:
       - .env
+    depends_on:
+      "init":
+        condition: service_completed_successfully
     volumes:
       - ./logs/externalapis:/app/Logs
     restart: unless-stopped

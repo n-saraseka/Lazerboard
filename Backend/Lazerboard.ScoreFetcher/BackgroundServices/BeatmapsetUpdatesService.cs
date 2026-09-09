@@ -37,8 +37,15 @@ public class BeatmapsetUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var shouldUpdate = await ShouldUpdateBeatmapsetsAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
+            if (!shouldUpdate)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+                shouldUpdate = await ShouldUpdateBeatmapsetsAsync(stoppingToken);
+                continue;
+            }
             try
             {
                 var beatmapsets = await GetBeatmapsetsAsync(stoppingToken);
@@ -131,5 +138,22 @@ public class BeatmapsetUpdatesService : BackgroundService
         }
         
         return startingBeatmapset;
+    }
+
+    /// <summary>
+    /// Check whether the updater service should proceed or not
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>True if there are no beatmapsets with null <see cref="Beatmapset.RankedDate"/>s and a scan hasn't been finished</returns>
+    private async Task<bool> ShouldUpdateBeatmapsetsAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+        var beatmapsetLogRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
+        
+        var nullBeatmapset = await beatmapsetRepository.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
+        var finishedScan = await beatmapsetLogRepository.GetLatestFinishedScanAsync(stoppingToken);
+
+        return !(nullBeatmapset is null && finishedScan is null);
     }
 }

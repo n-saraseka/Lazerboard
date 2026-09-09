@@ -60,4 +60,16 @@ public class BeatmapsetRepository(ScoreDataContext db) : BaseRepository<Beatmaps
             .Where(bs => bs.FinishedScanningAt != null)
             .OrderByDescending(bs => bs.FinishedScanningAt)
             .FirstOrDefaultAsync(cancellationToken);
+    
+    /// <summary>
+    /// Get the <see cref="Beatmapset"/> with the largest <see cref="Beatmapset.Id"/>
+    /// where <see cref="Beatmapset.RankedDate"/> is null
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="Beatmapset"/> or null</returns>
+    public Task<Beatmapset?> GetLatestBeatmapsetWithNullRankAsync(CancellationToken cancellationToken = default) =>
+        Set
+            .Where(bs => bs.RankedDate == null)
+            .OrderByDescending(bs => bs.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 }

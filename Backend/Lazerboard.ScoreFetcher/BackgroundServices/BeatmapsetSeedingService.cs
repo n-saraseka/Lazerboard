@@ -40,6 +40,9 @@ public class BeatmapsetSeedingService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {beatmapsetId}", finishingBeatmapset?.Id);
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -48,9 +51,7 @@ public class BeatmapsetSeedingService : BackgroundService
 
                 if (beatmapsets.Count == 0)
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-                    await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
+                    await FinishSeedingAsync(stoppingToken);
                     break;
                 }
                 
@@ -72,6 +73,10 @@ public class BeatmapsetSeedingService : BackgroundService
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
                     await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
                 }
+                
+                if (finishingBeatmapset is null || !beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id)) continue;
+                await FinishSeedingAsync(stoppingToken);
+                break;
             }
             catch (Exception ex)
             {
@@ -129,9 +134,34 @@ public class BeatmapsetSeedingService : BackgroundService
         {
             // Start seeding from the first beatmapset (DISCO PRINCE)
             await scanLogsRepository.SaveEventAsync(ScanEventType.RescanStarted, stoppingToken);
-            return await beatmapsetRepository.GetByIdAsync(1, stoppingToken);
+            return null;
         }
         
-        return await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Continuing seeding the database...");
+        return await beatmapsetRepository.GetLatestRescannedMapsetAsync(stoppingToken);
+    }
+
+    /// <summary>
+    /// Get the beatmapset with null <see cref="Beatmapset.RankedDate"/> on which the seeding should finish
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns></returns>
+    private async Task<Beatmapset?> GetFinishingBeatmapsetAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+        return await beatmapsetRepository.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
+    }
+
+    /// <summary>
+    /// Save the <see cref="ScanEventType.RescanFinished"/> event
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task FinishSeedingAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
+        await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
+        _logger.Log(LogLevel.Information, "Database seeding complete");
     }
 }

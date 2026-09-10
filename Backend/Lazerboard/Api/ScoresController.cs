@@ -192,7 +192,7 @@ public class ScoresController(IScoreRepository scoreRepository,
 
         var rankings = group.Select(g => new UserRanking
         {
-            Rank = group.IndexOf(g) + 1,
+            Rank = (rankingPage - 1) * rankingAmount + group.IndexOf(g) + 1,
             ScoresCount = g.ScoresCount,
             User = users.First(u => u.Id == g.UserId)
         }).ToList();

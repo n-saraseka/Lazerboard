@@ -90,7 +90,6 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
         var beatmapsets = await GetBeatmapsetsAsync(_offset, stoppingToken);
         var ids = beatmapsets.Select(b => b.Id).ToList();
         if (ids.Contains(beatmapset.Id)) return beatmapsets;
-        _offset += beatmapsets.Count;
         return await GetBeatmapsetsAsync(_offset, stoppingToken);
     }
 
@@ -98,7 +97,9 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IDirectApiFetcher>();
-        return await apiFetcher.GetBeatmapsetsAsync(offset, stoppingToken);
+        var beatmapsets = await apiFetcher.GetBeatmapsetsAsync(offset, stoppingToken);
+        _offset += beatmapsets.Length;
+        return beatmapsets;
     }
     
     private async Task<Beatmapset?> GetStartingBeatmapsetAsync(CancellationToken stoppingToken)

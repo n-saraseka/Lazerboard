@@ -1,4 +1,6 @@
 using System.Net;
+using System.Net.Sockets;
+using System.Security.Authentication;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.ExternalApis.Services.OsuApi;
 using Microsoft.Extensions.Http.Resilience;
@@ -18,18 +20,47 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .ReadFrom.Services(services)
 );
 
+static bool IsTransient(Exception? ex)
+{
+    for (var e = ex; e is not null; e = e.InnerException)
+    {
+        switch (e)
+        {
+            case SocketException:
+            case IOException:
+            case AuthenticationException:
+            case HttpRequestException:
+                return true;
+        }
+    }
+    return false;
+}
+
 builder.Services.AddHttpClient<OsuApiService>()
-    .SetHandlerLifetime(TimeSpan.FromMinutes(2))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        ConnectTimeout = TimeSpan.FromSeconds(10),
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+    })
     .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
     {
         resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
         {
-            ShouldHandle = static args => args.Outcome switch
+            ShouldHandle = static args =>
             {
-                { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
-                { Exception: System.Net.Sockets.SocketException } => PredicateResult.True(),
-                { Exception.InnerException: System.Net.Sockets.SocketException } => PredicateResult.True(),
-                _ => PredicateResult.False()
+                if (args.Outcome.Result is { IsSuccessStatusCode: false } r &&
+                    r.StatusCode != HttpStatusCode.UnprocessableEntity)
+                {
+                    return PredicateResult.True();
+                }
+
+                if (IsTransient(args.Outcome.Exception))
+                {
+                    return PredicateResult.True();
+                }
+                
+                return PredicateResult.False();
             },
             
             MaxRetryAttempts = 7,

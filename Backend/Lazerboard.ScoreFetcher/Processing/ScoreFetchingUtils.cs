@@ -63,7 +63,6 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
             .Select(group => group.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).First())
             .ToList();
         
-        logger.Log(LogLevel.Information, "Getting significant scores..");
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(deduplicatedScores, stoppingToken);
         var significantScores = deduplicatedScores.Where(s => checkResults[s.Id]).ToList();
 

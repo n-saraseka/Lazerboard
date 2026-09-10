@@ -57,7 +57,7 @@ public class BeatmapsetUpdatesService : BackgroundService
                         
                     await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
                     // Exponential backoff exponent is capped to 10 (~17 minute intervals)
-                    _repeatExponent = _repeatExponent == 10 ? _repeatExponent : _repeatExponent + 1;
+                    _repeatExponent = Math.Min(_repeatExponent + 1, 10);
                 }
                 else
                 {

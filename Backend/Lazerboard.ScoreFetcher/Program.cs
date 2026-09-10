@@ -63,6 +63,7 @@ builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 // Score fetching related
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
+builder.Services.AddScoped<IDirectApiFetcher, DirectApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
@@ -120,6 +121,10 @@ builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 if (bool.Parse(servicesConfig["MainSeeding"]))
 {
     builder.Services.AddHostedService<BeatmapsetSeedingService>();
+}
+if (bool.Parse(servicesConfig["SecondarySeeding"]))
+{
+    builder.Services.AddHostedService<UnlistedBeatmapsetSeedingService>();
 }
 if (bool.Parse(servicesConfig["Firehose"]))
 {

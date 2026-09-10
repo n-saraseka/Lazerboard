@@ -56,7 +56,7 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
                 else
                 {
                     _logger.Log(LogLevel.Information, 
-                        "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
+                        "Processing a batch of unlisted {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
                         beatmapsets.Count,
                         DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                         DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));

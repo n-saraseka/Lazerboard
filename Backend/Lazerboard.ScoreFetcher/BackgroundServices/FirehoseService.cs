@@ -40,6 +40,7 @@ public class FirehoseService: BackgroundService
         {
             try
             {
+                var interval = _apiInterval * Math.Pow(2, _repeatExponent);
                 var scores = await FetchExistingBeatmapScoresAsync(stoppingToken);
                 if (scores.Count > 0)
                 {
@@ -51,14 +52,14 @@ public class FirehoseService: BackgroundService
                             continue;
                         }
                         
-                        var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-                        _logger.Log(LogLevel.Information, "No significant scores found. Repeating after {seconds} found", interval);
+                        _logger.Log(LogLevel.Information, "No significant scores found. Repeating after {seconds} seconds", interval);
                         
                         await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
                         // Exponential backoff exponent is capped to 8 (~4 minute intervals)
                         _repeatExponent = Math.Min(_repeatExponent + 1, 8);
                         continue;
                     }
+                    _repeatExponent = 0;
                     
                     var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                     var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
@@ -80,16 +81,18 @@ public class FirehoseService: BackgroundService
                         
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
                     await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
+                    continue;
                 }
-                if (!_catchUpOnExistingBeatmapScores)
-                {
-                    await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
-                }
+                
+                _logger.Log(LogLevel.Information, "No scores found. Repeating after {seconds} seconds", interval);
+                        
+                await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
+                // Exponential backoff exponent is capped to 8 (~4 minute intervals)
+                _repeatExponent = Math.Min(_repeatExponent + 1, 8);
             }
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Firehose service failed!");
-                throw;
             }
         }
     }

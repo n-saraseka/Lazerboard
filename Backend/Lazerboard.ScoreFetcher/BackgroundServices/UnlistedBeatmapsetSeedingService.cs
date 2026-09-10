@@ -37,15 +37,15 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
         {
             try
             {
-                var beatmapsets = startingBeatmapset == null
+                var beatmapsets = _offset == 0
                     ? await GetRelevantBeatmapsetBatchAsync(startingBeatmapset, stoppingToken) 
                     : await GetBeatmapsetsAsync(_offset, stoppingToken);
                 
                 var beatmapsetCount = beatmapsets.Count;
+                var ids = beatmapsets.Select(bs => bs.Id).ToList();
 
-                if (startingBeatmapset is not null)
+                if (startingBeatmapset is not null && ids.Contains(startingBeatmapset.Id))
                 {
-                    var ids = beatmapsets.Select(bs => bs.Id).ToList();
                     beatmapsets = beatmapsets.Skip(ids.IndexOf(startingBeatmapset.Id) + 1).ToList();
                 }
                 

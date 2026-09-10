@@ -68,8 +68,7 @@ public class BeatmapsetSeedingService : BackgroundService
                     }
                 }
 
-                if (finishingBeatmapset is not null &&
-                    !beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
+                if (finishingBeatmapset is not null && beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
                 {
                     await FinishSeedingAsync(stoppingToken);
                     break;
@@ -134,7 +133,6 @@ public class BeatmapsetSeedingService : BackgroundService
             return null;
         }
         
-        _logger.Log(LogLevel.Information, "Continuing seeding the database...");
         return await beatmapsetRepository.GetLatestRescannedMapsetAsync(stoppingToken);
     }
 

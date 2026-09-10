@@ -58,7 +58,7 @@ public class OsuApiService
         }
 
         await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
-        _logger.Log(LogLevel.Information, "Request: {requestString}", requestString);
+        _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         
         return response;
@@ -179,7 +179,7 @@ public class OsuApiService
         {
             await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
             var requestString = $"https://osu.ppy.sh/osu/{beatmapId}";
-            _logger.Log(LogLevel.Information, "Request: {requestString}", requestString);
+            _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
             return await _httpClient.GetStreamAsync(requestString, ct);
         }
         catch (Exception ex)

@@ -4,5 +4,5 @@ namespace Lazerboard.Data.ApiFetchers;
 
 public interface IDirectApiFetcher
 {
-    Task<List<APIBeatmapset>> GetBeatmapsetsAsync(int offset, CancellationToken ct = default);
+    Task<APIBeatmapset[]> GetBeatmapsetsAsync(int offset, CancellationToken ct = default);
 }

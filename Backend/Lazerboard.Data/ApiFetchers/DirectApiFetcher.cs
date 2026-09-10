@@ -58,7 +58,13 @@ public class DirectApiFetcher : IDirectApiFetcher
         return response;
     }
     
-    public async Task<List<APIBeatmapset>> GetBeatmapsetsAsync(int offset, CancellationToken ct = default)
+    /// <summary>
+    /// Get unlisted beatmapsets
+    /// </summary>
+    /// <param name="offset">The offset of the results</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>An array of <see cref="APIBeatmapset"/>s</returns>
+    public async Task<APIBeatmapset[]> GetBeatmapsetsAsync(int offset, CancellationToken ct = default)
     {
         using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{_apiUrl}/beatmapsets?offset={offset}",
@@ -66,7 +72,7 @@ public class DirectApiFetcher : IDirectApiFetcher
             ct);
         
         var beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
-        var beatmapsets = JsonConvert.DeserializeObject<List<APIBeatmapset>>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        var beatmapsets = JsonConvert.DeserializeObject<APIBeatmapset[]>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return beatmapsets;
     }

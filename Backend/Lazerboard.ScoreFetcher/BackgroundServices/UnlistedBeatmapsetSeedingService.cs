@@ -83,7 +83,7 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
         }
     }
 
-    private async Task<List<APIBeatmapset>> GetRelevantBeatmapsetBatchAsync(Beatmapset? beatmapset,
+    private async Task<IList<APIBeatmapset>> GetRelevantBeatmapsetBatchAsync(Beatmapset? beatmapset,
         CancellationToken stoppingToken)
     {
         if (beatmapset is null) return await GetBeatmapsetsAsync(0, stoppingToken);
@@ -94,7 +94,7 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
         return await GetBeatmapsetsAsync(_offset, stoppingToken);
     }
 
-    private async Task<List<APIBeatmapset>> GetBeatmapsetsAsync(int offset, CancellationToken stoppingToken)
+    private async Task<IList<APIBeatmapset>> GetBeatmapsetsAsync(int offset, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IDirectApiFetcher>();

@@ -13,7 +13,7 @@ public class DirectApiController(DirectApiService directApiService) : Controller
     /// </summary>
     /// <param name="offset">The offset of the results</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Populated <see cref="BeatmapsetsResponse"/> object</returns>
+    /// <returns>An array of <see cref="APIBeatmapset"/>s</returns>
     [HttpGet("beatmapsets")]
     public async Task<IActionResult> GetBeatmapsetsAsync([FromQuery] int offset, CancellationToken ct = default)
     {

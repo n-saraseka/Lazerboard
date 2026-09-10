@@ -81,7 +81,7 @@ runs:
         echo "FetcherServices__MainSeeding=false" >> .env
         echo "FetcherServices__SecondarySeeding=true" >> .env
         echo "FetcherServices__Firehose=true" >> .env
-        echo "FetcherServices__Rescans=false" >> .env
+        echo "FetcherServices__Rescans=true" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env

@@ -197,9 +197,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct)
+    public async Task<int> ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct)
     {
-        if (scores.Count == 0) return;
+        if (scores.Count == 0) return 0;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
@@ -226,7 +226,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 g.Key.Mode == group.Key.Mode && g.Key.BeatmapId == group.Key.BeatmapId);
             if (matchingGroup == null)
             {
-                foreach (var score in groupScores) score.Rank = groupScores.IndexOf(score) + 1;
+                groupScores = groupScores.Select((s, i) =>
+                {
+                    s.Rank = i + 1;
+                    return s;
+                }).ToList();
                 // This is to prevent edge cases where there are somehow more than 100 scores per mode and combination,
                 // even though there were none before. We can't verify scores ranked above 100.
                 groupScores = groupScores.Where(s => s.Rank <= 100).ToList();
@@ -292,8 +296,12 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .ToList();
-            
-                foreach (var score in merged) score.Rank = merged.IndexOf(score) +1;
+
+                merged = merged.Select((s, i) =>
+                {
+                    s.Rank = i + 1;
+                    return s;
+                }).ToList();
 
                 if (newScores.Count > 0)
                 {
@@ -321,10 +329,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
             logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}; Deleted scores: {deletedCount}", 
                 createdCount, updatedCount, deletedCount);
+
+            return createdCount;
         }
         catch (NpgsqlException exception)
         {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessScoresAsync | Scores: {@scores}", scores);
+            logger.Log(LogLevel.Error, exception, "Couldn't process scores! Scores: {@scores}", scores);
+            return 0;
         }
     }
 

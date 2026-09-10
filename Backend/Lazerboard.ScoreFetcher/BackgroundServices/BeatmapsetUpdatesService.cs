@@ -37,6 +37,8 @@ public class BeatmapsetUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await GetRestartCursorAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Restart cursor for beatmapset updates: {cursor}", _cursor);
         var shouldUpdate = await ShouldUpdateBeatmapsetsAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -97,47 +99,45 @@ public class BeatmapsetUpdatesService : BackgroundService
     /// <returns>List of <see cref="APIBeatmapset"/>s</returns>
     private async Task<List<APIBeatmapset>> GetBeatmapsetsAsync(CancellationToken stoppingToken)
     {
-        var startingBeatmapset = await GetStartingBeatmapsetAsync(stoppingToken);
         using var scope = _serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
-        
-        if (startingBeatmapset is null)
-        {
-            _cursor = null;
-        }
-        else if (_catchUpAfterRestart)
-        {
-            if (startingBeatmapset.RankedDate is null)
-            {
-                var apiBeatmapset = await apiFetcher.GetBeatmapsetAsync(startingBeatmapset.Id, stoppingToken);
-                startingBeatmapset.RankedDate = apiBeatmapset.RankedDate;
-            }
-            
-            var approvedDate = startingBeatmapset.RankedDate.Value.ToUnixTimeMilliseconds();
-            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{startingBeatmapset.Id}}}"));
-            _catchUpAfterRestart = false;
-        }
-        
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
         _cursor = beatmapsetsResponse.Cursor;
         
         return beatmapsetsResponse.Beatmapsets;
     }
 
-    private async Task<Beatmapset?> GetStartingBeatmapsetAsync(CancellationToken stoppingToken)
+    /// <summary>
+    /// Get the cursor string for updates restart
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task GetRestartCursorAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
         var startingBeatmapset = await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
 
+        // If there is no main processed beatmapset, fall back to second highest beatmapset that has been processed
+        // by the score fetcher.
         if (startingBeatmapset is null)
         {
             var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
             var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
             startingBeatmapset = await beatmapsetRepository.GetByIdAsync(beatmapsetId, stoppingToken);
         }
+
+        if (startingBeatmapset is null) return;
         
-        return startingBeatmapset;
+        if (startingBeatmapset.RankedDate is null)
+        {
+            var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
+            var apiBeatmapset = await apiFetcher.GetBeatmapsetAsync(startingBeatmapset.Id, stoppingToken);
+            startingBeatmapset.RankedDate = apiBeatmapset.RankedDate;
+        }
+        
+        var approvedDate = startingBeatmapset.RankedDate.Value.ToUnixTimeMilliseconds();
+        
+        _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{startingBeatmapset.Id}}}"));
     }
 
     /// <summary>

@@ -74,7 +74,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     /// </summary>
     /// <param name="scores">A populated <see cref="IList{APIScore}"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task SaveUserDataFromScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    private async Task SaveUserDataFromScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
         if (scores.Count == 0) return;
         List<APIUser> users;
@@ -107,10 +107,10 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     /// <param name="scores">List of <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task SaveScoreDataAsync(IList<APIScore> scores, ScoreSource source, CancellationToken stoppingToken)
+    public async Task<int> SaveScoreDataAsync(IList<APIScore> scores, ScoreSource source, CancellationToken stoppingToken)
     {
         await SaveUserDataFromScoresAsync(scores,  stoppingToken);
-        await dataProcessor.ProcessScoresAsync(scores, source, stoppingToken);
+        return await dataProcessor.ProcessScoresAsync(scores, source, stoppingToken);
     }
     
     /// <summary>

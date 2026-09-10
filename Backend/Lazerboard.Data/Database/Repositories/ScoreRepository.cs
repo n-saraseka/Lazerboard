@@ -50,6 +50,7 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
         Set
             .AsNoTracking()
             .Where(s => s.ScoreSource == ScoreSource.ScoreFetcher)
+            .OrderByDescending(s => s.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
     public IQueryable<Score> GetByUserId(int userId) => Set

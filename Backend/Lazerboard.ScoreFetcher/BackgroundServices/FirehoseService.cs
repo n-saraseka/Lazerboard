@@ -12,13 +12,16 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices;
 public class FirehoseService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger)
     : BackgroundService
 {
-    private bool _catchUpAfterRestart = true;
     private bool _catchUpOnExistingBeatmapScores;
-
     private string? _cursor;
+    private int _insertedCount;
+    private int _repeatExponent;
+    private readonly int _baseRepeatSeconds = 30;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await GetRestartCursorAsync(stoppingToken);
+        logger.Log(LogLevel.Information, "Restart cursor for the firehose: {cursor}", _cursor);
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -46,12 +49,22 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
                     }
                         
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
-                    await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
+                    _insertedCount += await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
                 }
-                if (!_catchUpOnExistingBeatmapScores)
+                if (_catchUpOnExistingBeatmapScores) continue;
+                if (_insertedCount == 0)
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                    _repeatExponent = Math.Min(_repeatExponent + 1, 5);
+                    logger.Log(LogLevel.Information, "No new scores inserted. Repeating in {interval} seconds", 
+                        _baseRepeatSeconds * Math.Pow(2, _repeatExponent));
                 }
+                else
+                {
+                    logger.Log(LogLevel.Information, "Inserted {count} new scores", _insertedCount);
+                    _repeatExponent = 0;
+                    _insertedCount = 0;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(_baseRepeatSeconds * Math.Pow(2, _repeatExponent)), stoppingToken);
             }
             catch (Exception ex)
             {
@@ -69,17 +82,12 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
         using var scope = serviceProvider.CreateScope();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
-        
-        if (_catchUpAfterRestart)
-        {
-            await GetRestartCursorAsync(dataProcessor, stoppingToken);
-        }
         _catchUpOnExistingBeatmapScores = true;
         
         var scoresResponse = await apiFetcher.GetScoresAsync(_cursor, stoppingToken);
         var scores = scoresResponse.Scores;
         
-        if (_cursor is null && _catchUpAfterRestart)
+        if (_cursor is null)
         {
             if (scores.Length == 0)
             {
@@ -90,11 +98,8 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
             // 800k scores is around of 6 hours of missing scores
             var catchUpScoreId = scores.Max(s => s.Id) - 800000;
             _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {catchUpScoreId}}}"));
-            _catchUpAfterRestart = false;
             return [];
         }
-        
-        _catchUpAfterRestart = false;
         _cursor = scoresResponse.Cursor;
 
         if (scores.Length < 100 && _catchUpOnExistingBeatmapScores)
@@ -139,15 +144,21 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
     /// </summary>
     /// <param name="scores">List of <see cref="APIScore"/>s</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task SaveExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
+    private async Task<int> SaveExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
     {
         using var scope = serviceProvider.CreateScope();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, stoppingToken);
+        return await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, stoppingToken);
     }
 
-    private async Task GetRestartCursorAsync(IDataProcessor dataProcessor, CancellationToken stoppingToken)
+    /// <summary>
+    /// Get the cursor string for firehose restart
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task GetRestartCursorAsync(CancellationToken stoppingToken)
     {
+        using var scope = serviceProvider.CreateScope();
+        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var maxFirehoseScore = await dataProcessor.GetMaxFirehoseScoreAsync(stoppingToken);
         // Score is too old, use null cursor
         if (DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromDays(1))

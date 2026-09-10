@@ -14,7 +14,7 @@ public interface IDataProcessor
     Task ProcessCountriesAsync(IList<APICountry> countries, CancellationToken ct);
     Task ProcessUsersAsync(IList<APIUser> users, CancellationToken ct);
     Task ProcessRemovedUsersAsync(IList<User> users, CancellationToken ct);
-    Task ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct);
+    Task<int> ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct);
     Task<List<int>> GetBeatmapIdsWithScoresAsync(IList<int> beatmapIds, CancellationToken ct);
     Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken);
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken);

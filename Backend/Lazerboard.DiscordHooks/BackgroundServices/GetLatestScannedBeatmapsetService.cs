@@ -116,7 +116,6 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
                 : latestSecondaryProcessedBeatmapset;
         }
         
-        _logger.Log(LogLevel.Information, "Beatmapset: {@beatmapset}", latestRescannedBeatmapset);
         var beatmapsetId = beatmapset?.Id ?? 1;
         var beatmapsData = await beatmapRepository.GetByBeatmapsetIdAsync(beatmapsetId, cancellationToken);
         

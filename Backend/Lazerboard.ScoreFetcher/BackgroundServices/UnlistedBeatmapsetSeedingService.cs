@@ -31,7 +31,7 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
         var startingBeatmapset = await GetStartingBeatmapsetAsync(stoppingToken);
         if (startingBeatmapset is not null)
         {
-            _logger.Log(LogLevel.Information, "Starting beatmapset ID: {beatmapsetId}", startingBeatmapset.Id);
+            _logger.Log(LogLevel.Information, "Starting unlisted beatmapset ID: {beatmapsetId}", startingBeatmapset.Id);
         }
         while (!stoppingToken.IsCancellationRequested)
         {

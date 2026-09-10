@@ -161,9 +161,8 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var maxFirehoseScore = await dataProcessor.GetMaxFirehoseScoreAsync(stoppingToken);
         // Score is too old, use null cursor
-        if (DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromDays(1))
+        if (DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromHours(6))
         {
-            _cursor = null;
             return;
         }
         _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxFirehoseScore.Id}}}"));

@@ -29,7 +29,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         _logger = logger;
         
         var webhooksConfig = config.GetSection("DiscordHooks");
-        var beatmapScoresConfig = webhooksConfig.GetSection("Rescans");
+        var beatmapScoresConfig = webhooksConfig.GetSection("Scans");
         _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
         _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
         
@@ -111,7 +111,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         if (latestRescannedBeatmapset != null & latestSecondaryProcessedBeatmapset != null)
         {
             beatmapset = latestRescannedBeatmapset?.FinishedScanningAt >
-                         latestSecondaryProcessedBeatmapset?.SecondaryFinishedProcessingAt 
+                         latestSecondaryProcessedBeatmapset?.SecondaryFinishedProcessingAt
                 ? latestRescannedBeatmapset
                 : latestSecondaryProcessedBeatmapset;
         }

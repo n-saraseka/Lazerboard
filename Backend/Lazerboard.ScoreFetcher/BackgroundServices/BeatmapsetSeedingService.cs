@@ -57,17 +57,23 @@ public class BeatmapsetSeedingService : BackgroundService
                     var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
                     await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.RescanStarted, stoppingToken);
                 }
-                    
-                foreach (var beatmapset in beatmapsets)
+
+                if (finishingBeatmapset is null)
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
+                    foreach (var beatmapset in beatmapsets)
+                    {
+                        using var scope = _serviceProvider.CreateScope();
+                        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
+                    }
                 }
-                
-                if (finishingBeatmapset is null || !beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id)) continue;
-                await FinishSeedingAsync(stoppingToken);
-                break;
+
+                if (finishingBeatmapset is not null &&
+                    !beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
+                {
+                    await FinishSeedingAsync(stoppingToken);
+                    break;
+                }
             }
             catch (Exception ex)
             {

@@ -174,7 +174,3 @@ jobs:
     - name: Cleanup
       if: always()
       uses: ./.github/actions/cleanup-post-deploy
-      with:
-        ssh_user: ${{ secrets.SSH_USER }}
-        ssh_host: ${{ secrets.SSH_HOST }}
-        work_dir: ${{ secrets.WORK_DIR }}

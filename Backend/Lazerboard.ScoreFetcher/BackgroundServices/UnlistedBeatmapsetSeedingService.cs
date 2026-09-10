@@ -64,14 +64,14 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-                        await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.MainSeedingStarted, stoppingToken);
+                        await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.SecondarySeedingStarted, stoppingToken);
                     }
                     
                     foreach (var beatmapset in beatmapsets)
                     {
                         using var scope = _serviceProvider.CreateScope();
                         var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.MainSeedingStarted, stoppingToken);
+                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.SecondarySeedingStarted, stoppingToken);
                     }
                 }
             }

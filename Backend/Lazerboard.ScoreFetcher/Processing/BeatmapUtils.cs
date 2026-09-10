@@ -64,21 +64,37 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
             }
         }
         
-        var dbBeatmapset = await beatmapsetRepository.GetByIdAsync(beatmapset.Id, stoppingToken);
+        List<APIBeatmapset> list = [beatmapset];
+        await SaveProcessingTimestampAsync(list, eventType, stoppingToken);
+    }
+
+    /// <summary>
+    /// Save the event timestamp for a list of <see cref="APIBeatmapset"/>s
+    /// </summary>
+    /// <param name="beatmapsets">The <see cref="APIBeatmapset"/>s</param>
+    /// <param name="eventType">The <see cref="ScanEventType"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    public async Task SaveProcessingTimestampAsync(IList<APIBeatmapset> beatmapsets, ScanEventType eventType, CancellationToken stoppingToken)
+    {
+        var ids = beatmapsets.Select(bs => bs.Id).ToList();
+        var dbBeatmapsets = await beatmapsetRepository.GetBulkAsync(ids, stoppingToken);
         var currentDateTime = DateTimeOffset.Now;
-        switch (eventType)
+        foreach (var beatmapset in dbBeatmapsets)
         {
-            case ScanEventType.RescanStarted:
-                dbBeatmapset!.FinishedScanningAt = currentDateTime;
-                break;
-            case ScanEventType.MainSeedingStarted:
-                dbBeatmapset!.MainFinishedProcessingAt = currentDateTime;
-                break;
-            case ScanEventType.SecondarySeedingStarted:
-                dbBeatmapset!.SecondaryFinishedProcessingAt = currentDateTime;
-                break;
+            switch (eventType)
+            {
+                case ScanEventType.RescanStarted:
+                    beatmapset.FinishedScanningAt = currentDateTime;
+                    break;
+                case ScanEventType.MainSeedingStarted:
+                    beatmapset.MainFinishedProcessingAt = currentDateTime;
+                    break;
+                case ScanEventType.SecondarySeedingStarted:
+                    beatmapset.SecondaryFinishedProcessingAt = currentDateTime;
+                    break;
+            }
         }
-        beatmapsetRepository.Update(dbBeatmapset);
+        beatmapsetRepository.UpdateBulk(dbBeatmapsets);
         await beatmapsetRepository.SaveChangesAsync(stoppingToken);
     }
 }

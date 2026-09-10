@@ -67,6 +67,13 @@ public class BeatmapsetSeedingService : BackgroundService
                         await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
                     }
                 }
+                else
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+                    await beatmapUtils.SaveProcessingTimestampAsync(beatmapsets, ScanEventType.RescanStarted,
+                        stoppingToken);
+                }
 
                 if (finishingBeatmapset is not null && beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
                 {

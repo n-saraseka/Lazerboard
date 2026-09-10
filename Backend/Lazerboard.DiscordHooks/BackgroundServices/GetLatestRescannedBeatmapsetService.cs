@@ -105,6 +105,7 @@ public class GetLatestRescannedBeatmapsetService : BackgroundService
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
 
         var latestRescannedBeatmapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(cancellationToken);
+        _logger.Log(LogLevel.Information, "Beatmapset: {@beatmapset}", @latestRescannedBeatmapset);
         var beatmapsetId = latestRescannedBeatmapset?.Id ?? 1;
         var beatmapsData = await beatmapRepository.GetByBeatmapsetIdAsync(beatmapsetId, cancellationToken);
         

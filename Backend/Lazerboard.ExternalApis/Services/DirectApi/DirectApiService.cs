@@ -39,7 +39,7 @@ public class DirectApiService(HttpClient httpClient, ILogger<DirectApiService> l
             "(availability.more_information%20IS%20NOT%20NULL%20OR%20availability.download_disabled=true)";
         var rankStatusQuery = "(ranked=1%20OR%20ranked=2%20OR%20ranked=4)";
         var dbQuery = $"[{availabilityQuery}%20AND%20{rankStatusQuery}]";
-        var sort = "ranked_date:asc";
+        var sort = "sort=ranked_date:asc";
         var offsetString = $"offset={offset}";
         using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/search?q={dbQuery}&{sort}&{offsetString}", 

@@ -11,16 +11,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.DiscordHooks.BackgroundServices;
 
-public class GetLatestRescannedBeatmapsetService : BackgroundService
+public class GetLatestScannedBeatmapsetService : BackgroundService
 {
     private IServiceProvider _serviceProvider;
-    private ILogger<GetLatestRescannedBeatmapsetService> _logger;
+    private ILogger<GetLatestScannedBeatmapsetService> _logger;
     private readonly string _webhookUrl;
     private readonly TimeSpan _updateInterval;
     private System.Timers.Timer _updateTimer;
 
-    public GetLatestRescannedBeatmapsetService(IServiceProvider serviceProvider, 
-        ILogger<GetLatestRescannedBeatmapsetService> logger)
+    public GetLatestScannedBeatmapsetService(IServiceProvider serviceProvider, 
+        ILogger<GetLatestScannedBeatmapsetService> logger)
     {
         _serviceProvider = serviceProvider;
         using var scope = _serviceProvider.CreateScope();
@@ -29,7 +29,7 @@ public class GetLatestRescannedBeatmapsetService : BackgroundService
         _logger = logger;
         
         var webhooksConfig = config.GetSection("DiscordHooks");
-        var beatmapScoresConfig = webhooksConfig.GetSection("Rescans");
+        var beatmapScoresConfig = webhooksConfig.GetSection("Scans");
         _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
         _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
         
@@ -105,8 +105,18 @@ public class GetLatestRescannedBeatmapsetService : BackgroundService
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
 
         var latestRescannedBeatmapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(cancellationToken);
-        _logger.Log(LogLevel.Information, "Beatmapset: {@beatmapset}", @latestRescannedBeatmapset);
-        var beatmapsetId = latestRescannedBeatmapset?.Id ?? 1;
+        var latestSecondaryProcessedBeatmapset = await beatmapsetRepository.GetLatestSecondaryProcessedMapsetAsync(cancellationToken);
+        
+        var beatmapset = latestRescannedBeatmapset ?? latestSecondaryProcessedBeatmapset ?? null;
+        if (latestRescannedBeatmapset != null & latestSecondaryProcessedBeatmapset != null)
+        {
+            beatmapset = latestRescannedBeatmapset?.FinishedScanningAt >
+                         latestSecondaryProcessedBeatmapset?.SecondaryFinishedProcessingAt
+                ? latestRescannedBeatmapset
+                : latestSecondaryProcessedBeatmapset;
+        }
+        
+        var beatmapsetId = beatmapset?.Id ?? 1;
         var beatmapsData = await beatmapRepository.GetByBeatmapsetIdAsync(beatmapsetId, cancellationToken);
         
         return beatmapsData;

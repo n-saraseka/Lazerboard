@@ -48,10 +48,10 @@ if (bool.Parse(beatmapScoresConfig["Enabled"]))
 {
     builder.Services.AddHostedService<GetLatestProcessedBeatmapsetService>();
 }
-var rescansConfig = webhooksConfig.GetSection("Rescans");
-if (bool.Parse(rescansConfig["Enabled"]))
+var scansConfig = webhooksConfig.GetSection("Scans");
+if (bool.Parse(scansConfig["Enabled"]))
 {
-    builder.Services.AddHostedService<GetLatestRescannedBeatmapsetService>();
+    builder.Services.AddHostedService<GetLatestScannedBeatmapsetService>();
 }
 
 // Logs

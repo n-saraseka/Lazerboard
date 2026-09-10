@@ -79,7 +79,7 @@ runs:
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
         echo "FetcherServices__MainSeeding=false" >> .env
-        echo "FetcherServices__SecondarySeeding=false" >> .env
+        echo "FetcherServices__SecondarySeeding=true" >> .env
         echo "FetcherServices__Firehose=true" >> .env
         echo "FetcherServices__Rescans=false" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env

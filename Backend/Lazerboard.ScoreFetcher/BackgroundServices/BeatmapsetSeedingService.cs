@@ -81,6 +81,10 @@ public class BeatmapsetSeedingService : BackgroundService
                     break;
                 }
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Leaderboard seeding service failed!");

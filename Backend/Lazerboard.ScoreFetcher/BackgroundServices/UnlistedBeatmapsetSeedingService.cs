@@ -31,9 +31,9 @@ public class UnlistedBeatmapsetSeedingService(
             try
             {
                 var beatmapsets = _offset == 0
-                    ? await GetRelevantBeatmapsetBatchAsync(startingBeatmapset, stoppingToken) 
+                    ? await GetRelevantBeatmapsetBatchAsync(startingBeatmapset, stoppingToken)
                     : await GetNextBeatmapsetBatchAsync(_offset, stoppingToken);
-                
+
                 var beatmapsetCount = beatmapsets.Count;
                 var ids = beatmapsets.Select(bs => bs.Id).ToList();
 
@@ -42,15 +42,15 @@ public class UnlistedBeatmapsetSeedingService(
                     beatmapsets = beatmapsets.Skip(ids.IndexOf(startingBeatmapset.Id) + 1).ToList();
                     startingBeatmapset = null;
                 }
-                
+
                 if (beatmapsets.Count == 0)
                 {
                     await FinishSeedingAsync(stoppingToken);
                 }
                 else
                 {
-                    logger.Log(LogLevel.Information, 
-                        "Processing a batch of unlisted {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
+                    logger.Log(LogLevel.Information,
+                        "Processing a batch of unlisted {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}",
                         beatmapsets.Count,
                         DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                         DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
@@ -58,16 +58,18 @@ public class UnlistedBeatmapsetSeedingService(
                     using (var scope = serviceProvider.CreateScope())
                     {
                         var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-                        await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.SecondarySeedingStarted, stoppingToken);
+                        await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets,
+                            ScanEventType.SecondarySeedingStarted, stoppingToken);
                     }
-                    
+
                     foreach (var beatmapset in beatmapsets)
                     {
                         using var scope = serviceProvider.CreateScope();
                         var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.SecondarySeedingStarted, stoppingToken);
+                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.SecondarySeedingStarted,
+                            stoppingToken);
                     }
-                    
+
                     var beatmapsetCheckResults = await CheckIfBeatmapsetsHaveAnyScoresAsync(beatmapsets, stoppingToken);
                     var removedBeatmapsets = beatmapsets.Where(bs => !beatmapsetCheckResults[bs.Id]).ToList();
                     if (removedBeatmapsets.Count > 0)
@@ -75,6 +77,10 @@ public class UnlistedBeatmapsetSeedingService(
                         await MoveRemovedMapsetsAsync(removedBeatmapsets, stoppingToken);
                     }
                 }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
             }
             catch (Exception ex)
             {

@@ -95,7 +95,7 @@ builder.Services.AddHttpClient<DirectApiService>()
             ShouldHandle = static args =>
             {
                 if (args.Outcome.Result is { IsSuccessStatusCode: false } r &&
-                    r.StatusCode != HttpStatusCode.UnprocessableEntity)
+                    (r.StatusCode != HttpStatusCode.UnprocessableEntity || r.StatusCode != HttpStatusCode.NotFound))
                 {
                     return PredicateResult.True();
                 }

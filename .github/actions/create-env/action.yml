@@ -79,14 +79,14 @@ runs:
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
         echo "FetcherServices__MainSeeding=false" >> .env
-        echo "FetcherServices__SecondarySeeding=true" >> .env
+        echo "FetcherServices__SecondarySeeding=false" >> .env
         echo "FetcherServices__Firehose=true" >> .env
-        echo "FetcherServices__Rescans=true" >> .env
+        echo "FetcherServices__Rescans=false" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env
         echo "DiscordHooks__Scans__HookURL=${{ inputs.hooks_rescansurl }}" >> .env
-        echo "DiscordHooks__Scans__Enabled=true" >> .env
+        echo "DiscordHooks__Scans__Enabled=false" >> .env
         echo "DiscordHooks__Scans__UpdateIntervalMinutes=30" >> .env
         echo "DeleteScoresAfter=4" >> .env
         scp ./.env ${{ inputs.ssh_user }}@${{ inputs.ssh_host }}:${{ inputs.work_dir }}/.env

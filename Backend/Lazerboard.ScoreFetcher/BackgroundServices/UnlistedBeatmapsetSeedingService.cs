@@ -33,19 +33,17 @@ public class UnlistedBeatmapsetSeedingService(
                 var beatmapsets = _offset == 0
                     ? await GetRelevantBeatmapsetBatchAsync(startingBeatmapset, stoppingToken)
                     : await GetNextBeatmapsetBatchAsync(stoppingToken);
-                var startingCount = beatmapsets.Count;
+                if (beatmapsets.Count == 0)
+                {
+                    await FinishSeedingAsync(stoppingToken);
+                    break;
+                }
+                
                 var ids = beatmapsets.Select(bs => bs.Id).ToList();
-
                 if (startingBeatmapset is not null && ids.Contains(startingBeatmapset.Id))
                 {
                     beatmapsets = beatmapsets.Skip(ids.IndexOf(startingBeatmapset.Id) + 1).ToList();
                     startingBeatmapset = null;
-                }
-
-                if (startingCount == 0)
-                {
-                    await FinishSeedingAsync(stoppingToken);
-                    break;
                 }
                 logger.Log(LogLevel.Information,
                     "Processing a batch of unlisted {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}",

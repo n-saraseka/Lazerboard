@@ -148,7 +148,7 @@ public class OsuApiService
             false, 
             ct);
 
-        if (scoresResponse.StatusCode == HttpStatusCode.NotFound) return "{\"scores\":[],\"score_count\":0";
+        if (scoresResponse.StatusCode == HttpStatusCode.NotFound) return "{\"scores\":[],\"score_count\":0}";
         
         return await scoresResponse.Content.ReadAsStringAsync(ct);
     }

@@ -45,6 +45,9 @@ public class UnlistedBeatmapsetSeedingService(
                     beatmapsets = beatmapsets.Skip(ids.IndexOf(startingBeatmapset.Id) + 1).ToList();
                     startingBeatmapset = null;
                 }
+
+                if (beatmapsets.Count == 0) continue; // Could happen if the starting beatmapset is last in relevant batch
+                
                 logger.Log(LogLevel.Information,
                     "Processing a batch of unlisted {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}",
                     beatmapsets.Count,

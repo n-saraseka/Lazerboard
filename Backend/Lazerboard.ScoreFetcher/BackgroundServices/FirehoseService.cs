@@ -66,6 +66,10 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
                 }
                 await Task.Delay(TimeSpan.FromSeconds(_baseRepeatSeconds * Math.Pow(2, _repeatExponent)), stoppingToken);
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Critical, ex, "Firehose service failed!");

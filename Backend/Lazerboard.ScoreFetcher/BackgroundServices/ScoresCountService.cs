@@ -41,6 +41,10 @@ public class ScoresCountService : BackgroundService
 
                 await Task.Delay(TimeSpan.FromMinutes(_updateInterval), stoppingToken);
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Warning, ex, "Scores count service failed!");

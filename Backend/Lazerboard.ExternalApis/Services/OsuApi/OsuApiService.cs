@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
@@ -146,6 +147,8 @@ public class OsuApiService
             null, 
             false, 
             ct);
+
+        if (scoresResponse.StatusCode == HttpStatusCode.NotFound) return "{\"scores\":[],\"score_count\":0";
         
         return await scoresResponse.Content.ReadAsStringAsync(ct);
     }

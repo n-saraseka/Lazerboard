@@ -43,7 +43,6 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
         
         foreach (var beatmap in beatmapset.Beatmaps)
         {
-            var flatWorkingBeatmap = await utils.GetFlatWorkingBeatmapAsync(beatmap.Id, stoppingToken);
             foreach (var val in Enum.GetValues<Mode>())
             {
                 if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
@@ -53,10 +52,14 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
                 
                 var scoresWithoutPp = scores.Where(s => s.PP == null).ToList();
                 var scoresWithPp = scores.Where(s => s.PP != null).ToList();
-                        
-                foreach (var score in scoresWithoutPp)
+
+                if (scoresWithoutPp.Count > 0)
                 {
-                    await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+                    var flatWorkingBeatmap = await utils.GetFlatWorkingBeatmapAsync(beatmap.Id, stoppingToken);
+                    foreach (var score in scoresWithoutPp)
+                    {
+                        await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+                    }
                 }
                 
                 var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();

@@ -119,10 +119,6 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("finished_scanning_at");
 
-                    b.Property<bool>("IsRemoved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_removed");
-
                     b.Property<DateTimeOffset?>("MainFinishedProcessingAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("main_finished_processing_at");

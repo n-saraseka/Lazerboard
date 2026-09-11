@@ -37,4 +37,8 @@ public class Beatmapset : IEntity<int>
     /// Set when all leaderboards in the beatmapset have been rescanned
     /// </summary>
     public DateTimeOffset? FinishedScanningAt { get; set; }
+    /// <summary>
+    /// Set to true only during unlisted mapsets search if the mapset has no scores at all.
+    /// </summary>
+    public bool IsRemoved { get; set; } = false;
 }

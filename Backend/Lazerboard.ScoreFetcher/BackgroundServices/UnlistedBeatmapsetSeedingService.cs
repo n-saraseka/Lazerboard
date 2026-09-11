@@ -86,11 +86,16 @@ public class UnlistedBeatmapsetSeedingService : BackgroundService
     private async Task<IList<APIBeatmapset>> GetRelevantBeatmapsetBatchAsync(Beatmapset? beatmapset,
         CancellationToken stoppingToken)
     {
-        if (beatmapset is null) return await GetBeatmapsetsAsync(0, stoppingToken);
         var beatmapsets = await GetBeatmapsetsAsync(_offset, stoppingToken);
+        if (beatmapset is null) return beatmapsets;
         var ids = beatmapsets.Select(b => b.Id).ToList();
-        if (ids.Contains(beatmapset.Id)) return beatmapsets;
-        return await GetBeatmapsetsAsync(_offset, stoppingToken);
+        while (!ids.Contains(beatmapset.Id))
+        {
+            beatmapsets = await GetBeatmapsetsAsync(_offset, stoppingToken);
+            if (beatmapsets.Count == 0) return beatmapsets;
+            ids = beatmapsets.Select(b => b.Id).ToList();
+        }
+        return beatmapsets;
     }
 
     private async Task<IList<APIBeatmapset>> GetBeatmapsetsAsync(int offset, CancellationToken stoppingToken)

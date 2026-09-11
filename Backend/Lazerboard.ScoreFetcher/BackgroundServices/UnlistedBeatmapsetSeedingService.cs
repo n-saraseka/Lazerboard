@@ -33,6 +33,7 @@ public class UnlistedBeatmapsetSeedingService(
                 var beatmapsets = _offset == 0
                     ? await GetRelevantBeatmapsetBatchAsync(startingBeatmapset, stoppingToken)
                     : await GetNextBeatmapsetBatchAsync(stoppingToken);
+                var startingCount = beatmapsets.Count;
                 var ids = beatmapsets.Select(bs => bs.Id).ToList();
 
                 if (startingBeatmapset is not null && ids.Contains(startingBeatmapset.Id))
@@ -41,7 +42,7 @@ public class UnlistedBeatmapsetSeedingService(
                     startingBeatmapset = null;
                 }
 
-                if (beatmapsets.Count == 0)
+                if (startingCount == 0)
                 {
                     await FinishSeedingAsync(stoppingToken);
                     break;
@@ -132,8 +133,21 @@ public class UnlistedBeatmapsetSeedingService(
                 Creator = bs.Creator,
                 RankedDate = bs.RankedDate,
                 ArchivedDate = currentDateTime
-            });
-            removedBeatmapsetRepository.UpdateBulk(removedBeatmapsets);
+            }).ToList();
+            var removedIds = removedBeatmapsets.Select(bs => bs.Id).ToList();
+            var existingRemovedBeatmapsets = await removedBeatmapsetRepository.GetBulkAsync(removedIds, stoppingToken);
+            var newRemovedBeatmapsets = removedBeatmapsets
+                .Where(bs => !existingRemovedBeatmapsets.Select(b => b.Id).Contains(bs.Id))
+                .ToList();
+            if (existingRemovedBeatmapsets.Count > 0)
+            {
+                removedBeatmapsetRepository.UpdateBulk(existingRemovedBeatmapsets);
+            }
+
+            if (newRemovedBeatmapsets.Count > 0)
+            {
+                removedBeatmapsetRepository.CreateBulk(newRemovedBeatmapsets);
+            }
             beatmapsetRepository.DeleteBulk(existingBeatmapsets);
             await beatmapsetRepository.SaveChangesAsync(stoppingToken);
         }

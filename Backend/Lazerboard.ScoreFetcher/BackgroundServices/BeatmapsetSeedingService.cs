@@ -54,8 +54,12 @@ public class BeatmapsetSeedingService : BackgroundService
                     await FinishSeedingAsync(stoppingToken);
                     break;
                 }
-                
-                if (_onlyAddMissingMaps) beatmapsets = await GetUnprocessedMapsetsAsync(beatmapsets, stoppingToken);
+
+                if (_onlyAddMissingMaps)
+                {
+                    beatmapsets = await GetUnprocessedMapsetsAsync(beatmapsets, stoppingToken);
+                    _logger.Log(LogLevel.Information, "Found {beatmapsetCount} new beatmapsets", beatmapsets.Count);
+                }
                 
                 _logger.Log(LogLevel.Information, 
                     "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
@@ -189,10 +193,12 @@ public class BeatmapsetSeedingService : BackgroundService
         var beatmapsetIds = beatmapsets.Select(bs => bs.Id).ToList();
         var existingBeatmapsets = await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken);
         
-        var processedMapsets = existingBeatmapsets.Where(bs => 
-            bs.MainFinishedProcessingAt != null || 
-            bs.SecondaryFinishedProcessingAt != null || 
-            bs.FinishedScanningAt != null)
+        // At the moment we only have to care for missing explicit mapsets. That shouldn't change any time in the future, hopefully.
+        var processedMapsets = existingBeatmapsets.Where(bs => bs.IsExplicit
+            && (bs.MainFinishedProcessingAt != null 
+                || bs.SecondaryFinishedProcessingAt != null
+                || bs.FinishedScanningAt != null)
+            )
             .ToList();
         var processedMapsetIds = processedMapsets.Select(bs => bs.Id).ToList();
         return beatmapsets.Where(bs => !processedMapsetIds.Contains(bs.Id)).ToList();

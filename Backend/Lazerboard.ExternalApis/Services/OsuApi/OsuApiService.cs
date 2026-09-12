@@ -103,7 +103,7 @@ public class OsuApiService
     public async Task<string> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
         using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}", 
+            $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}&nsfw=true", 
             null, 
             false, 
             ct);

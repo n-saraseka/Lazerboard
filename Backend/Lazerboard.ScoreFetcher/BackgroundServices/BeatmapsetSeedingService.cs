@@ -98,7 +98,7 @@ public class BeatmapsetSeedingService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Critical, ex, "Leaderboard seeding service failed!");
+                _logger.Log(LogLevel.Critical, ex, "Beatmapset seeding service failed!");
                 throw;
             }
         }
@@ -134,6 +134,7 @@ public class BeatmapsetSeedingService : BackgroundService
         {
             // Start seeding from the first beatmapset (DISCO PRINCE)
             await scanLogsRepository.SaveEventAsync(ScanEventType.RescanStarted, stoppingToken);
+            _logger.Log(LogLevel.Information, "Started scanning beatmapsets at {datetime}", DateTime.UtcNow);
             return;
         }
         

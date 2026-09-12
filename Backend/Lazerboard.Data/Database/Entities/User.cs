@@ -6,4 +6,6 @@ public class User : IEntity<int>
     public string Username { get; set; }
     public string? CountryCode { get; set; }
     public Country? Country { get; set; }
+    public DateTime? CheckedAt { get; set; }
+    public bool IsRestricted { get; set; } = false;
 }

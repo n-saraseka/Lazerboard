@@ -25,11 +25,10 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
         
         return Set
             .AsNoTracking()
-            .Where(u => u.Username.ToLower().StartsWith(trimmedQuery) && u.CountryCode != null)
+            .Where(u => u.Username.ToLower().StartsWith(trimmedQuery) && u.CountryCode != null && !u.IsRestricted)
             .Take(25)
             .Include(u => u.Country)
-            .OrderBy(u => u.Username.Length)
-            .ThenByDescending(u => u.Username)
+            .OrderBy(u => u.Username)
             .ToListAsync(cancellationToken);
     } 
 }

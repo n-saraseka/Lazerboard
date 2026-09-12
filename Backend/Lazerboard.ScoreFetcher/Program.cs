@@ -55,7 +55,7 @@ builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IScorePendingDeletionRepository, ScorePendingDeletionRepository>();
+builder.Services.AddScoped<IUnlistedScoreRepository, UnlistedScoreRepository>();
 builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();

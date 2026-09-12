@@ -20,4 +20,6 @@ public class APIBeatmapset
     public int UserId { get; set; }
     [JsonProperty("ranked_date")]
     public DateTimeOffset RankedDate { get; set; }
+    [JsonProperty("nsfw")]
+    public bool IsExplicit { get; set; }
 }

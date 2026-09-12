@@ -82,6 +82,8 @@ runs:
         echo "FetcherServices__SecondarySeeding=false" >> .env
         echo "FetcherServices__Firehose=true" >> .env
         echo "FetcherServices__Rescans=false" >> .env
+        echo "ScanBehavior__OnlyAddMissingMaps=true" >> .env
+        echo "ScanBehavior__OnlyUpdateMapsetData=true" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env

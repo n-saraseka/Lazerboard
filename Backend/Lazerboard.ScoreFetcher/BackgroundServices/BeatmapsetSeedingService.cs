@@ -20,6 +20,7 @@ public class BeatmapsetSeedingService : BackgroundService
 
     private readonly bool _onlyAddMissingMaps;
     private readonly bool _onlyUpdateMapsetData;
+    private bool _shouldFinishAfterThisBatch;
     private string? _cursor;
     
     public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger, ISeedingState seedingState)
@@ -53,6 +54,12 @@ public class BeatmapsetSeedingService : BackgroundService
                 {
                     await FinishSeedingAsync(stoppingToken);
                     break;
+                }
+
+                if (finishingBeatmapset is not null &&
+                    beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
+                {
+                    _shouldFinishAfterThisBatch = true;
                 }
 
                 if (_onlyAddMissingMaps)
@@ -91,7 +98,7 @@ public class BeatmapsetSeedingService : BackgroundService
                     }
                 }
 
-                if (finishingBeatmapset is not null && beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
+                if (_shouldFinishAfterThisBatch)
                 {
                     await FinishSeedingAsync(stoppingToken);
                     break;

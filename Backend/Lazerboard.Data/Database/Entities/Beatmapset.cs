@@ -9,6 +9,7 @@ public class Beatmapset : IEntity<int>
     public int? UserId { get; set; }
     public User? User { get; set; }
     public DateTimeOffset? RankedDate { get; set; }
+    public bool IsExplicit { get; set; } = false;
     /// <summary>
     /// Set when beatmapset is added to the DB
     /// through the main queue (ranked beatmapsets available through the osu! API search endpoint)

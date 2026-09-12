@@ -4,9 +4,6 @@ description: Remove .env file and ssh
 runs:
   using: composite
   steps:
-    - name: Cleanup .env locally
-      shell: bash
-      run: rm -f ./.env
     - name: Cleanup ssh
       shell: bash
       run: rm -rf ~/.ssh

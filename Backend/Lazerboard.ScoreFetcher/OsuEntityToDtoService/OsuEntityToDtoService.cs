@@ -85,7 +85,8 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
         Title = beatmapset.Title,
         Creator = beatmapset.Creator,
         UserId = beatmapset.UserId,
-        RankedDate = beatmapset.RankedDate
+        RankedDate = beatmapset.RankedDate,
+        IsExplicit = beatmapset.IsExplicit
     };
     
     public Country CountryEntityToDto(APICountry country) => new Country

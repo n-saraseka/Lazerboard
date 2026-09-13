@@ -28,10 +28,11 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
         .AsNoTracking()
         .Where(s => s.BeatmapId == beatmapId && s.Mode == mode).CountAsync(cancellationToken);
 
-    public Task<List<Score>> GetByBeatmapIdsAsync(IEnumerable<int> beatmapIds, CancellationToken cancellationToken) =>
+    public Task<List<Score>> GetByBeatmapIdsAsync(IList<int> beatmapIds, CancellationToken cancellationToken) =>
         Set
+            .FromSql($"SELECT s.* FROM scores s JOIN unnest({beatmapIds}::int[]) AS b(id) ON s.beatmap_id = b.id")
             .AsNoTracking()
-            .Where(s => beatmapIds.Contains(s.BeatmapId)).ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
 
     // We have to do this because the generated LINQ by EF Core is literally 15 times more inefficient. (0.1s execution time vs 1.5s on a test DB)
     public Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken) =>

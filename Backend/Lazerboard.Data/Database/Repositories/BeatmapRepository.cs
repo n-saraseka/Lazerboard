@@ -28,4 +28,18 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
             .Include(b => b.Beatmapset)
             .ThenInclude(bs => bs.User)
                     .FirstOrDefaultAsync(ct);
+
+    /// <summary>
+    /// Get <see cref="Beatmap"/>s that have <see cref="Score"/>s
+    /// </summary>
+    /// <param name="ids">A list of <see cref="Beatmap.Id"/>s</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The</returns>
+    public Task<List<Beatmap>> GetBeatmapsWithScoresAsync(IList<int> ids, CancellationToken ct = default) =>
+        Set
+            .Where(b => ids.Contains(b.Id))
+            .Include(b => b.Scores)
+            .AsSplitQuery()
+            .Where(b => b.Scores.Count > 0)
+            .ToListAsync(ct);
 }

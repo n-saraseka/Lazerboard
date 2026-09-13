@@ -1,6 +1,6 @@
 name: Cleanup post deploy
 author: SomeMelGuy
-description: Remove .env file and ssh
+description: Remove ssh
 runs:
   using: composite
   steps:

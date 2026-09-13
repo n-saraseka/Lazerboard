@@ -15,7 +15,7 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices;
 public class BeatmapsetSeedingService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<BeatmapsetUpdatesService> _logger;
+    private readonly ILogger<BeatmapsetSeedingService> _logger;
     private ISeedingState _seedingState;
 
     private readonly bool _onlyAddMissingMaps;
@@ -23,7 +23,7 @@ public class BeatmapsetSeedingService : BackgroundService
     private bool _shouldFinishAfterThisBatch;
     private string? _cursor;
     
-    public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger, ISeedingState seedingState)
+    public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetSeedingService> logger, ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;

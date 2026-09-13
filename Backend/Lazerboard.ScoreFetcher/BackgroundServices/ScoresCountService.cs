@@ -11,10 +11,10 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices;
 public class ScoresCountService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<FirehoseService> _logger;
+    private readonly ILogger<ScoresCountService> _logger;
     private readonly int _updateInterval;
 
-    public ScoresCountService(IServiceProvider serviceProvider, ILogger<FirehoseService> logger)
+    public ScoresCountService(IServiceProvider serviceProvider, ILogger<ScoresCountService> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;

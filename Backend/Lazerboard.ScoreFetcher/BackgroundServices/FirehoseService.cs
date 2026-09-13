@@ -10,7 +10,7 @@ using Lazerboard.ScoreFetcher.Processing;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
-public class FirehoseService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger)
+public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseService> logger)
     : BackgroundService
 {
     private bool _catchUpOnExistingBeatmapScores;

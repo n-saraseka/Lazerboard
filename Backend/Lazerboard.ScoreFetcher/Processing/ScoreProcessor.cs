@@ -40,7 +40,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     {
         var dictionary = new Dictionary<ulong, bool>();
         var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
-        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList(); 

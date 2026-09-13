@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Lazerboard.Data.Database.Entities;
@@ -200,8 +199,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task<int> ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct)
     {
         if (scores.Count == 0) return 0;
-        logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count());
-        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct();
+        logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count);
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();

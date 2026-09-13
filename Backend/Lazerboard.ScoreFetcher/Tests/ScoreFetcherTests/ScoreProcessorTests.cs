@@ -193,7 +193,7 @@ public class ScoreProcessorTests
             });
         }
 
-        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(scores);
         
         // Act
@@ -264,7 +264,7 @@ public class ScoreProcessorTests
         }
         scores.AddRange(scoreDtos);
 
-        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(scores);
         
         // Act
@@ -314,7 +314,7 @@ public class ScoreProcessorTests
         
         var scores = new List<Score>();
 
-        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(scores);
         
         // Act

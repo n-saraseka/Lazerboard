@@ -28,4 +28,33 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
             .Include(b => b.Beatmapset)
             .ThenInclude(bs => bs.User)
                     .FirstOrDefaultAsync(ct);
+
+    /// <summary>
+    /// Get <see cref="Beatmap.Id"/>s that have <see cref="Score"/>s
+    /// </summary>
+    /// <param name="ids">A list of <see cref="Beatmap.Id"/>s</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>A list of matching <see cref="Beatmap"/>s</returns>
+    public Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default) =>
+        Set
+            .Where(b => ids.Contains(b.Id))
+            .Include(b => b.Scores)
+            .AsSplitQuery()
+            .Where(b => b.Scores.Count > 0)
+            .Select(b => b.Id)
+            .ToListAsync(ct);
+    
+    /// <summary>
+    /// Get <see cref="Beatmap.Id"/>s that are from processed <see cref="Beatmapset"/>s
+    /// </summary>
+    /// <param name="ids">A list of <see cref="Beatmap.Id"/>s</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>A list of matching <see cref="Beatmap"/>s</returns>
+    public Task<List<int>> GetBeatmapsIdsFromProcessedMapsetsAync(IList<int> ids, CancellationToken ct = default) =>
+        Set
+            .Where(b => ids.Contains(b.Id))
+            .Include(b => b.Beatmapset)
+            .Where(b => b.Beatmapset.MainFinishedProcessingAt != null)
+            .Select(b => b.Id)
+            .ToListAsync(ct);
 }

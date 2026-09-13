@@ -98,11 +98,11 @@ public class UnlistedBeatmapsetSeedingService(
         CancellationToken stoppingToken)
     {
         using var scope = serviceProvider.CreateScope();
-        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
         var beatmaps = beatmapsets.SelectMany(bs => bs.Beatmaps).ToList();
         var beatmapIds = beatmaps.Select(b => b.Id).ToList();
         
-        var existingBeatmapIds = (await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken)).ToHashSet();
+        var existingBeatmapIds = (await beatmapRepository.GetBeatmapsIdsWithScoresAsync(beatmapIds, stoppingToken)).ToHashSet();
 
         return beatmapsets.ToDictionary(
             bs => bs.Id, 

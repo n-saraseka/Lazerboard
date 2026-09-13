@@ -1,6 +1,7 @@
 using System.Text;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities.Enums;
+using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -112,9 +113,9 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
         }
         
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
-        var existingBeatmapIds = await dataProcessor.GetBeatmapIdsWithScoresAsync(beatmapIds, stoppingToken);
+        var validIds = await GetValidBeatmapIdsAsync(beatmapIds, stoppingToken);
 
-        var scoresToProcess = scores.Where(s => existingBeatmapIds.Contains(s.BeatmapId)).ToList();
+        var scoresToProcess = scores.Where(s => validIds.Contains(s.BeatmapId)).ToList();
         
         if (scoresToProcess.Count > 0)
         {
@@ -125,6 +126,25 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<Beatmapse
         }
 
         return scoresToProcess;
+    }
+
+    /// <summary>
+    /// Get valid beatmap IDs from a list
+    /// </summary>
+    /// <param name="ids">List of IDs</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A list of valid beatmap IDs</returns>
+    private async Task<List<int>> GetValidBeatmapIdsAsync(IList<int> ids, CancellationToken stoppingToken)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
+        
+        var beatmapsWithScores = await beatmapRepository.GetBeatmapsIdsWithScoresAsync(ids, stoppingToken);
+        var beatmapsFromProcessedMapsets =
+            await beatmapRepository.GetBeatmapsIdsFromProcessedMapsetsAync(ids, stoppingToken);
+
+        var validMapIds = beatmapsWithScores.Concat(beatmapsFromProcessedMapsets).Distinct().ToList();
+        return ids.Where(id => validMapIds.Contains(id)).ToList();
     }
 
     /// <summary>

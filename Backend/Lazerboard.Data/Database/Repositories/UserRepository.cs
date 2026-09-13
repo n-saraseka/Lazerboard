@@ -21,15 +21,14 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
     public Task<List<User>> SearchAsync(string query, CancellationToken cancellationToken)
     {
         var trimmedQuery = query.Length > 100 ? query.Substring(0, 100) : query;
-        trimmedQuery = trimmedQuery.ToLower();
+        trimmedQuery = trimmedQuery.ToLowerInvariant();
         
         return Set
             .AsNoTracking()
             .Where(u => u.Username.ToLower().StartsWith(trimmedQuery) && u.CountryCode != null)
+            .OrderBy(u => u.Username)
             .Take(25)
             .Include(u => u.Country)
-            .OrderBy(u => u.Username.Length)
-            .ThenByDescending(u => u.Username)
             .ToListAsync(cancellationToken);
     } 
 }

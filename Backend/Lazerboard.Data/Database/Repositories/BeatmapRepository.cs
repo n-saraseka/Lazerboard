@@ -38,9 +38,7 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
     public Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default) =>
         Set
             .Where(b => ids.Contains(b.Id))
-            .Include(b => b.Scores)
-            .AsSplitQuery()
-            .Where(b => b.Scores.Count > 0)
+            .Where(b => b.Scores.Any())
             .Select(b => b.Id)
             .ToListAsync(ct);
     

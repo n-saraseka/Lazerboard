@@ -51,7 +51,6 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
     public Task<List<int>> GetBeatmapsIdsFromProcessedMapsetsAync(IList<int> ids, CancellationToken ct = default) =>
         Set
             .Where(b => ids.Contains(b.Id))
-            .Include(b => b.Beatmapset)
             .Where(b => b.Beatmapset.MainFinishedProcessingAt != null)
             .Select(b => b.Id)
             .ToListAsync(ct);

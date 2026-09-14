@@ -127,6 +127,74 @@ public class ScoreProcessorTests
     }
     
     [Test]
+    public async Task CheckIfSignificantAsync_IsPbAndLast_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 1,
+            BeatmapId = 1,
+            TotalScore = 0,
+            Mode = Mode.Osu,
+            UserId = 1
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 100; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(await _scoreProcessor.CheckIfSignificantAsync(score, CancellationToken.None));
+    }
+    
+    [Test]
+    public async Task CheckIfSignificantAsync_IsPbAndOutsideOfTop100_ReturnsFalse()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 101,
+            BeatmapId = 1,
+            TotalScore = 0,
+            Mode = Mode.Osu,
+            UserId = 1,
+            Date = new DateTime().AddMilliseconds(1000)
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 100; i++)
+        {
+            scores.Add(new Score
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1,
+                Date = new DateTime().AddMilliseconds(i)
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsFalse(await _scoreProcessor.CheckIfSignificantAsync(score, CancellationToken.None));
+    }
+    
+    [Test]
     public async Task CheckIfSignificantAsync_NoScores_ReturnsTrue()
     {
         // Arrange

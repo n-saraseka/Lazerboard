@@ -27,7 +27,10 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         if (scoresForMode.Count == 0) return true;
         if (CheckIfIsPersonalBest(score, scoresForMode))
         {
-            return !(scoresForMode.All(s => s.TotalScore >= score.TotalScore) && beatmapScores.Count >= 100);
+            var lastScore = scoresForMode.Last();
+            return !((lastScore.TotalScore > score.TotalScore 
+                      || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
+                     && scoresForMode.Count >= 100);
         }
         return false;
     }
@@ -64,7 +67,10 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                     if (CheckIfIsPersonalBest(score, beatmapScores))
                     {
                         // Only consider a score significant if it's in the top 100 and is a personal best
-                        dictionary[score.Id] = !(beatmapScores.All(s => s.TotalScore >= score.TotalScore) && beatmapScores.Count >= 100);
+                        var lastScore = beatmapScores.Last();
+                        dictionary[score.Id] = !((lastScore.TotalScore > score.TotalScore 
+                                                  || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
+                                                 && beatmapScores.Count >= 100);
                     }
                     else
                     {
@@ -98,7 +104,6 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         return (score.TotalScore > bestUserScore.TotalScore) ||
                 (score.TotalScore == bestUserScore.TotalScore && bestUserScore.Date <= score.Date);
     }
-        
 
     /// <summary>
     /// Calculate PP for a score

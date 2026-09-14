@@ -17,10 +17,8 @@ public class BeatmapsetUpdatesService : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<BeatmapsetUpdatesService> _logger;
     private readonly double _apiInterval;
-    private bool _catchUpAfterRestart = true;
     
     private string? _cursor;
-    private string? _oldCursor;
     private int _repeatExponent;
 
     public BeatmapsetUpdatesService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger)
@@ -107,11 +105,10 @@ public class BeatmapsetUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
-        _oldCursor = _cursor;
         _cursor = beatmapsetsResponse.Cursor;
         
         // Only happens when it's the last page of beatmapsets for some reason. We manually extract the correct cursor in that case.
-        if (_cursor is null && _oldCursor is not null)
+        if (_cursor is null)
         {
             var latestMapset = beatmapsetsResponse.Beatmapsets.MaxBy(bs => bs.RankedDate);
             if (latestMapset is null) // Fall back to latest main processed mapset.

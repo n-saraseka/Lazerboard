@@ -21,7 +21,6 @@ public class BeatmapsetSeedingService : BackgroundService
     private readonly bool _onlyAddMissingMaps;
     private readonly bool _onlyUpdateMapsetData;
     private bool _shouldFinishAfterThisBatch;
-    private string? _oldCursor;
     private string? _cursor;
     
     public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetSeedingService> logger, ISeedingState seedingState)
@@ -128,11 +127,10 @@ public class BeatmapsetSeedingService : BackgroundService
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
-        _oldCursor = _cursor;
         _cursor = beatmapsetsResponse.Cursor;
         
         // Only happens when it's the last page of beatmapsets for some reason. We manually extract the correct cursor in that case.
-        if (_cursor is null && _oldCursor is not null)
+        if (_cursor is null)
         {
             var latestMapset = beatmapsetsResponse.Beatmapsets.MaxBy(bs => bs.RankedDate);
             if (latestMapset is null) // Fall back to latest rescanned mapset.

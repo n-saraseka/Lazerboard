@@ -127,6 +127,74 @@ public class ScoreProcessorTests
     }
     
     [Test]
+    public async Task CheckIfSignificantAsync_IsPbAndLast_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 1,
+            BeatmapId = 1,
+            TotalScore = 0,
+            Mode = Mode.Osu,
+            UserId = 1
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 100; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(await _scoreProcessor.CheckIfSignificantAsync(score, CancellationToken.None));
+    }
+    
+    [Test]
+    public async Task CheckIfSignificantAsync_IsPbAndOutsideOfTop100_ReturnsFalse()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 101,
+            BeatmapId = 1,
+            TotalScore = 0,
+            Mode = Mode.Osu,
+            UserId = 1,
+            Date = new DateTime().AddMilliseconds(1000)
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 100; i++)
+        {
+            scores.Add(new Score
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1,
+                Date = new DateTime().AddMilliseconds(i)
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsFalse(await _scoreProcessor.CheckIfSignificantAsync(score, CancellationToken.None));
+    }
+    
+    [Test]
     public async Task CheckIfSignificantAsync_NoScores_ReturnsTrue()
     {
         // Arrange
@@ -329,5 +397,191 @@ public class ScoreProcessorTests
                 Assert.IsTrue(dict[key]);
             }
         });
+    }
+    
+    [Test]
+    public void CheckIfIsPersonalBest_NoScore_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 51,
+            BeatmapId = 1,
+            TotalScore = 10000,
+            Mode = Mode.Osu,
+            UserId = 50
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 49; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                UserId = i + 1
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(_scoreProcessor.CheckIfIsPersonalBest(score, scores));
+    }
+    
+    [Test]
+    public void CheckIfIsPersonalBest_WorseScoreExists_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 51,
+            BeatmapId = 1,
+            TotalScore = 10000,
+            Mode = Mode.Osu,
+            UserId = 1
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 50; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(_scoreProcessor.CheckIfIsPersonalBest(score, scores));
+    }
+    
+    [Test]
+    public void CheckIfIsPersonalBest_BetterScoreExists_ReturnsFalse()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 51,
+            BeatmapId = 1,
+            TotalScore = 10000,
+            Mode = Mode.Osu,
+            UserId = 1
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 50; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsFalse(_scoreProcessor.CheckIfIsPersonalBest(score, scores));
+    }
+
+    [Test]
+    public void CheckIfIsPersonalBest_SameScoreExists_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 50,
+            BeatmapId = 1,
+            TotalScore = 10000,
+            Mode = Mode.Osu,
+            UserId = 50
+        };
+
+        var scoreDto = new Score
+        {
+            Id = score.Id,
+            BeatmapId = score.BeatmapId,
+            TotalScore = score.TotalScore,
+            Mode = score.Mode,
+            UserId = score.UserId
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 49; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+        
+        scores.Add(scoreDto);
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(_scoreProcessor.CheckIfIsPersonalBest(score, scores));
+    }
+    
+    [Test]
+    public void CheckIfIsPersonalBest_SameScoreExistsButWorseComesFirst_ReturnsTrue()
+    {
+        // Arrange
+        var score = new APIScore
+        {
+            Id = 50,
+            BeatmapId = 1,
+            TotalScore = 1000000,
+            Mode = Mode.Osu,
+            UserId = 2
+        };
+
+        var scoreDto = new Score
+        {
+            Id = score.Id,
+            BeatmapId = score.BeatmapId,
+            TotalScore = score.TotalScore,
+            Mode = score.Mode,
+            UserId = score.UserId
+        };
+        
+        var scores = new List<Score>();
+        for (int i = 0; i < 49; i++)
+        {
+            scores.Add(new Score()
+            {
+                Id = (ulong)i + 1,
+                BeatmapId = 1,
+                TotalScore = 1000000 - 1000 * i,
+                Mode = Mode.Osu,
+                UserId = i + 1
+            });
+        }
+        
+        scores.Add(scoreDto);
+
+        _scoreRepository.Setup(r => r.GetByBeatmapIdAsync(It.IsAny<int>(), CancellationToken.None))
+            .ReturnsAsync(scores);
+        
+        // Assert
+        Assert.IsTrue(_scoreProcessor.CheckIfIsPersonalBest(score, scores));
     }
 }

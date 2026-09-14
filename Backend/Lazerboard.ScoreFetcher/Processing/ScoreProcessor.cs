@@ -1,3 +1,4 @@
+using Lazerboard.Data.Database.Entities;
 using Microsoft.Extensions.Logging;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
@@ -24,10 +25,14 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                 .ThenBy(s => s.Date)
                 .ToList();
         if (scoresForMode.Count == 0) return true;
-        var lastScore = scoresForMode.Last();
-        return !((lastScore.TotalScore > score.TotalScore 
-                  || lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)
-                 && scoresForMode.Count >= 100);
+        if (CheckIfIsPersonalBest(score, scoresForMode))
+        {
+            var lastScore = scoresForMode.Last();
+            return !((lastScore.TotalScore > score.TotalScore 
+                      || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
+                     && scoresForMode.Count >= 100);
+        }
+        return false;
     }
     
     /// <summary>
@@ -57,12 +62,20 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                     .OrderByDescending(s => s.TotalScore)
                     .ThenBy(s => s.Date)
                     .ToList();
-                var lastScore = beatmapScores.Last();
                 foreach (var score in scoresInGroup)
                 {
-                    dictionary[score.Id] = !((lastScore.TotalScore > score.TotalScore 
-                                              || lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)
-                                             && beatmapScores.Count >= 100);
+                    if (CheckIfIsPersonalBest(score, beatmapScores))
+                    {
+                        // Only consider a score significant if it's in the top 100 and is a personal best
+                        var lastScore = beatmapScores.Last();
+                        dictionary[score.Id] = !((lastScore.TotalScore > score.TotalScore 
+                                                  || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
+                                                 && beatmapScores.Count >= 100);
+                    }
+                    else
+                    {
+                        dictionary[score.Id] = false;
+                    }
                 }
             }
             else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
@@ -75,6 +88,21 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         }
         
         return dictionary;
+    }
+
+    /// <summary>
+    /// Check if a user's <see cref="APIScore"/> is a personal best for the range of <see cref="Score"/>'s
+    /// </summary>
+    /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="scores">The list of <see cref="Score"/>s from the database</param>
+    /// <returns>True if is a personal best, false otherwise</returns>
+    public bool CheckIfIsPersonalBest(APIScore score, IList<Score> scores)
+    {
+        var userScores = scores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
+        var bestUserScore = userScores.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).FirstOrDefault();
+        if (bestUserScore == null) return true;
+        return (score.TotalScore > bestUserScore.TotalScore) ||
+                (score.TotalScore == bestUserScore.TotalScore && bestUserScore.Date <= score.Date);
     }
 
     /// <summary>

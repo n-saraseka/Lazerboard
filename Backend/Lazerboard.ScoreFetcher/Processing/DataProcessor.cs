@@ -240,21 +240,29 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             {
                 var beatmapScores = matchingGroup.ToList();
 
-                var personalBests = new List<Score>();
+                var personalBestsForRemoval = new List<Score>();
 
                 foreach (var score in groupScores.ToList())
                 {
-                    var matchingScores = beatmapScores.Where(s => s.UserId == score.UserId 
+                    var previousScores = beatmapScores.Where(s => s.UserId == score.UserId 
                                                                   && s.Mode == score.Mode 
-                                                                  && s.Id != score.Id).ToList();
-                    if (matchingScores.Any())
+                                                                  && s.Id != score.Id)
+                        .OrderByDescending(b => b.TotalScore)
+                        .ThenBy(b => b.Date)
+                        .ToList();
+
+                    if (previousScores.Any())
                     {
-                        var worsePbs = matchingScores.Where(s => 
-                            s.TotalScore < score.TotalScore 
-                            || s.TotalScore == score.TotalScore && s.Id > score.Id).ToList();
-                        if (worsePbs.Any())
+                        var previousBest = previousScores.First();
+                        if (previousScores.Count > 1) // There are multiple user scores in the DB somehow. Remove them as well
                         {
-                            personalBests.AddRange(worsePbs);
+                            var worseUserScores = previousScores.Where((s, i) => i > 0).ToList();
+                            personalBestsForRemoval.AddRange(worseUserScores);
+                        } 
+                        if (previousBest.TotalScore < score.TotalScore
+                            || (previousBest.TotalScore == score.TotalScore && previousBest.Date > score.Date))
+                        {
+                            personalBestsForRemoval.Add(previousBest);
                         }
                         else
                         {
@@ -262,9 +270,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         }
                     }
                 }
-                scoreRepository.DeleteBulk(personalBests);
-                beatmapScores = beatmapScores.Where(s => !personalBests.Select(pb => pb.Id).Contains(s.Id)).ToList();
-                deletedCount += personalBests.Count;
+                scoreRepository.DeleteBulk(personalBestsForRemoval);
+                beatmapScores = beatmapScores.Where(s => !personalBestsForRemoval.Select(pb => pb.Id).Contains(s.Id)).ToList();
+                deletedCount += personalBestsForRemoval.Count;
                 
                 var newScores = groupScores
                     .Where(b => !beatmapScores
@@ -301,6 +309,28 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     s.Rank = i + 1;
                     return s;
                 }).ToList();
+                
+                var scoresOutsideOfTop100 = merged.Where(s => s.Rank > 100).ToList();
+                if (scoresOutsideOfTop100.Count > 0)
+                {
+                    // We remove any scores that land outside the top 100 on the map
+                    // to save up on storage. It's going to get really bad on new maps in the long run
+                    
+                    var scoreIds = scoresOutsideOfTop100.Select(s => s.Id).Distinct().ToList();
+                    var oldScoresOutsideTop100 = oldScores.Where(s => scoreIds.Contains(s.Id)).ToList();
+                    var extraScoresOutsideTop100 = extraScores.Where(s => scoreIds.Contains(s.Id)).ToList();
+                    
+                    var mergedForDeletion = oldScoresOutsideTop100
+                        .Concat(extraScoresOutsideTop100).ToList();
+                    scoreRepository.DeleteBulk(mergedForDeletion);
+                    
+                    // This is pretty ugly and excessive, but you never know.
+                    oldScores = oldScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
+                    newScores = newScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
+                    extraScores = extraScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
+                    
+                    deletedCount += mergedForDeletion.Count;
+                }
 
                 if (newScores.Count > 0)
                 {

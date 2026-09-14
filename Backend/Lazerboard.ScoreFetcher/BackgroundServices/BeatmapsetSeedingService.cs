@@ -136,7 +136,7 @@ public class BeatmapsetSeedingService : BackgroundService
         _cursor = beatmapsetsResponse.Cursor;
         
         // Only happens when it's the last page of beatmapsets for some reason. We manually extract the correct cursor in that case.
-        if (_cursor is null)
+        if (_cursor is null && _latestMapsetId > 1)
         {
             _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{_latestMapsetDateMs},\"id\":{_latestMapsetId}}}"));
         }
@@ -176,7 +176,7 @@ public class BeatmapsetSeedingService : BackgroundService
         var approvedDate = latestRescannedMapset.RankedDate.Value.ToUnixTimeMilliseconds();
         _latestMapsetDateMs = approvedDate;
         _latestMapsetId = latestRescannedMapset.Id;
-        _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestRescannedMapset.Id}}}"));
+        _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{_latestMapsetDateMs},\"id\":{_latestMapsetId}}}"));
     }
 
     /// <summary>

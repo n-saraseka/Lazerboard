@@ -54,7 +54,7 @@ public class BeatmapsetUpdatesService : BackgroundService
                 if (beatmapsets.Count == 0)
                 {
                     var interval = _apiInterval * Math.Pow(2, _repeatExponent);
-                    _logger.Log(LogLevel.Information, "No new beatmapsets found. Repeating after {seconds}", interval);
+                    _logger.Log(LogLevel.Information, "No new beatmapsets found. Repeating after {seconds} seconds", interval);
                         
                     await Task.Delay(TimeSpan.FromSeconds(interval), stoppingToken);
                     // Exponential backoff exponent is capped to 10 (~17 minute intervals)

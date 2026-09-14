@@ -20,6 +20,7 @@ public class BeatmapsetUpdatesService : BackgroundService
     private bool _catchUpAfterRestart = true;
     
     private string? _cursor;
+    private string? _oldCursor;
     private int _repeatExponent;
 
     public BeatmapsetUpdatesService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger)
@@ -106,7 +107,16 @@ public class BeatmapsetUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var beatmapsetsResponse = await apiFetcher.SearchBeatmapsetsAsync(_cursor, stoppingToken);
+        _oldCursor = _cursor;
         _cursor = beatmapsetsResponse.Cursor;
+        
+        // Only happens when it's the last page of beatmapsets for some reason. We manually extract the correct cursor in that case.
+        if (_cursor is null && _oldCursor is not null)
+        {
+            var latestMapset = beatmapsetsResponse.Beatmapsets.MaxBy(bs => bs.RankedDate);
+            var approvedDate = latestMapset!.RankedDate.ToUnixTimeMilliseconds();
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestMapset.Id}}}"));
+        }
         
         return beatmapsetsResponse.Beatmapsets;
     }
@@ -121,13 +131,17 @@ public class BeatmapsetUpdatesService : BackgroundService
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
         var startingBeatmapset = await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
 
-        // If there is no main processed beatmapset, fall back to second highest beatmapset that has been processed
-        // by the score fetcher.
+        // If there is no main processed beatmapset, fall back to latest scanned beatmapset that has been processed
+        // by the score fetcher. If that doesn't exist either, fall back to the second highest beatmapset.
         if (startingBeatmapset is null)
         {
-            var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-            var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
-            startingBeatmapset = await beatmapsetRepository.GetByIdAsync(beatmapsetId, stoppingToken);
+            startingBeatmapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(stoppingToken);
+            if (startingBeatmapset is null)
+            {
+                var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
+                var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
+                startingBeatmapset = await beatmapsetRepository.GetByIdAsync(beatmapsetId, stoppingToken);
+            }
         }
 
         if (startingBeatmapset is null) return;
@@ -140,7 +154,6 @@ public class BeatmapsetUpdatesService : BackgroundService
         }
         
         var approvedDate = startingBeatmapset.RankedDate.Value.ToUnixTimeMilliseconds();
-        
         _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{startingBeatmapset.Id}}}"));
     }
 

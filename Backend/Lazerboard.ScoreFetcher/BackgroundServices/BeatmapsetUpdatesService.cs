@@ -17,7 +17,9 @@ public class BeatmapsetUpdatesService : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<BeatmapsetUpdatesService> _logger;
     private readonly double _apiInterval;
-    
+
+    private long _latestMapsetDateMs;
+    private int _latestMapsetId;
     private string? _cursor;
     private int _repeatExponent;
 
@@ -81,6 +83,10 @@ public class BeatmapsetUpdatesService : BackgroundService
                         var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
                         await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.MainSeedingStarted, stoppingToken);
                     }
+
+                    var latestMapset = beatmapsets.MaxBy(bs => bs.RankedDate);
+                    _latestMapsetDateMs = latestMapset!.RankedDate.ToUnixTimeMilliseconds();
+                    _latestMapsetId = latestMapset.Id;
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -110,19 +116,7 @@ public class BeatmapsetUpdatesService : BackgroundService
         // Only happens when it's the last page of beatmapsets for some reason. We manually extract the correct cursor in that case.
         if (_cursor is null)
         {
-            var latestMapset = beatmapsetsResponse.Beatmapsets.MaxBy(bs => bs.RankedDate);
-            if (latestMapset is null) // Fall back to latest main processed mapset.
-            {
-                var beatmapsetsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-                var latestProcessedMapset = await beatmapsetsRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
-                var approvedDate = latestProcessedMapset!.RankedDate!.Value.ToUnixTimeMilliseconds();
-                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestProcessedMapset.Id}}}"));
-            }
-            else
-            {
-                var approvedDate = latestMapset.RankedDate.ToUnixTimeMilliseconds();
-                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestMapset.Id}}}"));
-            }
+            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{_latestMapsetDateMs},\"id\":{_latestMapsetId}}}"));
         }
         
         return beatmapsetsResponse.Beatmapsets;
@@ -161,6 +155,8 @@ public class BeatmapsetUpdatesService : BackgroundService
         }
         
         var approvedDate = startingBeatmapset.RankedDate.Value.ToUnixTimeMilliseconds();
+        _latestMapsetDateMs = approvedDate;
+        _latestMapsetId = startingBeatmapset.Id;
         _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{startingBeatmapset.Id}}}"));
     }
 

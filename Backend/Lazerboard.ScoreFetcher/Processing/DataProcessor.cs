@@ -310,13 +310,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     return s;
                 }).ToList();
                 
-                var scoresOutsideOfTop100 = merged.Where(s => s.Rank > 100).ToList();
-                if (scoresOutsideOfTop100.Count > 0)
+                var scoresOutsideOfBuffer = merged.Where(s => s.Rank > 200).ToList();
+                if (scoresOutsideOfBuffer.Count > 0)
                 {
-                    // We remove any scores that land outside the top 100 on the map
+                    // We remove any scores that land outside the specified rank buffer on the map
                     // to save up on storage. It's going to get really bad on new maps in the long run
                     
-                    var scoreIds = scoresOutsideOfTop100.Select(s => s.Id).Distinct().ToList();
+                    var scoreIds = scoresOutsideOfBuffer.Select(s => s.Id).Distinct().ToList();
                     var oldScoresOutsideTop100 = oldScores.Where(s => scoreIds.Contains(s.Id)).ToList();
                     var extraScoresOutsideTop100 = extraScores.Where(s => scoreIds.Contains(s.Id)).ToList();
                     

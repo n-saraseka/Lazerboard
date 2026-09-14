@@ -114,8 +114,18 @@ public class BeatmapsetUpdatesService : BackgroundService
         if (_cursor is null && _oldCursor is not null)
         {
             var latestMapset = beatmapsetsResponse.Beatmapsets.MaxBy(bs => bs.RankedDate);
-            var approvedDate = latestMapset!.RankedDate.ToUnixTimeMilliseconds();
-            _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestMapset.Id}}}"));
+            if (latestMapset is null) // Fall back to latest main processed mapset.
+            {
+                var beatmapsetsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+                var latestProcessedMapset = await beatmapsetsRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+                var approvedDate = latestProcessedMapset!.RankedDate!.Value.ToUnixTimeMilliseconds();
+                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestProcessedMapset.Id}}}"));
+            }
+            else
+            {
+                var approvedDate = latestMapset.RankedDate.ToUnixTimeMilliseconds();
+                _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"approved_date\":{approvedDate},\"id\":{latestMapset.Id}}}"));
+            }
         }
         
         return beatmapsetsResponse.Beatmapsets;

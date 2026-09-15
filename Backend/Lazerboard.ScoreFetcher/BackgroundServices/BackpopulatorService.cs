@@ -198,7 +198,7 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
         var updatedScores = await scoreRepo
             .GetDbContext()
             .Database
-            .ExecuteSqlAsync($"UPDATE scores s SET is_convert = (s.mode != v.mode) FROM unnest({batch.Select(kvp => kvp.Key)}::int[], {batch.Select(kvp => kvp.Value)}::mode[]) AS v(beatmap_id, mode) WHERE s.beatmap_id = v.beatmap_id AND s.is_convert IS NULL", 
+            .ExecuteSqlAsync($"UPDATE scores s SET is_convert = (s.mode != v.mode) FROM unnest({batch.Select(kvp => kvp.Key)}::int[], {batch.Select(kvp => kvp.Value)}::mode[]) AS v(beatmap_id, mode) WHERE s.beatmap_id = v.beatmap_id", 
                 token);
         logger.Log(LogLevel.Information, "Added missing convert attributes to {scoreCount} scores", updatedScores);
         return true;

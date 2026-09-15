@@ -207,6 +207,7 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
         }
         scoreRepo.UpdateBulk(updatedScores);
         await scoreRepo.SaveChangesAsync(token);
+        logger.Log(LogLevel.Information, "Added missing attributes to {scoreCount} scores", updatedScores.Count);
         return true;
     }
 }

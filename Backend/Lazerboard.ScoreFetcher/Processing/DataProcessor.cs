@@ -281,6 +281,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 beatmapScores = beatmapScores.Where(s => !personalBestsForRemoval.Select(pb => pb.Id).Contains(s.Id)).ToList();
                 deletedCount += personalBestsForRemoval.Count;
                 
+                var groupIds = groupScores.Select(s => s.Id).Distinct().ToList();
+                
                 var newScores = groupScores
                     .Where(b => !beatmapScores
                         .Select(s => s.Id)
@@ -304,13 +306,38 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .Concat(extraScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
+                    .Select((s, i) =>
+                    {
+                        s.Rank = i + 1;
+                        return s;
+                    })
                     .ToList();
-
-                merged = merged.Select((s, i) =>
+                
+                // This branch of logic is only relevant for leaderboard rescans.
+                // An old score may have been removed from the top 100 leaderboard between scans
+                // due to the user getting restricted or for other reasons. If that happens, we should remove it.
+                if (source == ScoreSource.LeaderboardScan)
                 {
-                    s.Rank = i + 1;
-                    return s;
-                }).ToList();
+                    var removedScores = merged.Where(s => s.Rank <= 100 && !groupIds.Contains(s.Id)).ToList();
+                    if (removedScores.Count > 0)
+                    {
+                        var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
+                        scoreRepository.DeleteBulk(removedScores);
+                        deletedCount += removedScores.Count;
+                        
+                        extraScores = extraScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
+                        merged = merged
+                            .Where(s => !removedScoreIds.Contains(s.Id))
+                            .OrderByDescending(b => b.TotalScore)
+                            .ThenBy(b => b.Date)
+                            .Select((s, i) =>
+                            {
+                                s.Rank = i + 1;
+                                return s;
+                            })
+                            .ToList();
+                    }
+                }
 
                 // We remove any scores that land outside the top 100 only when specified for that mode's configuration.
                 // (in case of needing to add new fields that would take a while or are impossible to backfill,

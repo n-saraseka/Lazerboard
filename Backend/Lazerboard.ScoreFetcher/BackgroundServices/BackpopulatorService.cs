@@ -12,34 +12,43 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
 public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<BackpopulatorService> logger) : BackgroundService
 {
-    private const int BatchSize = 100;
+    private const int BatchSize = 50;
     private const int DelayBetweenBatches = 50;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var startedAt = DateTime.UtcNow;
-        while (await AddMissingUserAttributesToBeatmapsetsAsync(stoppingToken))
+        try
         {
-            await Task.Delay(DelayBetweenBatches, stoppingToken);
-        }
-        var elapsed = DateTime.UtcNow - startedAt;
-        logger.Log(LogLevel.Information, "Added missing user attributes in {executionTime}", elapsed);
+            while (await AddMissingUserAttributesToBeatmapsetsAsync(stoppingToken))
+            {
+                await Task.Delay(DelayBetweenBatches, stoppingToken);
+            }
+            var elapsed = DateTime.UtcNow - startedAt;
+            logger.Log(LogLevel.Information, "Added missing user attributes in {executionTime}", elapsed);
         
-        startedAt = DateTime.UtcNow;
-        while (await AddMissingHealthAttributesAsync(stoppingToken))
-        {
-            await Task.Delay(DelayBetweenBatches, stoppingToken);
-        }
-        elapsed = DateTime.UtcNow - startedAt;
-        logger.Log(LogLevel.Information, "Added missing health attributes in {executionTime}", elapsed);
+            startedAt = DateTime.UtcNow;
+            while (await AddMissingHealthAttributesAsync(stoppingToken))
+            {
+                await Task.Delay(DelayBetweenBatches, stoppingToken);
+            }
+            elapsed = DateTime.UtcNow - startedAt;
+            logger.Log(LogLevel.Information, "Added missing health attributes in {executionTime}", elapsed);
 
-        startedAt = DateTime.UtcNow;
-        while (await AddMissingConvertFlagsAsync(stoppingToken))
-        {
-            await Task.Delay(DelayBetweenBatches, stoppingToken);
+            startedAt = DateTime.UtcNow;
+            while (await AddMissingConvertFlagsAsync(stoppingToken))
+            {
+                await Task.Delay(DelayBetweenBatches, stoppingToken);
+            }
+            elapsed = DateTime.UtcNow - startedAt;
+            logger.Log(LogLevel.Information, "Added missing convert flags in {executionTime}", elapsed);
         }
-        elapsed = DateTime.UtcNow - startedAt;
-        logger.Log(LogLevel.Information, "Added missing convert flags in {executionTime}", elapsed);
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        { }
+        catch (Exception ex)
+        {
+            logger.Log(LogLevel.Critical, ex, "Backpopulator service failed!");
+        }
     }
     
     /// <summary>
@@ -58,7 +67,7 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
             .ToListAsync(token);
         if (beatmapsets.Count == 0) return false;
         
-        logger.Log(LogLevel.Information, "Adding missing user attributes");
+        logger.Log(LogLevel.Information, "Adding missing health attributes to {beatmapsetCount} beatmapsets", beatmapsets.Count);
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
@@ -104,15 +113,15 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
             beatmapset.Creator = respectiveApiBeatmapset?.Creator;
             beatmapset.UserId = respectiveApiBeatmapset?.UserId ?? 0;
             beatmapsetRepo.Update(beatmapset);
-            if (!token.IsCancellationRequested) continue;
-            try
-            {
-                await beatmapsetRepo.SaveChangesAsync(token);
-            }
-            catch (NpgsqlException ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {@beatmapsets}", beatmapsets);
-            }
+        }
+        
+        try
+        {
+            await beatmapsetRepo.SaveChangesAsync(token);
+        }
+        catch (NpgsqlException ex)
+        {
+            logger.Log(LogLevel.Error, ex, "Method: IBeatmapsetRepository.SaveChangesAsync; Beatmapsets: {@beatmapsets}", beatmapsets);
         }
 
         try
@@ -145,7 +154,7 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
 
         if (beatmaps.Count == 0) return false;
         
-        logger.Log(LogLevel.Information, "Adding missing health attributes");
+        logger.Log(LogLevel.Information, "Adding missing health attributes to {beatmapCount} beatmaps", beatmaps.Count);
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
             
         var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), token);
@@ -155,15 +164,6 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
             beatmap.Health = respectiveApiBeatmap?.Health ?? 0;
             beatmap.DrainLength = respectiveApiBeatmap?.DrainLength ?? 0;
             beatmapRepo.Update(beatmap);
-            if (!token.IsCancellationRequested) continue;
-            try
-            {
-                await beatmapRepo.SaveChangesAsync(token);
-            }
-            catch (NpgsqlException ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {@beatmaps}", beatmaps);
-            }
         }
         try
         {
@@ -182,11 +182,9 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
         using var scope = serviceProvider.CreateScope();
         var beatmapRepo = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
         
-        var allMaps = beatmapRepo
-            .GetAll()
-            .OrderBy(b => b.Beatmapset.RankedDate);
         // Filter beatmaps to ones that have any scores with the null convert flag.
-        var mapsWithNullConvertFlags = allMaps
+        var mapsWithNullConvertFlags = beatmapRepo
+            .GetAll()
             .Include(b => b.Scores)
             .AsSplitQuery()
             .Where(b => b.Scores.Any(s => s.IsConvert == null));
@@ -194,7 +192,7 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
         var batch = await mapsWithNullConvertFlags.Take(BatchSize).ToListAsync(token);
         if (batch.Count == 0) return false;
         
-        logger.Log(LogLevel.Information, "Adding missing convert flags");
+        logger.Log(LogLevel.Information, "Adding missing convert attributes to {beatmapCount} beatmaps", batch.Count);
         var scoreRepo = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         
         var updatedScores = new List<Score>();

@@ -12,7 +12,7 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
 public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<BackpopulatorService> logger) : BackgroundService
 {
-    private const int BatchSize = 50;
+    private const int BatchSize = 75;
     private const int DelayBetweenBatches = 50;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

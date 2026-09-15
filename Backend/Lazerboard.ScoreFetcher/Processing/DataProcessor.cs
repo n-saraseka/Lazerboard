@@ -291,11 +291,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .Where(b => beatmapScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
-                    .Select(s =>
-                    {
-                        s.ScoreSource = source;
-                        return s;
-                    })
                     .ToList();
                 
                 var extraScores = beatmapScores

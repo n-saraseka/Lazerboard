@@ -46,8 +46,9 @@ public class RescanService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {beatmapsetId}", finishingBeatmapset?.Id);
+        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {finishingMapsetId}", finishingBeatmapset?.Id);
         await GetStartingDataAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Starting mapset ID: {startingMapsetId}", _latestMapsetId);
         
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -86,7 +87,7 @@ public class RescanService : BackgroundService
                     using var scope = _serviceProvider.CreateScope();
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
                     await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, 
-                        ScanEventType.MainSeedingStarted, 
+                        ScanEventType.RescanStarted,
                         _topRemovalConfiguration, 
                         stoppingToken);
                 }

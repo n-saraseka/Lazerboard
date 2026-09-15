@@ -135,8 +135,12 @@ if (servicesConfig.GetValue<bool>("Rescans"))
 {
     builder.Services.AddHostedService<RescanService>();
 }
+
+if (servicesConfig.GetValue<bool>("Backpopulator"))
+{
+    builder.Services.AddHostedService<BackpopulatorService>();
+}
 builder.Services.AddHostedService<ScoresCountService>();
-builder.Services.AddHostedService<BackpopulatorService>();
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>

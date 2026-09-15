@@ -59,7 +59,6 @@ builder.Services.AddScoped<IScorePendingDeletionRepository, ScorePendingDeletion
 builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
-builder.Services.AddScoped<IBackpopulator, Backpopulator>();
 
 // Score fetching related
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
@@ -132,6 +131,7 @@ if (bool.Parse(servicesConfig["Firehose"]))
     builder.Services.AddHostedService<FirehoseService>();
 }
 builder.Services.AddHostedService<ScoresCountService>();
+builder.Services.AddHostedService<BackpopulatorService>();
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
@@ -177,10 +177,6 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var backpopulator = scope.ServiceProvider.GetRequiredService<IBackpopulator>();
-    var cancellationToken = CancellationToken.None;
-    await backpopulator.BackpopulateAsync(cancellationToken);
-    
     var cacheStore = scope.ServiceProvider.GetRequiredService<ICacheStore>();
     try
     {

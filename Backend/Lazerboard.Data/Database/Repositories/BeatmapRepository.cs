@@ -1,5 +1,6 @@
 ﻿using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lazerboard.Data.Database.Repositories;
@@ -54,4 +55,15 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
             .Where(b => b.Beatmapset.MainFinishedProcessingAt != null)
             .Select(b => b.Id)
             .ToListAsync(ct);
+    
+    /// <summary>
+    /// Get <see cref="Mode"/> data from a list of <see cref="Beatmap"/> IDs
+    /// </summary>
+    /// <param name="ids">The <see cref="Beatmap"/> IDs</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>A dictionary of <see cref="Beatmap"/> IDs mapped to their respective <see cref="Mode"/>s</returns>
+    public Task<Dictionary<int, Mode>> GetModeDataAsync(IList<int> ids, CancellationToken ct = default) =>
+        Set
+            .Where(b => ids.Contains(b.Id))
+            .ToDictionaryAsync(b => b.Id, b => b.Mode, ct);
 }

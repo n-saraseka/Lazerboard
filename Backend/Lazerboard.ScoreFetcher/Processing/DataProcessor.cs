@@ -204,6 +204,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
+        var modeData = await beatmapRepository.GetModeDataAsync(beatmapIds, ct);
 
         var updatedCount = 0;
         var createdCount = 0;
@@ -216,7 +217,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 .ThenBy(b => b.Date)
                 .Select(s =>
                 {
-                    var dto = entityToDtoService.ScoreEntityToDto(s, source);
+                    var dto = entityToDtoService.ScoreEntityToDto(s, source, modeData[s.BeatmapId]);
                     return dto;
                 })
                 .DistinctBy(s => s.Id)

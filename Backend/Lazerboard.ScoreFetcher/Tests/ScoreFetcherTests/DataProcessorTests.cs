@@ -198,7 +198,8 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 1,
                 TotalScore = 100,
-                Date = new DateTime(2020, 1, 1)
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
             },
             new APIScore
             {
@@ -206,7 +207,8 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 2,
                 TotalScore = 100,
-                Date = new DateTime(2020, 1, 1)
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
             },
             new APIScore
             {
@@ -214,22 +216,28 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 3,
                 TotalScore = 50,
-                Date = new DateTime(2020, 3, 1)
+                Date = new DateTime(2020, 3, 1),
+                Mode = Mode.Osu
             }
         };
 
         var dbData = new List<Score>();
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
-            .Returns((APIScore api, ScoreSource source) => new Score
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
                 Date = api.Date,
-                ScoreSource = source
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
             });
 
         // Act
@@ -253,7 +261,8 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 1,
                 TotalScore = 100,
-                Date = new DateTime(2020, 1, 1)
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
             },
             new APIScore
             {
@@ -261,7 +270,8 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 2,
                 TotalScore = 100,
-                Date = new DateTime(2020, 2, 1)
+                Date = new DateTime(2020, 2, 1),
+                Mode = Mode.Osu
             },
             new APIScore
             {
@@ -269,7 +279,8 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 3,
                 TotalScore = 50,
-                Date = new DateTime(2020, 3, 1)
+                Date = new DateTime(2020, 3, 1),
+                Mode = Mode.Osu
             }
         };
 
@@ -282,16 +293,22 @@ public class DataProcessorTests
             { 3, 3 }
         };
         
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
+        
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
-            .Returns((APIScore api, ScoreSource source) => new Score
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
                 Date = api.Date,
-                ScoreSource = source
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
             });
 
         // Act
@@ -323,11 +340,15 @@ public class DataProcessorTests
         }
 
         var dbData = new List<Score>();
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
-            .Returns((APIScore api, ScoreSource source) => new Score
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
@@ -335,7 +356,8 @@ public class DataProcessorTests
                 Date = api.Date,
                 UserId = api.UserId,
                 Mode = api.Mode,
-                ScoreSource = source
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
             });
 
         // Act
@@ -425,16 +447,22 @@ public class DataProcessorTests
             { 3, 6 }
         };
         
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
+        
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
-            .Returns((APIScore api, ScoreSource source) => new Score
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
                 TotalScore = api.TotalScore,
                 Date = api.Date,
-                ScoreSource = source
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
             });
 
         // Act
@@ -503,10 +531,15 @@ public class DataProcessorTests
         
         dbData.AddRange(copy);
         
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
+        
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
-            .Returns((APIScore api, ScoreSource source) => new Score
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
@@ -514,7 +547,8 @@ public class DataProcessorTests
                 Date = api.Date,
                 UserId = api.UserId,
                 Mode = api.Mode,
-                ScoreSource = source
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
             });
 
         // Act
@@ -595,11 +629,15 @@ public class DataProcessorTests
             Date = new DateTime(2019, 1, 1),
             Mode = Mode.Osu
         });
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
-        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>()))
-            .Returns((APIScore api, ScoreSource source) => new Score
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
             {
                 Id = api.Id,
                 BeatmapId = api.BeatmapId,
@@ -607,7 +645,8 @@ public class DataProcessorTests
                 Date = api.Date,
                 UserId = api.UserId,
                 Mode = api.Mode,
-                ScoreSource = source
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
             });
         
         // Act

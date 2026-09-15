@@ -25,7 +25,9 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             Mode = score.Mode,
             UserId = score.UserId,
             ScoreSource = source,
-            IsConvert = score.Mode != beatmapMode
+            IsConvert = score.Mode != beatmapMode,
+            Statistics = score.Statistics,
+            IsLazerScore = score.LegacyTotalScore == 0
         };
 
         var modAcronyms = score.Mods.Select(m => m.Acronym).ToList();

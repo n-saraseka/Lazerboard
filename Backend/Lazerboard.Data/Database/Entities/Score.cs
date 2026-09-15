@@ -1,5 +1,6 @@
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.OsuEntities.OsuApiEntities;
 
 namespace Lazerboard.Data.Database.Entities;
 
@@ -25,4 +26,5 @@ public class Score : IEntity<ulong>
     public int Rank { get; set; }
     public ScoreSource ScoreSource { get; set; } = ScoreSource.ScoreFetcher;
     public bool? IsConvert { get; set; }
+    public Statistics? Statistics { get; set; }
 }

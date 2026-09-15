@@ -26,5 +26,6 @@ public class Score : IEntity<ulong>
     public int Rank { get; set; }
     public ScoreSource ScoreSource { get; set; } = ScoreSource.ScoreFetcher;
     public bool? IsConvert { get; set; }
+    public bool? IsLazerScore { get; set; }
     public Statistics? Statistics { get; set; }
 }

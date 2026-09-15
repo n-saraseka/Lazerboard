@@ -3,6 +3,7 @@ using Npgsql;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 
@@ -195,8 +196,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
+    /// <param name="topScoresConfiguration">A mode-to-bool dictionary that determines whether scores outside
+    /// of top 100 for said mode should get removed or not</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task<int> ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct)
+    public async Task<int> ProcessScoresAsync(IList<APIScore> scores, 
+        ScoreSource source, 
+        Dictionary<Mode, bool> topScoresConfiguration, 
+        CancellationToken ct)
     {
         if (scores.Count == 0) return 0;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count);
@@ -281,8 +287,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         .Contains(b.Id))
                     .ToList();
                 
-                var oldScores = beatmapScores
-                    .Where(b => groupScores
+                var oldScores = groupScores
+                    .Where(b => beatmapScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
                     .Select(s =>
@@ -310,13 +316,18 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     s.Rank = i + 1;
                     return s;
                 }).ToList();
+
+                // We remove any scores that land outside the top 100 only when specified for that mode's configuration.
+                // (in case of needing to add new fields that would take a while or are impossible to backfill,
+                // or during score multiplier updates for mode)
+                // Otherwise, we only remove scores outside of top 200.
+                // That's done to save up on storage. It's going to get really bad on new maps in the long run
+                var scoresOutsideOfBuffer = topScoresConfiguration[group.Key.Mode] 
+                    ? merged.Where(s => s.Rank > 100).ToList() 
+                    : merged.Where(s => s.Rank > 200).ToList();
                 
-                var scoresOutsideOfBuffer = merged.Where(s => s.Rank > 200).ToList();
                 if (scoresOutsideOfBuffer.Count > 0)
                 {
-                    // We remove any scores that land outside the specified rank buffer on the map
-                    // to save up on storage. It's going to get really bad on new maps in the long run
-                    
                     var scoreIds = scoresOutsideOfBuffer.Select(s => s.Id).Distinct().ToList();
                     var oldScoresOutsideTop100 = oldScores.Where(s => scoreIds.Contains(s.Id)).ToList();
                     var extraScoresOutsideTop100 = extraScores.Where(s => scoreIds.Contains(s.Id)).ToList();

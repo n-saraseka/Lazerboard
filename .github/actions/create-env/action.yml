@@ -88,7 +88,6 @@ runs:
         echo "RescanBehavior__RemoveScoresOutsideTop100__taiko=true >> .env
         echo "RescanBehavior__RemoveScoresOutsideTop100__fruits=true >> .env
         echo "RescanBehavior__RemoveScoresOutsideTop100__mania=true >> .env
-        echo "RescanBehavior__UpdateTop100ScoreData=true >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env

@@ -20,7 +20,6 @@ public class RescanService : BackgroundService
 
     private const int BatchSize = 50;
     private readonly Dictionary<Mode, bool> _topRemovalConfiguration = new();
-    private readonly bool _updateTopHundredData;
     private bool _shouldFinishAfterThisBatch;
     private DateTimeOffset? _latestRankedDate;
     private int? _latestMapsetId;
@@ -42,8 +41,6 @@ public class RescanService : BackgroundService
         _topRemovalConfiguration[Mode.Taiko] = topsRemovalConfig.GetValue<bool>("taiko");
         _topRemovalConfiguration[Mode.Fruits] = topsRemovalConfig.GetValue<bool>("fruits");
         _topRemovalConfiguration[Mode.Mania] = topsRemovalConfig.GetValue<bool>("mania");
-
-        _updateTopHundredData = scanConfig.GetValue<bool>("UpdateTop100ScoreData");
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -84,7 +81,15 @@ public class RescanService : BackgroundService
                     await beatmapUtils.SaveStartingTimestampAsync(beatmapsetIds, ScanEventType.RescanStarted, stoppingToken);
                 }
 
-                // TODO: Beatmapset processing logic
+                foreach (var beatmapset in beatmapsets)
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+                    await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, 
+                        ScanEventType.MainSeedingStarted, 
+                        _topRemovalConfiguration, 
+                        stoppingToken);
+                }
                 
                 var latestMapset = beatmapsets.MaxBy(bs => bs.RankedDate);
                 if (latestMapset is not null)

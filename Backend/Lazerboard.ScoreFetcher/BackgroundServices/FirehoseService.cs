@@ -2,6 +2,7 @@ using System.Text;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -85,7 +86,6 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     private async Task<List<APIScore>> FetchExistingBeatmapScoresAsync(CancellationToken stoppingToken)
     {
         using var scope = serviceProvider.CreateScope();
-        var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         _catchUpOnExistingBeatmapScores = true;
         
@@ -172,7 +172,12 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     {
         using var scope = serviceProvider.CreateScope();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        return await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, stoppingToken);
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
+        return await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, topScoresConfig, stoppingToken);
     }
 
     /// <summary>

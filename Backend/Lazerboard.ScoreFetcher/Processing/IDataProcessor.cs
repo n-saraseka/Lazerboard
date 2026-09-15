@@ -1,5 +1,6 @@
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 
 namespace Lazerboard.ScoreFetcher.Processing;
@@ -14,7 +15,10 @@ public interface IDataProcessor
     Task ProcessCountriesAsync(IList<APICountry> countries, CancellationToken ct);
     Task ProcessUsersAsync(IList<APIUser> users, CancellationToken ct);
     Task ProcessRemovedUsersAsync(IList<User> users, CancellationToken ct);
-    Task<int> ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct);
+    Task<int> ProcessScoresAsync(IList<APIScore> scores, 
+        ScoreSource source, 
+        Dictionary<Mode, bool> topScoresConfiguration, 
+        CancellationToken ct);
     Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken);
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken);
 }

@@ -41,6 +41,11 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
         logger.Log(LogLevel.Information, "Processing beatmapset ID: {beatmapsetID}", beatmapset.Id);
 
         await dataProcessor.ProcessBeatmapsAsync(beatmapset.Beatmaps, stoppingToken);
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         foreach (var beatmap in beatmapset.Beatmaps)
         {
@@ -64,7 +69,51 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
                 }
                 
                 var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
-                await utils.SaveScoreDataAsync(mergedScores, ScoreSource.LeaderboardScan, stoppingToken);
+                await utils.SaveScoreDataAsync(mergedScores, ScoreSource.LeaderboardScan, topScoresConfig, stoppingToken);
+            }
+        }
+        
+        await SaveFinishingTimestampAsync([beatmapset.Id], eventType, stoppingToken);
+    }
+    
+    /// <summary>
+    /// Process existing mapset and save the data
+    /// </summary>
+    /// <param name="beatmapset">The <see cref="APIBeatmapset"/></param>
+    /// <param name="eventType">The <see cref="ScanEventType"/></param>
+    /// <param name="topScoresConfiguration">A mode-to-bool dictionary that determines whether scores outside
+    /// of top 100 for said mode should get removed or not</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    public async Task ProcessExistingMapsetAsync(Beatmapset beatmapset, 
+        ScanEventType eventType, 
+        Dictionary<Mode, bool> topScoresConfiguration, 
+        CancellationToken stoppingToken)
+    {
+        logger.Log(LogLevel.Information, "Processing beatmapset ID: {beatmapsetID}", beatmapset.Id);
+        
+        foreach (var beatmap in beatmapset.Beatmaps)
+        {
+            foreach (var val in Enum.GetValues<Mode>())
+            {
+                if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
+                var scores = await GetBeatmapScoresAsync(beatmap.Id, val, stoppingToken);
+
+                if (scores.Count == 0) continue;
+                
+                var scoresWithoutPp = scores.Where(s => s.PP == null).ToList();
+                var scoresWithPp = scores.Where(s => s.PP != null).ToList();
+
+                if (scoresWithoutPp.Count > 0)
+                {
+                    var flatWorkingBeatmap = await utils.GetFlatWorkingBeatmapAsync(beatmap.Id, stoppingToken);
+                    foreach (var score in scoresWithoutPp)
+                    {
+                        await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+                    }
+                }
+                
+                var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
+                await utils.SaveScoreDataAsync(mergedScores, ScoreSource.LeaderboardScan, topScoresConfiguration, stoppingToken);
             }
         }
         

@@ -224,6 +224,11 @@ public class DataProcessorTests
         var dbData = new List<Score>();
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -241,7 +246,7 @@ public class DataProcessorTests
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -295,6 +300,11 @@ public class DataProcessorTests
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -312,7 +322,7 @@ public class DataProcessorTests
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -342,6 +352,11 @@ public class DataProcessorTests
         var dbData = new List<Score>();
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -361,7 +376,7 @@ public class DataProcessorTests
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -449,6 +464,11 @@ public class DataProcessorTests
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -466,7 +486,7 @@ public class DataProcessorTests
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
         
         // Assert
         _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
@@ -533,6 +553,11 @@ public class DataProcessorTests
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -552,7 +577,7 @@ public class DataProcessorTests
             });
 
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
         
         // Assert
         var scoreRanks = new Dictionary<ulong, int>
@@ -631,6 +656,11 @@ public class DataProcessorTests
         });
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -650,7 +680,7 @@ public class DataProcessorTests
             });
         
         // Act
-        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
         
         // Assert
         ulong[] deletedIds = [1, 2, 3];

@@ -12,7 +12,7 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices;
 
 public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<BackpopulatorService> logger) : BackgroundService
 {
-    private const int BatchSize = 75;
+    private const int BatchSize = 50;
     private const int DelayBetweenBatches = 500;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -185,29 +185,22 @@ public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<Back
         // Filter beatmaps to ones that have any scores with the null convert flag.
         var mapsWithNullConvertFlags = beatmapRepo
             .GetAll()
-            .Include(b => b.Scores)
-            .AsSplitQuery()
             .Where(b => b.Scores.Any(s => s.IsConvert == null));
-        
-        var batch = await mapsWithNullConvertFlags.Take(BatchSize).ToListAsync(token);
+
+        var batch = await mapsWithNullConvertFlags
+            .Take(BatchSize)
+            .ToDictionaryAsync(b => b.Id, b => b.Mode, token);
         if (batch.Count == 0) return false;
         
         logger.Log(LogLevel.Information, "Adding missing convert attributes to {beatmapCount} beatmaps", batch.Count);
         var scoreRepo = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
-        
-        var updatedScores = new List<Score>();
-        foreach (var beatmap in batch)
-        {
-            beatmap.Scores = beatmap.Scores.Select(s =>
-            {
-                s.IsConvert = s.Mode != beatmap.Mode;
-                return s;
-            }).ToList();
-            updatedScores.AddRange(beatmap.Scores);
-        }
-        scoreRepo.UpdateBulk(updatedScores);
-        await scoreRepo.SaveChangesAsync(token);
-        logger.Log(LogLevel.Information, "Added missing attributes to {scoreCount} scores", updatedScores.Count);
+
+        var updatedScores = await scoreRepo
+            .GetDbContext()
+            .Database
+            .ExecuteSqlAsync($"UPDATE scores s SET is_convert = (s.mode != v.mode) FROM unnest({batch.Select(kvp => kvp.Key)}, {batch.Select(kvp => kvp.Value)}) AS v(beatmap_id, mode) WHERE s.beatmap_id = v.beatmap_id AND s.is_convert IS NULL", 
+                token);
+        logger.Log(LogLevel.Information, "Added missing convert attributes to {scoreCount} scores", updatedScores);
         return true;
     }
 }

@@ -9,6 +9,7 @@ namespace Lazerboard.ScoreFetcher.Processing;
 
 public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
     IBeatmapRepository beatmapRepo,
+    IScoreRepository scoreRepo,
     IUserRepository userRepo, 
     IOsuApiFetcher apiFetcher, 
     IDataProcessor dataProcessor,
@@ -18,6 +19,7 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
     {
         await AddMissingHealthAttributesAsync(token);
         await AddMissingUserAttributesToBeatmapsAsync(token);
+        await AddMissingConvertFlagsAsync(token);
     }
 
     private async Task AddMissingUserAttributesToBeatmapsAsync(CancellationToken token)
@@ -28,7 +30,6 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
         if (beatmaps.Count > 0)
         {
             logger.Log(LogLevel.Information, "Adding missing user attributes. Beatmapsets count: {count}", beatmapsets.Count);
-            Console.WriteLine("Adding missing user attributes");
             var apiBeatmaps = await apiFetcher.GetBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), token);
             var apiBeatmapsets = apiBeatmaps.Select(b => b.Beatmapset).DistinctBy(b => b.Id).ToList();
             
@@ -118,6 +119,43 @@ public class Backpopulator(IBeatmapsetRepository beatmapsetRepo,
             catch (NpgsqlException ex)
             {
                 logger.Log(LogLevel.Error, ex, "Method: IBeatmapRepository.SaveChangesAsync; Beatmaps: {@beatmaps}", beatmaps);
+            }
+        }
+    }
+
+    private async Task AddMissingConvertFlagsAsync(CancellationToken token)
+    {
+        var allMaps = beatmapRepo
+            .GetAll()
+            .OrderBy(b => b.Beatmapset.RankedDate);
+        // Filter beatmaps to ones that have any scores with the null convert flag.
+        var mapsWithNullConvertFlags = allMaps
+            .Include(b => b.Scores)
+            .AsSplitQuery()
+            .Where(b => b.Scores.Any(s => s.IsConvert == null));
+
+        const int batchSize = 50;
+        var batch = await mapsWithNullConvertFlags.Take(batchSize).ToListAsync(token);
+        for (var i = 0; batch.Count > 0; i++)
+        {
+            logger.Log(LogLevel.Information, "Adding missing convert flags");
+            var updatedScores = new List<Score>();
+            foreach (var beatmap in batch)
+            {
+                beatmap.Scores = beatmap.Scores.Select(s =>
+                {
+                    s.IsConvert = s.Mode != beatmap.Mode;
+                    return s;
+                }).ToList();
+                updatedScores.AddRange(beatmap.Scores);
+            }
+            scoreRepo.UpdateBulk(updatedScores);
+            await scoreRepo.SaveChangesAsync(token);
+            await Task.Delay(100, token);
+            batch = await mapsWithNullConvertFlags.Skip(batchSize * (i + 1)).Take(batchSize).ToListAsync(token);
+            if (batch.Count == 0)
+            {
+                logger.Log(LogLevel.Information, "Finished adding missing convert flags");
             }
         }
     }

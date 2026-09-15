@@ -93,6 +93,9 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("Difficulty")
                         .HasDatabaseName("ix_beatmaps_difficulty");
 
+                    b.HasIndex("Mode")
+                        .HasDatabaseName("ix_beatmaps_mode");
+
                     b.ToTable("beatmaps", (string)null);
                 });
 

@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260915184008_AddMapsetRankedDateIndex")]
+    partial class AddMapsetRankedDateIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -306,10 +309,6 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_convert");
 
-                    b.Property<bool?>("IsLazerScore")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_lazer_score");
-
                     b.Property<int?>("LegacyTotalScore")
                         .HasColumnType("integer")
                         .HasColumnName("legacy_total_score");
@@ -350,37 +349,6 @@ namespace OsuScoreStats.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer")
                         .HasColumnName("user_id");
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Statistics", "Lazerboard.Data.Database.Entities.Score.Statistics#Statistics", b1 =>
-                        {
-                            b1.Property<int?>("CountGood");
-
-                            b1.Property<int?>("CountGreat");
-
-                            b1.Property<int?>("CountMeh");
-
-                            b1.Property<int?>("CountMiss");
-
-                            b1.Property<int?>("CountOk");
-
-                            b1.Property<int?>("CountPerfect");
-
-                            b1.Property<int?>("LegacySliderEndMisses");
-
-                            b1.Property<int?>("LegacySliderEnds");
-
-                            b1.Property<int?>("SliderEnds");
-
-                            b1.Property<int?>("SliderTickMisses");
-
-                            b1.Property<int?>("SliderTicks");
-
-                            b1.Property<int?>("SpinnerBonus");
-
-                            b1.Property<int?>("SpinnerSpins");
-
-                            b1.ToJson("statistics");
-                        });
 
                     b.HasKey("Id")
                         .HasName("pk_scores");

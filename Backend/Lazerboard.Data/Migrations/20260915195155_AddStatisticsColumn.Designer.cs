@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260915195155_AddStatisticsColumn")]
+    partial class AddStatisticsColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -305,10 +308,6 @@ namespace OsuScoreStats.Migrations
                     b.Property<bool?>("IsConvert")
                         .HasColumnType("boolean")
                         .HasColumnName("is_convert");
-
-                    b.Property<bool?>("IsLazerScore")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_lazer_score");
 
                     b.Property<int?>("LegacyTotalScore")
                         .HasColumnType("integer")

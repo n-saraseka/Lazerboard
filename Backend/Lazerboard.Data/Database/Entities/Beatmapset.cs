@@ -10,6 +10,7 @@ public class Beatmapset : IEntity<int>
     public User? User { get; set; }
     public DateTimeOffset? RankedDate { get; set; }
     public bool IsExplicit { get; set; } = false;
+    public List<Beatmap> Beatmaps = [];
     /// <summary>
     /// Set when beatmapset is added to the DB
     /// through the main queue (ranked beatmapsets available through the osu! API search endpoint)

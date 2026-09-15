@@ -3,6 +3,7 @@ using Npgsql;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 
@@ -195,8 +196,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
+    /// <param name="topScoresConfiguration">A mode-to-bool dictionary that determines whether scores outside
+    /// of top 100 for said mode should get removed or not</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    public async Task<int> ProcessScoresAsync(IList<APIScore> scores, ScoreSource source, CancellationToken ct)
+    public async Task<int> ProcessScoresAsync(IList<APIScore> scores, 
+        ScoreSource source, 
+        Dictionary<Mode, bool> topScoresConfiguration, 
+        CancellationToken ct)
     {
         if (scores.Count == 0) return 0;
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count);
@@ -275,21 +281,18 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 beatmapScores = beatmapScores.Where(s => !personalBestsForRemoval.Select(pb => pb.Id).Contains(s.Id)).ToList();
                 deletedCount += personalBestsForRemoval.Count;
                 
+                var groupIds = groupScores.Select(s => s.Id).Distinct().ToList();
+                
                 var newScores = groupScores
                     .Where(b => !beatmapScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
                     .ToList();
                 
-                var oldScores = beatmapScores
-                    .Where(b => groupScores
+                var oldScores = groupScores
+                    .Where(b => beatmapScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
-                    .Select(s =>
-                    {
-                        s.ScoreSource = source;
-                        return s;
-                    })
                     .ToList();
                 
                 var extraScores = beatmapScores
@@ -303,20 +306,50 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .Concat(extraScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
+                    .Select((s, i) =>
+                    {
+                        s.Rank = i + 1;
+                        return s;
+                    })
                     .ToList();
-
-                merged = merged.Select((s, i) =>
-                {
-                    s.Rank = i + 1;
-                    return s;
-                }).ToList();
                 
-                var scoresOutsideOfBuffer = merged.Where(s => s.Rank > 200).ToList();
+                // This branch of logic is only relevant for leaderboard rescans.
+                // An old score may have been removed from the top 100 leaderboard between scans
+                // due to the user getting restricted or for other reasons. If that happens, we should remove it.
+                if (source == ScoreSource.LeaderboardScan)
+                {
+                    var removedScores = merged.Where(s => s.Rank <= 100 && !groupIds.Contains(s.Id)).ToList();
+                    if (removedScores.Count > 0)
+                    {
+                        var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
+                        scoreRepository.DeleteBulk(removedScores);
+                        deletedCount += removedScores.Count;
+                        
+                        extraScores = extraScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
+                        merged = merged
+                            .Where(s => !removedScoreIds.Contains(s.Id))
+                            .OrderByDescending(b => b.TotalScore)
+                            .ThenBy(b => b.Date)
+                            .Select((s, i) =>
+                            {
+                                s.Rank = i + 1;
+                                return s;
+                            })
+                            .ToList();
+                    }
+                }
+
+                // We remove any scores that land outside the top 100 only when specified for that mode's configuration.
+                // (in case of needing to add new fields that would take a while or are impossible to backfill,
+                // or during score multiplier updates for mode)
+                // Otherwise, we only remove scores outside of top 200.
+                // That's done to save up on storage. It's going to get really bad on new maps in the long run
+                var scoresOutsideOfBuffer = topScoresConfiguration[group.Key.Mode] 
+                    ? merged.Where(s => s.Rank > 100).ToList() 
+                    : merged.Where(s => s.Rank > 200).ToList();
+                
                 if (scoresOutsideOfBuffer.Count > 0)
                 {
-                    // We remove any scores that land outside the specified rank buffer on the map
-                    // to save up on storage. It's going to get really bad on new maps in the long run
-                    
                     var scoreIds = scoresOutsideOfBuffer.Select(s => s.Id).Distinct().ToList();
                     var oldScoresOutsideTop100 = oldScores.Where(s => scoreIds.Contains(s.Id)).ToList();
                     var extraScoresOutsideTop100 = extraScores.Where(s => scoreIds.Contains(s.Id)).ToList();

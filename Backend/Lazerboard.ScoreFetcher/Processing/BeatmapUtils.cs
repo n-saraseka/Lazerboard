@@ -1,4 +1,5 @@
 using Lazerboard.Data.ApiFetchers;
+using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
@@ -67,20 +68,47 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
             }
         }
         
-        List<APIBeatmapset> list = [beatmapset];
-        await SaveProcessingTimestampAsync(list, eventType, stoppingToken);
+        await SaveFinishingTimestampAsync([beatmapset.Id], eventType, stoppingToken);
+    }
+    
+    /// <summary>
+    /// Save the starting event timestamp for a list of <see cref="Beatmapset"/> IDs
+    /// </summary>
+    /// <param name="beatmapsetIds">The <see cref="Beatmapset"/> IDs</param>
+    /// <param name="eventType">The <see cref="ScanEventType"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    public async Task SaveStartingTimestampAsync(IList<int> beatmapsetIds, ScanEventType eventType, CancellationToken stoppingToken)
+    {
+        var dbBeatmapsets = await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken);
+        var currentDateTime = DateTimeOffset.Now;
+        foreach (var beatmapset in dbBeatmapsets)
+        {
+            switch (eventType)
+            {
+                case ScanEventType.RescanStarted:
+                    beatmapset.StartedScanningAt = currentDateTime;
+                    break;
+                case ScanEventType.MainSeedingStarted:
+                    beatmapset.MainStartedProcessingAt = currentDateTime;
+                    break;
+                case ScanEventType.SecondarySeedingStarted:
+                    beatmapset.SecondaryStartedProcessingAt = currentDateTime;
+                    break;
+            }
+        }
+        beatmapsetRepository.UpdateBulk(dbBeatmapsets);
+        await beatmapsetRepository.SaveChangesAsync(stoppingToken);
     }
 
     /// <summary>
-    /// Save the event timestamp for a list of <see cref="APIBeatmapset"/>s
+    /// Save the finishing event timestamp for a list of <see cref="Beatmapset"/> IDs
     /// </summary>
-    /// <param name="beatmapsets">The <see cref="APIBeatmapset"/>s</param>
+    /// <param name="beatmapsetIds">The <see cref="Beatmapset"/> IDs</param>
     /// <param name="eventType">The <see cref="ScanEventType"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task SaveProcessingTimestampAsync(IList<APIBeatmapset> beatmapsets, ScanEventType eventType, CancellationToken stoppingToken)
+    public async Task SaveFinishingTimestampAsync(IList<int> beatmapsetIds, ScanEventType eventType, CancellationToken stoppingToken)
     {
-        var ids = beatmapsets.Select(bs => bs.Id).ToList();
-        var dbBeatmapsets = await beatmapsetRepository.GetBulkAsync(ids, stoppingToken);
+        var dbBeatmapsets = await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken);
         var currentDateTime = DateTimeOffset.Now;
         foreach (var beatmapset in dbBeatmapsets)
         {

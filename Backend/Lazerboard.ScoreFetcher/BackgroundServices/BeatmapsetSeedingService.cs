@@ -87,7 +87,8 @@ public class BeatmapsetSeedingService : BackgroundService
                 {
                     using var scope = _serviceProvider.CreateScope();
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.SaveProcessingTimestampAsync(beatmapsets, ScanEventType.RescanStarted,
+                    var setIds = beatmapsets.Select(bs => bs.Id).ToList();
+                    await beatmapUtils.SaveFinishingTimestampAsync(setIds, ScanEventType.RescanStarted,
                         stoppingToken);
                 }
                 else

@@ -4,7 +4,6 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.Calculations;
-using Microsoft.Extensions.Logging;
 using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.Processing;
@@ -14,8 +13,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
     ICacheStore cacheStore,
     IOsuApiFetcher osuApiFetcher,
-    IBeatmapCacheRepository beatmapCacheRepository,
-    ILogger<IScoreFetchingUtils> logger) : IScoreFetchingUtils
+    IBeatmapCacheRepository beatmapCacheRepository) : IScoreFetchingUtils
 {
     /// <summary>
     /// Save all beatmapset data from <see cref="APIBeatmapset"/>s (beatmapset creators and beatmapsets)

@@ -126,7 +126,8 @@ public class RescanService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
         return await beatmapsetRepository.GetAll()
-            .Where(bs => bs.RankedDate > _latestRankedDate || (bs.RankedDate == _latestRankedDate && bs.Id > _latestMapsetId))
+            .Where(bs => bs.RankedDate > (_latestRankedDate ?? DateTimeOffset.MinValue) 
+                         || (bs.RankedDate == _latestRankedDate && bs.Id > _latestMapsetId))
             .OrderBy(bs => bs.RankedDate)
             .ThenBy(bs => bs.Id)
             .Take(BatchSize)
@@ -190,6 +191,6 @@ public class RescanService : BackgroundService
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
         await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
         _seedingState.IsSeeding = false;
-        _logger.Log(LogLevel.Information, "Database seeding complete");
+        _logger.Log(LogLevel.Information, "Rescan complete");
     }
 }

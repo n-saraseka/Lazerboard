@@ -24,4 +24,8 @@ public class Score : IEntity<ulong>
     public float? PP { get; set; }
     public int Rank { get; set; }
     public ScoreSource ScoreSource { get; set; } = ScoreSource.ScoreFetcher;
+    /// <summary>
+    /// True when the <see cref="Score.Mode"/> isn't the same as the respective <see cref="Beatmap.Mode"/>
+    /// </summary>
+    public bool IsConvert { get; set; } = false;
 }

@@ -24,4 +24,5 @@ public class Score : IEntity<ulong>
     public float? PP { get; set; }
     public int Rank { get; set; }
     public ScoreSource ScoreSource { get; set; } = ScoreSource.ScoreFetcher;
+    public bool? IsConvert { get; set; }
 }

@@ -31,5 +31,7 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => new { s.BeatmapId, s.Mode, s.TotalScore, s.Date });
         builder
             .HasIndex(s => s.ScoreSource);
+        builder
+            .HasIndex(s => s.IsConvert);
     }
 }

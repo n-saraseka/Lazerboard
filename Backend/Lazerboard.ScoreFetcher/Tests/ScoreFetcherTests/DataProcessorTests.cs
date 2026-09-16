@@ -20,6 +20,7 @@ public class DataProcessorTests
     private Mock<ICountryRepository> _countryRepository;
     private Mock<IUserRepository> _userRepository;
     private Mock<IScoreRepository> _scoreRepository;
+    private Mock<IUnlistedScoreRepository> _unlistedScoreRepository;
     private Mock<IOsuEntityToDtoService> _osuEntityToDtoService;
     private Mock<ILogger<IDataProcessor>> _logger;
 
@@ -31,13 +32,15 @@ public class DataProcessorTests
         _countryRepository = new();
         _userRepository = new();
         _scoreRepository = new();
+        _unlistedScoreRepository = new();
         _osuEntityToDtoService = new();
         _logger = new Mock<ILogger<IDataProcessor>>();
         _dataProcessor = new DataProcessor(_beatmapsetRepository.Object, 
             _beatmapRepository.Object, 
             _countryRepository.Object, 
             _userRepository.Object, 
-            _scoreRepository.Object, 
+            _scoreRepository.Object,
+            _unlistedScoreRepository.Object,
             _osuEntityToDtoService.Object,
             _logger.Object);
     }
@@ -691,7 +694,7 @@ public class DataProcessorTests
     } 
     
     [Test]
-    public async Task ProcessScoresAsync_ScoreWasRemovedBetweenLeaderboardScores_HandledCorrectly()
+    public async Task ProcessScoresAsync_ScoreWasRemovedBetweenLeaderboardScans_HasNullData_RemovedCompletely()
     {
         // Arrange
         var data = new List<APIScore>
@@ -790,5 +793,113 @@ public class DataProcessorTests
         _scoreRepository.Verify(r => r.DeleteBulk(It.Is<IEnumerable<Score>>(dtos => 
             dtos.Count() == 1 &&
             dtos.All(d => removedScoreIds.Contains(d.Id)))), Times.Once);
+        _unlistedScoreRepository.Verify(r => r.CreateBulk(It.IsAny<IEnumerable<UnlistedScore>>()), Times.Never);
+    }
+    
+    [Test]
+    public async Task ProcessScoresAsync_ScoreWasRemovedBetweenLeaderboardScans_HasNecessaryData_GetsUnlisted()
+    {
+        // Arrange
+        var data = new List<APIScore>
+        {
+            new APIScore
+            {
+                Id = 2,
+                BeatmapId = 1,
+                UserId = 4,
+                TotalScore = 100,
+                Date = new DateTime(2020, 4, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 3,
+                BeatmapId = 1,
+                UserId = 5,
+                TotalScore = 50,
+                Date = new DateTime(2020, 5, 1),
+                Mode = Mode.Osu
+            }
+        };
+
+        var dbData = new List<Score>
+        {
+            new Score
+            {
+                Id = 1,
+                BeatmapId = 1,
+                UserId = 4,
+                TotalScore = 100,
+                Date = new DateTime(2020, 3, 1),
+                Rank = 1,
+                Mode = Mode.Osu,
+                IsConvert = false,
+                IsLazerScore = true,
+                IsPerfectCombo = true,
+                Statistics = new()
+            },
+            new Score
+            {
+                Id = 2,
+                BeatmapId = 1,
+                UserId = 5,
+                TotalScore = 100,
+                Date = new DateTime(2020, 4, 1),
+                Rank = 2,
+                Mode = Mode.Osu
+            },
+            new Score
+            {
+                Id = 3,
+                BeatmapId = 1,
+                UserId = 6,
+                TotalScore = 50,
+                Date = new DateTime(2020, 5, 1),
+                Rank = 3,
+                Mode = Mode.Osu
+            }
+        };
+
+        var scoreRanks = new Dictionary<ulong, int>
+        {
+            { 2, 1 },
+            { 3, 2 }
+        };
+        ulong[] removedScoreIds = [1];
+        
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
+        
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(dbData);
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
+            {
+                Id = api.Id,
+                BeatmapId = api.BeatmapId,
+                TotalScore = api.TotalScore,
+                Date = api.Date,
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
+            });
+
+        // Act
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.LeaderboardScan, topScoresConfig, CancellationToken.None);
+        
+        // Assert
+        _scoreRepository.Verify(r => r.UpdateBulk(It.Is<IEnumerable<Score>>(dtos => 
+            dtos.Count() == 2 &&
+            dtos.All(d => d.Rank == scoreRanks[d.Id]))), Times.Once);
+        _scoreRepository.Verify(r => r.DeleteBulk(It.Is<IEnumerable<Score>>(dtos => 
+            dtos.Count() == 1 &&
+            dtos.All(d => removedScoreIds.Contains(d.Id)))), Times.Once);
+        _unlistedScoreRepository.Verify(r => r.CreateBulk(It.IsAny<IEnumerable<UnlistedScore>>()), Times.Once);
     }
 }

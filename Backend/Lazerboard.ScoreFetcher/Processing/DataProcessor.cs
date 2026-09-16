@@ -14,6 +14,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     ICountryRepository countryRepository,
     IUserRepository userRepository,
     IScoreRepository scoreRepository,
+    IUnlistedScoreRepository unlistedScoreRepository,
     IOsuEntityToDtoService entityToDtoService, 
     ILogger<IDataProcessor> logger): IDataProcessor
 {
@@ -322,8 +323,22 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     if (removedScores.Count > 0)
                     {
                         var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
+                        
                         scoreRepository.DeleteBulk(removedScores);
                         deletedCount += removedScores.Count;
+                        
+                        // If a score has all the necessary data, it doesn't get removed completely,
+                        // but rather becomes unlisted. It may get restored if the user is unrestricted
+                        var scoresWithNullData = GetScoreIdsWithNullData(removedScores);
+                        var scoresToUnlist = removedScores
+                            .Where(s => !scoresWithNullData.Contains(s.Id))
+                            .Select(GetUnlsitedScoreFromScore)
+                            .ToList();
+                        if (scoresToUnlist.Count > 0)
+                        {
+                            unlistedScoreRepository.CreateBulk(scoresToUnlist);
+                            logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", scoresToUnlist.Count);
+                        }
                         
                         extraScores = extraScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
                         merged = merged
@@ -401,6 +416,47 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             return 0;
         }
     }
+
+    /// <summary>
+    /// Get score IDs with null new column data
+    /// </summary>
+    /// <param name="scores">List of <see cref="Score"/>s</param>
+    /// <returns>List of <see cref="Score"/> IDs</returns>
+    private List<ulong> GetScoreIdsWithNullData(IList<Score> scores) =>
+        scores.Where(s =>
+                s.IsConvert == null || s.IsLazerScore == null || s.Statistics == null || s.IsPerfectCombo == null)
+            .Select(s => s.Id)
+            .ToList();
+
+    /// <summary>
+    /// Get a <see cref="UnlistedScore"/> from <see cref="Score"/> data
+    /// </summary>
+    /// <param name="score">The <see cref="Score"/></param>
+    /// <returns>The corresponding <see cref="UnlistedScore"/></returns>
+    private UnlistedScore GetUnlsitedScoreFromScore(Score score) => new UnlistedScore
+    {
+        Id = score.Id,
+        Date = score.Date,
+        Mode = score.Mode,
+        BeatmapId = score.BeatmapId,
+        UserId = score.UserId,
+        Grade = score.Grade,
+        ModAcronyms = score.ModAcronyms,
+        SpeedChange = score.SpeedChange,
+        Accuracy = score.Accuracy,
+        Combo = score.Combo,
+        Misses = score.Misses,
+        TotalScore = score.TotalScore,
+        ClassicTotalScore = score.ClassicTotalScore,
+        LegacyTotalScore = score.LegacyTotalScore,
+        PP = score.PP,
+        Rank = score.Rank,
+        ScoreSource = score.ScoreSource,
+        IsConvert = score.IsConvert,
+        IsLazerScore = score.IsLazerScore,
+        IsPerfectCombo = score.IsPerfectCombo,
+        Statistics = score.Statistics
+    };
 
     /// <summary>
     /// Get max score ID with the ScoreFetcher <see cref="Score.ScoreSource"/> from the database

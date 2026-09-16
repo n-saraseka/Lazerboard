@@ -18,6 +18,9 @@ public class Score : IEntity<ulong>
     public double? SpeedChange { get; set; }
     public float Accuracy { get; set; }
     public int Combo { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
     public int? Misses { get; set; }
     public int TotalScore { get; set; }
     public long ClassicTotalScore { get; set; }
@@ -27,5 +30,6 @@ public class Score : IEntity<ulong>
     public ScoreSource ScoreSource { get; set; } = ScoreSource.ScoreFetcher;
     public bool? IsConvert { get; set; }
     public bool? IsLazerScore { get; set; }
+    public bool? IsPerfectCombo { get; set; }
     public Statistics? Statistics { get; set; }
 }

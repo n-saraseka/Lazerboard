@@ -40,6 +40,8 @@ public class APIScore
     public long ClassicTotalScore { get; set; }
     [JsonProperty("legacy_total_score")]
     public int? LegacyTotalScore { get; set; }
+    [JsonProperty("is_perfect_combo")]
+    public bool IsPerfectCombo { get; set; }
     [JsonProperty("pp")]
     public float? PP { get; set; }
 }

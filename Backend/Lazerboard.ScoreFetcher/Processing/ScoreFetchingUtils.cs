@@ -1,10 +1,10 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.Calculations;
-using Microsoft.Extensions.Logging;
 using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.Processing;
@@ -14,8 +14,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
     ICacheStore cacheStore,
     IOsuApiFetcher osuApiFetcher,
-    IBeatmapCacheRepository beatmapCacheRepository,
-    ILogger<IScoreFetchingUtils> logger) : IScoreFetchingUtils
+    IBeatmapCacheRepository beatmapCacheRepository) : IScoreFetchingUtils
 {
     /// <summary>
     /// Save all beatmapset data from <see cref="APIBeatmapset"/>s (beatmapset creators and beatmapsets)
@@ -104,13 +103,18 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     /// <summary>
     /// Save data from scores to the database
     /// </summary>
-    /// <param name="scores">List of <see cref="APIScore"/>s</param>
+    /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
+    /// <param name="topScoresConfiguration">A mode-to-bool dictionary that determines whether scores outside
+    /// of top 100 for said mode should get removed or not</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task<int> SaveScoreDataAsync(IList<APIScore> scores, ScoreSource source, CancellationToken stoppingToken)
+    public async Task<int> SaveScoreDataAsync(IList<APIScore> scores, 
+        ScoreSource source,
+        Dictionary<Mode, bool> topScoresConfiguration, 
+        CancellationToken stoppingToken)
     {
         await SaveUserDataFromScoresAsync(scores,  stoppingToken);
-        return await dataProcessor.ProcessScoresAsync(scores, source, stoppingToken);
+        return await dataProcessor.ProcessScoresAsync(scores, source, topScoresConfiguration, stoppingToken);
     }
     
     /// <summary>

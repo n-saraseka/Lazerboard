@@ -4,7 +4,7 @@ using Lazerboard.Data.OsuEntities.OsuApiEntities;
 
 namespace Lazerboard.Data.Database.Entities;
 
-public class Score : IEntity<ulong>
+public class UnlistedScore  : IEntity<ulong>
 {
     public ulong Id { get; set; }
     public DateTime Date {  get; set; }
@@ -19,7 +19,7 @@ public class Score : IEntity<ulong>
     public float Accuracy { get; set; }
     public int Combo { get; set; }
     /// <summary>
-    /// This column duplicates the data in <see cref="Statistics.CountMiss"/> column. It will get removed
+    /// This column duplicates the data in <see cref="OsuEntities.OsuApiEntities.Statistics.CountMiss"/> column. It will get removed
     /// after every score has non-null <see cref="Score.Statistics"/>.
     /// </summary>
     public int? Misses { get; set; }

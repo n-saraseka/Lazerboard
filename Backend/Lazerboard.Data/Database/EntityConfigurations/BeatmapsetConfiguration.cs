@@ -24,5 +24,7 @@ public class BeatmapsetConfiguration : IEntityTypeConfiguration<Beatmapset>
             .HasIndex(b => b.StartedScanningAt);
         builder
             .HasIndex(b => b.FinishedScanningAt);
+        builder
+            .HasIndex(b => b.RankedDate);
     }
 }

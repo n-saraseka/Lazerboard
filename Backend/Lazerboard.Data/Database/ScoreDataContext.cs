@@ -10,8 +10,8 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
     public DbSet<Beatmapset> Beatmapsets { get; set; }
     public DbSet<Country> Countries { get; set; }
     public DbSet<Score> Scores { get; set; }
+    public DbSet<UnlistedScore> UnlistedScores { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<ScorePendingDeletion> ScoresPendingDeletion { get; set; }
     public DbSet<BeatmapsetScanLog> BeatmapsetScanLogs { get; set; }
     public DbSet<RemovedBeatmapset> RemovedBeatmapsets { get; set; }
 
@@ -21,7 +21,7 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new BeatmapConfiguration());
         modelBuilder.ApplyConfiguration(new BeatmapsetConfiguration());
-        modelBuilder.ApplyConfiguration(new ScorePendingDeletionConfiguration());
+        modelBuilder.ApplyConfiguration(new UnlistedScoreConfiguration());
     }
 }
     

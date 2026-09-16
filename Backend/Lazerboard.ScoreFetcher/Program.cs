@@ -18,6 +18,7 @@ using Lazerboard.ScoreFetcher.Calculations;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Serilog;
@@ -55,7 +56,7 @@ builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IScorePendingDeletionRepository, ScorePendingDeletionRepository>();
+builder.Services.AddScoped<IUnlistedScoreRepository, UnlistedScoreRepository>();
 builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
@@ -118,20 +119,28 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
 // Background services
 var servicesConfig = builder.Configuration.GetSection("FetcherServices");
 builder.Services.AddHostedService<BeatmapsetUpdatesService>();
-if (bool.Parse(servicesConfig["MainSeeding"]))
+if (servicesConfig.GetValue<bool>("MainSeeding"))
 {
     builder.Services.AddHostedService<BeatmapsetSeedingService>();
 }
-if (bool.Parse(servicesConfig["SecondarySeeding"]))
+if (servicesConfig.GetValue<bool>("SecondarySeeding"))
 {
     builder.Services.AddHostedService<UnlistedBeatmapsetSeedingService>();
 }
-if (bool.Parse(servicesConfig["Firehose"]))
+if (servicesConfig.GetValue<bool>("Firehose"))
 {
     builder.Services.AddHostedService<FirehoseService>();
 }
+if (servicesConfig.GetValue<bool>("Rescans"))
+{
+    builder.Services.AddHostedService<RescanService>();
+}
+
+if (servicesConfig.GetValue<bool>("Backpopulator"))
+{
+    builder.Services.AddHostedService<BackpopulatorService>();
+}
 builder.Services.AddHostedService<ScoresCountService>();
-builder.Services.AddHostedService<BackpopulatorService>();
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>

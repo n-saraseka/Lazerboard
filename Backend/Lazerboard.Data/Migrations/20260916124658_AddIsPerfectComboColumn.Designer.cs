@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260916124658_AddIsPerfectComboColumn")]
+    partial class AddIsPerfectComboColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -413,134 +416,34 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("scores", (string)null);
                 });
 
-            modelBuilder.Entity("Lazerboard.Data.Database.Entities.UnlistedScore", b =>
+            modelBuilder.Entity("Lazerboard.Data.Database.Entities.ScorePendingDeletion", b =>
                 {
-                    b.Property<decimal>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric(20,0)")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<float>("Accuracy")
-                        .HasColumnType("real")
-                        .HasColumnName("accuracy");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BeatmapId")
-                        .HasColumnType("integer")
-                        .HasColumnName("beatmap_id");
-
-                    b.Property<long>("ClassicTotalScore")
-                        .HasColumnType("bigint")
-                        .HasColumnName("classic_total_score");
-
-                    b.Property<int>("Combo")
-                        .HasColumnType("integer")
-                        .HasColumnName("combo");
-
-                    b.Property<DateTime>("Date")
+                    b.Property<DateTime>("MarkedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date");
+                        .HasColumnName("marked_at");
 
-                    b.Property<Grade>("Grade")
-                        .HasColumnType("grade")
-                        .HasColumnName("grade");
-
-                    b.Property<bool?>("IsConvert")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_convert");
-
-                    b.Property<bool?>("IsLazerScore")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_lazer_score");
-
-                    b.Property<bool?>("IsPerfectCombo")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_perfect_combo");
-
-                    b.Property<int?>("LegacyTotalScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("legacy_total_score");
-
-                    b.Property<int?>("Misses")
-                        .HasColumnType("integer")
-                        .HasColumnName("misses");
-
-                    b.PrimitiveCollection<List<string>>("ModAcronyms")
-                        .IsRequired()
-                        .HasColumnType("text[]")
-                        .HasColumnName("mod_acronyms");
-
-                    b.Property<Mode>("Mode")
-                        .HasColumnType("mode")
-                        .HasColumnName("mode");
-
-                    b.Property<float?>("PP")
-                        .HasColumnType("real")
-                        .HasColumnName("pp");
-
-                    b.Property<int>("Rank")
-                        .HasColumnType("integer")
-                        .HasColumnName("rank");
-
-                    b.Property<ScoreSource>("ScoreSource")
-                        .HasColumnType("score_source")
-                        .HasColumnName("score_source");
-
-                    b.Property<double?>("SpeedChange")
-                        .HasColumnType("double precision")
-                        .HasColumnName("speed_change");
-
-                    b.Property<int>("TotalScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("total_score");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer")
-                        .HasColumnName("user_id");
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Statistics", "Lazerboard.Data.Database.Entities.UnlistedScore.Statistics#Statistics", b1 =>
-                        {
-                            b1.Property<int?>("CountGood");
-
-                            b1.Property<int?>("CountGreat");
-
-                            b1.Property<int?>("CountMeh");
-
-                            b1.Property<int?>("CountMiss");
-
-                            b1.Property<int?>("CountOk");
-
-                            b1.Property<int?>("CountPerfect");
-
-                            b1.Property<int?>("LegacySliderEndMisses");
-
-                            b1.Property<int?>("LegacySliderEnds");
-
-                            b1.Property<int?>("SliderEnds");
-
-                            b1.Property<int?>("SliderTickMisses");
-
-                            b1.Property<int?>("SliderTicks");
-
-                            b1.Property<int?>("SpinnerBonus");
-
-                            b1.Property<int?>("SpinnerSpins");
-
-                            b1.ToJson("statistics");
-                        });
+                    b.Property<decimal>("ScoreId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("score_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_unlisted_scores");
+                        .HasName("pk_scores_pending_deletion");
 
-                    b.HasIndex("BeatmapId")
-                        .HasDatabaseName("ix_unlisted_scores_beatmap_id");
+                    b.HasIndex("MarkedAt")
+                        .HasDatabaseName("ix_scores_pending_deletion_marked_at");
 
-                    b.HasIndex("ScoreSource")
-                        .HasDatabaseName("ix_unlisted_scores_score_source");
+                    b.HasIndex("ScoreId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_scores_pending_deletion_score_id");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_unlisted_scores_user_id");
-
-                    b.ToTable("unlisted_scores", (string)null);
+                    b.ToTable("scores_pending_deletion", (string)null);
                 });
 
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.User", b =>
@@ -623,25 +526,16 @@ namespace OsuScoreStats.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Lazerboard.Data.Database.Entities.UnlistedScore", b =>
+            modelBuilder.Entity("Lazerboard.Data.Database.Entities.ScorePendingDeletion", b =>
                 {
-                    b.HasOne("Lazerboard.Data.Database.Entities.Beatmap", "Beatmap")
-                        .WithMany()
-                        .HasForeignKey("BeatmapId")
+                    b.HasOne("Lazerboard.Data.Database.Entities.Score", "Score")
+                        .WithOne()
+                        .HasForeignKey("Lazerboard.Data.Database.Entities.ScorePendingDeletion", "ScoreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_unlisted_scores_beatmaps_beatmap_id");
+                        .HasConstraintName("fk_scores_pending_deletion_scores_score_id");
 
-                    b.HasOne("Lazerboard.Data.Database.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_unlisted_scores_users_user_id");
-
-                    b.Navigation("Beatmap");
-
-                    b.Navigation("User");
+                    b.Navigation("Score");
                 });
 
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.User", b =>

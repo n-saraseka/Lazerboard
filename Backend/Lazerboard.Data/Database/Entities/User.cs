@@ -8,4 +8,5 @@ public class User : IEntity<int>
     public Country? Country { get; set; }
     public bool IsRestricted { get; set; }
     public DateTime? LastCheckedAt { get; set; }
+    public DateTime? LastScannedAt { get; set; }
 }

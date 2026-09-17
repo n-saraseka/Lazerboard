@@ -8,7 +8,6 @@ namespace Lazerboard.Data.ApiFetchers;
 
 public class OsuApiFetcher : IOsuApiFetcher
 {
-    private readonly double _apiInterval;
     private readonly HttpClient _httpClient;
     private readonly string _apiUrl;
     private readonly ILogger<IOsuApiFetcher> _logger;
@@ -22,7 +21,6 @@ public class OsuApiFetcher : IOsuApiFetcher
         var port = externalApisConfig.GetValue<int>("Port");
         
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
-        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         var baseUrl = osuApiConfig.GetValue<string>("BaseAddress");
 
         var builder = new UriBuilder
@@ -153,7 +151,6 @@ public class OsuApiFetcher : IOsuApiFetcher
                 var userData = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
                 
                 users.AddRange(userData);
-                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
             }
         }
 
@@ -186,7 +183,6 @@ public class OsuApiFetcher : IOsuApiFetcher
 
             APIBeatmap[] beatmapData = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
             beatmaps.AddRange(beatmapData);
-            await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
         }
 
         return beatmaps;

@@ -1,6 +1,7 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -20,8 +21,9 @@ public class UserUtils(IUserRepository userRepository,
     /// Process a batch of users, determine whether they are restricted or not, and process their scores
     /// </summary>
     /// <param name="users">A list of <see cref="User"/>s</param>
+    /// <param name="isUserScan">Whether the method was called from a <see cref="UserScanService"/> or not</param>
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    public async Task ProcessUsersAsync(IList<User> users, CancellationToken stoppingToken)
+    public async Task ProcessUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
     {
         var userIds = users.Select(u => u.Id).Distinct().ToList();
         
@@ -29,6 +31,9 @@ public class UserUtils(IUserRepository userRepository,
         var existingUserIds = existingUsers.Select(u => u.Id).ToList();
         
         var restrictedUsers = users.Where(u => !existingUserIds.Contains(u.Id)).ToList();
+        var unrestrictedUsers = users
+            .Where(u => existingUserIds.Contains(u.Id))
+            .ToDictionary(u => u.Id, u => existingUsers.First(user => u.Id == user.Id));
         var restrictedUserIds = restrictedUsers.Select(u => u.Id).ToList();
 
         await RemoveUserScoresAsync(restrictedUserIds, stoppingToken);
@@ -37,7 +42,22 @@ public class UserUtils(IUserRepository userRepository,
         users = users.Select(u =>
         {
             u.IsRestricted = !existingUserIds.Contains(u.Id);
-            u.LastScannedAt = currentDateTime;
+            
+            if (isUserScan)
+            {
+                u.LastScannedAt = currentDateTime;
+            }
+            else
+            {
+                u.LastCheckedAt = currentDateTime;
+            }
+
+            if (!u.IsRestricted)
+            {
+                u.Username = unrestrictedUsers[u.Id].Username;
+                u.CountryCode = unrestrictedUsers[u.Id].CountryCode;
+            }
+            
             return u;
         }).ToList();
         userRepository.UpdateBulk(users);

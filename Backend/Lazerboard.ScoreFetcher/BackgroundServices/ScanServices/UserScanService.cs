@@ -13,7 +13,7 @@ public class UserScanService(
     IServiceProvider serviceProvider,
     ILogger<UserScanService> logger) : BackgroundService
 {
-    private const int BatchSize = 500;
+    private const int BatchSize = 50;
     private int? _latestUserId;
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,7 +66,7 @@ public class UserScanService(
     {
         using var scope = serviceProvider.CreateScope();
         var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
-        await userUtils.ProcessUsersAsync(users, stoppingToken);
+        await userUtils.ProcessUsersAsync(users, true, stoppingToken);
     }
     
     /// <summary>

@@ -121,7 +121,6 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
 
 // Background services
 var servicesConfig = builder.Configuration.GetSection("FetcherServices");
-builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 if (servicesConfig.GetValue<bool>("MainSeeding"))
 {
     builder.Services.AddHostedService<BeatmapsetSeedingService>();
@@ -138,11 +137,16 @@ if (servicesConfig.GetValue<bool>("Rescans"))
 {
     builder.Services.AddHostedService<RescanService>();
 }
-
 if (servicesConfig.GetValue<bool>("Backpopulator"))
 {
     builder.Services.AddHostedService<BackpopulatorService>();
 }
+if (servicesConfig.GetValue<bool>("UserScans"))
+{
+    builder.Services.AddHostedService<UserScanService>();
+}
+builder.Services.AddHostedService<BeatmapsetUpdatesService>();
+builder.Services.AddHostedService<UserUpdatesService>();
 builder.Services.AddHostedService<ScoresCountService>();
 
 // Rate limiting

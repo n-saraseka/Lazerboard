@@ -9,4 +9,9 @@ public class UnlistedScoreRepository(ScoreDataContext db) : BaseRepository<Unlis
     public IQueryable<UnlistedScore> GetByUserId(int userId) => Set
         .AsNoTracking()
         .Where(s => s.UserId == userId);
+    
+    public IQueryable<UnlistedScore> GetByUserIds(IList<int> userIds) => Set
+        .AsNoTracking()
+        .Where(s => userIds.Contains(s.UserId))
+        .OrderBy(s => s.Id);
 }

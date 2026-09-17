@@ -66,7 +66,7 @@ public class UserScanService(
     {
         using var scope = serviceProvider.CreateScope();
         var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
-        await userUtils.ProcessUsersAsync(users, true, stoppingToken);
+        await userUtils.ProcessExistingUsersAsync(users, true, stoppingToken);
     }
     
     /// <summary>

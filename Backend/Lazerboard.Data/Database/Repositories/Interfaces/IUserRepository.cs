@@ -8,4 +8,5 @@ public interface IUserRepository : IRepository<User, int>
     Task<User?> GetByIdWithCountryAsync(int id, CancellationToken cancellationToken);
     Task<List<User>> SearchAsync(string query, CancellationToken cancellationToken);
     Task<User?> GetLatestScannedUserAsync(CancellationToken cancellationToken = default);
+    IQueryable<User> GetRestrictedUsersAsync(DateTime dateTime, TimeSpan interval);
 }

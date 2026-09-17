@@ -1,6 +1,5 @@
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +15,8 @@ public class UserUpdatesService : BackgroundService
     private readonly ILogger<UserUpdatesService> _logger;
 
     private const int BatchSize = 50;
-    private readonly TimeSpan _lookbackInterval;
+    private readonly TimeSpan _existingUsersLookbackInterval;
+    private readonly TimeSpan _restrictedUsersLookbackInterval;
     private DateTime _startingDateTime;
     
     public UserUpdatesService(IServiceProvider serviceProvider, ILogger<UserUpdatesService> logger)
@@ -27,9 +27,11 @@ public class UserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var updateHours = config.GetValue<double>("UserUpdatesIntervalHours");
-        _lookbackInterval = TimeSpan.FromHours(updateHours);
-        _startingDateTime = DateTime.UtcNow - _lookbackInterval;
+        var existingUsersUpdateHours = config.GetValue<double>("UserUpdatesIntervalHours");
+        var restrictedUsersUpdatehours = config.GetValue<double>("RestrictedUsersUpdateIntervalHours");
+        _existingUsersLookbackInterval = TimeSpan.FromHours(existingUsersUpdateHours);
+        _restrictedUsersLookbackInterval = TimeSpan.FromHours(restrictedUsersUpdatehours);
+        _startingDateTime = DateTime.UtcNow;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,14 +40,22 @@ public class UserUpdatesService : BackgroundService
         {
             try
             {
-                var users = await GetUsersAsync(_startingDateTime, 0, stoppingToken);
+                var users = await GetLatestUsersAsync(_startingDateTime, 0, stoppingToken);
                 for (var i = 1; users.Count > 0; i++)
                 {
-                    await ProcessUsersAsync(users, stoppingToken);
-                    users = await GetUsersAsync(_startingDateTime, i, stoppingToken);
+                    await ProcessExistingUsersAsync(users, stoppingToken);
+                    users = await GetLatestUsersAsync(_startingDateTime, i, stoppingToken);
                 }
-                _startingDateTime = _startingDateTime.Add(_lookbackInterval);
-                await Task.Delay(_lookbackInterval, stoppingToken);
+
+                var restrictedUsers = await GetRestrictedUsersAsync(_startingDateTime, 0, stoppingToken);
+                for (var i = 1; restrictedUsers.Count > 0; i++)
+                {
+                    await ProcessRestrictedUsersAsync(users, stoppingToken);
+                    restrictedUsers = await GetRestrictedUsersAsync(_startingDateTime, i, stoppingToken);
+                }
+                
+                _startingDateTime = _startingDateTime.Add(_existingUsersLookbackInterval);
+                await Task.Delay(_existingUsersLookbackInterval, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -60,18 +70,37 @@ public class UserUpdatesService : BackgroundService
     }
     
     /// <summary>
-    /// Get a batch of <see cref="User"/>s from scores after specified date
+    /// Get a batch of <see cref="User"/>s from recent scores
     /// </summary>
     /// <param name="date">The <see cref="DateTime"/></param>
     /// <param name="batchNumber">The batch number</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetUsersAsync(DateTime date, int batchNumber, CancellationToken stoppingToken)
+    private async Task<List<User>> GetLatestUsersAsync(DateTime date, int batchNumber, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         return await scoreRepository
-            .GetUsersFromScoresAfterDate(date, _lookbackInterval)
+            .GetUsersFromScoresAfterDate(date, _existingUsersLookbackInterval)
+            .Skip(batchNumber * BatchSize)
+            .Take(BatchSize)
+            .ToListAsync(stoppingToken);
+    }
+
+    /// <summary>
+    /// Get a batch of restricted <see cref="User"/>s
+    /// </summary>
+    /// <param name="date">The <see cref="DateTime"/></param>
+    /// <param name="batchNumber">The batch number</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>List of <see cref="User"/>s</returns>
+    private async Task<List<User>> GetRestrictedUsersAsync(DateTime date, int batchNumber,
+        CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        return await userRepository
+            .GetRestrictedUsersAsync(date, _restrictedUsersLookbackInterval)
             .Skip(batchNumber * BatchSize)
             .Take(BatchSize)
             .ToListAsync(stoppingToken);
@@ -82,10 +111,22 @@ public class UserUpdatesService : BackgroundService
     /// </summary>
     /// <param name="users">A list of <see cref="User"/>s</param>
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    private async Task ProcessUsersAsync(IList<User> users, CancellationToken stoppingToken)
+    private async Task ProcessExistingUsersAsync(IList<User> users, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
-        await userUtils.ProcessUsersAsync(users, false, stoppingToken);
+        await userUtils.ProcessExistingUsersAsync(users, false, stoppingToken);
+    }
+    
+    /// <summary>
+    /// Process a batch of users, determine whether they are still restricted or not, and process their scores
+    /// </summary>
+    /// <param name="users">A list of <see cref="User"/>s</param>
+    /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
+    private async Task ProcessRestrictedUsersAsync(IList<User> users, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
+        await userUtils.ProcessRestrictedUsersAsync(users, stoppingToken);
     }
 }

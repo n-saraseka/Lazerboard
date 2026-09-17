@@ -65,10 +65,10 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
 
     public IQueryable<User> GetUsersFromScoresAfterDate(DateTime dateTime, TimeSpan interval)
     {
-        var endTime = dateTime + interval;
+        var startTime = dateTime - interval;
         return Set
             .AsNoTracking()
-            .Where(s => s.Date >= dateTime && s.Date <= endTime)
+            .Where(s => s.Date >= startTime && s.Date <= dateTime)
             .OrderBy(s => s.Date)
             .Select(s => s.User)
             .Distinct();

@@ -7,5 +7,7 @@ public enum ScanEventType
     MainSeedingStarted,
     MainSeedingFinished,
     SecondarySeedingStarted,
-    SecondarySeedingFinished
+    SecondarySeedingFinished,
+    UserScanStarted,
+    UserScanFinished
 }

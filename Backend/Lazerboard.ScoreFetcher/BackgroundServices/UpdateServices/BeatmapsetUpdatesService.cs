@@ -3,14 +3,14 @@ using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Lazerboard.Data.OsuEntities.OsuApiEntities;
-using Lazerboard.ScoreFetcher.Processing;
 
-namespace Lazerboard.ScoreFetcher.BackgroundServices;
+namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 
 public class BeatmapsetUpdatesService : BackgroundService
 {

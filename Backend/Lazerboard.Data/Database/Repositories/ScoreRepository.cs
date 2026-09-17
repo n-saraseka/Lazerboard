@@ -57,4 +57,9 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
     public IQueryable<Score> GetByUserId(int userId) => Set
         .AsNoTracking()
         .Where(s => s.UserId == userId);
+    
+    public IQueryable<Score> GetByUserIds(IList<int> userIds) => Set
+        .AsNoTracking()
+        .Where(s => userIds.Contains(s.UserId))
+        .OrderBy(s => s.Id);
 }

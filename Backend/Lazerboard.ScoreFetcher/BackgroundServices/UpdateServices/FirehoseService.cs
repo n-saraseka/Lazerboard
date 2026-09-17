@@ -4,12 +4,12 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Lazerboard.ScoreFetcher.Processing;
 
-namespace Lazerboard.ScoreFetcher.BackgroundServices;
+namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 
 public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseService> logger)
     : BackgroundService

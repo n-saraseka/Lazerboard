@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace Lazerboard.ScoreFetcher.BackgroundServices;
+namespace Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 
 public class BackpopulatorService(IServiceProvider serviceProvider, ILogger<BackpopulatorService> logger) : BackgroundService
 {

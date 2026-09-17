@@ -30,4 +30,23 @@ public class UserScanLogRepository(ScoreDataContext db) : BaseRepository<UserSca
             .Where(b => b.EventType == ScanEventType.UserScanFinished)
             .OrderByDescending(b => b.LoggedAt)
             .FirstOrDefaultAsync(cancellationToken);
+    
+    /// <summary>
+    /// Save a new <see cref="UserScanLog"/> event with current timestamp
+    /// </summary>
+    /// <param name="type">The <see cref="ScanEventType"/></param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>Number of rows inserted into the DB</returns>
+    public async Task<int> SaveEventAsync(ScanEventType type, CancellationToken cancellationToken = default)
+    {
+        var currentDateTime = DateTime.UtcNow;
+        var newRow = new UserScanLog
+        {
+            EventType = type,
+            LoggedAt = currentDateTime
+        };
+        
+        Create(newRow);
+        return await SaveChangesAsync(cancellationToken);
+    }
 }

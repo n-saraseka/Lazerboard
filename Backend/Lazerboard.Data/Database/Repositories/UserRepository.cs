@@ -30,5 +30,12 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
             .Take(25)
             .Include(u => u.Country)
             .ToListAsync(cancellationToken);
-    } 
+    }
+    
+    public Task<User?> GetLatestScannedUserAsync(CancellationToken cancellationToken = default) => 
+        Set
+            .AsNoTracking()
+            .Where(u => u.LastScannedAt != null)
+            .OrderByDescending(u => u.LastScannedAt)
+            .FirstOrDefaultAsync(cancellationToken);
 }

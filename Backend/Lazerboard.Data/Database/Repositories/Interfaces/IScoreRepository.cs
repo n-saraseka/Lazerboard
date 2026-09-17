@@ -13,4 +13,5 @@ public interface IScoreRepository : IRepository<Score, ulong>
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken = default);
     Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken);
     IQueryable<Score> GetByUserId(int userId);
+    IQueryable<Score> GetByUserIds(IList<int> userIds);
 }

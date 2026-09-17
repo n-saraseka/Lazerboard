@@ -7,5 +7,5 @@ public class User : IEntity<int>
     public string? CountryCode { get; set; }
     public Country? Country { get; set; }
     public bool IsRestricted { get; set; }
-    public DateTime LastCheckedAt { get; set; }
+    public DateTime? LastCheckedAt { get; set; }
 }

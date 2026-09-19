@@ -1,0 +1,62 @@
+name: Deploy all images
+on: workflow_dispatch
+
+env:
+  REGISTRY: ghcr.io
+  MIGRATIONS_IMAGE_NAME: ${{ github.actor }}/lazerboard-migrations:latest
+  SCOREFETCHER_IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:latest
+  BACKEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:latest
+  FRONTEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:latest
+  DISCORDHOOKS_IMAGE_NAME: ${{ github.actor }}/lazerboard-discordhooks:latest
+  EXTERNALAPIS_IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:latest
+
+jobs:
+  deploy:
+    name: deploy containers
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: install ssh keys
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+      - name: copy docker-compose to server
+        run: |
+          scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
+      - name: create .env file
+        uses: ./.github/actions/create-env
+        with:
+          psql_user: ${{ secrets.PSQL_USER }}
+          psql_password: ${{ secrets.PSQL_PASSWORD }}
+          psql_db: ${{ secrets.PSQL_DB }}
+          psql_host: ${{ secrets.PSQL_HOST }}
+          psql_port: ${{ secrets.PSQL_PORT }}
+          redis_password: ${{ secrets.REDIS_PASSWORD }}
+          redis_user: ${{ secrets.REDIS_USER }}
+          redis_user_password: ${{ secrets.REDIS_USER_PASSWORD }}
+          osuapi_clientid: ${{ secrets.OSUAPI_CLIENTID }}
+          osuapi_clientsecret: ${{ secrets.OSUAPI_CLIENTSECRET }}
+          hooks_latestmapurl: ${{ secrets.HOOKS_SCANHOOKURL }}
+          hooks_rescansurl: ${{ secrets.HOOKS_RESCANHOOKURL }}
+          ssh_user: ${{ secrets.SSH_USER }}
+          ssh_host: ${{ secrets.SSH_HOST }}
+          work_dir: ${{ secrets.WORK_DIR }}
+      - name: Unlock GPG key for pass
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+      - name: Login
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+          "echo '${{ secrets.PAT }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+      - name: deploy container
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
+          docker compose pull && UID=$(id -u) GID=$(id -g) docker compose up -d"
+      - name: Logout
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup-post-deploy

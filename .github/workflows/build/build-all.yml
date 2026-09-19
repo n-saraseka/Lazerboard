@@ -1,0 +1,119 @@
+name: Build all images
+on: workflow_dispatch
+
+env:
+  REGISTRY: ghcr.io
+  MIGRATIONS_IMAGE_NAME: ${{ github.actor }}/lazerboard-migrations:latest
+  SCOREFETCHER_IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:latest
+  BACKEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:latest
+  FRONTEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:latest
+  DISCORDHOOKS_IMAGE_NAME: ${{ github.actor }}/lazerboard-discordhooks:latest
+  EXTERNALAPIS_IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:latest
+
+jobs:
+  publish-migrations:
+    name: publish migrations image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish migrations
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.Data/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.MIGRATIONS_IMAGE_NAME }}
+  publish-scorefetcher:
+    name: publish score fetcher image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish score fetcher
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.ScoreFetcher/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.SCOREFETCHER_IMAGE_NAME }}
+  publish-backend:
+    name: publish backend image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+  publish-frontend:
+    name: publish frontend image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Frontend
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+  publish-discordhooks:
+    name: publish discord hooks image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.DiscordHooks/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.DISCORDHOOKS_IMAGE_NAME }}
+  publish-externalapis:
+    name: publish external apis image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.DiscordHooks/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.EXTERNALAPIS_IMAGE_NAME }}

@@ -1,0 +1,33 @@
+name: Build migrations image
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "Backend/Lazerboard.Data/Migrations/**"
+      - "Backend/Lazerboard.Data/Entities/**"
+      - "Backend/Lazerboard.Data/EntityConfigurations/**"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.actor }}/lazerboard-migrations:latest
+
+jobs:
+  publish:
+    name: publish image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login
+        run: |
+          echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and publish migrations
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Lazerboard.Data/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}

@@ -3,7 +3,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 
 namespace Lazerboard.Data.Database.Repositories.Interfaces;
 
-public interface IBeatmapsetScanLogRepository
+public interface IBeatmapsetScanLogRepository : IRepository<BeatmapsetScanLog, int>
 {
     Task<BeatmapsetScanLog?> GetLatestStartedScanAsync(CancellationToken cancellationToken = default);
     Task<BeatmapsetScanLog?> GetLatestFinishedScanAsync(CancellationToken cancellationToken = default);

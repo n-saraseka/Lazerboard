@@ -13,7 +13,8 @@ using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
-using Lazerboard.ScoreFetcher.BackgroundServices;
+using Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
+using Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 using Lazerboard.ScoreFetcher.Calculations;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 using Lazerboard.ScoreFetcher.Processing;
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUnlistedScoreRepository, UnlistedScoreRepository>();
 builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetRepository>();
+builder.Services.AddScoped<IUserScanLogRepository, UserScanLogRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 
 // Score fetching related
@@ -69,6 +71,7 @@ builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
 builder.Services.AddScoped<IBeatmapUtils, BeatmapUtils>();
+builder.Services.AddScoped<IUserUtils, UserUtils>();
 
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
 
@@ -118,7 +121,6 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
 
 // Background services
 var servicesConfig = builder.Configuration.GetSection("FetcherServices");
-builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 if (servicesConfig.GetValue<bool>("MainSeeding"))
 {
     builder.Services.AddHostedService<BeatmapsetSeedingService>();
@@ -135,11 +137,16 @@ if (servicesConfig.GetValue<bool>("Rescans"))
 {
     builder.Services.AddHostedService<RescanService>();
 }
-
 if (servicesConfig.GetValue<bool>("Backpopulator"))
 {
     builder.Services.AddHostedService<BackpopulatorService>();
 }
+if (servicesConfig.GetValue<bool>("UserScans"))
+{
+    builder.Services.AddHostedService<UserScanService>();
+}
+builder.Services.AddHostedService<BeatmapsetUpdatesService>();
+builder.Services.AddHostedService<UserUpdatesService>();
 builder.Services.AddHostedService<ScoresCountService>();
 
 // Rate limiting

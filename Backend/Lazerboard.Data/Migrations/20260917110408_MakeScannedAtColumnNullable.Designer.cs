@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260917110408_MakeScannedAtColumnNullable")]
+    partial class MakeScannedAtColumnNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -563,10 +566,6 @@ namespace OsuScoreStats.Migrations
                     b.Property<DateTime?>("LastCheckedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_checked_at");
-
-                    b.Property<DateTime?>("LastScannedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_scanned_at");
 
                     b.Property<string>("Username")
                         .IsRequired()

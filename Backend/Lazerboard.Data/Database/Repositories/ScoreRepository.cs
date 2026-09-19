@@ -57,4 +57,21 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
     public IQueryable<Score> GetByUserId(int userId) => Set
         .AsNoTracking()
         .Where(s => s.UserId == userId);
+    
+    public IQueryable<Score> GetByUserIds(IList<int> userIds) => Set
+        .AsNoTracking()
+        .Where(s => userIds.Contains(s.UserId))
+        .OrderBy(s => s.Id);
+
+    public IQueryable<User> GetUsersFromScoresAfterDate(DateTime dateTime, TimeSpan interval)
+    {
+        var startTime = dateTime - interval;
+        return Set
+            .AsNoTracking()
+            .Where(s => s.Date >= startTime && s.Date <= dateTime)
+            .OrderBy(s => s.Date)
+            .Select(s => s.User)
+            .Distinct();
+    }
+        
 }

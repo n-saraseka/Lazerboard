@@ -1,4 +1,4 @@
-name: deploy-discordhooks.yml
+name: Deploy Discord hooks image
 on: workflow_dispatch
 
 env:

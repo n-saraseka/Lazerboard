@@ -28,8 +28,6 @@ services:
         condition: service_started
     env_file:
       - .env
-    environment:
-      - ASPNETCORE_URLS=http://+:8081
     volumes:
       - ./logs/scorefetcher:/app/Logs
       - ./BeatmapCache:/app/BeatmapCache

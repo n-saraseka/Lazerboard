@@ -3,7 +3,7 @@ lazer.board {
     encode gzip
     
     handle /api/fetcher/* {
-        reverse_proxy scorefetcher:8081
+        reverse_proxy scorefetcher:8080
     }
     
     handle /api/* {

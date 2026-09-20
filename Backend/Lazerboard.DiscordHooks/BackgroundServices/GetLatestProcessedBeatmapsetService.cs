@@ -123,8 +123,8 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
         var beatmapStatuses = EmbedUtils.GetStatusesString(beatmaps);
 
         var rankedAt = beatmapset.RankedDate == null ? "" : $"**Ranked at**: <t:{beatmapset.RankedDate.Value.ToUnixTimeSeconds()}:f>\n";
-        var mapsetBy = $"**Mapset by**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
-        var mode = $"**Beatmapset modes**: {beatmapsetModes}";
+        var mapsetBy = $"**Beatmapset creator**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
+        var mode = $"**Beatmap modes**: {beatmapsetModes}";
         var beatmapStatus = $"**Beatmap statuses**: {beatmapStatuses}";
         var lazerboardLink = $"**[Lazerboard link](https://lazerboard.melguy.com/beatmapsets/{beatmapset.Id})**";
 

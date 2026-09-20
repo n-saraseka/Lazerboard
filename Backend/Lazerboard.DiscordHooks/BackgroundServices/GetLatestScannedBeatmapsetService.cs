@@ -47,7 +47,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.Log(LogLevel.Error, ex, "Latest rescanned map service failed!");
+            _logger.Log(LogLevel.Error, ex, "Latest scanned mapset service failed!");
         }
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -84,9 +84,9 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
             using var client = new DiscordWebhookClient(_webhookUrl);
                     
             var beatmapsetId = beatmaps.First().BeatmapsetId;
-            _logger.Log(LogLevel.Information, "Latest rescanned beatmapset ID: {beatmapId}", beatmapsetId);
+            _logger.Log(LogLevel.Information, "Latest scanned beatmapset ID: {beatmapId}", beatmapsetId);
             
-            await client.SendMessageAsync("Latest rescanned beatmapset:", false, [embed]);
+            await client.SendMessageAsync("Latest scanned beatmapset:", false, [embed]);
         }
     }
     
@@ -97,7 +97,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
     /// <returns>List of <see cref="Beatmap"/>s</returns>
     private async Task<List<Beatmap>> GetBeatmapsDataAsync(CancellationToken cancellationToken)
     {
-        _logger.Log(LogLevel.Information, "Getting latest rescanned beatmapset...");
+        _logger.Log(LogLevel.Information, "Getting latest scanned beatmapset...");
         
         using var scope = _serviceProvider.CreateScope();
         
@@ -133,8 +133,8 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         var beatmapStatuses = EmbedUtils.GetStatusesString(beatmaps);
 
         var rankedAt = beatmapset.RankedDate == null ? "" : $"**Ranked at**: <t:{beatmapset.RankedDate.Value.ToUnixTimeSeconds()}:f>\n";
-        var mapsetBy = $"**Mapset by**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
-        var mode = $"**Beatmapset modes**: {beatmapsetModes}";
+        var mapsetBy = $"**Beatmapset creator**: [{beatmapset.Creator}](https://osu.ppy.sh/users/{beatmapset.UserId})";
+        var mode = $"**Beatmap modes**: {beatmapsetModes}";
         var beatmapStatus = $"**Beatmap statuses**: {beatmapStatuses}";
         var lazerboardLink = $"**[Lazerboard link](https://lazerboard.melguy.com/beatmapsets/{beatmapset.Id})**";
 
@@ -156,7 +156,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
             Timestamp = timestamp,
             Footer = new EmbedFooterBuilder
             {
-                Text = "Lazerboard: Beatmap rescans"
+                Text = "Lazerboard: Beatmap scans"
             }
         };
         return builder.Build();

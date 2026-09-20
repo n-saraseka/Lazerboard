@@ -64,6 +64,7 @@ public class UserUpdatesService : BackgroundService
                 }
                 
                 _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval);
+                _existingCheckFinish = _existingCheckFinish.Add(_restrictedUsersLookbackInterval);
                 await FinishUserCheckAsync(stoppingToken);
                 _shouldStartCheck = true;
                 await Task.Delay(_existingUsersLookbackInterval, stoppingToken);

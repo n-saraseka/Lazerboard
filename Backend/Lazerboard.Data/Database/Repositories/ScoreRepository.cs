@@ -67,9 +67,9 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
         Set
             .AsNoTracking()
             .Where(s => s.Date >= startTime && s.Date <= endTime)
-            .OrderBy(s => s.Date)
             .Select(s => s.User)
-            .Distinct();
+            .Distinct()
+            .OrderBy(u => u.Id);
     
     public Task<Score?> GetNewestScoreAsync(CancellationToken cancellationToken = default) =>
         Set

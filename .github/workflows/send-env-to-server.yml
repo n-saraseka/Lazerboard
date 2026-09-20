@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: install ssh keys
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
       - name: create .env file
         uses: ./.github/actions/create-env
         with:
@@ -29,3 +34,6 @@ jobs:
           ssh_user: ${{ secrets.SSH_USER }}
           ssh_host: ${{ secrets.SSH_HOST }}
           work_dir: ${{ secrets.WORK_DIR }}
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup-post-deploy

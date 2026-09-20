@@ -98,7 +98,8 @@ public class UserScanService(
         if (latestStartTimestamp is null 
             || (latestFinishTimeStamp != null && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
-            await scanLogsRepository.SaveEventAsync(ScanEventType.UserScanStarted, stoppingToken);
+            var currentDateTime = DateTime.UtcNow;
+            await scanLogsRepository.SaveEventAsync(ScanEventType.UserScanStarted, currentDateTime, stoppingToken);
             logger.Log(LogLevel.Information, "Started scanning users at {datetime}", DateTime.UtcNow);
             return;
         }
@@ -118,7 +119,8 @@ public class UserScanService(
     {
         using var scope = serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
-        await scanLogsRepository.SaveEventAsync(ScanEventType.UserScanFinished, stoppingToken);
+        var currentDateTime = DateTime.UtcNow;
+        await scanLogsRepository.SaveEventAsync(ScanEventType.UserScanFinished, currentDateTime, stoppingToken);
         logger.Log(LogLevel.Information, "User scan complete");
     }
 }

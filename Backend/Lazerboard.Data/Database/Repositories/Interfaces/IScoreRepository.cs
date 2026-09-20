@@ -14,5 +14,6 @@ public interface IScoreRepository : IRepository<Score, ulong>
     Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken);
     IQueryable<Score> GetByUserId(int userId);
     IQueryable<Score> GetByUserIds(IList<int> userIds);
-    IQueryable<User> GetUsersFromScoresAfterDate(DateTime dateTime, TimeSpan interval);
+    IQueryable<User> GetUsersFromScoresAfterDate(DateTime startTime, DateTime endTime);
+    Task<Score?> GetNewestScoreAsync(CancellationToken cancellationToken = default);
 }

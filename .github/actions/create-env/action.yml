@@ -82,7 +82,7 @@ runs:
         echo "FetcherServices__Rescans=false" >> .env
         echo "FetcherServices__Backpopulator=false" >> .env
         echo "FetcherServices__UserScans=false" >> .env
-        echo "ScanBehavior__OnlyAddMissingMaps=true" >> .env
+        echo "ScanBehavior__OnlyAddMissingMaps=false" >> .env
         echo "ScanBehavior__OnlyUpdateMapsetData=false" >> .env
         echo "RescanBehavior__RemoveScoresOutsideTop100__osu=false" >> .env
         echo "RescanBehavior__RemoveScoresOutsideTop100__taiko=false" >> .env
@@ -93,7 +93,7 @@ runs:
         echo "UserUpdatesIntervalHours=2" >> .env
         echo "RestrictedUsersUpdateIntervalHours=12" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
-        echo "DiscordHooks__BeatmapScores__Enabled=true" >> .env
+        echo "DiscordHooks__BeatmapScores__Enabled=false" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env
         echo "DiscordHooks__Scans__HookURL=${{ inputs.hooks_rescansurl }}" >> .env
         echo "DiscordHooks__Scans__Enabled=false" >> .env

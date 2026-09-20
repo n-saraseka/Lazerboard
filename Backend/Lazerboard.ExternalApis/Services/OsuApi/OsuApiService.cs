@@ -41,12 +41,14 @@ public class OsuApiService
     /// <param name="requestString">Request URL</param>
     /// <param name="content">Request content (for Post requests)</param>
     /// <param name="isTokenRequest">Whether the request is a token request or not</param>
+    /// <param name="isHighPriority">Whether the request is high priority or not</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Request response text</returns>
     private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod method, 
         string requestString,
         HttpContent? content,
         bool isTokenRequest = false,
+        bool isHighPriority = true,
         CancellationToken ct = default)
     {
         var requestMessage = new HttpRequestMessage(method, requestString);
@@ -58,7 +60,7 @@ public class OsuApiService
             requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
         }
 
-        await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
+        await _centralizedRateLimiter.WaitForAvailableTokenAsync(isHighPriority, ct);
         _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         
@@ -85,6 +87,7 @@ public class OsuApiService
             ApiTokenUrl, 
             new StringContent(dataJson, Encoding.UTF8, "application/json"),
             true,
+            true,
             ct);
         
         var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
@@ -106,6 +109,7 @@ public class OsuApiService
             $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}&nsfw=true", 
             null, 
             false, 
+            true,
             ct);
 
         return await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
@@ -123,6 +127,7 @@ public class OsuApiService
             $"{BaseApiUrl}/beatmapsets/{id}", 
             null, 
             false, 
+            true,
             ct);
         
         return await beatmapsetResponse.Content.ReadAsStringAsync(ct);
@@ -146,6 +151,7 @@ public class OsuApiService
             $"{BaseApiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
             null, 
             false, 
+            false,
             ct);
 
         if (scoresResponse.StatusCode == HttpStatusCode.NotFound) return "{\"scores\":[],\"score_count\":0}";
@@ -165,6 +171,7 @@ public class OsuApiService
             $"{BaseApiUrl}/scores?cursor_string={cursor}", 
             null, 
             false, 
+            true,
             ct);
         
         return await scoresResponse.Content.ReadAsStringAsync(ct);
@@ -180,7 +187,7 @@ public class OsuApiService
     {
         try
         {
-            await _centralizedRateLimiter.WaitForAvailableTokenAsync(ct);
+            await _centralizedRateLimiter.WaitForAvailableTokenAsync(true, ct);
             var requestString = $"https://osu.ppy.sh/osu/{beatmapId}";
             _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
             return await _httpClient.GetStreamAsync(requestString, ct);
@@ -211,6 +218,7 @@ public class OsuApiService
             $"{BaseApiUrl}/beatmaps?{queryString}", 
             null, 
             false, 
+            true,
             ct);
         
         return await beatmapsResponse.Content.ReadAsStringAsync(ct);
@@ -234,7 +242,8 @@ public class OsuApiService
         using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/users?{queryString}", 
             null, 
-            false, 
+            false,
+            false,
             ct);
         
         return await usersResponse.Content.ReadAsStringAsync(ct);

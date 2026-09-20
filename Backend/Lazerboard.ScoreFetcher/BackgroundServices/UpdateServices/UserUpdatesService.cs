@@ -156,6 +156,7 @@ public class UserUpdatesService : BackgroundService
             _existingCheckStart = newestScore == null 
                 ? DateTime.UtcNow - _existingUsersLookbackInterval
                 : newestScore.Date - _existingUsersLookbackInterval;
+            _shouldStartCheck = true;
         }
         else
         {
@@ -178,6 +179,7 @@ public class UserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
         var currentDateTime = DateTime.UtcNow;
+        _logger.Log(LogLevel.Information, "Started checking users at {checkStart}", currentDateTime);
         await scanLogsRepository.SaveEventAsync(ScanEventType.UserCheckStarted, currentDateTime, stoppingToken);
     }
     
@@ -186,6 +188,7 @@ public class UserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
         var currentDateTime = DateTime.UtcNow;
+        _logger.Log(LogLevel.Information, "Finished checking users at {checkStart}", currentDateTime);
         await scanLogsRepository.SaveEventAsync(ScanEventType.UserCheckFinished, currentDateTime, stoppingToken);
     }
 }

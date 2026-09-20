@@ -45,6 +45,7 @@ public class BeatmapsetSeedingService : BackgroundService
         var finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
         _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {beatmapsetId}", finishingBeatmapset?.Id);
         await GetStartingCursorAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Restart cursor for beatmapset seeding: {cursor}", _cursor);
         
         while (!stoppingToken.IsCancellationRequested)
         {

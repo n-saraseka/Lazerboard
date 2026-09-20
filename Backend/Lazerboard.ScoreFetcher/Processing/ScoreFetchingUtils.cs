@@ -37,7 +37,8 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
         var removedUsers = removedUserIds.Select(id => new User
         {
             Id = id,
-            Username = beatmapsets.First(b => b.UserId == id).Creator
+            Username = beatmapsets.First(b => b.UserId == id).Creator,
+            IsRestricted = true
         }).ToList();
             
         await dataProcessor.ProcessRemovedUsersAsync(removedUsers, stoppingToken);

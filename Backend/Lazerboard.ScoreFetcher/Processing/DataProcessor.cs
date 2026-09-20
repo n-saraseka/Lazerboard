@@ -457,14 +457,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         IsPerfectCombo = score.IsPerfectCombo,
         Statistics = score.Statistics
     };
-
-    /// <summary>
-    /// Get max score ID with the ScoreFetcher <see cref="Score.ScoreSource"/> from the database
-    /// </summary>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetMaxFirehoseScoreAsync(cancellationToken);
     
     /// <summary>
     /// Get max beatmapset ID from the database

@@ -189,11 +189,8 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
         using var scope = serviceProvider.CreateScope();
         var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
         var maxFirehoseScore = await dataProcessor.GetMaxFirehoseScoreAsync(stoppingToken);
-        // Score is too old, use null cursor
-        if (DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromHours(6))
-        {
-            return;
-        }
+        // If the score is too old or doesn't exist, use null cursor
+        if (maxFirehoseScore is null || DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromHours(6)) return;
         _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {maxFirehoseScore.Id}}}"));
     }
 }

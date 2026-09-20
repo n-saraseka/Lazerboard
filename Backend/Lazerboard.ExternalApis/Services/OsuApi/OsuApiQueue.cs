@@ -60,11 +60,9 @@ public class OsuApiQueue : IDisposable
             var finishTime = startTime + requestTime;
             if (isHighPriority) _lastHighFinishTime = finishTime;
                                 else _lastLowFinishTime = finishTime;
-            _pendingRequests.Enqueue(new Request(completionSource, finishTime), finishTime);
+            _pendingRequests.Enqueue(new Request(completionSource, finishTime, token), finishTime);
             GrantAvailableTokens();
         }
-        
-        token.Register(() => completionSource.TrySetCanceled(token));
         
         return completionSource.Task;
     }
@@ -77,6 +75,11 @@ public class OsuApiQueue : IDisposable
         while (_availableTokens >= 1 && _pendingRequests.TryDequeue(out var request, out _))
         {
             if (request.CompletionSource.Task.IsCompleted) continue;
+            if (request.CancellationToken.IsCancellationRequested)
+            {
+                request.CompletionSource.TrySetCanceled(request.CancellationToken);
+                continue;
+            }
             _availableTokens--;
             _virtualTime = Math.Max(_virtualTime, request.FinishTime);
             request.CompletionSource.TrySetResult();
@@ -97,10 +100,12 @@ public class OsuApiQueue : IDisposable
     /// </summary>
     /// <param name="completionSource">The <see cref="TaskCompletionSource"/> to track request completion</param>
     /// <param name="finishTime">The virtual finish time</param>
-    private class Request(TaskCompletionSource completionSource, decimal finishTime)
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    private class Request(TaskCompletionSource completionSource, decimal finishTime, CancellationToken cancellationToken)
     {
         public readonly TaskCompletionSource CompletionSource = completionSource;
         public readonly decimal FinishTime = finishTime;
+        public readonly CancellationToken CancellationToken = cancellationToken;
     }
 
     public void Dispose()

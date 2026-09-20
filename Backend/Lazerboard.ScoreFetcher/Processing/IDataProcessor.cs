@@ -19,6 +19,5 @@ public interface IDataProcessor
         ScoreSource source, 
         Dictionary<Mode, bool> topScoresConfiguration, 
         CancellationToken ct);
-    Task<Score?> GetMaxFirehoseScoreAsync(CancellationToken cancellationToken);
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken);
 }

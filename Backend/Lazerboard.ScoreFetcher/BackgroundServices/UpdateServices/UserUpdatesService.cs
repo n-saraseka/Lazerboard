@@ -59,7 +59,7 @@ public class UserUpdatesService : BackgroundService
                 var restrictedUsers = await GetRestrictedUsersAsync(currentDateTime, 0, stoppingToken);
                 for (var i = 1; restrictedUsers.Count > 0; i++)
                 {
-                    await ProcessRestrictedUsersAsync(users, stoppingToken);
+                    await ProcessRestrictedUsersAsync(restrictedUsers, stoppingToken);
                     restrictedUsers = await GetRestrictedUsersAsync(currentDateTime, i, stoppingToken);
                 }
                 

@@ -11,6 +11,7 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
+builder.Services.AddSingleton<OsuApiQueue>();
 builder.Services.AddSingleton<OsuRateLimiter>();
 builder.Services.AddScoped<OsuApiService>();
 builder.Services.AddSingleton<DirectApiLimiter>();

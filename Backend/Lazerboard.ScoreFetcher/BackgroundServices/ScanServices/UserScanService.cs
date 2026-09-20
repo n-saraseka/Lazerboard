@@ -78,8 +78,9 @@ public class UserScanService(
     {
         using var scope = serviceProvider.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var userId = _latestUserId ?? 0;
         return await userRepository.GetAll()
-            .Where(u => u.Id > _latestUserId)
+            .Where(u => u.Id > userId)
             .OrderBy(u => u.Id)
             .Take(BatchSize)
             .AsNoTracking()

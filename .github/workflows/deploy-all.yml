@@ -3,12 +3,12 @@ on: workflow_dispatch
 
 env:
   REGISTRY: ghcr.io
-  MIGRATIONS_IMAGE_NAME: ${{ github.actor }}/lazerboard-migrations:latest
-  SCOREFETCHER_IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:latest
-  BACKEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:latest
-  FRONTEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:latest
-  DISCORDHOOKS_IMAGE_NAME: ${{ github.actor }}/lazerboard-discordhooks:latest
-  EXTERNALAPIS_IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:latest
+  MIGRATIONS_IMAGE_NAME: ${{ github.actor }}/lazerboard-migrations:master
+  SCOREFETCHER_IMAGE_NAME: ${{ github.actor }}/lazerboard-scorefetcher:master
+  BACKEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:master
+  FRONTEND_IMAGE_NAME: ${{ github.actor }}/lazerboard-frontend:master
+  DISCORDHOOKS_IMAGE_NAME: ${{ github.actor }}/lazerboard-discordhooks:master
+  EXTERNALAPIS_IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:master
 
 jobs:
   deploy:

@@ -3,7 +3,7 @@ on: workflow_dispatch
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:latest
+  IMAGE_NAME: ${{ github.actor }}/lazerboard-externalapis:master
 
 jobs:
   deploy:

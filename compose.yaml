@@ -3,7 +3,7 @@ networks:
 
 services:
   init:
-    image: alpine:master
+    image: alpine:latest
     user: root
     volumes:
       - ./BeatmapCache:/app/BeatmapCache

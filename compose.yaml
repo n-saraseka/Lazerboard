@@ -3,7 +3,7 @@ networks:
 
 services:
   init:
-    image: alpine:latest
+    image: alpine:master
     user: root
     volumes:
       - ./BeatmapCache:/app/BeatmapCache
@@ -15,7 +15,7 @@ services:
     restart: "no"
   
   migrations:
-    image: ghcr.io/n-saraseka/lazerboard-migrations:latest
+    image: ghcr.io/n-saraseka/lazerboard-migrations:master
     depends_on:
       "db":
         condition: service_healthy
@@ -29,7 +29,7 @@ services:
       - main
   
   scorefetcher:
-    image: ghcr.io/n-saraseka/lazerboard-scorefetcher:latest
+    image: ghcr.io/n-saraseka/lazerboard-scorefetcher:master
     depends_on:
       "init":
         condition: service_completed_successfully
@@ -50,7 +50,7 @@ services:
       - main
   
   discordhooks:
-    image: ghcr.io/n-saraseka/lazerboard-discordhooks:latest
+    image: ghcr.io/n-saraseka/lazerboard-discordhooks:master
     depends_on:
       "migrations":
         condition: service_completed_successfully
@@ -63,7 +63,7 @@ services:
       - main
   
   backend:
-    image: ghcr.io/n-saraseka/lazerboard-backend:latest
+    image: ghcr.io/n-saraseka/lazerboard-backend:master
     depends_on:
       "migrations":
         condition: service_completed_successfully
@@ -80,7 +80,7 @@ services:
       - main
   
   frontend:
-    image: ghcr.io/n-saraseka/lazerboard-frontend:latest
+    image: ghcr.io/n-saraseka/lazerboard-frontend:master
     depends_on:
       "backend":
         condition: service_started
@@ -96,7 +96,7 @@ services:
       - main
   
   externalapis:
-    image: ghcr.io/n-saraseka/lazerboard-externalapis:latest
+    image: ghcr.io/n-saraseka/lazerboard-externalapis:master
     env_file:
       - .env
     depends_on:

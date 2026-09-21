@@ -1,10 +1,6 @@
 name: Deploy backend image
 on: workflow_dispatch
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.actor }}/lazerboard-backend:master
-
 jobs:
   deploy:
     name: deploy image

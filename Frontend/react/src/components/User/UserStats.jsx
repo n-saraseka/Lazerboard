@@ -134,6 +134,10 @@ function UserStats({data, loadingData, errorData}) {
                                     title: {
                                         display: true,
                                         text: "Star rating distribution"
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
                                     }
                                 },
                                 scales: gridOptions,
@@ -152,6 +156,10 @@ function UserStats({data, loadingData, errorData}) {
                                     title: {
                                         display: true,
                                         text: "Speed distribution"
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
                                     }
                                 },
                                 scales: gridOptions,

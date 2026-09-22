@@ -14,6 +14,11 @@ public static class FilterUtils
         ScoreQueryCommand command)
     {
         query = query.Where(s => command.Modes.Contains(s.Mode));
+
+        if (command.IncludeConverts != null)
+        {
+            query = !command.IncludeConverts.Value ? query.Where(s => s.IsConvert == false) : query;
+        }
         
         if (command.DateRange[0] != null)
         {

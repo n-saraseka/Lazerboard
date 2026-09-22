@@ -74,4 +74,9 @@ public class ScoreQueryCommand
     /// Whether sort is descending or not
     /// </summary>
     public bool? IsDescending { get; set; }
+    
+    /// <summary>
+    /// Whether to include scores that have the <see cref="Score.IsConvert"/> flag set to true or not
+    /// </summary>
+    public bool? IncludeConverts { get; set; }
 }

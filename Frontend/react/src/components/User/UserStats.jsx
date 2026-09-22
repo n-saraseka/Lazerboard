@@ -51,19 +51,16 @@ function UserStats({data, loadingData, errorData}) {
     }
     
     if (data.stars !== null) {
-        const allSrs = Array(11).fill(0).map((_, i) => i);
-        const dataSrs = data.stars.map((item) => item.srBracket);
+        const nonZeroData = data.stars.filter((item) => item.count > 0);
         
         starStats = {
-            labels: allSrs,
+            labels: nonZeroData.map((item) => item.srBracket),
             datasets: [{
                 label: 'Count',
-                data: allSrs.map(
-                    (sr) => dataSrs.includes(sr)
-                        ? data.stars.find((i) => i.srBracket === sr).count
-                        : 0
+                data: nonZeroData.map(
+                    (item) => item.count
                 ),
-                backgroundColor: allSrs.map((sr) => getDifficultyColor(sr + 0.5))
+                backgroundColor: nonZeroData.map((item) => getDifficultyColor(item.srBracket + 0.5))
             }],
         }
     }

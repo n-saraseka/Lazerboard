@@ -20,6 +20,7 @@ function ScoreRankingPage({countries}) {
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
+        includeConverts: false,
         amount: 10
     });
     const [isLoading, setIsLoading] = useState(false);

@@ -43,29 +43,40 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
             <table className="options">
                 <tbody>
                 { isMania
-                    ? <tr>
-                        <td>Star rating:</td>
-                        <td>
-                            <div className="filter-container">
-                                <label htmlFor="starMin">From: <input id="starMin" name="starMin" type="number"
-                                                                      step={0.1} min={0} max={20} value={filters.starRange.min}
-                                                                      onChange={(e) => {
-                                                                          const allFilters = {...filters,
-                                                                              starRange: {...filters.starRange, min: e.target.value === '' ? null : e.target.value}};
-                                                                          setFilters(allFilters);
-                                                                      }}/>
-                                </label>
-                                <label htmlFor="starMax">to: <input id="starMax" name="starMax" type="number"
-                                                                    step={0.1} min={0} max={20} value={filters.starRange.max}
-                                                                    onChange={(e) => {
-                                                                        const allFilters = {...filters, 
-                                                                            starRange: {...filters.starRange, max: e.target.value === '' ? null : e.target.value}};
-                                                                        setFilters(allFilters);
-                                                                    }}/>
-                                </label>
-                            </div>
-                        </td>
-                    </tr>
+                    ? <>
+                        <tr>
+                            <td>Star rating:</td>
+                            <td>
+                                <div className="filter-container">
+                                    <label htmlFor="starMin">From: <input id="starMin" name="starMin" type="number"
+                                                                          step={0.1} min={0} max={20} value={filters.starRange.min}
+                                                                          onChange={(e) => {
+                                                                              const allFilters = {...filters,
+                                                                                  starRange: {...filters.starRange, min: e.target.value === '' ? null : e.target.value}};
+                                                                              setFilters(allFilters);
+                                                                          }}/>
+                                    </label>
+                                    <label htmlFor="starMax">to: <input id="starMax" name="starMax" type="number"
+                                                                        step={0.1} min={0} max={20} value={filters.starRange.max}
+                                                                        onChange={(e) => {
+                                                                            const allFilters = {...filters,
+                                                                                starRange: {...filters.starRange, max: e.target.value === '' ? null : e.target.value}};
+                                                                            setFilters(allFilters);
+                                                                        }}/>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Include converts:</td>
+                            <td>
+                                <input name="includeConverts" id="includeConverts" type="checkbox" checked={filters.includeConverts} onClick={() => {
+                                    const newFilters = {...filters, includeConverts: !filters.includeConverts}
+                                    setFilters(newFilters);
+                                }}/>
+                            </td>
+                        </tr>
+                    </>
                     : <>
                         <tr>
                             <td>Modes:</td>
@@ -93,6 +104,11 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                                             }}></div>
                                         </div>
                                     ))}
+                                    <input name="includeConverts" id="includeConverts" type="checkbox" checked={filters.includeConverts} onClick={() => {
+                                        const newFilters = {...filters, includeConverts: !filters.includeConverts}
+                                        setFilters(newFilters);
+                                    }}/>
+                                    <label htmlFor="includeConverts">Include converts</label>
                                 </div>
                             </td>
                         </tr>

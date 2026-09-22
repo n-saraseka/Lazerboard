@@ -20,6 +20,7 @@ function UserPage({user}) {
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
+        includeConverts: false,
         dateRange: {min: null, max: null},
         rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},

@@ -3,7 +3,7 @@ import { Line, Bar } from 'react-chartjs-2'
 import { defaults } from 'chart.js'
 import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
-import {getSpeedColor} from "../../utils/score-things.js";
+import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
 import Loader from "../Misc/Loader.jsx";
 import Error from "../Misc/Error.jsx";
 
@@ -45,25 +45,22 @@ function UserStats({data, loadingData, errorData}) {
             datasets: [{
                 label: 'Count',
                 data: data.ranks.map((item) => item.count),
-                backgroundColor: 'rgb(180, 180, 180)',
+                backgroundColor: data.ranks.map((item) => getRankTierColor(item.rankBound))
             }],
         }
     }
     
     if (data.stars !== null) {
-        const allSrs = Array(11).fill(0).map((_, i) => i);
-        const dataSrs = data.stars.map((item) => item.srBracket);
+        const nonZeroData = data.stars.filter((item) => item.count > 0);
         
         starStats = {
-            labels: allSrs,
+            labels: nonZeroData.map((item) => item.srBracket),
             datasets: [{
                 label: 'Count',
-                data: allSrs.map(
-                    (sr) => dataSrs.includes(sr)
-                        ? data.stars.find((i) => i.srBracket === sr).count
-                        : 0
+                data: nonZeroData.map(
+                    (item) => item.count
                 ),
-                backgroundColor: allSrs.map((sr) => getDifficultyColor(sr + 0.5))
+                backgroundColor: nonZeroData.map((item) => getDifficultyColor(item.srBracket + 0.5))
             }],
         }
     }
@@ -91,6 +88,10 @@ function UserStats({data, loadingData, errorData}) {
                                 title: {
                                     display: true,
                                     text: "Top 100 leaderboard count history"
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
                                 }
                             },
                             elements: {
@@ -98,7 +99,8 @@ function UserStats({data, loadingData, errorData}) {
                                     borderWidth: 4
                                 }
                             },
-                            scales: gridOptions
+                            scales: gridOptions,
+                            responsive: true,
                         }}/>
                 }
             </div>
@@ -116,7 +118,8 @@ function UserStats({data, loadingData, errorData}) {
                                         text: "Rank distribution",
                                     }
                                 },
-                                scales: gridOptions
+                                scales: gridOptions,
+                                responsive: true
                             }}/>
                 }
             </div>
@@ -131,9 +134,14 @@ function UserStats({data, loadingData, errorData}) {
                                     title: {
                                         display: true,
                                         text: "Star rating distribution"
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
                                     }
                                 },
-                                scales: gridOptions
+                                scales: gridOptions,
+                                responsive: true
                             }}/>
                 }
             </div>
@@ -148,9 +156,14 @@ function UserStats({data, loadingData, errorData}) {
                                     title: {
                                         display: true,
                                         text: "Speed distribution"
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
                                     }
                                 },
-                                scales: gridOptions
+                                scales: gridOptions,
+                                responsive: true
                             }}/>
                 }
             </div>

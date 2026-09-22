@@ -3,7 +3,7 @@ import { Line, Bar } from 'react-chartjs-2'
 import { defaults } from 'chart.js'
 import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
-import {getSpeedColor} from "../../utils/score-things.js";
+import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
 import Loader from "../Misc/Loader.jsx";
 import Error from "../Misc/Error.jsx";
 
@@ -45,7 +45,7 @@ function UserStats({data, loadingData, errorData}) {
             datasets: [{
                 label: 'Count',
                 data: data.ranks.map((item) => item.count),
-                backgroundColor: 'rgb(180, 180, 180)',
+                backgroundColor: data.ranks.map((item) => getRankTierColor(item.rankBound))
             }],
         }
     }

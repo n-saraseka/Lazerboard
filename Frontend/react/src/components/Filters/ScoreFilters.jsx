@@ -85,6 +85,12 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                                     }}></div>
                                 </div>
                             ))}
+                            <input name="includeConverts" id="includeConverts" type="checkbox" checked={filters.includeConverts} onClick={() => {
+                                const newFilters = {...filters, includeConverts: !filters.includeConverts}
+                                setFilters(newFilters);
+                                refetchScores(newFilters);
+                            }}/>
+                            <label htmlFor="includeConverts">Include converts</label>
                         </div>
                     </td>
                 </tr>

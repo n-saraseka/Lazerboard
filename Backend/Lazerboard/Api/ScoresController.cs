@@ -55,7 +55,8 @@ public class ScoresController(IScoreRepository scoreRepository,
             LenientMode = command.LenientMode,
             CountryCode = command.CountryCode,
             SortBy = command.SortBy,
-            IsDescending = command.IsDescending
+            IsDescending = command.IsDescending,
+            IncludeConverts = command.IncludeConverts
         };
         
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
@@ -123,6 +124,7 @@ public class ScoresController(IScoreRepository scoreRepository,
             ExcludeMods = command.ExcludeMods,
             LenientMode = command.LenientMode,
             CountryCode = command.CountryCode,
+            IncludeConverts = command.IncludeConverts
         };
 
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);

@@ -58,7 +58,8 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
             ExcludeMods = command.ExcludeMods,
             LenientMode = command.LenientMode,
             SortBy = command.SortBy,
-            IsDescending = command.IsDescending
+            IsDescending = command.IsDescending,
+            IncludeConverts = command.IncludeConverts
         };
         
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);

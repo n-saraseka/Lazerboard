@@ -45,6 +45,15 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                 { isMania
                     ? <>
                         <tr>
+                            <td>Include converts:</td>
+                            <td>
+                                <input name="includeConverts" id="includeConverts" type="checkbox" checked={filters.includeConverts} onClick={() => {
+                                    const newFilters = {...filters, includeConverts: !filters.includeConverts}
+                                    setFilters(newFilters);
+                                }}/>
+                            </td>
+                        </tr>
+                        <tr>
                             <td>Star rating:</td>
                             <td>
                                 <div className="filter-container">
@@ -65,15 +74,6 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                                                                         }}/>
                                     </label>
                                 </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Include converts:</td>
-                            <td>
-                                <input name="includeConverts" id="includeConverts" type="checkbox" checked={filters.includeConverts} onClick={() => {
-                                    const newFilters = {...filters, includeConverts: !filters.includeConverts}
-                                    setFilters(newFilters);
-                                }}/>
                             </td>
                         </tr>
                     </>

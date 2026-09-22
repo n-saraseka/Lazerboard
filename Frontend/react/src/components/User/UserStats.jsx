@@ -88,6 +88,10 @@ function UserStats({data, loadingData, errorData}) {
                                 title: {
                                     display: true,
                                     text: "Top 100 leaderboard count history"
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
                                 }
                             },
                             elements: {
@@ -95,7 +99,8 @@ function UserStats({data, loadingData, errorData}) {
                                     borderWidth: 4
                                 }
                             },
-                            scales: gridOptions
+                            scales: gridOptions,
+                            responsive: true,
                         }}/>
                 }
             </div>
@@ -113,7 +118,8 @@ function UserStats({data, loadingData, errorData}) {
                                         text: "Rank distribution",
                                     }
                                 },
-                                scales: gridOptions
+                                scales: gridOptions,
+                                responsive: true
                             }}/>
                 }
             </div>
@@ -130,7 +136,8 @@ function UserStats({data, loadingData, errorData}) {
                                         text: "Star rating distribution"
                                     }
                                 },
-                                scales: gridOptions
+                                scales: gridOptions,
+                                responsive: true
                             }}/>
                 }
             </div>
@@ -147,7 +154,8 @@ function UserStats({data, loadingData, errorData}) {
                                         text: "Speed distribution"
                                     }
                                 },
-                                scales: gridOptions
+                                scales: gridOptions,
+                                responsive: true
                             }}/>
                 }
             </div>

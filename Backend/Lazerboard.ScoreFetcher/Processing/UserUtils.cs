@@ -300,6 +300,7 @@ public class UserUtils(IUserRepository userRepository,
                 var beatmapId = group.Key.BeatmapId;
                 var mode = group.Key.Mode;
                 if (!beatmapModes[beatmapId].Contains(mode)) continue;
+                logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapId, mode);
                 var groupScores = group
                     .OrderByDescending(s => s.TotalScore)
                     .ThenBy(s => s.Date)

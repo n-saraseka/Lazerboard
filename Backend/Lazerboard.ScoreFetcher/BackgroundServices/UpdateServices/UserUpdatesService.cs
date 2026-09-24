@@ -20,6 +20,7 @@ public class UserUpdatesService : BackgroundService
     private readonly TimeSpan _restrictedUsersLookbackInterval;
     private DateTime _existingCheckStart;
     private DateTime _existingCheckFinish;
+    private DateTime _restrictedCheckFinish;
     private bool _shouldStartCheck;
     
     public UserUpdatesService(IServiceProvider serviceProvider, ILogger<UserUpdatesService> logger)
@@ -46,7 +47,6 @@ public class UserUpdatesService : BackgroundService
                 await StartUserCheckAsync(stoppingToken);
                 _shouldStartCheck = false;
             }
-            var currentDateTime = DateTime.UtcNow;
             try
             {
                 var users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, 0, stoppingToken);
@@ -56,15 +56,16 @@ public class UserUpdatesService : BackgroundService
                     users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, i, stoppingToken);
                 }
 
-                var restrictedUsers = await GetRestrictedUsersAsync(currentDateTime, 0, stoppingToken);
+                var restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckFinish, 0, stoppingToken);
                 for (var i = 1; restrictedUsers.Count > 0; i++)
                 {
                     await ProcessRestrictedUsersAsync(restrictedUsers, stoppingToken);
-                    restrictedUsers = await GetRestrictedUsersAsync(currentDateTime, i, stoppingToken);
+                    restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckFinish, i, stoppingToken);
                 }
                 
                 _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval);
-                _existingCheckFinish = _existingCheckFinish.Add(_restrictedUsersLookbackInterval);
+                _existingCheckFinish = _existingCheckFinish.Add(_existingUsersLookbackInterval);
+                _restrictedCheckFinish = _restrictedCheckFinish.Add(_restrictedUsersLookbackInterval);
                 await FinishUserCheckAsync(stoppingToken);
                 _shouldStartCheck = true;
                 await Task.Delay(_existingUsersLookbackInterval, stoppingToken);
@@ -171,6 +172,7 @@ public class UserUpdatesService : BackgroundService
             }
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_existingUsersLookbackInterval);
+        _restrictedCheckFinish = DateTime.UtcNow - _restrictedUsersLookbackInterval;
     }
 
     private async Task StartUserCheckAsync(CancellationToken stoppingToken)

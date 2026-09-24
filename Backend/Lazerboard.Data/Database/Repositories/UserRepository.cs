@@ -43,7 +43,7 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
     {
         return Set
             .AsNoTracking()
-            .Where(u => u.IsRestricted && (u.LastCheckedAt >= startDate || u.LastScannedAt >= startDate))
+            .Where(u => u.IsRestricted && (u.LastCheckedAt <= startDate || u.LastScannedAt <= startDate))
             .OrderBy(u => u.Id);
     }
     

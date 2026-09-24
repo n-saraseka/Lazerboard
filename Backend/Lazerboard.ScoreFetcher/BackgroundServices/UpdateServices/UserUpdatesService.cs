@@ -170,7 +170,7 @@ public class UserUpdatesService : BackgroundService
                 _existingCheckFinish = latestStartTimestamp.LoggedAt;
             }
         }
-        _existingCheckStart = _existingCheckFinish.Add(_existingUsersLookbackInterval);
+        _existingCheckStart = _existingCheckFinish.Subtract(_existingUsersLookbackInterval);
     }
 
     private async Task StartUserCheckAsync(CancellationToken stoppingToken)

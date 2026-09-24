@@ -139,8 +139,11 @@ public class UserUtils(IUserRepository userRepository,
                 scoreRepository.CreateBulk(newScores);
                 await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 
-                var beatmapIds = scoresBatch.Select(s => s.BeatmapId).Distinct().ToList();
-                await ReprocessBeatmapRanksAsync(beatmapIds, stoppingToken);
+                var beatmapModes = scoresBatch
+                    .GroupBy(s => s.BeatmapId)
+                    .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+            
+                await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
 
                 reinstatedCount += newScores.Count;
                 scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
@@ -171,7 +174,7 @@ public class UserUtils(IUserRepository userRepository,
             var scoreIdsToRemove = GetScoreIdsWithNullData(batch);
             var scoresToUnlist = batch
                 .Where(s => !scoreIdsToRemove.Contains(s.Id))
-                .Select(GetUnlsitedScoreFromScore)
+                .Select(GetUnlistedScoreFromScore)
                 .ToList();
             
             var batchIds = scoresToUnlist.Select(s => s.Id).ToList();
@@ -182,8 +185,11 @@ public class UserUtils(IUserRepository userRepository,
             unlistedScoreRepository.CreateBulk(newUnlistedScores);
             await scoreRepository.SaveChangesAsync(stoppingToken);
             
-            var beatmapIds = batch.Select(s => s.BeatmapId).Distinct().ToList();
-            await ReprocessBeatmapRanksAsync(beatmapIds, stoppingToken);
+            var beatmapModes = batch
+                .GroupBy(s => s.BeatmapId)
+                .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+            
+            await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
             
             deletedCount += scoreIdsToRemove.Count;
             unlistedCount += scoresToUnlist.Count;
@@ -209,7 +215,7 @@ public class UserUtils(IUserRepository userRepository,
     /// </summary>
     /// <param name="score">The <see cref="Score"/></param>
     /// <returns>The corresponding <see cref="UnlistedScore"/></returns>
-    private UnlistedScore GetUnlsitedScoreFromScore(Score score) => new()
+    private UnlistedScore GetUnlistedScoreFromScore(Score score) => new()
     {
         Id = score.Id,
         Date = score.Date,
@@ -267,11 +273,11 @@ public class UserUtils(IUserRepository userRepository,
     /// <summary>
     /// Update score ranks on beatmaps that had scores removed, unlisted or reinstated
     /// </summary>
-    /// <param name="beatmapIds">List of <see cref="Beatmap"/> IDs</param>
+    /// <param name="beatmapModes">A dictionary of <see cref="Beatmap.Id"/>s and the relevant score <see cref="Mode"/>s</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task ReprocessBeatmapRanksAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
+    private async Task ReprocessBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
     {
-        if (beatmapIds.Count == 0) return;
+        if (beatmapModes.Count == 0) return;
         
         // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
         // in between otherwise.
@@ -280,8 +286,10 @@ public class UserUtils(IUserRepository userRepository,
         {
             topScoresConfig[val] = true;
         }
+
+        var beatmapIds = beatmapModes.Keys;
         
-        for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
+        for (var i = 0; i < beatmapModes.Count; i += BeatmapBatchSize)
         {
             var batch = beatmapIds.Skip(i * BeatmapBatchSize).Take(BeatmapBatchSize).ToList();
             
@@ -289,6 +297,9 @@ public class UserUtils(IUserRepository userRepository,
             var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
             foreach (var group in groupedScores)
             {
+                var beatmapId = group.Key.BeatmapId;
+                var mode = group.Key.Mode;
+                if (!beatmapModes[beatmapId].Contains(mode)) continue;
                 var groupScores = group
                     .OrderByDescending(s => s.TotalScore)
                     .ThenBy(s => s.Date)

@@ -86,6 +86,18 @@ public class UserUtils(IUserRepository userRepository,
             await ReinstateUserScoresAsync(unrestrictedUserIds, stoppingToken);
         }
         
+        // Clean up restricted user ID scores if failed to do so for some reason earlier.
+        var userIdsWithoutCleanedUpScores = await scoreRepository
+            .GetByUserIds(userIds)
+            .Select(s => s.UserId)
+            .Distinct()
+            .ToListAsync(stoppingToken);
+
+        if (userIdsWithoutCleanedUpScores.Count > 0)
+        {
+            await RemoveUserScoresAsync(userIdsWithoutCleanedUpScores, stoppingToken);
+        }
+        
         var currentDateTime = DateTime.UtcNow;
         users = users.Select(u =>
         {

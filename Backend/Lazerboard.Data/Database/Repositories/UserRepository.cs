@@ -39,7 +39,7 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
             .OrderByDescending(u => u.LastScannedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-    public IQueryable<User> GetRestrictedUsersAsync(DateTime startDate, TimeSpan interval)
+    public IQueryable<User> GetRestrictedUsersAsync(DateTime startDate)
     {
         return Set
             .AsNoTracking()

@@ -113,7 +113,7 @@ public class UserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         return await userRepository
-            .GetRestrictedUsersAsync(startDate, _restrictedUsersLookbackInterval)
+            .GetRestrictedUsersAsync(startDate)
             .Skip(batchNumber * BatchSize)
             .Take(BatchSize)
             .ToListAsync(stoppingToken);

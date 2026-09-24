@@ -130,19 +130,19 @@ public class UserUtils(IUserRepository userRepository,
             var scoresBatch = await scoresQuery
                 .Take(ScoreBatchSize)
                 .ToListAsync(stoppingToken);
+            
             while (scoresBatch.Count > 0)
             {
                 var newScores = scoresBatch.Select(GetScoreFromUnlistedScore).ToList();
                 
                 unlistedScoreRepository.DeleteBulk(scoresBatch);
                 scoreRepository.CreateBulk(newScores);
+                await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 
                 var beatmapIds = scoresBatch.Select(s => s.BeatmapId).Distinct().ToList();
                 await ReprocessBeatmapRanksAsync(beatmapIds, stoppingToken);
-                
-                await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
+
                 reinstatedCount += newScores.Count;
-                
                 scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
             }
         }
@@ -173,12 +173,18 @@ public class UserUtils(IUserRepository userRepository,
                 .Where(s => !scoreIdsToRemove.Contains(s.Id))
                 .Select(GetUnlsitedScoreFromScore)
                 .ToList();
-            unlistedScoreRepository.CreateBulk(scoresToUnlist);
+            
+            var batchIds = scoresToUnlist.Select(s => s.Id).ToList();
+            var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(batchIds, stoppingToken);
+            var existingUnlistedIds = existingUnlistedScores.Select(s => s.Id);
+
+            var newUnlistedScores = scoresToUnlist.Where(s => !existingUnlistedIds.Contains(s.Id)).ToList();
+            unlistedScoreRepository.CreateBulk(newUnlistedScores);
+            await scoreRepository.SaveChangesAsync(stoppingToken);
             
             var beatmapIds = batch.Select(s => s.BeatmapId).Distinct().ToList();
             await ReprocessBeatmapRanksAsync(beatmapIds, stoppingToken);
             
-            await scoreRepository.SaveChangesAsync(stoppingToken);
             deletedCount += scoreIdsToRemove.Count;
             unlistedCount += scoresToUnlist.Count;
             batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
@@ -266,11 +272,15 @@ public class UserUtils(IUserRepository userRepository,
     private async Task ReprocessBeatmapRanksAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
     {
         if (beatmapIds.Count == 0) return;
+        
+        // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
+        // in between otherwise.
         var topScoresConfig = new Dictionary<Mode, bool>();
         foreach (var val in Enum.GetValues<Mode>())
         {
-            topScoresConfig[val] = false;
+            topScoresConfig[val] = true;
         }
+        
         for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
         {
             var batch = beatmapIds.Skip(i * BeatmapBatchSize).Take(BeatmapBatchSize).ToList();
@@ -301,5 +311,6 @@ public class UserUtils(IUserRepository userRepository,
                 }
             }
         }
+        await scoreRepository.SaveChangesAsync(stoppingToken);
     }
 }

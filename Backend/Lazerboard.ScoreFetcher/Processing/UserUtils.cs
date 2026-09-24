@@ -251,10 +251,9 @@ public class UserUtils(IUserRepository userRepository,
     private async Task ReprocessBeatmapRanksAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
     {
         if (beatmapIds.Count == 0) return;
-        for (var i = 0; beatmapIds.Count > 0; i++)
+        for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
         {
-            beatmapIds = beatmapIds.Skip(BeatmapBatchSize * i).ToList();
-            var batch = beatmapIds.Take(BeatmapBatchSize).ToList();
+            var batch = beatmapIds.Skip(i * BeatmapBatchSize).Take(BeatmapBatchSize).ToList();
             
             var scores = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
             var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();

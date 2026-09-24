@@ -115,7 +115,7 @@ public class UserUtils(IUserRepository userRepository,
             var scoresBatch = await scoresQuery
                 .Take(ScoreBatchSize)
                 .ToListAsync(stoppingToken);
-            for (var j = 1; scoresBatch.Count > 0; j++)
+            while (scoresBatch.Count > 0)
             {
                 var newScores = scoresBatch.Select(GetScoreFromUnlistedScore).ToList();
                 
@@ -128,7 +128,7 @@ public class UserUtils(IUserRepository userRepository,
                 await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 reinstatedCount += newScores.Count;
                 
-                scoresBatch = await scoresQuery.Skip(ScoreBatchSize * j).Take(ScoreBatchSize).ToListAsync(stoppingToken);
+                scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
             }
         }
         
@@ -149,7 +149,7 @@ public class UserUtils(IUserRepository userRepository,
         
         var deletedCount = 0;
         var unlistedCount = 0;
-        for (var i = 1; batch.Count > 0; i++)
+        while (batch.Count > 0)
         {
             scoreRepository.DeleteBulk(batch);
             
@@ -166,8 +166,7 @@ public class UserUtils(IUserRepository userRepository,
             await scoreRepository.SaveChangesAsync(stoppingToken);
             deletedCount += scoreIdsToRemove.Count;
             unlistedCount += scoresToUnlist.Count;
-            
-            batch = await query.Skip(ScoreBatchSize * i).Take(ScoreBatchSize).ToListAsync(stoppingToken);
+            batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
         }
         logger.Log(LogLevel.Information, "Deleted {deletedCount} restricted user scores", deletedCount);
         logger.Log(LogLevel.Information, "Unlisted {unlistedCount} restricted user scores", unlistedCount);

@@ -1,6 +1,8 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,6 +13,7 @@ public class UserUtils(IUserRepository userRepository,
     IOsuApiFetcher osuApiFetcher,
     IScoreRepository scoreRepository,
     IUnlistedScoreRepository unlistedScoreRepository,
+    IScoreFetchingUtils scoreFetchingUtils,
     ILogger<IUserUtils> logger) : IUserUtils
 {
     private const int BeatmapBatchSize = 20;
@@ -263,6 +266,11 @@ public class UserUtils(IUserRepository userRepository,
     private async Task ReprocessBeatmapRanksAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
     {
         if (beatmapIds.Count == 0) return;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
         for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
         {
             var batch = beatmapIds.Skip(i * BeatmapBatchSize).Take(BeatmapBatchSize).ToList();
@@ -280,7 +288,17 @@ public class UserUtils(IUserRepository userRepository,
                         return s;
                     })
                     .ToList();
-                scoreRepository.UpdateBulk(groupScores);
+                // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
+                if (groupScores.Count < 100)
+                {
+                    var scoresResponse = await osuApiFetcher.GetBeatmapScoresAsync(group.Key.BeatmapId, group.Key.Mode, 0, stoppingToken);
+                    var apiScores = scoresResponse.Scores;
+                    await scoreFetchingUtils.SaveScoreDataAsync(apiScores, ScoreSource.LeaderboardScan, topScoresConfig, stoppingToken);
+                }
+                else
+                {
+                    scoreRepository.UpdateBulk(groupScores);
+                }
             }
         }
     }

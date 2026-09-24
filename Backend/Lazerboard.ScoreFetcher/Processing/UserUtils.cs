@@ -14,6 +14,7 @@ public class UserUtils(IUserRepository userRepository,
     IScoreRepository scoreRepository,
     IUnlistedScoreRepository unlistedScoreRepository,
     IScoreFetchingUtils scoreFetchingUtils,
+    IScoreProcessor scoreProcessor,
     ILogger<IUserUtils> logger) : IUserUtils
 {
     private const int BeatmapBatchSize = 20;
@@ -313,8 +314,17 @@ public class UserUtils(IUserRepository userRepository,
                 // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
                 if (groupScores.Count < 100)
                 {
-                    var scoresResponse = await osuApiFetcher.GetBeatmapScoresAsync(group.Key.BeatmapId, group.Key.Mode, 0, stoppingToken);
+                    var scoresResponse = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
                     var apiScores = scoresResponse.Scores;
+                    var scoresWithoutPp = apiScores.Where(s => s.PP == null).ToList();
+                    if (scoresWithoutPp.Any())
+                    {
+                        var flatWorkingBeatmap = await scoreFetchingUtils.GetFlatWorkingBeatmapAsync(beatmapId, stoppingToken);
+                        foreach (var score in scoresWithoutPp)
+                        {
+                            await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+                        }
+                    }
                     await scoreFetchingUtils.SaveScoreDataAsync(apiScores, ScoreSource.LeaderboardScan, topScoresConfig, stoppingToken);
                 }
                 else

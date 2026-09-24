@@ -1,6 +1,8 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,6 +13,7 @@ public class UserUtils(IUserRepository userRepository,
     IOsuApiFetcher osuApiFetcher,
     IScoreRepository scoreRepository,
     IUnlistedScoreRepository unlistedScoreRepository,
+    IScoreFetchingUtils scoreFetchingUtils,
     ILogger<IUserUtils> logger) : IUserUtils
 {
     private const int BeatmapBatchSize = 20;
@@ -86,6 +89,18 @@ public class UserUtils(IUserRepository userRepository,
             await ReinstateUserScoresAsync(unrestrictedUserIds, stoppingToken);
         }
         
+        // Clean up restricted user ID scores if failed to do so for some reason earlier.
+        var userIdsWithoutCleanedUpScores = await scoreRepository
+            .GetByUserIds(userIds)
+            .Select(s => s.UserId)
+            .Distinct()
+            .ToListAsync(stoppingToken);
+
+        if (userIdsWithoutCleanedUpScores.Count > 0)
+        {
+            await RemoveUserScoresAsync(userIdsWithoutCleanedUpScores, stoppingToken);
+        }
+        
         var currentDateTime = DateTime.UtcNow;
         users = users.Select(u =>
         {
@@ -115,7 +130,7 @@ public class UserUtils(IUserRepository userRepository,
             var scoresBatch = await scoresQuery
                 .Take(ScoreBatchSize)
                 .ToListAsync(stoppingToken);
-            for (var j = 1; scoresBatch.Count > 0; j++)
+            while (scoresBatch.Count > 0)
             {
                 var newScores = scoresBatch.Select(GetScoreFromUnlistedScore).ToList();
                 
@@ -128,7 +143,7 @@ public class UserUtils(IUserRepository userRepository,
                 await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 reinstatedCount += newScores.Count;
                 
-                scoresBatch = await scoresQuery.Skip(ScoreBatchSize * j).Take(ScoreBatchSize).ToListAsync(stoppingToken);
+                scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
             }
         }
         
@@ -149,7 +164,7 @@ public class UserUtils(IUserRepository userRepository,
         
         var deletedCount = 0;
         var unlistedCount = 0;
-        for (var i = 1; batch.Count > 0; i++)
+        while (batch.Count > 0)
         {
             scoreRepository.DeleteBulk(batch);
             
@@ -166,8 +181,7 @@ public class UserUtils(IUserRepository userRepository,
             await scoreRepository.SaveChangesAsync(stoppingToken);
             deletedCount += scoreIdsToRemove.Count;
             unlistedCount += scoresToUnlist.Count;
-            
-            batch = await query.Skip(ScoreBatchSize * i).Take(ScoreBatchSize).ToListAsync(stoppingToken);
+            batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
         }
         logger.Log(LogLevel.Information, "Deleted {deletedCount} restricted user scores", deletedCount);
         logger.Log(LogLevel.Information, "Unlisted {unlistedCount} restricted user scores", unlistedCount);
@@ -252,10 +266,14 @@ public class UserUtils(IUserRepository userRepository,
     private async Task ReprocessBeatmapRanksAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
     {
         if (beatmapIds.Count == 0) return;
-        for (var i = 0; beatmapIds.Count > 0; i++)
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
         {
-            beatmapIds = beatmapIds.Skip(BeatmapBatchSize * i).ToList();
-            var batch = beatmapIds.Take(BeatmapBatchSize).ToList();
+            topScoresConfig[val] = false;
+        }
+        for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
+        {
+            var batch = beatmapIds.Skip(i * BeatmapBatchSize).Take(BeatmapBatchSize).ToList();
             
             var scores = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
             var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
@@ -270,7 +288,17 @@ public class UserUtils(IUserRepository userRepository,
                         return s;
                     })
                     .ToList();
-                scoreRepository.UpdateBulk(groupScores);
+                // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
+                if (groupScores.Count < 100)
+                {
+                    var scoresResponse = await osuApiFetcher.GetBeatmapScoresAsync(group.Key.BeatmapId, group.Key.Mode, 0, stoppingToken);
+                    var apiScores = scoresResponse.Scores;
+                    await scoreFetchingUtils.SaveScoreDataAsync(apiScores, ScoreSource.LeaderboardScan, topScoresConfig, stoppingToken);
+                }
+                else
+                {
+                    scoreRepository.UpdateBulk(groupScores);
+                }
             }
         }
     }

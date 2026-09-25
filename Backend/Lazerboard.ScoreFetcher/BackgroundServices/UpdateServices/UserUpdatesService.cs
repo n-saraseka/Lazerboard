@@ -18,6 +18,7 @@ public class UserUpdatesService : BackgroundService
     private const int BatchSize = 50;
     private readonly TimeSpan _existingUsersLookbackInterval;
     private readonly TimeSpan _restrictedUsersLookbackInterval;
+    private TimeSpan _lookBackJitter; // For when there are scores in the previous interval inserted post-check
     private DateTime _existingCheckStart;
     private DateTime _existingCheckFinish;
     private DateTime _restrictedCheckStart;
@@ -64,10 +65,11 @@ public class UserUpdatesService : BackgroundService
                     restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckFinish, _restrictedCheckStart, i, stoppingToken);
                 }
                 
-                _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval);
-                _existingCheckFinish = _existingCheckFinish.Add(_existingUsersLookbackInterval);
+                _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval).Subtract(_lookBackJitter);
+                _existingCheckFinish = _existingCheckFinish.Add(_existingUsersLookbackInterval).Add(_lookBackJitter);
                 _restrictedCheckFinish = _restrictedCheckFinish.Add(_restrictedUsersLookbackInterval);
                 _restrictedCheckStart = _restrictedCheckStart.Add(_restrictedUsersLookbackInterval);
+                _lookBackJitter = TimeSpan.FromMinutes(45);
                 await FinishUserCheckAsync(stoppingToken);
                 _shouldStartCheck = true;
                 await Task.Delay(_existingUsersLookbackInterval, stoppingToken);

@@ -56,14 +56,14 @@ public class UserUpdatesService : BackgroundService
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
-                    await ProcessExistingUsersAsync(users, stoppingToken);
+                    await ProcessExistingUsersAsync(batch, stoppingToken);
                 }
                 
                 var restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckStart, _restrictedCheckFinish, stoppingToken);
                 for (var i = 0; i < restrictedUsers.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
-                    await ProcessRestrictedUsersAsync(users, stoppingToken);
+                    await ProcessRestrictedUsersAsync(batch, stoppingToken);
                 }
                 
                 _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval).Subtract(_lookBackJitter);

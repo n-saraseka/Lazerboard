@@ -134,9 +134,13 @@ public class UserUtils(IUserRepository userRepository,
             
             while (scoresBatch.Count > 0)
             {
-                var newScores = scoresBatch.Select(GetScoreFromUnlistedScore).ToList();
+                var reinstatedScores = scoresBatch.Select(GetScoreFromUnlistedScore).ToList();
                 
                 unlistedScoreRepository.DeleteBulk(scoresBatch);
+                var scoreIds = reinstatedScores.Select(s => s.Id).ToList();
+                var existingScores = await scoreRepository.GetBulkAsync(scoreIds, stoppingToken);
+                var existingScoreIds = existingScores.Select(s => s.Id).ToList();
+                var newScores = reinstatedScores.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
                 scoreRepository.CreateBulk(newScores);
                 await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 

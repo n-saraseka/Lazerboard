@@ -52,18 +52,18 @@ public class UserUpdatesService : BackgroundService
             }
             try
             {
-                var users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, 0, stoppingToken);
-                for (var i = 1; users.Count > 0; i++)
+                var users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, stoppingToken);
+                for (var i = 0; i < users.Count; i += BatchSize)
                 {
+                    var batch = users.Skip(i).Take(BatchSize).ToList();
                     await ProcessExistingUsersAsync(users, stoppingToken);
-                    users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, i, stoppingToken);
                 }
-
-                var restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckFinish, _restrictedCheckStart, 0, stoppingToken);
-                for (var i = 1; restrictedUsers.Count > 0; i++)
+                
+                var restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckStart, _restrictedCheckFinish, stoppingToken);
+                for (var i = 0; i < restrictedUsers.Count; i += BatchSize)
                 {
-                    await ProcessRestrictedUsersAsync(restrictedUsers, stoppingToken);
-                    restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckFinish, _restrictedCheckStart, i, stoppingToken);
+                    var batch = users.Skip(i).Take(BatchSize).ToList();
+                    await ProcessRestrictedUsersAsync(users, stoppingToken);
                 }
                 
                 _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval).Subtract(_lookBackJitter);
@@ -91,17 +91,14 @@ public class UserUpdatesService : BackgroundService
     /// </summary>
     /// <param name="startDate">The starting <see cref="DateTime"/></param>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
-    /// <param name="batchNumber">The batch number</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetLatestUsersAsync(DateTime startDate, DateTime endDate, int batchNumber, CancellationToken stoppingToken)
+    private async Task<List<User>> GetLatestUsersAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         return await scoreRepository
             .GetUsersFromScoresAfterDate(startDate, endDate)
-            .Skip(batchNumber * BatchSize)
-            .Take(BatchSize)
             .ToListAsync(stoppingToken);
     }
 
@@ -110,18 +107,14 @@ public class UserUpdatesService : BackgroundService
     /// </summary>
     /// <param name="startDate">The starting <see cref="DateTime"/></param>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
-    /// <param name="batchNumber">The batch number</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <param name="batchNumber">The batch number</param    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetRestrictedUsersAsync(DateTime startDate, DateTime endDate, int batchNumber,
-        CancellationToken stoppingToken)
+    private async Task<List<User>> GetRestrictedUsersAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         return await userRepository
             .GetRestrictedUsersAsync(startDate, endDate)
-            .Skip(batchNumber * BatchSize)
-            .Take(BatchSize)
             .ToListAsync(stoppingToken);
     }
     

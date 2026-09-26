@@ -292,7 +292,7 @@ public class UserUtils(IUserRepository userRepository,
         
         for (var i = 0; i < beatmapModes.Count; i += BeatmapBatchSize)
         {
-            var batch = beatmapIds.Skip(i * BeatmapBatchSize).Take(BeatmapBatchSize).ToList();
+            var batch = beatmapIds.Skip(i).Take(BeatmapBatchSize).ToList();
             
             var scores = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
             var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();

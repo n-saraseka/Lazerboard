@@ -46,6 +46,7 @@ public class RestrictedUserUpdatesService : BackgroundService
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessRestrictedUsersAsync(batch, stoppingToken);
                 }
+                _restrictedCheckFinish = _restrictedCheckFinish.Add(_lookbackInterval);
                 await Task.Delay(_lookbackInterval, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

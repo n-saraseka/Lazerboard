@@ -144,7 +144,7 @@ public class UserUtils(IUserRepository userRepository,
                 scoreRepository.CreateBulk(newScores);
                 await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 
-                var beatmapModes = scoresBatch
+                var beatmapModes = newScores
                     .GroupBy(s => s.BeatmapId)
                     .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
             
@@ -190,7 +190,7 @@ public class UserUtils(IUserRepository userRepository,
             unlistedScoreRepository.CreateBulk(newUnlistedScores);
             await scoreRepository.SaveChangesAsync(stoppingToken);
             
-            var beatmapModes = batch
+            var beatmapModes = newUnlistedScores
                 .GroupBy(s => s.BeatmapId)
                 .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
             

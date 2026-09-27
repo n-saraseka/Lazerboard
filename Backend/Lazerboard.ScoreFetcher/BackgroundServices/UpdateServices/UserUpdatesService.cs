@@ -51,15 +51,17 @@ public class UserUpdatesService : BackgroundService
             }
             try
             {
-                var users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, stoppingToken);
+                var userIds = await GetLatestUserIdsAsync(_existingCheckStart, _existingCheckFinish, stoppingToken);
+                var users = await GetUsersAsync(userIds, stoppingToken); 
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
                     await ProcessExistingUsersAsync(batch, stoppingToken);
                 }
                 
-                var restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckFinish, stoppingToken);
-                for (var i = 0; i < restrictedUsers.Count; i += BatchSize)
+                var restrictedUserIds = await GetRestrictedUserIdsAsync(_restrictedCheckFinish, stoppingToken);
+                users = await GetUsersAsync(restrictedUserIds, stoppingToken);
+                for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
                     await ProcessRestrictedUsersAsync(batch, stoppingToken);
@@ -85,34 +87,47 @@ public class UserUpdatesService : BackgroundService
     }
     
     /// <summary>
-    /// Get a batch of <see cref="User"/>s from recent scores
+    /// Get a batch of <see cref="User.Id"/>s from recent scores
     /// </summary>
     /// <param name="startDate">The starting <see cref="DateTime"/></param>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetLatestUsersAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
+    private async Task<List<int>> GetLatestUserIdsAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         return await scoreRepository
-            .GetUsersFromScoresAfterDate(startDate, endDate)
+            .GetUserIdsFromScoresAfterDate(startDate, endDate)
             .ToListAsync(stoppingToken);
     }
 
     /// <summary>
-    /// Get a batch of restricted <see cref="User"/>s
+    /// Get a batch of restricted <see cref="User.Id"/>s
     /// </summary>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetRestrictedUsersAsync(DateTime endDate, CancellationToken stoppingToken)
+    private async Task<List<int>> GetRestrictedUserIdsAsync(DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         return await userRepository
-            .GetRestrictedUsersAsync(endDate)
+            .GetRestrictedUserIdsAsync(endDate)
             .ToListAsync(stoppingToken);
+    }
+
+    /// <summary>
+    /// Get <see cref="User"/>s from the DB
+    /// </summary>
+    /// <param name="userIds">List of <see cref="User"/> IDs</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>List of <see cref="User"/>s</returns>
+    private async Task<List<User>> GetUsersAsync(IList<int> userIds, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        return await userRepository.GetBulkAsync(userIds, stoppingToken);
     }
     
     /// <summary>

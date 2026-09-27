@@ -39,13 +39,14 @@ public class UserRepository(ScoreDataContext db) : BaseRepository<User, int>(db)
             .OrderByDescending(u => u.LastScannedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-    public IQueryable<User> GetRestrictedUsersAsync(DateTime endDate)
+    public IQueryable<int> GetRestrictedUserIdsAsync(DateTime endDate)
     {
         return Set
             .AsNoTracking()
             .Where(u => u.IsRestricted 
                         && (u.LastCheckedAt <= endDate || u.LastCheckedAt == null))
-            .OrderBy(u => u.Id);
+            .OrderBy(u => u.Id)
+            .Select(u => u.Id);
     }
     
     public Task<User?> GetLatestCheckedUserAsync(CancellationToken cancellationToken = default) =>

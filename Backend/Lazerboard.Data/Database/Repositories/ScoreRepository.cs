@@ -63,13 +63,12 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
         .Where(s => userIds.Contains(s.UserId))
         .OrderBy(s => s.Id);
 
-    public IQueryable<User> GetUsersFromScoresAfterDate(DateTime startTime, DateTime endTime) =>
+    public IQueryable<int> GetUserIdsFromScoresAfterDate(DateTime startTime, DateTime endTime) =>
         Set
             .AsNoTracking()
             .Where(s => s.Date >= startTime && s.Date <= endTime)
-            .Select(s => s.User)
-            .Distinct()
-            .OrderBy(u => u.Id);
+            .Select(s => s.UserId)
+            .Distinct();
     
     public Task<Score?> GetNewestScoreAsync(CancellationToken cancellationToken = default) =>
         Set

@@ -12,4 +12,6 @@ public enum ScanEventType
     UserScanFinished,
     UserCheckStarted,
     UserCheckFinished,
+    RestrictedCheckStarted,
+    RestrictedCheckFinished,
 }

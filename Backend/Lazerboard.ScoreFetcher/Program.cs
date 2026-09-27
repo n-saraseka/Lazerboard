@@ -146,7 +146,8 @@ if (servicesConfig.GetValue<bool>("UserScans"))
     builder.Services.AddHostedService<UserScanService>();
 }
 builder.Services.AddHostedService<BeatmapsetUpdatesService>();
-builder.Services.AddHostedService<UserUpdatesService>();
+builder.Services.AddHostedService<UnrestrictedUserUpdatesService>();
+builder.Services.AddHostedService<RestrictedUserUpdatesService>();
 builder.Services.AddHostedService<ScoresCountService>();
 
 // Rate limiting

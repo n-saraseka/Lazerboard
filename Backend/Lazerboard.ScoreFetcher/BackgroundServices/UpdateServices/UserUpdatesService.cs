@@ -52,17 +52,23 @@ public class UserUpdatesService : BackgroundService
             try
             {
                 var userIds = await GetLatestUserIdsAsync(_existingCheckStart, _existingCheckFinish, stoppingToken);
-                var users = await GetUsersAsync(userIds, stoppingToken); 
+                var users = (await GetUsersAsync(userIds, stoppingToken)).OrderBy(u => u.Id).ToList(); 
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
+                    _logger.Log(LogLevel.Information,
+                        "Processing a batch of existing users between IDs {minId} and {maxId}",
+                        batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessExistingUsersAsync(batch, stoppingToken);
                 }
                 
-                users = await GetRestrictedUsersAsync(_restrictedCheckFinish, stoppingToken);
+                users = (await GetRestrictedUsersAsync(_restrictedCheckFinish, stoppingToken)).OrderBy(u => u.Id).ToList();
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
+                    _logger.Log(LogLevel.Information,
+                        "Processing a batch of restricted users between IDs {minId} and {maxId}",
+                        batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessRestrictedUsersAsync(batch, stoppingToken);
                 }
                 

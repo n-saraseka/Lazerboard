@@ -132,7 +132,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
         var currentDateTime = DateTime.UtcNow;
-        _logger.Log(LogLevel.Information, "Started checking users at {checkStart}", currentDateTime);
+        _logger.Log(LogLevel.Information, "Started checking unrestricted users at {checkStart}", currentDateTime);
         await scanLogsRepository.SaveEventAsync(ScanEventType.UserCheckStarted, currentDateTime, stoppingToken);
     }
     
@@ -141,7 +141,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
         var currentDateTime = DateTime.UtcNow;
-        _logger.Log(LogLevel.Information, "Finished checking users at {checkStart}", currentDateTime);
+        _logger.Log(LogLevel.Information, "Finished checking unrestricted users at {checkStart}", currentDateTime);
         await scanLogsRepository.SaveEventAsync(ScanEventType.UserCheckFinished, currentDateTime, stoppingToken);
     }
 }

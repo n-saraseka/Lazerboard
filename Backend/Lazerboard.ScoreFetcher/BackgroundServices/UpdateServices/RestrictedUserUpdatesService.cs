@@ -1,4 +1,5 @@
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ public class RestrictedUserUpdatesService : BackgroundService
         _restrictedCheckFinish = DateTime.UtcNow;
         while (!stoppingToken.IsCancellationRequested)
         {
+            await StartUserCheckAsync(stoppingToken);
             try
             {
                 var users = (await GetRestrictedUsersAsync(_restrictedCheckFinish, stoppingToken)).OrderBy(u => u.Id).ToList();
@@ -47,6 +49,7 @@ public class RestrictedUserUpdatesService : BackgroundService
                     await ProcessRestrictedUsersAsync(batch, stoppingToken);
                 }
                 _restrictedCheckFinish = _restrictedCheckFinish.Add(_lookbackInterval);
+                await FinishUserCheckAsync(stoppingToken);
                 await Task.Delay(_lookbackInterval, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -86,5 +89,23 @@ public class RestrictedUserUpdatesService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
         await userUtils.ProcessRestrictedUsersAsync(users, stoppingToken);
+    }
+    
+    private async Task StartUserCheckAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
+        var currentDateTime = DateTime.UtcNow;
+        _logger.Log(LogLevel.Information, "Started checking restricted users at {checkStart}", currentDateTime);
+        await scanLogsRepository.SaveEventAsync(ScanEventType.RestrictedCheckStarted, currentDateTime, stoppingToken);
+    }
+    
+    private async Task FinishUserCheckAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
+        var currentDateTime = DateTime.UtcNow;
+        _logger.Log(LogLevel.Information, "Finished checking restricted users at {checkStart}", currentDateTime);
+        await scanLogsRepository.SaveEventAsync(ScanEventType.RestrictedCheckFinished, currentDateTime, stoppingToken);
     }
 }

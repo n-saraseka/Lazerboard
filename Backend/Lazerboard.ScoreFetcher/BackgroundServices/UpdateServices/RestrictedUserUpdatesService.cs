@@ -33,7 +33,7 @@ public class RestrictedUserUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _restrictedCheckFinish = DateTime.UtcNow;
+        _restrictedCheckFinish = DateTime.UtcNow - _lookbackInterval;
         while (!stoppingToken.IsCancellationRequested)
         {
             await StartUserCheckAsync(stoppingToken);

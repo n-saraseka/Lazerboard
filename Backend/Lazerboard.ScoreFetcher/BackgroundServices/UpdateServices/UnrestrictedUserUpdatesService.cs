@@ -40,9 +40,10 @@ public class UnrestrictedUserUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await GetStartingDateTime(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
-            await GetStartingDateTime(stoppingToken);
+            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - _existingCheckFinish  > _lookbackInterval;
             if (_shouldStartCheck)
             {
                 await StartUserCheckAsync(stoppingToken);
@@ -59,7 +60,6 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessUsersAsync(batch, stoppingToken);
                 }
-                
                 _existingCheckStart = _existingCheckStart.Add(_lookbackInterval).Subtract(_lookBackJitter);
                 _existingCheckFinish = _existingCheckFinish.Add(_lookbackInterval).Add(_lookBackJitter);
                 if (!_shouldCatchUp)
@@ -128,17 +128,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         }
         else
         {
-            if (latestFinishTimeStamp != null
-                && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt)
-            {
-                _existingCheckFinish = latestStartTimestamp.LoggedAt.Add(_lookbackInterval);
-                _shouldStartCheck = true;
-            }
-            else
-            {
-                _existingCheckFinish = latestStartTimestamp.LoggedAt;
-            }
-            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - latestStartTimestamp.LoggedAt  > _lookbackInterval;
+            _existingCheckFinish = latestStartTimestamp.LoggedAt;
+            _shouldStartCheck = latestFinishTimeStamp != null
+                                && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt;
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);
     }

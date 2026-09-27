@@ -63,6 +63,10 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 _existingCheckStart = _existingCheckStart.Add(_lookbackInterval).Subtract(_lookBackJitter);
                 _existingCheckFinish = _existingCheckFinish.Add(_lookbackInterval).Add(_lookBackJitter);
                 await FinishUserCheckAsync(stoppingToken);
+                if (!_shouldCatchUp)
+                {
+                    await Task.Delay(_lookbackInterval, stoppingToken);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

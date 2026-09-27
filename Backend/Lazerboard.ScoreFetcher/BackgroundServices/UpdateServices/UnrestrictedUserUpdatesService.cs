@@ -20,6 +20,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
     private readonly TimeSpan _lookBackJitter; // For when there are scores in the previous interval inserted post-check
     private DateTime _existingCheckStart;
     private DateTime _existingCheckFinish;
+    
+    private DateTime? _newestScoreDate;
+    private bool _shouldCatchUp;
     private bool _shouldStartCheck;
     
     public UnrestrictedUserUpdatesService(IServiceProvider serviceProvider, ILogger<UnrestrictedUserUpdatesService> logger)
@@ -60,8 +63,11 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 _existingCheckStart = _existingCheckStart.Add(_lookbackInterval).Subtract(_lookBackJitter);
                 _existingCheckFinish = _existingCheckFinish.Add(_lookbackInterval).Add(_lookBackJitter);
                 await FinishUserCheckAsync(stoppingToken);
-                _shouldStartCheck = true;
-                await Task.Delay(_lookbackInterval, stoppingToken);
+                if (!_shouldCatchUp)
+                {
+                    _shouldStartCheck = true;
+                    await Task.Delay(_lookbackInterval, stoppingToken);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -111,18 +117,32 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
         var latestStartTimestamp = await scanLogsRepository.GetLatestStartedCheckAsync(stoppingToken);
         var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedCheckAsync(stoppingToken);
+        
+        var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
+        var newestScore = await scoreRepository.GetNewestScoreAsync(stoppingToken);
+        _newestScoreDate = newestScore?.Date;
 
-        if (latestStartTimestamp is null || (latestFinishTimeStamp != null
-                                             && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
+        if (latestStartTimestamp is null)
         {
-            var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
-            var newestScore = await scoreRepository.GetNewestScoreAsync(stoppingToken);
             _existingCheckFinish = newestScore?.Date ?? DateTime.UtcNow;
             _shouldStartCheck = true;
         }
         else
         {
-            _existingCheckFinish = latestStartTimestamp.LoggedAt;
+            if (latestFinishTimeStamp != null
+                && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt)
+            {
+                _existingCheckFinish = latestStartTimestamp.LoggedAt.Add(_lookbackInterval);
+                _shouldStartCheck = true;
+            }
+            else
+            {
+                _existingCheckFinish = latestStartTimestamp.LoggedAt;
+            }
+        }
+        if (_newestScoreDate != null && _existingCheckFinish - _newestScoreDate > _lookbackInterval)
+        {
+            _shouldCatchUp = true;
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);
     }

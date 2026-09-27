@@ -89,6 +89,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
     /// <returns>List of <see cref="User"/>s</returns>
     private async Task<List<User>> GetLatestUsersAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
     {
+        _logger.Log(LogLevel.Information, "Getting unrestricted users from scores between {startDate} and {endDate}", startDate, endDate);
         using var scope = _serviceProvider.CreateScope();
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         var ids = await scoreRepository
@@ -130,7 +131,14 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         {
             _shouldStartCheck = latestFinishTimeStamp != null
                                 && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt;
-            _existingCheckFinish = _shouldStartCheck ? latestStartTimestamp.LoggedAt.Add(_lookbackInterval) : latestStartTimestamp.LoggedAt;
+            _existingCheckFinish = latestStartTimestamp.LoggedAt;
+            if (_shouldStartCheck)
+            {
+                var currentDateTime = DateTime.UtcNow;
+                _existingCheckFinish = currentDateTime - _existingCheckFinish < _lookbackInterval 
+                    ? currentDateTime 
+                    : _existingCheckFinish.Add(_lookbackInterval);
+            }
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);
     }

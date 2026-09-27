@@ -128,9 +128,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         }
         else
         {
-            _existingCheckFinish = latestStartTimestamp.LoggedAt;
             _shouldStartCheck = latestFinishTimeStamp != null
                                 && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt;
+            _existingCheckFinish = _shouldStartCheck ? latestStartTimestamp.LoggedAt.Add(_lookbackInterval) : latestStartTimestamp.LoggedAt;
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);
     }

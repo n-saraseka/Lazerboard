@@ -59,8 +59,7 @@ public class UserUpdatesService : BackgroundService
                     await ProcessExistingUsersAsync(batch, stoppingToken);
                 }
                 
-                var restrictedUserIds = await GetRestrictedUserIdsAsync(_restrictedCheckFinish, stoppingToken);
-                users = await GetUsersAsync(restrictedUserIds, stoppingToken);
+                users = await GetRestrictedUsersAsync(_restrictedCheckFinish, stoppingToken);
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
@@ -87,7 +86,7 @@ public class UserUpdatesService : BackgroundService
     }
     
     /// <summary>
-    /// Get a batch of <see cref="User.Id"/>s from recent scores
+    /// Get <see cref="User.Id"/>s from recent scores
     /// </summary>
     /// <param name="startDate">The starting <see cref="DateTime"/></param>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
@@ -103,17 +102,17 @@ public class UserUpdatesService : BackgroundService
     }
 
     /// <summary>
-    /// Get a batch of restricted <see cref="User.Id"/>s
+    /// Get restricted <see cref="User"/>s
     /// </summary>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<int>> GetRestrictedUserIdsAsync(DateTime endDate, CancellationToken stoppingToken)
+    private async Task<List<User>> GetRestrictedUsersAsync(DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         return await userRepository
-            .GetRestrictedUserIdsAsync(endDate)
+            .GetRestrictedUsersAsync(endDate)
             .ToListAsync(stoppingToken);
     }
 

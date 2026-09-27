@@ -166,7 +166,8 @@ public class UserUpdatesService : BackgroundService
         var latestStartTimestamp = await scanLogsRepository.GetLatestStartedCheckAsync(stoppingToken);
         var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedCheckAsync(stoppingToken);
 
-        if (latestStartTimestamp is null)
+        if (latestStartTimestamp is null || (latestFinishTimeStamp != null
+                                             && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
             var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
             var newestScore = await scoreRepository.GetNewestScoreAsync(stoppingToken);
@@ -175,16 +176,7 @@ public class UserUpdatesService : BackgroundService
         }
         else
         {
-            if (latestFinishTimeStamp != null
-                && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt)
-            {
-                _shouldStartCheck = true;
-                _existingCheckFinish = latestStartTimestamp.LoggedAt.Add(_existingUsersLookbackInterval);
-            }
-            else
-            {
-                _existingCheckFinish = latestStartTimestamp.LoggedAt;
-            }
+            _existingCheckFinish = latestStartTimestamp.LoggedAt;
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_existingUsersLookbackInterval);
         _restrictedCheckFinish = DateTime.UtcNow;

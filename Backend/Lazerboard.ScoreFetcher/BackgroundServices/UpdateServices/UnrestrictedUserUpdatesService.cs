@@ -40,9 +40,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await GetStartingDateTime(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
+            await GetStartingDateTime(stoppingToken);
             if (_shouldStartCheck)
             {
                 await StartUserCheckAsync(stoppingToken);
@@ -63,11 +63,6 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 _existingCheckStart = _existingCheckStart.Add(_lookbackInterval).Subtract(_lookBackJitter);
                 _existingCheckFinish = _existingCheckFinish.Add(_lookbackInterval).Add(_lookBackJitter);
                 await FinishUserCheckAsync(stoppingToken);
-                if (!_shouldCatchUp)
-                {
-                    _shouldStartCheck = true;
-                    await Task.Delay(_lookbackInterval, stoppingToken);
-                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -140,10 +135,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 _existingCheckFinish = latestStartTimestamp.LoggedAt;
             }
         }
-        if (_newestScoreDate != null && _existingCheckFinish - _newestScoreDate > _lookbackInterval)
-        {
-            _shouldCatchUp = true;
-        }
+        _shouldCatchUp = _newestScoreDate != null && _existingCheckFinish - _newestScoreDate > _lookbackInterval;
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);
     }
 

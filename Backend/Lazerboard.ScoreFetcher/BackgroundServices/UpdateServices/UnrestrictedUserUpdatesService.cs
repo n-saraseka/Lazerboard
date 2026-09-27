@@ -62,9 +62,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 
                 _existingCheckStart = _existingCheckStart.Add(_lookbackInterval).Subtract(_lookBackJitter);
                 _existingCheckFinish = _existingCheckFinish.Add(_lookbackInterval).Add(_lookBackJitter);
-                await FinishUserCheckAsync(stoppingToken);
                 if (!_shouldCatchUp)
                 {
+                    await FinishUserCheckAsync(stoppingToken);
                     await Task.Delay(_lookbackInterval, stoppingToken);
                 }
             }
@@ -138,8 +138,8 @@ public class UnrestrictedUserUpdatesService : BackgroundService
             {
                 _existingCheckFinish = latestStartTimestamp.LoggedAt;
             }
+            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - latestStartTimestamp.LoggedAt  > _lookbackInterval;
         }
-        _shouldCatchUp = _newestScoreDate != null && _existingCheckFinish - _newestScoreDate > _lookbackInterval;
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);
     }
 

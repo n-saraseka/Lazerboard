@@ -21,7 +21,6 @@ public class UserUpdatesService : BackgroundService
     private readonly TimeSpan _lookBackJitter; // For when there are scores in the previous interval inserted post-check
     private DateTime _existingCheckStart;
     private DateTime _existingCheckFinish;
-    private DateTime _restrictedCheckStart;
     private DateTime _restrictedCheckFinish;
     private bool _shouldStartCheck;
     
@@ -52,15 +51,16 @@ public class UserUpdatesService : BackgroundService
             }
             try
             {
-                var users = await GetLatestUsersAsync(_existingCheckStart, _existingCheckFinish, stoppingToken);
+                var userIds = await GetLatestUserIdsAsync(_existingCheckStart, _existingCheckFinish, stoppingToken);
+                var users = await GetUsersAsync(userIds, stoppingToken); 
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
                     await ProcessExistingUsersAsync(batch, stoppingToken);
                 }
                 
-                var restrictedUsers = await GetRestrictedUsersAsync(_restrictedCheckStart, _restrictedCheckFinish, stoppingToken);
-                for (var i = 0; i < restrictedUsers.Count; i += BatchSize)
+                users = await GetRestrictedUsersAsync(_restrictedCheckFinish, stoppingToken);
+                for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
                     await ProcessRestrictedUsersAsync(batch, stoppingToken);
@@ -69,7 +69,6 @@ public class UserUpdatesService : BackgroundService
                 _existingCheckStart = _existingCheckStart.Add(_existingUsersLookbackInterval).Subtract(_lookBackJitter);
                 _existingCheckFinish = _existingCheckFinish.Add(_existingUsersLookbackInterval).Add(_lookBackJitter);
                 _restrictedCheckFinish = _restrictedCheckFinish.Add(_restrictedUsersLookbackInterval);
-                _restrictedCheckStart = _restrictedCheckStart.Add(_restrictedUsersLookbackInterval);
                 await FinishUserCheckAsync(stoppingToken);
                 _shouldStartCheck = true;
                 await Task.Delay(_existingUsersLookbackInterval, stoppingToken);
@@ -87,35 +86,47 @@ public class UserUpdatesService : BackgroundService
     }
     
     /// <summary>
-    /// Get a batch of <see cref="User"/>s from recent scores
+    /// Get <see cref="User.Id"/>s from recent scores
     /// </summary>
     /// <param name="startDate">The starting <see cref="DateTime"/></param>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetLatestUsersAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
+    private async Task<List<int>> GetLatestUserIdsAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         return await scoreRepository
-            .GetUsersFromScoresAfterDate(startDate, endDate)
+            .GetUserIdsFromScoresAfterDate(startDate, endDate)
             .ToListAsync(stoppingToken);
     }
 
     /// <summary>
-    /// Get a batch of restricted <see cref="User"/>s
+    /// Get restricted <see cref="User"/>s
     /// </summary>
-    /// <param name="startDate">The starting <see cref="DateTime"/></param>
     /// <param name="endDate">The finishing <see cref="DateTime"/></param>
-    /// <param name="batchNumber">The batch number</param    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>List of <see cref="User"/>s</returns>
-    private async Task<List<User>> GetRestrictedUsersAsync(DateTime startDate, DateTime endDate, CancellationToken stoppingToken)
+    private async Task<List<User>> GetRestrictedUsersAsync(DateTime endDate, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         return await userRepository
-            .GetRestrictedUsersAsync(startDate, endDate)
+            .GetRestrictedUsersAsync(endDate)
             .ToListAsync(stoppingToken);
+    }
+
+    /// <summary>
+    /// Get <see cref="User"/>s from the DB
+    /// </summary>
+    /// <param name="userIds">List of <see cref="User"/> IDs</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>List of <see cref="User"/>s</returns>
+    private async Task<List<User>> GetUsersAsync(IList<int> userIds, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        return await userRepository.GetBulkAsync(userIds, stoppingToken);
     }
     
     /// <summary>
@@ -171,7 +182,6 @@ public class UserUpdatesService : BackgroundService
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_existingUsersLookbackInterval);
         _restrictedCheckFinish = DateTime.UtcNow;
-        _restrictedCheckStart = _restrictedCheckFinish.Subtract(_restrictedUsersLookbackInterval);
     }
 
     private async Task StartUserCheckAsync(CancellationToken stoppingToken)

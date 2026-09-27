@@ -65,6 +65,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 if (!_shouldCatchUp)
                 {
                     await FinishUserCheckAsync(stoppingToken);
+                    _shouldStartCheck = true;
                     await Task.Delay(_lookbackInterval, stoppingToken);
                 }
             }

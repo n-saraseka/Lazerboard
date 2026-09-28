@@ -85,15 +85,11 @@ public class UserUtils(IUserRepository userRepository,
             .Where(u => existingUserIds.Contains(u.Id))
             .ToDictionary(u => u.Id, u => existingUsers.First(user => u.Id == user.Id));
         var unrestrictedUserIds = unrestrictedUsers.Select(s => s.Key).ToList();
-
-        if (unrestrictedUserIds.Count > 0)
-        {
-            await ReinstateUserScoresAsync(unrestrictedUserIds, stoppingToken);
-        }
+        var restrictedUserIds = userIds.Where(id => !unrestrictedUserIds.Contains(id)).ToList();
         
         // Clean up restricted user ID scores if failed to do so for some reason earlier.
         var userIdsWithoutCleanedUpScores = await scoreRepository
-            .GetByUserIds(userIds)
+            .GetByUserIds(restrictedUserIds)
             .Select(s => s.UserId)
             .Distinct()
             .ToListAsync(stoppingToken);
@@ -101,6 +97,11 @@ public class UserUtils(IUserRepository userRepository,
         if (userIdsWithoutCleanedUpScores.Count > 0)
         {
             await RemoveUserScoresAsync(userIdsWithoutCleanedUpScores, stoppingToken);
+        }
+
+        if (unrestrictedUserIds.Count > 0)
+        {
+            await ReinstateUserScoresAsync(unrestrictedUserIds, stoppingToken);
         }
         
         var currentDateTime = DateTime.UtcNow;
@@ -352,6 +353,14 @@ public class UserUtils(IUserRepository userRepository,
     {
         if (scores.Count == 0) return 0;
         
+        // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
+        // in between otherwise.
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = true;
+        }
+        
         var significantScores = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
         var relevantScores = scores.Where(s => significantScores[s.Id]).ToList();
 
@@ -376,6 +385,27 @@ public class UserUtils(IUserRepository userRepository,
                 
                 var groupScores = group.ToList();
                 var newScores = relevantScores.Where(s => s.BeatmapId == beatmapId && s.Mode == mode).ToList();
+                
+                if (groupScores.Count + newScores.Count < 100)
+                {
+                    var scoresResponse = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
+                    var apiScores = scoresResponse.Scores;
+                    var scoresWithoutPp = apiScores.Where(s => s.PP == null).ToList();
+                    if (scoresWithoutPp.Any())
+                    {
+                        var flatWorkingBeatmap = await scoreFetchingUtils.GetFlatWorkingBeatmapAsync(beatmapId, stoppingToken);
+                        foreach (var score in scoresWithoutPp)
+                        {
+                            await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+                        }
+                    }
+                    await scoreFetchingUtils.SaveScoreDataAsync(apiScores, ScoreSource.LeaderboardScan, topScoresConfig, stoppingToken);
+                    
+                    var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
+                    newScores = newScores.Where(s => checkResults[s.Id]).ToList();
+                    groupScores = (await scoreRepository.GetByBeatmapIdAsync(beatmapId, stoppingToken)).Where(s => s.Mode == mode).ToList();
+                }
+                
                 var allScores = groupScores
                     .Concat(newScores)
                     .OrderByDescending(s => s.TotalScore)

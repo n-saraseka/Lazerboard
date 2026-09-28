@@ -73,8 +73,9 @@ public class UserUtils(IUserRepository userRepository,
     /// Process a batch of restricted users and reinstate scores if a user is unrestricted
     /// </summary>
     /// <param name="users">A list of <see cref="User"/>s</param>
+    /// <param name="isUserScan">Whether the method was called from a <see cref="UserScanService"/> or not</param>
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    public async Task ProcessRestrictedUsersAsync(IList<User> users, CancellationToken stoppingToken)
+    public async Task ProcessRestrictedUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
     {
         var userIds = users.Select(u => u.Id).Distinct().ToList();
         var existingUsers = await osuApiFetcher.GetUsersAsync(userIds, stoppingToken);
@@ -106,7 +107,15 @@ public class UserUtils(IUserRepository userRepository,
         users = users.Select(u =>
         {
             u.IsRestricted = !existingUserIds.Contains(u.Id);
-            u.LastCheckedAt = currentDateTime;
+            
+            if (isUserScan)
+            {
+                u.LastScannedAt = currentDateTime;
+            }
+            else
+            {
+                u.LastCheckedAt = currentDateTime;
+            }
 
             if (!u.IsRestricted)
             {

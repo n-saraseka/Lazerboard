@@ -88,7 +88,7 @@ public class RestrictedUserUpdatesService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
-        await userUtils.ProcessRestrictedUsersAsync(users, stoppingToken);
+        await userUtils.ProcessRestrictedUsersAsync(users, false, stoppingToken);
     }
     
     private async Task StartUserCheckAsync(CancellationToken stoppingToken)

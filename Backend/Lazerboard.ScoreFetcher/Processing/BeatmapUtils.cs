@@ -96,28 +96,41 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
             foreach (var val in Enum.GetValues<Mode>())
             {
                 if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
-                var scores = await GetBeatmapScoresAsync(beatmap.Id, val, stoppingToken);
-
-                if (scores.Count == 0) continue;
-                
-                var scoresWithoutPp = scores.Where(s => s.PP == null).ToList();
-                var scoresWithPp = scores.Where(s => s.PP != null).ToList();
-
-                if (scoresWithoutPp.Count > 0)
-                {
-                    var flatWorkingBeatmap = await utils.GetFlatWorkingBeatmapAsync(beatmap.Id, stoppingToken);
-                    foreach (var score in scoresWithoutPp)
-                    {
-                        await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
-                    }
-                }
-                
-                var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
-                await utils.SaveScoreDataAsync(mergedScores, ScoreSource.LeaderboardScan, topScoresConfiguration, stoppingToken);
+                await ProcessLeaderboardAsync(beatmap.Id, val, topScoresConfiguration, stoppingToken);
             }
         }
         
         await SaveFinishingTimestampAsync([beatmapset.Id], eventType, stoppingToken);
+    }
+
+    /// <summary>
+    /// Process leaderboard scores and save the data
+    /// </summary>
+    /// <param name="beatmapId">The <see cref="APIBeatmap"/> ID</param>
+    /// <param name="mode">The <see cref="Mode"/></param>
+    /// <param name="topScoresConfiguration">A mode-to-bool dictionary that determines whether scores outside
+    /// of top 100 for said mode should get removed or not</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    public async Task ProcessLeaderboardAsync(int beatmapId, Mode mode, Dictionary<Mode, bool> topScoresConfiguration, CancellationToken stoppingToken)
+    {
+        var scores = await GetBeatmapScoresAsync(beatmapId, mode, stoppingToken);
+
+        if (scores.Count == 0) return;
+                
+        var scoresWithoutPp = scores.Where(s => s.PP == null).ToList();
+        var scoresWithPp = scores.Where(s => s.PP != null).ToList();
+
+        if (scoresWithoutPp.Count > 0)
+        {
+            var flatWorkingBeatmap = await utils.GetFlatWorkingBeatmapAsync(beatmapId, stoppingToken);
+            foreach (var score in scoresWithoutPp)
+            {
+                await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
+            }
+        }
+                
+        var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
+        await utils.SaveScoreDataAsync(mergedScores, ScoreSource.LeaderboardScan, topScoresConfiguration, stoppingToken);
     }
     
     /// <summary>

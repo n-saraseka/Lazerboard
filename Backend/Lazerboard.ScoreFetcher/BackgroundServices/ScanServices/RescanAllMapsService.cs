@@ -12,10 +12,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 
-public class RescanService : BackgroundService
+public class RescanAllMapsService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<RescanService> _logger;
+    private readonly ILogger<RescanAllMapsService> _logger;
     private ISeedingState _seedingState;
 
     private const int BatchSize = 50;
@@ -24,7 +24,7 @@ public class RescanService : BackgroundService
     private DateTimeOffset? _latestRankedDate;
     private int? _latestMapsetId;
     
-    public RescanService(IServiceProvider serviceProvider, ILogger<RescanService> logger, ISeedingState seedingState)
+    public RescanAllMapsService(IServiceProvider serviceProvider, ILogger<RescanAllMapsService> logger, ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -58,7 +58,7 @@ public class RescanService : BackgroundService
 
                 if (beatmapsets.Count == 0)
                 {
-                    await FinishSeedingAsync(stoppingToken);
+                    await FinishScanningAsync(stoppingToken);
                     break;
                 }
 
@@ -101,7 +101,7 @@ public class RescanService : BackgroundService
 
                 if (_shouldFinishAfterThisBatch)
                 {
-                    await FinishSeedingAsync(stoppingToken);
+                    await FinishScanningAsync(stoppingToken);
                     break;
                 }
             }
@@ -186,7 +186,7 @@ public class RescanService : BackgroundService
     /// Save the <see cref="ScanEventType.RescanFinished"/> event
     /// </summary>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task FinishSeedingAsync(CancellationToken stoppingToken)
+    private async Task FinishScanningAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();

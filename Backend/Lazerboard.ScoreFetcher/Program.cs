@@ -135,7 +135,7 @@ if (servicesConfig.GetValue<bool>("Firehose"))
 }
 if (servicesConfig.GetValue<bool>("Rescans"))
 {
-    builder.Services.AddHostedService<RescanService>();
+    builder.Services.AddHostedService<RescanAllMapsService>();
 }
 if (servicesConfig.GetValue<bool>("Backpopulator"))
 {

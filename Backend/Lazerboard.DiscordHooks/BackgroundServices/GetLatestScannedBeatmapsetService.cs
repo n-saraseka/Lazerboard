@@ -120,7 +120,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         }
         if (latestSecondaryProcessedBeatmapset != null)
         {
-            beatmapsetScanEventDates[latestSecondaryProcessedBeatmapset.Id] = latestSecondaryProcessedBeatmapset.StartedScanningAt!.Value;
+            beatmapsetScanEventDates[latestSecondaryProcessedBeatmapset.Id] = latestSecondaryProcessedBeatmapset.SecondaryStartedProcessingAt!.Value;
         }
 
         var beatmapsetId = beatmapsetScanEventDates.MaxBy(kvp => kvp.Value).Key;

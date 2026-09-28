@@ -144,14 +144,14 @@ public class RescanAllMapsService : BackgroundService
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
         
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        var latestStartTimestamp = await scanLogsRepository.GetLatestStartedScanAsync(stoppingToken);
-        var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedScanAsync(stoppingToken);
+        var latestStartTimestamp = await scanLogsRepository.GetLatestStartedRescanAsync(stoppingToken);
+        var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedRescanAsync(stoppingToken);
             
         if (latestStartTimestamp is null 
             || (latestFinishTimeStamp != null && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
-            await scanLogsRepository.SaveEventAsync(ScanEventType.RescanStarted, stoppingToken);
-            _logger.Log(LogLevel.Information, "Started scanning beatmapsets at {datetime}", DateTime.UtcNow);
+            await scanLogsRepository.SaveEventAsync(ScanEventType.ScanStarted, stoppingToken);
+            _logger.Log(LogLevel.Information, "Started rescanning beatmapsets at {datetime}", DateTime.UtcNow);
             return;
         }
         
@@ -179,18 +179,20 @@ public class RescanAllMapsService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        return await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+        var latestProcessedMapset = await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+        if (latestProcessedMapset != null) return latestProcessedMapset;
+        return await beatmapsetRepository.GetLatestScannedMapsetAsync(stoppingToken);
     }
     
     /// <summary>
-    /// Save the <see cref="ScanEventType.RescanFinished"/> event
+    /// Save the <see cref="ScanEventType.ScanFinished"/> event
     /// </summary>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FinishScanningAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
+        await scanLogsRepository.SaveEventAsync(ScanEventType.ScanFinished, stoppingToken);
         _seedingState.IsSeeding = false;
         _logger.Log(LogLevel.Information, "Rescan complete");
     }

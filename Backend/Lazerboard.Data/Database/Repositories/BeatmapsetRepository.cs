@@ -33,10 +33,16 @@ public class BeatmapsetRepository(ScoreDataContext db) : BaseRepository<Beatmaps
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>The <see cref="Beatmapset"/> or null</returns>
-    public Task<Beatmapset?> GetLatestRescannedMapsetAsync(CancellationToken cancellationToken = default) =>
+    public Task<Beatmapset?> GetLatestScannedMapsetAsync(CancellationToken cancellationToken = default) =>
         Set
             .Where(bs => bs.FinishedScanningAt != null)
             .OrderByDescending(bs => bs.FinishedScanningAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    
+    public Task<Beatmapset?> GetLatestRescannedMapsetAsync(CancellationToken cancellationToken = default) =>
+        Set
+            .Where(bs => bs.FinishedRescanningAt != null)
+            .OrderByDescending(bs => bs.FinishedRescanningAt)
             .FirstOrDefaultAsync(cancellationToken);
     
     /// <summary>

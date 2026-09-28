@@ -32,11 +32,19 @@ public class Beatmapset : IEntity<int>
     /// </summary>
     public DateTimeOffset? SecondaryFinishedProcessingAt { get; set; }
     /// <summary>
-    /// Set when a rescan of the beatmapset is started
+    /// Set when a scan of the beatmapset is started
     /// </summary>
     public DateTimeOffset? StartedScanningAt { get; set; }
     /// <summary>
-    /// Set when all leaderboards in the beatmapset have been rescanned
+    /// Set when all leaderboards in the beatmapset have been scanned
     /// </summary>
     public DateTimeOffset? FinishedScanningAt { get; set; }
+    /// <summary>
+    /// Set when a rescan of the beatmapset is started
+    /// </summary>
+    public DateTimeOffset? StartedRescanningAt { get; set; }
+    /// <summary>
+    /// Set when all leaderboards in the beatmapset have been rescanned
+    /// </summary>
+    public DateTimeOffset? FinishedRescanningAt { get; set; }
 }

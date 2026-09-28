@@ -136,7 +136,7 @@ public class BeatmapsetUpdatesService : BackgroundService
         // by the score fetcher. If that doesn't exist either, fall back to the second highest beatmapset.
         if (startingBeatmapset is null)
         {
-            startingBeatmapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(stoppingToken);
+            startingBeatmapset = await beatmapsetRepository.GetLatestScannedMapsetAsync(stoppingToken);
             if (startingBeatmapset is null)
             {
                 var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();

@@ -164,7 +164,7 @@ public class BeatmapsetSeedingService : BackgroundService
             return;
         }
         
-        var latestRescannedMapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(stoppingToken);
+        var latestRescannedMapset = await beatmapsetRepository.GetLatestScannedMapsetAsync(stoppingToken);
         
         if (latestRescannedMapset is null) return;
         

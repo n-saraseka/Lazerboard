@@ -14,4 +14,6 @@ public enum ScanEventType
     UserCheckFinished,
     RestrictedCheckStarted,
     RestrictedCheckFinished,
+    ScanStarted, // These and rescan variables are backwards. ScanStarted is used for the rescans service.
+    ScanFinished
 }

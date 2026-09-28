@@ -33,6 +33,30 @@ public class BeatmapsetScanLogRepository(ScoreDataContext db) : BaseRepository<B
     
     /// <summary>
     /// Get the latest <see cref="BeatmapsetScanLog"/>
+    /// where the <see cref="BeatmapsetScanLog.EventType"/> is <see cref="ScanEventType.ScanStarted"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="BeatmapsetScanLog"/> or null</returns>
+    public Task<BeatmapsetScanLog?> GetLatestStartedRescanAsync(CancellationToken cancellationToken = default) =>
+        Set
+            .Where(b => b.EventType == ScanEventType.ScanStarted)
+            .OrderByDescending(b => b.LoggedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    
+    /// <summary>
+    /// Get the latest <see cref="BeatmapsetScanLog"/>
+    /// where the <see cref="BeatmapsetScanLog.EventType"/> is <see cref="ScanEventType.ScanFinished"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="BeatmapsetScanLog"/> or null</returns>
+    public Task<BeatmapsetScanLog?> GetLatestFinishedRescanAsync(CancellationToken cancellationToken = default) =>
+        Set
+            .Where(b => b.EventType == ScanEventType.ScanFinished)
+            .OrderByDescending(b => b.LoggedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    
+    /// <summary>
+    /// Get the latest <see cref="BeatmapsetScanLog"/>
     /// where the <see cref="BeatmapsetScanLog.EventType"/> is <see cref="ScanEventType.MainSeedingStarted"/>.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>

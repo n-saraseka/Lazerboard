@@ -135,7 +135,7 @@ if (servicesConfig.GetValue<bool>("Firehose"))
 }
 if (servicesConfig.GetValue<bool>("Rescans"))
 {
-    builder.Services.AddHostedService<RescanService>();
+    builder.Services.AddHostedService<RescanAllMapsService>();
 }
 if (servicesConfig.GetValue<bool>("Backpopulator"))
 {
@@ -144,6 +144,10 @@ if (servicesConfig.GetValue<bool>("Backpopulator"))
 if (servicesConfig.GetValue<bool>("UserScans"))
 {
     builder.Services.AddHostedService<UserScanService>();
+}
+if (servicesConfig.GetValue<bool>("UnlistedUserScans"))
+{
+    builder.Services.AddHostedService<UnlistedUserScanService>();
 }
 builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 builder.Services.AddHostedService<UnrestrictedUserUpdatesService>();

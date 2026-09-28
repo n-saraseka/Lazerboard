@@ -1,6 +1,5 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
-using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
@@ -13,7 +12,7 @@ public class UserUtils(IUserRepository userRepository,
     IOsuApiFetcher osuApiFetcher,
     IScoreRepository scoreRepository,
     IUnlistedScoreRepository unlistedScoreRepository,
-    IScoreFetchingUtils scoreFetchingUtils,
+    IBeatmapUtils beatmapUtils,
     IScoreProcessor scoreProcessor,
     ILogger<IUserUtils> logger) : IUserUtils
 {
@@ -73,8 +72,9 @@ public class UserUtils(IUserRepository userRepository,
     /// Process a batch of restricted users and reinstate scores if a user is unrestricted
     /// </summary>
     /// <param name="users">A list of <see cref="User"/>s</param>
+    /// <param name="isUserScan">Whether the method was called from a <see cref="UserScanService"/> or not</param>
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    public async Task ProcessRestrictedUsersAsync(IList<User> users, CancellationToken stoppingToken)
+    public async Task ProcessRestrictedUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
     {
         var userIds = users.Select(u => u.Id).Distinct().ToList();
         var existingUsers = await osuApiFetcher.GetUsersAsync(userIds, stoppingToken);
@@ -84,15 +84,11 @@ public class UserUtils(IUserRepository userRepository,
             .Where(u => existingUserIds.Contains(u.Id))
             .ToDictionary(u => u.Id, u => existingUsers.First(user => u.Id == user.Id));
         var unrestrictedUserIds = unrestrictedUsers.Select(s => s.Key).ToList();
-
-        if (unrestrictedUserIds.Count > 0)
-        {
-            await ReinstateUserScoresAsync(unrestrictedUserIds, stoppingToken);
-        }
+        var restrictedUserIds = userIds.Where(id => !unrestrictedUserIds.Contains(id)).ToList();
         
         // Clean up restricted user ID scores if failed to do so for some reason earlier.
         var userIdsWithoutCleanedUpScores = await scoreRepository
-            .GetByUserIds(userIds)
+            .GetByUserIds(restrictedUserIds)
             .Select(s => s.UserId)
             .Distinct()
             .ToListAsync(stoppingToken);
@@ -101,12 +97,25 @@ public class UserUtils(IUserRepository userRepository,
         {
             await RemoveUserScoresAsync(userIdsWithoutCleanedUpScores, stoppingToken);
         }
+
+        if (unrestrictedUserIds.Count > 0)
+        {
+            await ReinstateUserScoresAsync(unrestrictedUserIds, stoppingToken);
+        }
         
         var currentDateTime = DateTime.UtcNow;
         users = users.Select(u =>
         {
             u.IsRestricted = !existingUserIds.Contains(u.Id);
-            u.LastCheckedAt = currentDateTime;
+            
+            if (isUserScan)
+            {
+                u.LastScannedAt = currentDateTime;
+            }
+            else
+            {
+                u.LastCheckedAt = currentDateTime;
+            }
 
             if (!u.IsRestricted)
             {
@@ -311,18 +320,7 @@ public class UserUtils(IUserRepository userRepository,
                 // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
                 if (groupScores.Count < 100)
                 {
-                    var scoresResponse = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
-                    var apiScores = scoresResponse.Scores;
-                    var scoresWithoutPp = apiScores.Where(s => s.PP == null).ToList();
-                    if (scoresWithoutPp.Any())
-                    {
-                        var flatWorkingBeatmap = await scoreFetchingUtils.GetFlatWorkingBeatmapAsync(beatmapId, stoppingToken);
-                        foreach (var score in scoresWithoutPp)
-                        {
-                            await scoreProcessor.CalculateScoreAsync(score, flatWorkingBeatmap, stoppingToken);
-                        }
-                    }
-                    await scoreFetchingUtils.SaveScoreDataAsync(apiScores, ScoreSource.LeaderboardScan, topScoresConfig, stoppingToken);
+                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, topScoresConfig, stoppingToken);
                 }
                 else
                 {
@@ -343,8 +341,16 @@ public class UserUtils(IUserRepository userRepository,
     {
         if (scores.Count == 0) return 0;
         
-        var significantScores = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
-        var relevantScores = scores.Where(s => significantScores[s.Id]).ToList();
+        // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
+        // in between otherwise.
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = true;
+        }
+        
+        var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
+        var relevantScores = scores.Where(s => checkResults[s.Id]).ToList();
 
         var beatmapIds = relevantScores.Select(s => s.BeatmapId).Distinct().ToList();
         var beatmapModes = relevantScores
@@ -367,6 +373,17 @@ public class UserUtils(IUserRepository userRepository,
                 
                 var groupScores = group.ToList();
                 var newScores = relevantScores.Where(s => s.BeatmapId == beatmapId && s.Mode == mode).ToList();
+                
+                // Just in case if there's some weirdness with leaderboard scores.
+                // We really only want to reinstate significant scores.
+                if (groupScores.Count < 100)
+                {
+                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, topScoresConfig, stoppingToken);
+                    checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
+                    newScores = newScores.Where(s => checkResults[s.Id]).ToList();
+                    groupScores = (await scoreRepository.GetByBeatmapIdAsync(beatmapId, stoppingToken)).Where(s => s.Mode == mode).ToList();
+                }
+                
                 var allScores = groupScores
                     .Concat(newScores)
                     .OrderByDescending(s => s.TotalScore)
@@ -379,7 +396,7 @@ public class UserUtils(IUserRepository userRepository,
                     .ToList();
                 
                 scoreRepository.UpdateBulk(groupScores);
-                scoreRepository.CreateBulk(allScores);
+                scoreRepository.CreateBulk(newScores);
             }
             await scoreRepository.SaveChangesAsync(stoppingToken);
         }

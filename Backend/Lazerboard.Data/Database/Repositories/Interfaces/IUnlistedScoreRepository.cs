@@ -6,4 +6,5 @@ public interface IUnlistedScoreRepository  : IRepository<UnlistedScore, ulong>
 {
     IQueryable<UnlistedScore> GetByUserId(int userId);
     IQueryable<UnlistedScore> GetByUserIds(IList<int> userIds);
+    Task<List<int>> GetAllUsersAsync(CancellationToken ct);
 }

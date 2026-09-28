@@ -9,6 +9,8 @@ namespace Lazerboard.ScoreFetcher.Processing;
 public interface IBeatmapUtils
 {
     Task ProcessBeatmapsetAsync(APIBeatmapset beatmapset, ScanEventType eventType, CancellationToken stoppingToken);
+    Task ProcessLeaderboardAsync(int beatmapId, Mode mode, Dictionary<Mode, bool> topScoresConfiguration,
+        CancellationToken stoppingToken);
     Task ProcessExistingMapsetAsync(Beatmapset beatmapset, 
         ScanEventType eventType, 
         Dictionary<Mode, bool> topScoresConfiguration, 

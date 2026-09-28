@@ -14,4 +14,10 @@ public class UnlistedScoreRepository(ScoreDataContext db) : BaseRepository<Unlis
         .AsNoTracking()
         .Where(s => userIds.Contains(s.UserId))
         .OrderBy(s => s.Id);
+
+    public Task<List<int>> GetAllUsersAsync(CancellationToken ct) => Set
+        .AsNoTracking()
+        .Select(s => s.UserId)
+        .Distinct()
+        .ToListAsync(ct);
 }

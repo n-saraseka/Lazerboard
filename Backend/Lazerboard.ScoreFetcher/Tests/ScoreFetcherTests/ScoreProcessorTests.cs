@@ -61,7 +61,7 @@ public class ScoreProcessorTests
     }
     
     [Test]
-    public async Task CheckIfSignificantAsync_AllBetterLessThan50_ReturnsTrue()
+    public async Task CheckIfSignificantAsync_AllBetterLessThan100_ReturnsTrue()
     {
         // Arrange
         var score = new APIScore
@@ -134,7 +134,7 @@ public class ScoreProcessorTests
         {
             Id = 1,
             BeatmapId = 1,
-            TotalScore = 0,
+            TotalScore = 1,
             Mode = Mode.Osu,
             UserId = 1
         };

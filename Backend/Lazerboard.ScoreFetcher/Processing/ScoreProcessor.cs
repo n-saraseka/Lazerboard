@@ -28,9 +28,9 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         if (CheckIfIsPersonalBest(score, scoresForMode))
         {
             var lastScore = scoresForMode.Last();
-            return !((lastScore.TotalScore > score.TotalScore 
-                      || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
-                     && scoresForMode.Count >= 100);
+            return lastScore.TotalScore < score.TotalScore 
+                   || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                   || scoresForMode.Count < 100;
         }
         return false;
     }
@@ -68,9 +68,64 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                     {
                         // Only consider a score significant if it's in the top 100 and is a personal best
                         var lastScore = beatmapScores.Last();
-                        dictionary[score.Id] = !((lastScore.TotalScore > score.TotalScore 
-                                                  || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
-                                                 && beatmapScores.Count >= 100);
+                        dictionary[score.Id] = lastScore.TotalScore < score.TotalScore 
+                                               || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                                               || beatmapScores.Count < 100;
+                    }
+                    else
+                    {
+                        dictionary[score.Id] = false;
+                    }
+                }
+            }
+            else foreach (var score in scoresInGroup) dictionary[score.Id] = true;
+        }
+
+        if (dictionary.Any(kvp => kvp.Value))
+        {
+            logger.Log(LogLevel.Information, "Significant score IDs: {@scoreIds}", 
+                dictionary.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToList());
+        }
+        
+        return dictionary;
+    }
+    
+    /// <summary>
+    /// Check if multiple scores are significant (higher than the min TotalScore and no better score set by user exists)
+    /// </summary>
+    /// <param name="scores">The <see cref="APIScore"/>s</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A dictionary of results of checks for every score ID</returns>
+    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<Score> scores, CancellationToken cancellationToken)
+    {
+        var dictionary = new Dictionary<ulong, bool>();
+        var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+        
+        var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
+        var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList(); 
+        
+        foreach (var group in groupedByBeatmapId)
+        {
+            var scoresInGroup = group.ToList();
+            
+            var respectiveGroup = groupedExistingScores.FirstOrDefault(g => 
+                g.Key.Mode == group.Key.Mode && g.Key.BeatmapId == group.Key.BeatmapId);
+            if (respectiveGroup != null)
+            {
+                var beatmapScores = respectiveGroup
+                    .OrderByDescending(s => s.TotalScore)
+                    .ThenBy(s => s.Date)
+                    .ToList();
+                foreach (var score in scoresInGroup)
+                {
+                    if (CheckIfIsPersonalBest(score, beatmapScores))
+                    {
+                        // Only consider a score significant if it's in the top 100 and is a personal best
+                        var lastScore = beatmapScores.Last();
+                        dictionary[score.Id] = lastScore.TotalScore < score.TotalScore 
+                                               || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                                               || beatmapScores.Count < 100;
                     }
                     else
                     {
@@ -103,6 +158,21 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         if (bestUserScore == null) return true;
         return (score.TotalScore > bestUserScore.TotalScore) ||
                 (score.TotalScore == bestUserScore.TotalScore && bestUserScore.Date <= score.Date);
+    }
+    
+    /// <summary>
+    /// Check if a user's <see cref="Score"/> is a personal best for the range of <see cref="Score"/>'s
+    /// </summary>
+    /// <param name="score">The <see cref="APIScore"/></param>
+    /// <param name="scores">The list of <see cref="Score"/>s from the database</param>
+    /// <returns>True if is a personal best, false otherwise</returns>
+    public bool CheckIfIsPersonalBest(Score score, IList<Score> scores)
+    {
+        var userScores = scores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
+        var bestUserScore = userScores.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).FirstOrDefault();
+        if (bestUserScore == null) return true;
+        return (score.TotalScore > bestUserScore.TotalScore) ||
+               (score.TotalScore == bestUserScore.TotalScore && bestUserScore.Date <= score.Date);
     }
 
     /// <summary>

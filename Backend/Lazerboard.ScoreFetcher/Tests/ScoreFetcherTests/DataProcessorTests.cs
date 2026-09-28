@@ -22,6 +22,7 @@ public class DataProcessorTests
     private Mock<IScoreRepository> _scoreRepository;
     private Mock<IUnlistedScoreRepository> _unlistedScoreRepository;
     private Mock<IOsuEntityToDtoService> _osuEntityToDtoService;
+    private Mock<IScoreProcessor> _scoreProcessor;
     private Mock<ILogger<IDataProcessor>> _logger;
 
     [SetUp]
@@ -34,6 +35,7 @@ public class DataProcessorTests
         _scoreRepository = new();
         _unlistedScoreRepository = new();
         _osuEntityToDtoService = new();
+        _scoreProcessor = new();
         _logger = new Mock<ILogger<IDataProcessor>>();
         _dataProcessor = new DataProcessor(_beatmapsetRepository.Object, 
             _beatmapRepository.Object, 
@@ -41,6 +43,7 @@ public class DataProcessorTests
             _userRepository.Object, 
             _scoreRepository.Object,
             _unlistedScoreRepository.Object,
+            _scoreProcessor.Object,
             _osuEntityToDtoService.Object,
             _logger.Object);
     }
@@ -232,6 +235,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -247,6 +251,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
@@ -308,6 +315,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -323,6 +331,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
@@ -360,6 +371,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -377,6 +389,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
@@ -472,6 +487,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -487,6 +503,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
@@ -561,6 +580,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -578,6 +598,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
@@ -664,6 +687,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -681,6 +705,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
         
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
@@ -767,6 +794,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -782,6 +810,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.LeaderboardScan, topScoresConfig, CancellationToken.None);
@@ -874,6 +905,7 @@ public class DataProcessorTests
         {
             topScoresConfig[val] = false;
         }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -889,6 +921,9 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.LeaderboardScan, topScoresConfig, CancellationToken.None);
@@ -901,5 +936,109 @@ public class DataProcessorTests
             dtos.Count() == 1 &&
             dtos.All(d => removedScoreIds.Contains(d.Id)))), Times.Once);
         _unlistedScoreRepository.Verify(r => r.CreateBulk(It.IsAny<IEnumerable<UnlistedScore>>()), Times.Once);
+    }
+    
+    [Test]
+    public async Task ProcessScoresAsync_SomeScoresAreInsignificantNow_DontGetAdded()
+    {
+        // Arrange
+        var data = new List<APIScore>
+        {
+            new APIScore
+            {
+                Id = 4,
+                BeatmapId = 1,
+                UserId = 1,
+                TotalScore = 200,
+                Date = new DateTime(2020, 1, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 5,
+                BeatmapId = 1,
+                UserId = 2,
+                TotalScore = 200,
+                Date = new DateTime(2020, 2, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 6,
+                BeatmapId = 1,
+                UserId = 3,
+                TotalScore = 150,
+                Date = new DateTime(2020, 3, 1),
+                Mode = Mode.Osu
+            }
+        };
+
+        var dbData = new List<Score>
+        {
+            new Score
+            {
+                Id = 1,
+                BeatmapId = 1,
+                UserId = 4,
+                TotalScore = 100,
+                Date = new DateTime(2020, 3, 1),
+                Rank = 1,
+                Mode = Mode.Osu
+            },
+            new Score
+            {
+                Id = 2,
+                BeatmapId = 1,
+                UserId = 5,
+                TotalScore = 100,
+                Date = new DateTime(2020, 4, 1),
+                Rank = 2,
+                Mode = Mode.Osu
+            },
+            new Score
+            {
+                Id = 3,
+                BeatmapId = 1,
+                UserId = 6,
+                TotalScore = 50,
+                Date = new DateTime(2020, 5, 1),
+                Rank = 3,
+                Mode = Mode.Osu
+            }
+        };
+        
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
+        var topScoresConfig = new Dictionary<Mode, bool>();
+        foreach (var val in Enum.GetValues<Mode>())
+        {
+            topScoresConfig[val] = false;
+        }
+        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => s.Id == 5);
+        
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(dbData);
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
+            {
+                Id = api.Id,
+                BeatmapId = api.BeatmapId,
+                TotalScore = api.TotalScore,
+                Date = api.Date,
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
+            });
+        _scoreProcessor.Setup(s =>
+                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
+            .ReturnsAsync(significantScores);
+
+        // Act
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, topScoresConfig, CancellationToken.None);
+        
+        // Assert
+        _scoreRepository.Verify(r => r.CreateBulk(It.Is<IEnumerable<Score>>(dtos => 
+            dtos.Count() == 1)), Times.Once);
     }
 }

@@ -28,9 +28,9 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         if (CheckIfIsPersonalBest(score, scoresForMode))
         {
             var lastScore = scoresForMode.Last();
-            return !((lastScore.TotalScore > score.TotalScore 
-                      || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
-                     && scoresForMode.Count >= 100);
+            return lastScore.TotalScore < score.TotalScore 
+                   || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                   || scoresForMode.Count < 100;
         }
         return false;
     }
@@ -68,9 +68,9 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                     {
                         // Only consider a score significant if it's in the top 100 and is a personal best
                         var lastScore = beatmapScores.Last();
-                        dictionary[score.Id] = !((lastScore.TotalScore > score.TotalScore 
-                                                  || (lastScore.TotalScore == score.TotalScore && lastScore.Date < score.Date)) 
-                                                 && beatmapScores.Count >= 100);
+                        dictionary[score.Id] = lastScore.TotalScore < score.TotalScore 
+                                               || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                                               || beatmapScores.Count < 100;
                     }
                     else
                     {

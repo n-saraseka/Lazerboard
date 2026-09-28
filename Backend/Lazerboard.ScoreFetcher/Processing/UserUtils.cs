@@ -388,7 +388,7 @@ public class UserUtils(IUserRepository userRepository,
                     .ToList();
                 
                 scoreRepository.UpdateBulk(groupScores);
-                scoreRepository.CreateBulk(allScores);
+                scoreRepository.CreateBulk(newScores);
             }
             await scoreRepository.SaveChangesAsync(stoppingToken);
         }

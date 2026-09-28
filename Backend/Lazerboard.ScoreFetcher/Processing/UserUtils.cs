@@ -140,17 +140,11 @@ public class UserUtils(IUserRepository userRepository,
                 var scoreIds = reinstatedScores.Select(s => s.Id).ToList();
                 var existingScores = await scoreRepository.GetBulkAsync(scoreIds, stoppingToken);
                 var existingScoreIds = existingScores.Select(s => s.Id).ToList();
-                var newScores = reinstatedScores.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
-                scoreRepository.CreateBulk(newScores);
-                await unlistedScoreRepository.SaveChangesAsync(stoppingToken);
                 
-                var beatmapModes = newScores
-                    .GroupBy(s => s.BeatmapId)
-                    .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+                var newScores = reinstatedScores.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
             
-                await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
-
-                reinstatedCount += newScores.Count;
+                reinstatedCount += await ReprocessReaddedBeatmapRanksAsync(newScores, stoppingToken);
+                
                 scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
             }
         }
@@ -187,14 +181,13 @@ public class UserUtils(IUserRepository userRepository,
             var existingUnlistedIds = existingUnlistedScores.Select(s => s.Id);
 
             var newUnlistedScores = scoresToUnlist.Where(s => !existingUnlistedIds.Contains(s.Id)).ToList();
-            unlistedScoreRepository.CreateBulk(newUnlistedScores);
-            await scoreRepository.SaveChangesAsync(stoppingToken);
-            
             var beatmapModes = newUnlistedScores
                 .GroupBy(s => s.BeatmapId)
                 .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+            unlistedScoreRepository.CreateBulk(newUnlistedScores);
+            await scoreRepository.SaveChangesAsync(stoppingToken);
             
-            await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
+            await ReprocessRemovedBeatmapRanksAsync(beatmapModes, stoppingToken);
             
             deletedCount += scoreIdsToRemove.Count;
             unlistedCount += scoresToUnlist.Count;
@@ -276,11 +269,11 @@ public class UserUtils(IUserRepository userRepository,
     };
     
     /// <summary>
-    /// Update score ranks on beatmaps that had scores removed, unlisted or reinstated
+    /// Update score ranks on beatmaps that had scores removed or unlisted
     /// </summary>
     /// <param name="beatmapModes">A dictionary of <see cref="Beatmap.Id"/>s and the relevant score <see cref="Mode"/>s</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task ReprocessBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
+    private async Task ReprocessRemovedBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
     {
         if (beatmapModes.Count == 0) return;
         
@@ -336,7 +329,60 @@ public class UserUtils(IUserRepository userRepository,
                     scoreRepository.UpdateBulk(groupScores);
                 }
             }
+            await scoreRepository.SaveChangesAsync(stoppingToken);
         }
-        await scoreRepository.SaveChangesAsync(stoppingToken);
+    }
+    
+    /// <summary>
+    /// Update score ranks on beatmaps that had scores reinstated
+    /// </summary>
+    /// <param name="scores">A list of <see cref="Score"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>The reinstated scores count</returns>
+    private async Task<int> ReprocessReaddedBeatmapRanksAsync(List<Score> scores, CancellationToken stoppingToken)
+    {
+        if (scores.Count == 0) return 0;
+        
+        var significantScores = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
+        var relevantScores = scores.Where(s => significantScores[s.Id]).ToList();
+
+        var beatmapIds = relevantScores.Select(s => s.BeatmapId).Distinct().ToList();
+        var beatmapModes = relevantScores
+            .GroupBy(s => s.BeatmapId)
+            .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+        
+        for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
+        {
+            var batch = beatmapIds.Skip(i).Take(BeatmapBatchSize).ToList();
+            
+            var scoresBatch = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
+            var groupedScores = scoresBatch.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
+            foreach (var group in groupedScores)
+            {
+                var beatmapId = group.Key.BeatmapId;
+                var mode = group.Key.Mode;
+                if (!beatmapModes[beatmapId].Contains(mode)) continue;
+                
+                logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapId, mode);
+                
+                var groupScores = group.ToList();
+                var newScores = relevantScores.Where(s => s.BeatmapId == beatmapId && s.Mode == mode).ToList();
+                var allScores = groupScores
+                    .Concat(newScores)
+                    .OrderByDescending(s => s.TotalScore)
+                    .ThenBy(s => s.Date)
+                    .Select((s, index) =>
+                    {
+                        s.Rank = index + 1;
+                        return s;
+                    })
+                    .ToList();
+                
+                scoreRepository.UpdateBulk(groupScores);
+                scoreRepository.CreateBulk(allScores);
+            }
+            await scoreRepository.SaveChangesAsync(stoppingToken);
+        }
+        return relevantScores.Count;
     }
 }

@@ -104,19 +104,26 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
         var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
 
-        var latestRescannedBeatmapset = await beatmapsetRepository.GetLatestScannedMapsetAsync(cancellationToken);
+        var latestScannedBeatmapset = await beatmapsetRepository.GetLatestScannedMapsetAsync(cancellationToken);
+        var latestRescannedBeatmapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(cancellationToken);
         var latestSecondaryProcessedBeatmapset = await beatmapsetRepository.GetLatestSecondaryProcessedMapsetAsync(cancellationToken);
+
+        var beatmapsetScanEventDates = new Dictionary<int, DateTimeOffset>();
         
-        var beatmapset = latestRescannedBeatmapset ?? latestSecondaryProcessedBeatmapset ?? null;
-        if (latestRescannedBeatmapset != null & latestSecondaryProcessedBeatmapset != null)
+        if (latestScannedBeatmapset != null)
         {
-            beatmapset = latestRescannedBeatmapset?.FinishedScanningAt >
-                         latestSecondaryProcessedBeatmapset?.SecondaryFinishedProcessingAt
-                ? latestRescannedBeatmapset
-                : latestSecondaryProcessedBeatmapset;
+            beatmapsetScanEventDates[latestScannedBeatmapset.Id] = latestScannedBeatmapset.StartedScanningAt!.Value;
         }
-        
-        var beatmapsetId = beatmapset?.Id ?? 1;
+        if (latestRescannedBeatmapset != null)
+        {
+            beatmapsetScanEventDates[latestRescannedBeatmapset.Id] = latestRescannedBeatmapset.StartedScanningAt!.Value;
+        }
+        if (latestSecondaryProcessedBeatmapset != null)
+        {
+            beatmapsetScanEventDates[latestSecondaryProcessedBeatmapset.Id] = latestSecondaryProcessedBeatmapset.StartedScanningAt!.Value;
+        }
+
+        var beatmapsetId = beatmapsetScanEventDates.MaxBy(kvp => kvp.Value).Key;
         var beatmapsData = await beatmapRepository.GetByBeatmapsetIdAsync(beatmapsetId, cancellationToken);
         
         return beatmapsData;

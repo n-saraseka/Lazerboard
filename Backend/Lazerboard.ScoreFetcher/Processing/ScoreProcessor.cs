@@ -29,7 +29,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         {
             var lastScore = scoresForMode.Last();
             return lastScore.TotalScore < score.TotalScore 
-                   || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                   || (lastScore.TotalScore == score.TotalScore && (lastScore.Date > score.Date || lastScore.Id == score.Id)) 
                    || scoresForMode.Count < 100;
         }
         return false;
@@ -69,7 +69,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
                         // Only consider a score significant if it's in the top 100 and is a personal best
                         var lastScore = beatmapScores.Last();
                         dictionary[score.Id] = lastScore.TotalScore < score.TotalScore 
-                                               || (lastScore.TotalScore == score.TotalScore && lastScore.Date > score.Date) 
+                                               || (lastScore.TotalScore == score.TotalScore && (lastScore.Date > score.Date || lastScore.Id == score.Id)) 
                                                || beatmapScores.Count < 100;
                     }
                     else
@@ -156,6 +156,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         var userScores = scores.Where(s => s.UserId == score.UserId && s.Mode == score.Mode).ToList();
         var bestUserScore = userScores.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).FirstOrDefault();
         if (bestUserScore == null) return true;
+        if (score.Id == bestUserScore.Id) return true;
         return (score.TotalScore > bestUserScore.TotalScore) ||
                 (score.TotalScore == bestUserScore.TotalScore && bestUserScore.Date <= score.Date);
     }

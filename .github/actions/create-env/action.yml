@@ -89,7 +89,6 @@ runs:
         echo "RescanBehavior__RemoveScoresOutsideTop100__taiko=false" >> .env
         echo "RescanBehavior__RemoveScoresOutsideTop100__fruits=false" >> .env
         echo "RescanBehavior__RemoveScoresOutsideTop100__mania=false" >> .env
-        echo "RescanBehavior__OnlyProcessBeatmapsFromUnlistedScores=false" >> .env
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
         echo "UserUpdatesIntervalHours=2" >> .env

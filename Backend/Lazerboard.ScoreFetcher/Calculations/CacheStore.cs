@@ -105,6 +105,7 @@ public class CacheStore : ICacheStore
     {
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
         var attempts = 0;
+        var isInvalidFile = true; // We assume the beatmap file is invalid as it has to be retrieved and verified first
         
         // Set / reset .osu file TTL in Redis
         var cachedFileName = await beatmapCacheRepository.GetCachedBeatmapFileNameAsync(beatmapId);
@@ -121,26 +122,28 @@ public class CacheStore : ICacheStore
 
         while (attempts < MaxDownloadAttempts)
         {
-            if (!File.Exists(mapPath))
+            if (File.Exists(mapPath))
             {
-                try
-                {
-                    await using var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
-
-                    var bytes = await stream.ReadAllRemainingBytesToArrayAsync(ct);
-                    await File.WriteAllBytesAsync(mapPath, bytes, ct);
-                    
-                    await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Log(LogLevel.Error, ex, "Download failed for Beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
-                    attempts++;
-                    continue;
-                }
+                var fileInfo = new FileInfo(mapPath);
+                isInvalidFile = fileInfo.Length == 0; // Redownload in case the file is empty
             }
 
-            return mapPath;
+            if (!isInvalidFile) return mapPath;
+            
+            try
+            {
+                await using var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
+
+                var bytes = await stream.ReadAllRemainingBytesToArrayAsync(ct);
+                await File.WriteAllBytesAsync(mapPath, bytes, ct);
+                    
+                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, ex, "Download failed for Beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
+                attempts++;
+            }
         }
         
         throw new InvalidOperationException(

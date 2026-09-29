@@ -79,7 +79,7 @@ public class RescanAllMapsService : BackgroundService
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.SaveStartingTimestampAsync(beatmapsetIds, ScanEventType.RescanStarted, stoppingToken);
+                    await beatmapUtils.SaveStartingTimestampAsync(beatmapsetIds, ScanEventType.ScanStarted, stoppingToken);
                 }
 
                 foreach (var beatmapset in beatmapsets)
@@ -87,7 +87,7 @@ public class RescanAllMapsService : BackgroundService
                     using var scope = _serviceProvider.CreateScope();
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
                     await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, 
-                        ScanEventType.RescanStarted,
+                        ScanEventType.ScanStarted,
                         _topRemovalConfiguration, 
                         stoppingToken);
                 }

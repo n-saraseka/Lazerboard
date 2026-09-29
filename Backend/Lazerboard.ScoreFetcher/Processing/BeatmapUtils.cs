@@ -156,6 +156,9 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
                 case ScanEventType.SecondarySeedingStarted:
                     beatmapset.SecondaryStartedProcessingAt = currentDateTime;
                     break;
+                case ScanEventType.ScanStarted:
+                    beatmapset.StartedRescanningAt = currentDateTime;
+                    break;
             }
         }
         beatmapsetRepository.UpdateBulk(dbBeatmapsets);
@@ -184,6 +187,9 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
                     break;
                 case ScanEventType.SecondarySeedingStarted:
                     beatmapset.SecondaryFinishedProcessingAt = currentDateTime;
+                    break;
+                case ScanEventType.ScanStarted:
+                    beatmapset.FinishedRescanningAt = currentDateTime;
                     break;
             }
         }

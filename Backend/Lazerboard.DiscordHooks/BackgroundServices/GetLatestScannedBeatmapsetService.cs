@@ -116,7 +116,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         }
         if (latestRescannedBeatmapset != null)
         {
-            beatmapsetScanEventDates[latestRescannedBeatmapset.Id] = latestRescannedBeatmapset.StartedScanningAt!.Value;
+            beatmapsetScanEventDates[latestRescannedBeatmapset.Id] = latestRescannedBeatmapset.StartedRescanningAt!.Value;
         }
         if (latestSecondaryProcessedBeatmapset != null)
         {

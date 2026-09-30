@@ -9,9 +9,6 @@ public interface IScoreFetchingUtils
 {
     Task SaveAllBeatmapsetDataAsync(IList<APIBeatmapset> beatmapsets, ScanEventType eventType, CancellationToken stoppingToken);
     Task<List<APIScore>> GetSignificantScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken);
-    Task<int> SaveScoreDataAsync(IList<APIScore> scores, 
-        ScoreSource source,
-        Dictionary<Mode, bool> topScoresConfiguration, 
-        CancellationToken stoppingToken);
+    Task<int> SaveScoreDataAsync(IList<APIScore> scores, ScoreSource source, CancellationToken stoppingToken);
     Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken);
 }

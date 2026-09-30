@@ -2,7 +2,6 @@ using System.Text;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.DependencyInjection;
@@ -172,12 +171,7 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     {
         using var scope = serviceProvider.CreateScope();
         var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        var topScoresConfig = new Dictionary<Mode, bool>();
-        foreach (var val in Enum.GetValues<Mode>())
-        {
-            topScoresConfig[val] = false;
-        }
-        return await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, topScoresConfig, stoppingToken);
+        return await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, stoppingToken);
     }
 
     /// <summary>

@@ -2,10 +2,8 @@ using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,7 +17,6 @@ public class RescanAllMapsService : BackgroundService
     private ISeedingState _seedingState;
 
     private const int BatchSize = 50;
-    private readonly Dictionary<Mode, bool> _topRemovalConfiguration = new();
     private bool _shouldFinishAfterThisBatch;
     private DateTimeOffset? _latestRankedDate;
     private int? _latestMapsetId;
@@ -30,17 +27,6 @@ public class RescanAllMapsService : BackgroundService
         _logger = logger;
         _seedingState = seedingState;
         _seedingState.IsSeeding = true;
-        
-        using var scope = _serviceProvider.CreateScope();
-        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-
-        var scanConfig = config.GetSection("RescanBehavior");
-        
-        var topsRemovalConfig = scanConfig.GetSection("RemoveScoresOutsideTop100");
-        _topRemovalConfiguration[Mode.Osu] = topsRemovalConfig.GetValue<bool>("osu");
-        _topRemovalConfiguration[Mode.Taiko] = topsRemovalConfig.GetValue<bool>("taiko");
-        _topRemovalConfiguration[Mode.Fruits] = topsRemovalConfig.GetValue<bool>("fruits");
-        _topRemovalConfiguration[Mode.Mania] = topsRemovalConfig.GetValue<bool>("mania");
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -86,10 +72,7 @@ public class RescanAllMapsService : BackgroundService
                 {
                     using var scope = _serviceProvider.CreateScope();
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, 
-                        ScanEventType.ScanStarted,
-                        _topRemovalConfiguration, 
-                        stoppingToken);
+                    await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, ScanEventType.ScanStarted, stoppingToken);
                 }
                 
                 var latestMapset = beatmapsets.MaxBy(bs => bs.RankedDate);

@@ -119,16 +119,8 @@ public class UnlistedUserScanService(
     {
         using var scope = serviceProvider.CreateScope();
         var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-        
-        // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
-        // in between otherwise.
-        var topScoresConfig = new Dictionary<Mode, bool>();
-        foreach (var val in Enum.GetValues<Mode>())
-        {
-            topScoresConfig[val] = true;
-        }
 
-        await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, topScoresConfig, stoppingToken);
+        await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
     }
     
     private async Task GetStartingDataAsync(CancellationToken stoppingToken)

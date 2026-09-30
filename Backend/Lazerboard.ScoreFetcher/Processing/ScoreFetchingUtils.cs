@@ -106,16 +106,13 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
-    /// <param name="topScoresConfiguration">A mode-to-bool dictionary that determines whether scores outside
-    /// of top 100 for said mode should get removed or not</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     public async Task<int> SaveScoreDataAsync(IList<APIScore> scores, 
         ScoreSource source,
-        Dictionary<Mode, bool> topScoresConfiguration, 
         CancellationToken stoppingToken)
     {
         await SaveUserDataFromScoresAsync(scores,  stoppingToken);
-        return await dataProcessor.ProcessScoresAsync(scores, source, topScoresConfiguration, stoppingToken);
+        return await dataProcessor.ProcessScoresAsync(scores, source, stoppingToken);
     }
     
     /// <summary>

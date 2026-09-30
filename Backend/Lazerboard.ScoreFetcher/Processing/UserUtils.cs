@@ -285,14 +285,6 @@ public class UserUtils(IUserRepository userRepository,
     private async Task ReprocessRemovedBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
     {
         if (beatmapModes.Count == 0) return;
-        
-        // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
-        // in between otherwise.
-        var topScoresConfig = new Dictionary<Mode, bool>();
-        foreach (var val in Enum.GetValues<Mode>())
-        {
-            topScoresConfig[val] = true;
-        }
 
         var beatmapIds = beatmapModes.Keys;
         
@@ -320,7 +312,7 @@ public class UserUtils(IUserRepository userRepository,
                 // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
                 if (groupScores.Count < 100)
                 {
-                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, topScoresConfig, stoppingToken);
+                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
                 }
                 else
                 {
@@ -340,14 +332,6 @@ public class UserUtils(IUserRepository userRepository,
     private async Task<int> ReprocessReaddedBeatmapRanksAsync(List<Score> scores, CancellationToken stoppingToken)
     {
         if (scores.Count == 0) return 0;
-        
-        // We forcibly remove scores outside the top 100 because unnecessary scores might get inserted
-        // in between otherwise.
-        var topScoresConfig = new Dictionary<Mode, bool>();
-        foreach (var val in Enum.GetValues<Mode>())
-        {
-            topScoresConfig[val] = true;
-        }
         
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
         var relevantScores = scores.Where(s => checkResults[s.Id]).ToList();
@@ -378,7 +362,7 @@ public class UserUtils(IUserRepository userRepository,
                 // We really only want to reinstate significant scores.
                 if (groupScores.Count < 100)
                 {
-                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, topScoresConfig, stoppingToken);
+                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
                     checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
                     newScores = newScores.Where(s => checkResults[s.Id]).ToList();
                     groupScores = (await scoreRepository.GetByBeatmapIdAsync(beatmapId, stoppingToken)).Where(s => s.Mode == mode).ToList();

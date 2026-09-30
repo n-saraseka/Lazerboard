@@ -16,8 +16,7 @@ public interface IDataProcessor
     Task ProcessUsersAsync(IList<APIUser> users, CancellationToken ct);
     Task ProcessRemovedUsersAsync(IList<User> users, CancellationToken ct);
     Task<int> ProcessScoresAsync(IList<APIScore> scores, 
-        ScoreSource source, 
-        Dictionary<Mode, bool> topScoresConfiguration, 
+        ScoreSource source,
         CancellationToken ct);
     Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken);
 }

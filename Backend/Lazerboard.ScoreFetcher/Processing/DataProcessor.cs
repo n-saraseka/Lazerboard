@@ -362,7 +362,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     }
                 }
 
-                // We remove any scores that land outside the top 100 only when specified for that mode's configuration.
+                // We remove any scores that land outside the top 100.
                 // That's done to save up on storage. It's going to get really bad on new maps in the long run
                 var scoresOutsideOfBuffer = merged.Where(s => s.Rank > 100).ToList();
                 

@@ -173,7 +173,7 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
         var bestUserScore = userScores.OrderByDescending(s => s.TotalScore).ThenBy(s => s.Date).FirstOrDefault();
         if (bestUserScore == null) return true;
         return (score.TotalScore > bestUserScore.TotalScore) ||
-               (score.TotalScore == bestUserScore.TotalScore && bestUserScore.Date <= score.Date);
+               (score.TotalScore == bestUserScore.TotalScore && (score.Date < bestUserScore.Date || bestUserScore.Id == score.Id));
     }
 
     /// <summary>

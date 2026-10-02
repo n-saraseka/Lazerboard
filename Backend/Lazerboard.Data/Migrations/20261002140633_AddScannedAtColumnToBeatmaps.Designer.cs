@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace OsuScoreStats.Migrations
 {
     [DbContext(typeof(ScoreDataContext))]
-    partial class ScoreDataContextModelSnapshot : ModelSnapshot
+    [Migration("20261002140633_AddScannedAtColumnToBeatmaps")]
+    partial class AddScannedAtColumnToBeatmaps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,7 +29,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "beatmap_scan_finished", "beatmap_scan_started", "main_seeding_finished", "main_seeding_started", "rescan_finished", "rescan_started", "restricted_check_finished", "restricted_check_started", "scan_finished", "scan_started", "secondary_seeding_finished", "secondary_seeding_started", "user_check_finished", "user_check_started", "user_scan_finished", "user_scan_started" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "main_seeding_finished", "main_seeding_started", "rescan_finished", "rescan_started", "restricted_check_finished", "restricted_check_started", "scan_finished", "scan_started", "secondary_seeding_finished", "secondary_seeding_started", "user_check_finished", "user_check_started", "user_scan_finished", "user_scan_started" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "score_source", new[] { "leaderboard_scan", "score_fetcher" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 

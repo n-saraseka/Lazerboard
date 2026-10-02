@@ -11,4 +11,7 @@ public interface IBeatmapRepository : IRepository<Beatmap, int>
     Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default);
     Task<List<int>> GetBeatmapsIdsFromProcessedMapsetsAync(IList<int> ids, CancellationToken ct = default);
     Task<Dictionary<int, Mode>> GetModeDataAsync(IList<int> ids, CancellationToken ct = default);
+    Task<Beatmap?> GetLatestBeatmapWithFirehoseScoresAsync(CancellationToken ct = default);
+    Task<Beatmap?> GetFirstBeatmapWithFirehoseScoresAsync(CancellationToken ct = default);
+    Task<Beatmap?> GetLatestScannedBeatmapAsync(CancellationToken ct = default);
 }

@@ -13,7 +13,8 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     IScoreFetchingUtils utils,
     IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
-    IBeatmapsetRepository beatmapsetRepository) : IBeatmapUtils
+    IBeatmapsetRepository beatmapsetRepository,
+    IBeatmapRepository beatmapRepository) : IBeatmapUtils
 {
     /// <summary>
     /// Get significant <see cref="APIBeatmap"/> leaderboard scores
@@ -183,5 +184,25 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
         }
         beatmapsetRepository.UpdateBulk(dbBeatmapsets);
         await beatmapsetRepository.SaveChangesAsync(stoppingToken);
+    }
+
+    /// <summary>
+    /// Save the scan event timestamp for a list of <see cref="Beatmap"/> IDs
+    /// </summary>
+    /// <param name="beatmapIds">The <see cref="Beatmap"/> IDs</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    public async Task SaveBeatmapScansTimestampsAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
+    {
+        var dbBeatmaps = await beatmapRepository.GetBulkAsync(beatmapIds, stoppingToken);
+        var currentDateTime = DateTime.UtcNow;
+        
+        dbBeatmaps = dbBeatmaps.Select(b =>
+        {
+            b.ScannedAt = currentDateTime;
+            return b;
+        }).ToList();
+        
+        beatmapRepository.UpdateBulk(dbBeatmaps);
+        await beatmapRepository.SaveChangesAsync(stoppingToken);
     }
 }

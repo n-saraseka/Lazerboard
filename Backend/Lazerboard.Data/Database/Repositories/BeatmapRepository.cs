@@ -1,4 +1,5 @@
 ﻿using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -66,4 +67,22 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
         Set
             .Where(b => ids.Contains(b.Id))
             .ToDictionaryAsync(b => b.Id, b => b.Mode, ct);
+
+    public Task<Beatmap?> GetLatestBeatmapWithFirehoseScoresAsync(CancellationToken ct = default) =>
+        Set
+            .Where(b => b.Scores.Any(s => s.ScoreSource == ScoreSource.ScoreFetcher))
+            .OrderByDescending(b => b.Id)
+            .FirstOrDefaultAsync(ct);
+    
+    public Task<Beatmap?> GetFirstBeatmapWithFirehoseScoresAsync(CancellationToken ct = default) =>
+        Set
+            .Where(b => b.Scores.Any(s => s.ScoreSource == ScoreSource.ScoreFetcher))
+            .OrderBy(b => b.Id)
+            .FirstOrDefaultAsync(ct);
+
+    public Task<Beatmap?> GetLatestScannedBeatmapAsync(CancellationToken ct = default) =>
+        Set
+            .Where(b => b.ScannedAt != null)
+            .OrderByDescending(b => b.ScannedAt)
+            .FirstOrDefaultAsync(ct);
 }

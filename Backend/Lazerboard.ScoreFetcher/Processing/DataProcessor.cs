@@ -257,9 +257,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 foreach (var score in groupScores.ToList())
                 {
-                    var previousScores = beatmapScores.Where(s => s.UserId == score.UserId 
-                                                                  && s.Mode == score.Mode 
-                                                                  && s.Id != score.Id)
+                    var previousScores = beatmapScores.Where(s => s.UserId == score.UserId && s.Id != score.Id)
                         .OrderByDescending(b => b.TotalScore)
                         .ThenBy(b => b.Date)
                         .ToList();

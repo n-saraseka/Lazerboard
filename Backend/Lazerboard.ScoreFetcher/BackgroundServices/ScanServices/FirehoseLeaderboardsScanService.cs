@@ -171,7 +171,7 @@ public class FirehoseLeaderboardsScanService : BackgroundService
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
         await scanLogsRepository.SaveEventAsync(ScanEventType.BeatmapScanFinished, stoppingToken);
         _seedingState.IsSeeding = false;
-        _logger.Log(LogLevel.Information, "Rescan complete");
+        _logger.Log(LogLevel.Information, "Leaderboards scan complete");
     }
 
     /// <summary>

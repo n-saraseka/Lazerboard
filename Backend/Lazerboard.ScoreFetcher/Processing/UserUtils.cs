@@ -358,16 +358,6 @@ public class UserUtils(IUserRepository userRepository,
                 var groupScores = group.ToList();
                 var newScores = relevantScores.Where(s => s.BeatmapId == beatmapId && s.Mode == mode).ToList();
                 
-                // Just in case if there's some weirdness with leaderboard scores.
-                // We really only want to reinstate significant scores.
-                if (groupScores.Count < 100)
-                {
-                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
-                    checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
-                    newScores = newScores.Where(s => checkResults[s.Id]).ToList();
-                    groupScores = (await scoreRepository.GetByBeatmapIdAsync(beatmapId, stoppingToken)).Where(s => s.Mode == mode).ToList();
-                }
-                
                 var allScores = groupScores
                     .Concat(newScores)
                     .OrderByDescending(s => s.TotalScore)

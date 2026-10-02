@@ -236,6 +236,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 .ToList();
             var matchingGroup = groupedExistingScores.FirstOrDefault(g => 
                 g.Key.Mode == group.Key.Mode && g.Key.BeatmapId == group.Key.BeatmapId);
+            
             if (matchingGroup == null)
             {
                 groupScores = groupScores.Select((s, i) =>
@@ -293,21 +294,14 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         .Contains(b.Id))
                     .ToList();
                 
-                var oldScores = groupScores
-                    .Where(b => beatmapScores
-                        .Select(s => s.Id)
-                        .Contains(b.Id))
-                    .ToList();
-                
-                var extraScores = beatmapScores
-                    .Where(b => !groupScores
+                var oldScores = beatmapScores
+                    .Where(b => !newScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
                     .ToList();
                 
                 var merged = newScores
                     .Concat(oldScores)
-                    .Concat(extraScores)
                     .OrderByDescending(b => b.TotalScore)
                     .ThenBy(b => b.Date)
                     .Select((s, i) =>
@@ -322,7 +316,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 // due to the user getting restricted or for other reasons. If that happens, we should remove it.
                 if (source == ScoreSource.LeaderboardScan)
                 {
-                    var removedScores = merged.Where(s => s.Rank <= 100 && !groupIds.Contains(s.Id)).ToList();
+                    var removedScores = oldScores.Where(s => s.Rank <= 100 && !groupIds.Contains(s.Id)).ToList();
                     if (removedScores.Count > 0)
                     {
                         var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
@@ -346,7 +340,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                             logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", scoresToUnlist.Count);
                         }
                         
-                        extraScores = extraScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
                         merged = merged
                             .Where(s => !removedScoreIds.Contains(s.Id))
                             .OrderByDescending(b => b.TotalScore)
@@ -357,6 +350,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                                 return s;
                             })
                             .ToList();
+                        
+                        oldScores = oldScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
                     }
                 }
 
@@ -368,18 +363,14 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 {
                     var scoreIds = scoresOutsideOfBuffer.Select(s => s.Id).Distinct().ToList();
                     var oldScoresOutsideTop100 = oldScores.Where(s => scoreIds.Contains(s.Id)).ToList();
-                    var extraScoresOutsideTop100 = extraScores.Where(s => scoreIds.Contains(s.Id)).ToList();
                     
-                    var mergedForDeletion = oldScoresOutsideTop100
-                        .Concat(extraScoresOutsideTop100).ToList();
-                    scoreRepository.DeleteBulk(mergedForDeletion);
+                    scoreRepository.DeleteBulk(oldScoresOutsideTop100);
                     
                     // This is pretty ugly and excessive, but you never know.
                     oldScores = oldScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
                     newScores = newScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
-                    extraScores = extraScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
                     
-                    deletedCount += mergedForDeletion.Count;
+                    deletedCount += oldScoresOutsideTop100.Count;
                 }
 
                 if (newScores.Count > 0)
@@ -391,13 +382,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 {
                     scoreRepository.UpdateBulk(oldScores);
                 }
-
-                if (extraScores.Count > 0)
-                {
-                    scoreRepository.UpdateBulk(extraScores);
-                }
             
-                updatedCount += oldScores.Count + extraScores.Count;
+                updatedCount += oldScores.Count;
                 createdCount += newScores.Count;
             }
         }

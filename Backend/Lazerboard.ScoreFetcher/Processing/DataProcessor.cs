@@ -104,8 +104,19 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         var newBeatmaps = beatmapDtos.Where(b => !existingIds.Contains(b.Id));
         var oldMaps = beatmapDtos.Where(b => existingIds.Contains(b.Id));
         
+        var updatedBeatmapData =
+            existingBeatmaps.ToDictionary(b => b.Id, b => oldMaps.First(map => map.Id == b.Id));
+
+        existingBeatmaps = existingBeatmaps.Select(b =>
+        {
+            b.DifficultyName = updatedBeatmapData[b.Id].DifficultyName;
+            b.Difficulty = updatedBeatmapData[b.Id].Difficulty;
+            b.Status = updatedBeatmapData[b.Id].Status;
+            return b;
+        }).ToList();
+        
         beatmapRepository.CreateBulk(newBeatmaps);
-        beatmapRepository.UpdateBulk(oldMaps);
+        beatmapRepository.UpdateBulk(existingBeatmaps);
         try
         {
             await beatmapRepository.SaveChangesAsync(ct);
@@ -168,10 +179,20 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .DistinctBy(u => u.Id);
         var oldUsers = userDtos
             .Where(u => existingIds.Contains(u.Id))
-            .DistinctBy(u => u.Id);
+            .DistinctBy(u => u.Id)
+            .ToList();
+        var updatedUserData =
+            existingUsers.ToDictionary(u => u.Id, u => oldUsers.First(user => user.Id == u.Id));
+
+        existingUsers = existingUsers.Select(u =>
+        {
+            u.Username = updatedUserData[u.Id].Username;
+            u.CountryCode = updatedUserData[u.Id].CountryCode;
+            return u;
+        }).ToList();
         
         userRepository.CreateBulk(newUsers);
-        userRepository.UpdateBulk(oldUsers);
+        userRepository.UpdateBulk(existingUsers);
         try
         {
             await userRepository.SaveChangesAsync(ct);

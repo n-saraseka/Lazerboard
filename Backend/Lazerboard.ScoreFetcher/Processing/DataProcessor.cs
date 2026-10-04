@@ -101,21 +101,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .Select(entityToDtoService.BeatmapEntityToDto)
             .DistinctBy(b => b.Id)
             .ToList();
-        var newBeatmaps = beatmapDtos.Where(b => !existingIds.Contains(b.Id));
-        var oldMaps = beatmapDtos.Where(b => existingIds.Contains(b.Id));
-        
-        var updatedBeatmapData =
-            existingBeatmaps.ToDictionary(b => b.Id, b => oldMaps.First(map => map.Id == b.Id));
+        var newBeatmaps = beatmapDtos.Where(b => !existingIds.Contains(b.Id)).ToList();
 
-        foreach (var beatmap in existingBeatmaps)
-        {
-            beatmap.DifficultyName = updatedBeatmapData[beatmap.Id].DifficultyName;
-            beatmap.Difficulty = updatedBeatmapData[beatmap.Id].Difficulty;
-            beatmap.Status = updatedBeatmapData[beatmap.Id].Status;
-        }
+        if (newBeatmaps.Count == 0) return;
         
         beatmapRepository.CreateBulk(newBeatmaps);
-        beatmapRepository.UpdateBulk(existingBeatmaps);
         try
         {
             await beatmapRepository.SaveChangesAsync(ct);
@@ -175,22 +165,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         
         var newUsers = userDtos
             .Where(u => !existingIds.Contains(u.Id))
-            .DistinctBy(u => u.Id);
-        var oldUsers = userDtos
-            .Where(u => existingIds.Contains(u.Id))
             .DistinctBy(u => u.Id)
             .ToList();
-        var updatedUserData =
-            existingUsers.ToDictionary(u => u.Id, u => oldUsers.First(user => user.Id == u.Id));
-
-        foreach (var user in existingUsers)
-        {
-            user.Username = updatedUserData[user.Id].Username;
-            user.CountryCode = updatedUserData[user.Id].CountryCode;
-        }
+        if (newUsers.Count == 0) return;
         
         userRepository.CreateBulk(newUsers);
-        userRepository.UpdateBulk(existingUsers);
         try
         {
             await userRepository.SaveChangesAsync(ct);

@@ -107,13 +107,12 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         var updatedBeatmapData =
             existingBeatmaps.ToDictionary(b => b.Id, b => oldMaps.First(map => map.Id == b.Id));
 
-        existingBeatmaps = existingBeatmaps.Select(b =>
+        foreach (var beatmap in existingBeatmaps)
         {
-            b.DifficultyName = updatedBeatmapData[b.Id].DifficultyName;
-            b.Difficulty = updatedBeatmapData[b.Id].Difficulty;
-            b.Status = updatedBeatmapData[b.Id].Status;
-            return b;
-        }).ToList();
+            beatmap.DifficultyName = updatedBeatmapData[beatmap.Id].DifficultyName;
+            beatmap.Difficulty = updatedBeatmapData[beatmap.Id].Difficulty;
+            beatmap.Status = updatedBeatmapData[beatmap.Id].Status;
+        }
         
         beatmapRepository.CreateBulk(newBeatmaps);
         beatmapRepository.UpdateBulk(existingBeatmaps);
@@ -184,12 +183,11 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         var updatedUserData =
             existingUsers.ToDictionary(u => u.Id, u => oldUsers.First(user => user.Id == u.Id));
 
-        existingUsers = existingUsers.Select(u =>
+        foreach (var user in existingUsers)
         {
-            u.Username = updatedUserData[u.Id].Username;
-            u.CountryCode = updatedUserData[u.Id].CountryCode;
-            return u;
-        }).ToList();
+            user.Username = updatedUserData[user.Id].Username;
+            user.CountryCode = updatedUserData[user.Id].CountryCode;
+        }
         
         userRepository.CreateBulk(newUsers);
         userRepository.UpdateBulk(existingUsers);

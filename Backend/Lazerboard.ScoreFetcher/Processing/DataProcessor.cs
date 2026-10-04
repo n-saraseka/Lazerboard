@@ -131,7 +131,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         if (countries.Count == 0) return;
         var existingCountries = await countryRepository.GetBulkAsync(countries.Select(c => c.Code), ct);
         var newCountries = countries.Where(co => !existingCountries.Select(c => c.Id).Contains(co.Code));
-        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id);
+        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id).ToList();
+
+        if (countryDtos.Count == 0) return;
         
         countryRepository.CreateBulk(countryDtos);
         try

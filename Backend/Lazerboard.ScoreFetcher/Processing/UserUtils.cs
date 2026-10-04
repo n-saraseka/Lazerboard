@@ -336,6 +336,8 @@ public class UserUtils(IUserRepository userRepository,
         var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
         var relevantScores = scores.Where(s => checkResults[s.Id]).ToList();
 
+        if (relevantScores.Count == 0) return 0;
+
         var beatmapIds = relevantScores.Select(s => s.BeatmapId).Distinct().ToList();
         var beatmapModes = relevantScores
             .GroupBy(s => s.BeatmapId)

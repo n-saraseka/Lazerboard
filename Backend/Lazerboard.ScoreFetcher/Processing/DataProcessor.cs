@@ -3,7 +3,6 @@ using Npgsql;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
 
@@ -96,12 +95,17 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     {
         if (beatmaps.Count == 0) return;
         var existingBeatmaps = await GetExistingBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), ct);
-        var newBeatmaps = beatmaps.Where(b => !existingBeatmaps.Select(s => s.Id).Contains(b.Id));
-        var beatmapDtos = newBeatmaps
-            .Select(entityToDtoService.BeatmapEntityToDto)
-            .DistinctBy(b => b.Id);
+        var existingIds = existingBeatmaps.Select(b => b.Id).ToList();
         
-        beatmapRepository.CreateBulk(beatmapDtos);
+        var beatmapDtos = beatmaps
+            .Select(entityToDtoService.BeatmapEntityToDto)
+            .DistinctBy(b => b.Id)
+            .ToList();
+        var newBeatmaps = beatmapDtos.Where(b => !existingIds.Contains(b.Id));
+        var oldMaps = beatmapDtos.Where(b => existingIds.Contains(b.Id));
+        
+        beatmapRepository.CreateBulk(newBeatmaps);
+        beatmapRepository.UpdateBulk(oldMaps);
         try
         {
             await beatmapRepository.SaveChangesAsync(ct);
@@ -131,7 +135,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         if (countries.Count == 0) return;
         var existingCountries = await countryRepository.GetBulkAsync(countries.Select(c => c.Code), ct);
         var newCountries = countries.Where(co => !existingCountries.Select(c => c.Id).Contains(co.Code));
-        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id);
+        var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id).ToList();
+
+        if (countryDtos.Count == 0) return;
         
         countryRepository.CreateBulk(countryDtos);
         try
@@ -153,12 +159,19 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     {
         if (users.Count == 0) return;
         var existingUsers = await GetExistingUsersAsync(users.Select(u => u.Id).ToList(), ct);
-        var userDtos = users.Select(entityToDtoService.UserEntityToDto);
+        var existingIds = existingUsers.Select(u => u.Id).ToList();
+        
+        var userDtos = users.Select(entityToDtoService.UserEntityToDto).ToList();
+        
         var newUsers = userDtos
-            .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))
+            .Where(u => !existingIds.Contains(u.Id))
+            .DistinctBy(u => u.Id);
+        var oldUsers = userDtos
+            .Where(u => existingIds.Contains(u.Id))
             .DistinctBy(u => u.Id);
         
         userRepository.CreateBulk(newUsers);
+        userRepository.UpdateBulk(oldUsers);
         try
         {
             await userRepository.SaveChangesAsync(ct);

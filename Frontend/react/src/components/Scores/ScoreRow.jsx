@@ -25,7 +25,9 @@ function ScoreRow({score, usingStandardized}) {
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
-        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+            {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
+        </td>
         <td className="score-row-mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}

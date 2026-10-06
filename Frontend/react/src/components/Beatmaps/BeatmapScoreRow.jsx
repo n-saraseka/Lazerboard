@@ -35,7 +35,9 @@ function BeatmapScoreRow({score, usingStandardized}) {
         <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
-        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+            {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
+        </td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
         <td className="score-row-mods">
             <div className="mods">

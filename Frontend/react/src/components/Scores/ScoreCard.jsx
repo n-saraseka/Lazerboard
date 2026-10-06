@@ -61,7 +61,9 @@ function ScoreCard({score, usingStandardized}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
+                    <strong className="score-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+                        {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
+                    </strong>
                 </div>
                 <div className="scorecard-column">
                     <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>

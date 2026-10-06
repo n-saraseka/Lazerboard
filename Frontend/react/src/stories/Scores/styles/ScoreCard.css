@@ -50,6 +50,10 @@
     font-size: 1.25em;
 }
 
+.score-row {
+    min-height: calc(1em + 0.25em);
+}
+
 .score-row-rank {
     font-weight: bold;
 }

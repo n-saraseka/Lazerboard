@@ -429,6 +429,10 @@ input:focus, select:focus {
     font-weight: bold;
 }
 
+.score-row {
+    min-height: calc(1em + 0.25em);
+}
+
 .score-row-mode .mode-icon {
     width: 1em;
     height: 1em;

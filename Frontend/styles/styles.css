@@ -434,6 +434,10 @@ input:focus, select:focus {
     height: 1em;
 }
 
+.score-row-mods .mods {
+    justify-content: flex-start;
+}
+
 .score-row-mods .mod {
     font-weight: 400;
 }

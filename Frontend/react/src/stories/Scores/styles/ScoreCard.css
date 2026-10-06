@@ -54,6 +54,10 @@
     font-weight: bold;
 }
 
+.score-row-mods .mods {
+    justify-content: flex-start;
+}
+
 .score-row-mods .mod {
     font-weight: 400;
 }

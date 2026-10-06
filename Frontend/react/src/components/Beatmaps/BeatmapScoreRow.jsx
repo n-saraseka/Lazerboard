@@ -37,7 +37,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
         <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
-        <td className="mods">
+        <td className="score-row-mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
                 {score.modAcronyms.length > 5 && (<>

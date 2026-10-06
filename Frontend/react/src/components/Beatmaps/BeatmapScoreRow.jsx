@@ -20,15 +20,17 @@ function BeatmapScoreRow({score, usingStandardized}) {
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
         <td className={`score-row-grade ${gradeEnumToGradeClass(score.grade)}`}>{gradeEnumToGradeLetter(score.grade)}</td>
-        <td className="score-total">
-            <a href={`https://osu.ppy.sh/scores/${score.id}`}
-               title={usingStandardized ? "Standardised score" : "Classic score"}
-               className="score-primary">
-                {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
-            </a>
-            <span title={usingStandardized ? "Classic score" : "Standardised score"} className="score-secondary">
-                {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
-            </span>
+        <td className="score-row-total">
+            <div className="score-total">
+                <a href={`https://osu.ppy.sh/scores/${score.id}`}
+                   title={usingStandardized ? "Standardised score" : "Classic score"}
+                   className="score-primary">
+                    {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
+                </a>
+                <span title={usingStandardized ? "Classic score" : "Standardised score"} className="score-secondary">
+                    {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
+                </span>
+            </div>
         </td>
         <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>

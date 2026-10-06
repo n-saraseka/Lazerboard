@@ -63,7 +63,8 @@ const mockProps = {
         "classicTotalScore": 2253266,
         "legacyTotalScore": 0,
         "pp": 154.84521,
-        "rank": 1
+        "rank": 1,
+        isPerfectCombo: true,
     },
     usingStandardized: true,
 };

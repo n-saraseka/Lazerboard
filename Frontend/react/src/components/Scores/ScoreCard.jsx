@@ -51,7 +51,7 @@ function ScoreCard({score, usingStandardized}) {
                 </div>
                 <div className="scorecard-column">
                     <div className="score-combo-misses">
-                        <strong className="score-combo">{`${score.combo.toLocaleString('en-US')}x`}</strong>
+                        <strong className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</strong>
                         {score.misses > 0 &&
                             <span className="score-misses" title="Misses">
                                 {`(${score.misses}x)`}

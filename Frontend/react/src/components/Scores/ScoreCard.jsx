@@ -13,7 +13,7 @@ function ScoreCard({score, usingStandardized}) {
         }>
             <div className="scorecard-row title-row">
                 <div className="scorecard-column title-column">
-                    <a href={`/beatmapsets/${score.beatmap.beatmapset.id}?mode=${score.mode}`} className="score-song-name">
+                    <a href={`/b/${score.beatmap.id}?mode=${score.mode}`} className="score-song-name">
                         <strong>{`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title}`}</strong>
                     </a>
                 </div>

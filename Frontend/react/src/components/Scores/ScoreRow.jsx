@@ -53,7 +53,7 @@ function ScoreRow({score, usingStandardized}) {
         <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
         <td className="score-row-map-image">
-            <a href={`/beatmapsets/${score.beatmap.beatmapset.id}?mode=${score.mode}`}>
+            <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
                 <img src={`https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg`} alt="Beatmap image" onError={(event) => {
                     event.target.style.display = 'none';
                 }}/>

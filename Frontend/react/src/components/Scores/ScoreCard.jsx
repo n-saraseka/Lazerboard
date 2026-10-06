@@ -1,7 +1,7 @@
 import ScoreMod from "./ScoreMod";
 import ModeWedge from "./ModeWedge.jsx";
 import {useState} from "react";
-import {dateFromDateTime} from "../../utils/datetime-things.js";
+import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 
 function ScoreCard({score, usingStandardized}) {
@@ -61,7 +61,9 @@ function ScoreCard({score, usingStandardized}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
+                    <strong className="score-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+                        {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
+                    </strong>
                 </div>
                 <div className="scorecard-column">
                     <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
@@ -82,7 +84,7 @@ function ScoreCard({score, usingStandardized}) {
                     </div>
                 </div>
                 <div className="scorecard-column">
-                    <span title={dateFromDateTime(score.date)}>{score.date.split('T')[0]}</span>
+                    <span title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</span>
                 </div>
             </div>
         </div>

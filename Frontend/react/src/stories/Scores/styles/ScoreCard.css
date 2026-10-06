@@ -27,7 +27,7 @@
 }
 
 .score-rank {
-    font-size: 2em;
+    font-size: 1.75em;
 }
 
 .score-perfect {
@@ -50,8 +50,16 @@
     font-size: 1.25em;
 }
 
+.score-row {
+    min-height: calc(1em + 0.25em);
+}
+
 .score-row-rank {
     font-weight: bold;
+}
+
+.score-row-mods .mods {
+    justify-content: flex-start;
 }
 
 .score-row-mods .mod {

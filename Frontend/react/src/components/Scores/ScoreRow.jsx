@@ -3,7 +3,7 @@ import {modeEnumToString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
-import {dateFromDateTime, dateStringFromDatetime} from "../../utils/datetime-things.js";
+import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 
 function ScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -24,8 +24,10 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-player-name">
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
-        <td className="score-row-date" title={dateFromDateTime(score.date)}>{dateStringFromDatetime(score.date)}</td>
-        <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
+        <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
+        <td className="score-row-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+            {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
+        </td>
         <td className="score-row-mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
@@ -39,15 +41,17 @@ function ScoreRow({score, usingStandardized}) {
                 </>)}
             </div>
         </td>
-        <td className="score-total">
-            <a href={`https://osu.ppy.sh/scores/${score.id}`}
-               title={usingStandardized ? "Standardised score" : "Classic score"}
-               className="score-primary">
-                {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
-            </a>
-            <span title={usingStandardized ? "Classic score" : "Standardised score"} className="score-secondary">
-                {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
-            </span>
+        <td className="score-row-total">
+            <div className="score-total">
+                <a href={`https://osu.ppy.sh/scores/${score.id}`}
+                   title={usingStandardized ? "Standardised score" : "Classic score"}
+                   className="score-primary">
+                    {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
+                </a>
+                <span title={usingStandardized ? "Classic score" : "Standardised score"} className="score-secondary">
+                    {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
+                </span>
+            </div>
         </td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>

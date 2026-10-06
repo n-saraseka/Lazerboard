@@ -218,13 +218,9 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         if (scores.Count == 0) return 0;
         scores = scores.DistinctBy(s => s.Id).ToList(); // Deduplicate by ID just in case.
         
-        // We double-check these just in case scores were incorrectly marked as significant before.
-        var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, ct);
-        var significantScores = scores.Where(s => checkResults[s.Id]).ToList();
-        
-        logger.Log(LogLevel.Information, "Processing {count} significant scores...", significantScores.Count);
-        var beatmapIds = significantScores.Select(s => s.BeatmapId).Distinct().ToList();
-        var groupedScores = significantScores.GroupBy(s => new { s.BeatmapId, s.Mode });
+        logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count);
+        var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+        var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
         var modeData = await beatmapRepository.GetModeDataAsync(beatmapIds, ct);

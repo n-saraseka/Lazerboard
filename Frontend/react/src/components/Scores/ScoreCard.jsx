@@ -1,7 +1,7 @@
 import ScoreMod from "./ScoreMod";
 import ModeWedge from "./ModeWedge.jsx";
 import {useState} from "react";
-import {dateFromDateTime} from "../../utils/datetime-things.js";
+import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 
 function ScoreCard({score, usingStandardized}) {
@@ -82,7 +82,7 @@ function ScoreCard({score, usingStandardized}) {
                     </div>
                 </div>
                 <div className="scorecard-column">
-                    <span title={dateFromDateTime(score.date)}>{score.date.split('T')[0]}</span>
+                    <span title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</span>
                 </div>
             </div>
         </div>

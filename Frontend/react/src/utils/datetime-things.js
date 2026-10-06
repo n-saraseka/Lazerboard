@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export function timeSpanToString(time) {
     const hours = Math.floor(time / 3600);
     const minutes = Math.floor((time - hours * 3600) / 60);
@@ -33,6 +35,10 @@ export function YearMonthFromDateTime(datetime) {
     const month = dateSplit[1];
 
     return `${monthNumberToShortString(month)} ${year}`;
+}
+
+export function timeElapsedFromDateTime(datetime) {
+    return moment(datetime).fromNow();
 }
 
 export function dateFromDateTime(datetime) {

@@ -1,5 +1,5 @@
 import ScoreMod from "../Scores/ScoreMod";
-import { dateStringFromDatetime, dateFromDateTime } from "../../utils/datetime-things.js";
+import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor, getPpColor} from "../../utils/score-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
@@ -34,7 +34,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
         <td className="score-row-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</td>
-        <td className="score-row-date" title={dateFromDateTime(score.date)}>{dateStringFromDatetime(score.date)}</td>
+        <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
         <td className="mods">
             <div className="mods">
                 {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}

@@ -47,7 +47,6 @@ function ScoreCard({score, usingStandardized}) {
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
                     <strong className="score-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</strong>
-                    <strong className="score-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
                 </div>
                 <div className="scorecard-column">
                     <div className="score-combo-misses">
@@ -58,6 +57,13 @@ function ScoreCard({score, usingStandardized}) {
                             </span>
                         }
                     </div>
+                </div>
+            </div>
+            <div className="scorecard-row score-data">
+                <div className="scorecard-column">
+                    <strong className="score-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
+                </div>
+                <div className="scorecard-column">
                     <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
                 </div>
             </div>

@@ -406,6 +406,10 @@ input:focus, select:focus {
     text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
 }
 
+.score-rank {
+    font-size: 2em;
+}
+
 .score-perfect {
     color: hsl(90, 80%, 50%);
 }
@@ -441,6 +445,7 @@ input:focus, select:focus {
 
 .scorecard-row.score-data {
     font-size: 1.25em;
+    align-items: center;
 }
 
 .scorecard-column.title-column {

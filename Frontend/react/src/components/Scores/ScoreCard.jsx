@@ -13,7 +13,7 @@ function ScoreCard({score, usingStandardized}) {
         }>
             <div className="scorecard-row title-row">
                 <div className="scorecard-column title-column">
-                    <a href={`/beatmapsets/${score.beatmap.beatmapset.id}?mode=${score.mode}`} className="score-song-name">
+                    <a href={`/b/${score.beatmap.id}?mode=${score.mode}`} className="score-song-name">
                         <strong>{`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title}`}</strong>
                     </a>
                 </div>
@@ -47,17 +47,23 @@ function ScoreCard({score, usingStandardized}) {
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
                     <strong className="score-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</strong>
-                    <strong className="score-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
                 </div>
                 <div className="scorecard-column">
                     <div className="score-combo-misses">
-                        <strong className="score-combo">{`${score.combo.toLocaleString('en-US')}x`}</strong>
+                        <strong className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</strong>
                         {score.misses > 0 &&
                             <span className="score-misses" title="Misses">
                                 {`(${score.misses}x)`}
                             </span>
                         }
                     </div>
+                </div>
+            </div>
+            <div className="scorecard-row score-data">
+                <div className="scorecard-column">
+                    <strong className="score-pp" style={{color: getPpColor(score.pp)}}>{`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}</strong>
+                </div>
+                <div className="scorecard-column">
                     <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
                 </div>
             </div>

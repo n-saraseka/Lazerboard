@@ -1,6 +1,6 @@
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,15 +13,22 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 public class RestrictedUserUpdatesService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IUserUtils _userUtils;
     private readonly ILogger<RestrictedUserUpdatesService> _logger;
 
     private const int BatchSize = 50;
     private readonly TimeSpan _lookbackInterval;
     private DateTime _restrictedCheckFinish;
     
-    public RestrictedUserUpdatesService(IServiceProvider serviceProvider, ILogger<RestrictedUserUpdatesService> logger)
+    public RestrictedUserUpdatesService(IServiceProvider serviceProvider,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        IUserUtils userUtils,
+        ILogger<RestrictedUserUpdatesService> logger)
     {
         _serviceProvider = serviceProvider;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _userUtils = userUtils;
         _logger = logger;
         
         using var scope = _serviceProvider.CreateScope();
@@ -46,7 +53,7 @@ public class RestrictedUserUpdatesService : BackgroundService
                     _logger.Log(LogLevel.Information,
                         "Processing a batch of restricted users between IDs {minId} and {maxId}",
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
-                    await ProcessRestrictedUsersAsync(batch, stoppingToken);
+                    await _userUtils.ProcessRestrictedUsersAsync(batch, false, stoppingToken);
                 }
                 _restrictedCheckFinish = _restrictedCheckFinish.Add(_lookbackInterval);
                 await FinishUserCheckAsync(stoppingToken);
@@ -72,40 +79,34 @@ public class RestrictedUserUpdatesService : BackgroundService
     /// <returns>List of <see cref="User"/>s</returns>
     private async Task<List<User>> GetRestrictedUsersAsync(DateTime endDate, CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-        return await userRepository
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        return await unitOfWork.Users
             .GetRestrictedUsersAsync(endDate)
             .ToListAsync(stoppingToken);
     }
     
-    /// <summary>
-    /// Process a batch of users, determine whether they are still restricted or not, and process their scores
-    /// </summary>
-    /// <param name="users">A list of <see cref="User"/>s</param>
-    /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    private async Task ProcessRestrictedUsersAsync(IList<User> users, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
-        await userUtils.ProcessRestrictedUsersAsync(users, false, stoppingToken);
-    }
-    
     private async Task StartUserCheckAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
         var currentDateTime = DateTime.UtcNow;
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.UserScanLogs.SaveEvent(ScanEventType.RestrictedCheckStarted, currentDateTime);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
+        
         _logger.Log(LogLevel.Information, "Started checking restricted users at {checkStart}", currentDateTime);
-        await scanLogsRepository.SaveEventAsync(ScanEventType.RestrictedCheckStarted, currentDateTime, stoppingToken);
     }
     
     private async Task FinishUserCheckAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
         var currentDateTime = DateTime.UtcNow;
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.UserScanLogs.SaveEvent(ScanEventType.RestrictedCheckFinished, currentDateTime);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
+        
         _logger.Log(LogLevel.Information, "Finished checking restricted users at {checkStart}", currentDateTime);
-        await scanLogsRepository.SaveEventAsync(ScanEventType.RestrictedCheckFinished, currentDateTime, stoppingToken);
     }
 }

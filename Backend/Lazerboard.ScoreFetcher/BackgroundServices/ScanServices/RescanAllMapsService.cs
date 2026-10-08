@@ -1,7 +1,7 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +13,8 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 public class RescanAllMapsService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IBeatmapUtils _beatmapUtils;
     private readonly ILogger<RescanAllMapsService> _logger;
     private ISeedingState _seedingState;
 
@@ -21,9 +23,15 @@ public class RescanAllMapsService : BackgroundService
     private DateTimeOffset? _latestRankedDate;
     private int? _latestMapsetId;
     
-    public RescanAllMapsService(IServiceProvider serviceProvider, ILogger<RescanAllMapsService> logger, ISeedingState seedingState)
+    public RescanAllMapsService(IServiceProvider serviceProvider,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        IBeatmapUtils beatmapUtils,
+        ILogger<RescanAllMapsService> logger, 
+        ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _beatmapUtils = beatmapUtils;
         _logger = logger;
         _seedingState = seedingState;
         _seedingState.IsSeeding = true;
@@ -62,17 +70,11 @@ public class RescanAllMapsService : BackgroundService
 
                 var beatmapsetIds = beatmapsets.Select(bs => bs.Id).ToList();
 
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.SaveStartingTimestampAsync(beatmapsetIds, ScanEventType.ScanStarted, stoppingToken);
-                }
+                await _beatmapUtils.SaveStartingTimestampAsync(beatmapsetIds, ScanEventType.ScanStarted, stoppingToken);
 
                 foreach (var beatmapset in beatmapsets)
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, ScanEventType.ScanStarted, stoppingToken);
+                    await _beatmapUtils.ProcessExistingMapsetAsync(beatmapset, ScanEventType.ScanStarted, stoppingToken);
                 }
                 
                 var latestMapset = beatmapsets.MaxBy(bs => bs.RankedDate);
@@ -107,9 +109,9 @@ public class RescanAllMapsService : BackgroundService
     /// <returns>List of <see cref="Beatmapset"/>s with their beatmaps</returns>
     private async Task<List<Beatmapset>> GetBeatmapsetsAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        return await beatmapsetRepository.GetAll()
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        return await unitOfWork.Beatmapsets.GetAll()
             .Where(bs => bs.RankedDate > (_latestRankedDate ?? DateTimeOffset.MinValue) 
                          || (bs.RankedDate == _latestRankedDate && bs.Id > _latestMapsetId))
             .OrderBy(bs => bs.RankedDate)
@@ -123,32 +125,34 @@ public class RescanAllMapsService : BackgroundService
     
     private async Task GetStartingDataAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
         
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        var latestStartTimestamp = await scanLogsRepository.GetLatestStartedRescanAsync(stoppingToken);
-        var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedRescanAsync(stoppingToken);
+        var latestStartTimestamp = await unitOfWork.BeatmapsetScanLogs.GetLatestStartedRescanAsync(stoppingToken);
+        var latestFinishTimeStamp = await unitOfWork.BeatmapsetScanLogs.GetLatestFinishedRescanAsync(stoppingToken);
             
         if (latestStartTimestamp is null 
             || (latestFinishTimeStamp != null && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
-            await scanLogsRepository.SaveEventAsync(ScanEventType.ScanStarted, stoppingToken);
+            await unitOfWork.BeginTransactionAsync(stoppingToken);
+            unitOfWork.BeatmapsetScanLogs.SaveEvent(ScanEventType.ScanStarted);
+            await unitOfWork.CommitTransactionAsync(stoppingToken);
+            
             _logger.Log(LogLevel.Information, "Started rescanning beatmapsets at {datetime}", DateTime.UtcNow);
             return;
         }
         
-        var latestRescannedMapset = await beatmapsetRepository.GetLatestRescannedMapsetAsync(stoppingToken);
+        var latestRescannedMapset = await unitOfWork.Beatmapsets.GetLatestRescannedMapsetAsync(stoppingToken);
         
         if (latestRescannedMapset is null) return;
         
         if (latestRescannedMapset.RankedDate is null)
         {
+            using var scope = _serviceProvider.CreateScope();
             var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
             var apiBeatmapset = await apiFetcher.GetBeatmapsetAsync(latestRescannedMapset.Id, stoppingToken);
             latestRescannedMapset.RankedDate = apiBeatmapset.RankedDate;
         }
-            
+
         _latestRankedDate = latestRescannedMapset.RankedDate;
         _latestMapsetId = latestRescannedMapset.Id;
     }
@@ -160,11 +164,11 @@ public class RescanAllMapsService : BackgroundService
     /// <returns></returns>
     private async Task<Beatmapset?> GetFinishingBeatmapsetAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        var latestProcessedMapset = await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        var latestProcessedMapset = await unitOfWork.Beatmapsets.GetLatestMainProcessedMapsetAsync(stoppingToken);
         if (latestProcessedMapset != null) return latestProcessedMapset;
-        return await beatmapsetRepository.GetLatestScannedMapsetAsync(stoppingToken);
+        return await unitOfWork.Beatmapsets.GetLatestScannedMapsetAsync(stoppingToken);
     }
     
     /// <summary>
@@ -173,9 +177,12 @@ public class RescanAllMapsService : BackgroundService
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FinishScanningAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        await scanLogsRepository.SaveEventAsync(ScanEventType.ScanFinished, stoppingToken);
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.BeatmapsetScanLogs.SaveEvent(ScanEventType.ScanFinished);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
+        
         _seedingState.IsSeeding = false;
         _logger.Log(LogLevel.Information, "Rescan complete");
     }

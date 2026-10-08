@@ -11,13 +11,13 @@ namespace Lazerboard.ScoreFetcher.Calculations;
 public class CacheStore : ICacheStore
 {
     private readonly IServiceProvider _serviceProvider;
-    private ILogger<CacheStore> _logger;
-    private string _cachePath;
-    private int _osuFileTtl;
+    private readonly ILogger<CacheStore> _logger;
+    private readonly string _cachePath;
+    private readonly int _osuFileTtl;
     private const int DefaultTtl = 10;
     private const int MaxDownloadAttempts = 5;
-    private double _apiInterval;
-    private System.Timers.Timer _cleanupTimer;
+    private readonly double _apiInterval;
+    private readonly System.Timers.Timer _cleanupTimer;
     private readonly SemaphoreSlim _cleanupSemaphore = new(1, 1);
 
     public CacheStore(IConfiguration config, ILogger<CacheStore> logger, IServiceProvider serviceProvider)
@@ -98,8 +98,7 @@ public class CacheStore : ICacheStore
         _logger.Log(LogLevel.Information, "Removed {count} files from beatmap cache", deletedCount);
     }
     
-    public async Task<string> GetBeatmapFileStringAsync(int beatmapId, 
-        IOsuApiFetcher osuApiFetcher, 
+    public async Task<string> GetBeatmapFileStringAsync(int beatmapId,
         IBeatmapCacheRepository beatmapCacheRepository,
         CancellationToken ct)
     {
@@ -119,6 +118,8 @@ public class CacheStore : ICacheStore
         {
             await beatmapCacheRepository.ResetCachedBeatmapFileNameTtlAsync(beatmapId, TimeSpan.FromMinutes(_osuFileTtl));
         }
+        
+        using var scope = _serviceProvider.CreateScope();
 
         while (attempts < MaxDownloadAttempts)
         {
@@ -129,10 +130,12 @@ public class CacheStore : ICacheStore
             }
 
             if (!isInvalidFile) return mapPath;
+
+            var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
             
             try
             {
-                await using var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
+                await using var stream = await apiFetcher.DownloadBeatmapAsync(beatmapId, ct);
 
                 var bytes = await stream.ReadAllRemainingBytesToArrayAsync(ct);
                 await File.WriteAllBytesAsync(mapPath, bytes, ct);

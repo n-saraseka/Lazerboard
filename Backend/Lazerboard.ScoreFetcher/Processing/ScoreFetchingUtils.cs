@@ -1,19 +1,20 @@
 using Lazerboard.Data.ApiFetchers;
+using Lazerboard.Data.Database;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.Calculations;
+using Microsoft.Extensions.DependencyInjection;
 using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class ScoreFetchingUtils(IDataProcessor dataProcessor, 
-    IOsuApiFetcher apiFetcher, 
+public class ScoreFetchingUtils(IServiceProvider serviceProvider,
+    IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
     ICacheStore cacheStore,
-    IOsuApiFetcher osuApiFetcher,
     IBeatmapCacheRepository beatmapCacheRepository) : IScoreFetchingUtils
 {
     /// <summary>
@@ -25,11 +26,16 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     public async Task SaveAllBeatmapsetDataAsync(IList<APIBeatmapset> beatmapsets, ScanEventType eventType, CancellationToken stoppingToken)
     {
         var beatmapsetUserIds = beatmapsets.Select(bs => bs.UserId).Distinct().ToList();
+
+        using var scope = serviceProvider.CreateScope();
+        await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         
-        var existingUsers = await dataProcessor.GetExistingUsersAsync(beatmapsetUserIds, stoppingToken);
+        var existingUsers = await unitOfWork.Users.GetBulkWithCountriesAsync(beatmapsetUserIds, stoppingToken);
         var existingUserIds = existingUsers.Select(u => u.Id).ToList();
         
         var newUserIds = beatmapsetUserIds.Where(id => !existingUserIds.Contains(id)).ToList();
+        
+        var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
         var apiUsers = await apiFetcher.GetUsersAsync(newUserIds, stoppingToken);
         var apiUserIds = apiUsers.Select(u => u.Id).Distinct();
             
@@ -84,10 +90,14 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
         {
             var userIds = scores.Select(s => s.UserId).Distinct().ToList();
             
-            var existingUsers = await dataProcessor.GetExistingUsersAsync(userIds, stoppingToken);
+            using var scope = serviceProvider.CreateScope();
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        
+            var existingUsers = await unitOfWork.Users.GetBulkWithCountriesAsync(userIds, stoppingToken);
             var existingUserIds = existingUsers.Select(u => u.Id).ToList();
             
             var newUserIds = userIds.Where(id => !existingUserIds.Contains(id)).ToList();
+            var apiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
             users = await apiFetcher.GetUsersAsync(newUserIds, stoppingToken);
         }
         else
@@ -123,7 +133,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     /// <returns>The <see cref="FlatWorkingBeatmap"/></returns>
     public async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
     {
-        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, osuApiFetcher, beatmapCacheRepository, stoppingToken);
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
         return new FlatWorkingBeatmap(filename);
     }
 }

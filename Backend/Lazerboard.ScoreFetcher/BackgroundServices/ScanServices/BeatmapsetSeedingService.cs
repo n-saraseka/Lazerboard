@@ -2,7 +2,7 @@ using System.Text;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.Configuration;
@@ -15,8 +15,11 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 public class BeatmapsetSeedingService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IScoreFetchingUtils _scoreFetchingUtils;
+    private readonly IBeatmapUtils _beatmapUtils;
     private readonly ILogger<BeatmapsetSeedingService> _logger;
-    private ISeedingState _seedingState;
+    private readonly ISeedingState _seedingState;
 
     private long _latestMapsetDateMs;
     private int _latestMapsetId;
@@ -25,17 +28,23 @@ public class BeatmapsetSeedingService : BackgroundService
     private bool _shouldFinishAfterThisBatch;
     private string? _cursor;
     
-    public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetSeedingService> logger, ISeedingState seedingState)
+    public BeatmapsetSeedingService(IServiceProvider serviceProvider,
+        IScoreFetchingUtils scoreFetchingUtils,
+        IConfiguration configuration,
+        IBeatmapUtils beatmapUtils,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        ILogger<BeatmapsetSeedingService> logger, 
+        ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
+        _scoreFetchingUtils = scoreFetchingUtils;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _beatmapUtils = beatmapUtils;
         _logger = logger;
         _seedingState = seedingState;
         _seedingState.IsSeeding = true;
-        
-        using var scope = _serviceProvider.CreateScope();
-        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var scanConfig = config.GetSection("ScanBehavior");
+        var scanConfig = configuration.GetSection("ScanBehavior");
         _onlyAddMissingMaps = scanConfig.GetValue<bool>("OnlyAddMissingMaps");
         _onlyUpdateMapsetData = scanConfig.GetValue<bool>("OnlyUpdateMapsetData");
     }
@@ -78,27 +87,19 @@ public class BeatmapsetSeedingService : BackgroundService
                     DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                     DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
 
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-                    await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.RescanStarted, stoppingToken);
-                }
+                await _scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.RescanStarted, stoppingToken);
 
                 if (_onlyUpdateMapsetData)
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
                     var setIds = beatmapsets.Select(bs => bs.Id).ToList();
-                    await beatmapUtils.SaveFinishingTimestampAsync(setIds, ScanEventType.RescanStarted,
+                    await _beatmapUtils.SaveFinishingTimestampAsync(setIds, ScanEventType.RescanStarted,
                         stoppingToken);
                 }
                 else
                 {
                     foreach (var beatmapset in beatmapsets)
                     {
-                        using var scope = _serviceProvider.CreateScope();
-                        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
+                        await _beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.RescanStarted, stoppingToken);
                     }
                 }
                 
@@ -149,22 +150,24 @@ public class BeatmapsetSeedingService : BackgroundService
     private async Task GetStartingCursorAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+        var unitOfWork = _unitOfWorkFactory.Create();
         
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        var latestStartTimestamp = await scanLogsRepository.GetLatestStartedScanAsync(stoppingToken);
-        var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedScanAsync(stoppingToken);
+        var latestStartTimestamp = await unitOfWork.BeatmapsetScanLogs.GetLatestStartedScanAsync(stoppingToken);
+        var latestFinishTimeStamp = await unitOfWork.BeatmapsetScanLogs.GetLatestFinishedScanAsync(stoppingToken);
             
         if (latestStartTimestamp is null 
             || (latestFinishTimeStamp != null && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
             // Start seeding from the first beatmapset (DISCO PRINCE)
-            await scanLogsRepository.SaveEventAsync(ScanEventType.RescanStarted, stoppingToken);
+            await unitOfWork.BeginTransactionAsync(stoppingToken);
+            unitOfWork.BeatmapsetScanLogs.SaveEvent(ScanEventType.RescanStarted);
+            await unitOfWork.CommitTransactionAsync(stoppingToken);
+            
             _logger.Log(LogLevel.Information, "Started scanning beatmapsets at {datetime}", DateTime.UtcNow);
             return;
         }
         
-        var latestRescannedMapset = await beatmapsetRepository.GetLatestScannedMapsetAsync(stoppingToken);
+        var latestRescannedMapset = await unitOfWork.Beatmapsets.GetLatestScannedMapsetAsync(stoppingToken);
         
         if (latestRescannedMapset is null) return;
         
@@ -188,17 +191,16 @@ public class BeatmapsetSeedingService : BackgroundService
     /// <returns></returns>
     private async Task<Beatmapset?> GetFinishingBeatmapsetAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
 
         if (_onlyUpdateMapsetData)
         {
-            return await beatmapsetRepository.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
+            return await unitOfWork.Beatmapsets.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
         }
 
         if (_onlyAddMissingMaps)
         {
-            return await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+            return await unitOfWork.Beatmapsets.GetLatestMainProcessedMapsetAsync(stoppingToken);
         }
 
         return null;
@@ -212,11 +214,11 @@ public class BeatmapsetSeedingService : BackgroundService
     /// <returns>The filtered <see cref="APIBeatmapset"/>s</returns>
     private async Task<List<APIBeatmapset>> GetUnprocessedMapsetsAsync(IList<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
         var beatmapsetIds = beatmapsets.Select(bs => bs.Id).ToList();
         
-        var existingBeatmapsets = (await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken))
+        var existingBeatmapsets = (await unitOfWork.Beatmapsets.GetBulkAsync(beatmapsetIds, stoppingToken))
             .Where(bs => bs.IsExplicit);
         var processedMapsets = existingBeatmapsets.Where(
                 bs => bs.MainFinishedProcessingAt != null 
@@ -235,9 +237,12 @@ public class BeatmapsetSeedingService : BackgroundService
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FinishSeedingAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        await scanLogsRepository.SaveEventAsync(ScanEventType.RescanFinished, stoppingToken);
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.BeatmapsetScanLogs.SaveEvent(ScanEventType.RescanFinished);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
+        
         _seedingState.IsSeeding = false;
         _logger.Log(LogLevel.Information, "Database seeding complete");
     }

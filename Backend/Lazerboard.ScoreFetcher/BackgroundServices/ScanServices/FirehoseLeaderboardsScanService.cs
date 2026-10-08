@@ -1,10 +1,9 @@
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,16 +12,24 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 public class FirehoseLeaderboardsScanService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IBeatmapUtils _beatmapUtils;
     private readonly ILogger<FirehoseLeaderboardsScanService> _logger;
-    private ISeedingState _seedingState;
+    private readonly ISeedingState _seedingState;
 
     private const int BatchSize = 50;
     private bool _shouldFinishAfterThisBatch;
     private int? _latestMapId;
     
-    public FirehoseLeaderboardsScanService(IServiceProvider serviceProvider, ILogger<FirehoseLeaderboardsScanService> logger, ISeedingState seedingState)
+    public FirehoseLeaderboardsScanService(IServiceProvider serviceProvider, 
+        IBeatmapUtils beatmapUtils,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        ILogger<FirehoseLeaderboardsScanService> logger, 
+        ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _beatmapUtils = beatmapUtils;
         _logger = logger;
         _seedingState = seedingState;
         _seedingState.IsSeeding = true;
@@ -60,9 +67,6 @@ public class FirehoseLeaderboardsScanService : BackgroundService
 
                 foreach (var beatmap in beatmaps)
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    
                     var groupedByModes = beatmap.Scores.GroupBy(s => s.Mode).ToList();
                     var relevantModes = new List<Mode>();
                     foreach (var group in groupedByModes)
@@ -75,11 +79,11 @@ public class FirehoseLeaderboardsScanService : BackgroundService
 
                     foreach (var mode in relevantModes)
                     {
-                        await beatmapUtils.ProcessLeaderboardAsync(beatmap.Id, mode, stoppingToken);
+                        await _beatmapUtils.ProcessLeaderboardAsync(beatmap.Id, mode, stoppingToken);
                     }
                 }
 
-                await SaveScanTimestampAsync(beatmapIds, stoppingToken);
+                await _beatmapUtils.SaveBeatmapScansTimestampsAsync(beatmapIds, stoppingToken);
                 
                 var latestMapset = beatmaps.MaxBy(b => b.Id);
                 if (latestMapset is not null)
@@ -112,9 +116,9 @@ public class FirehoseLeaderboardsScanService : BackgroundService
     /// <returns>List of <see cref="Beatmap"/>s with their beatmaps</returns>
     private async Task<List<Beatmap>> GetBeatmapsAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
-        return await beatmapRepository.GetAll()
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        return await unitOfWork.Beatmaps.GetAll()
             .Where(b => b.Id > (_latestMapId ?? 0) && b.Scores.Any(s => s.ScoreSource == ScoreSource.ScoreFetcher))
             .OrderBy(b => b.Id)
             .Take(BatchSize)
@@ -126,22 +130,23 @@ public class FirehoseLeaderboardsScanService : BackgroundService
     
     private async Task GetStartingDataAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
         
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        var latestStartTimestamp = await scanLogsRepository.GetLatestStartedBeatmapScanAsync(stoppingToken);
-        var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedBeatmapScanAsync(stoppingToken);
+        var latestStartTimestamp = await unitOfWork.BeatmapsetScanLogs.GetLatestStartedBeatmapScanAsync(stoppingToken);
+        var latestFinishTimeStamp = await unitOfWork.BeatmapsetScanLogs.GetLatestFinishedBeatmapScanAsync(stoppingToken);
             
         if (latestStartTimestamp is null 
             || (latestFinishTimeStamp != null && latestFinishTimeStamp.LoggedAt > latestStartTimestamp.LoggedAt))
         {
-            await scanLogsRepository.SaveEventAsync(ScanEventType.BeatmapScanStarted, stoppingToken);
+            await unitOfWork.BeginTransactionAsync(stoppingToken);
+            unitOfWork.BeatmapsetScanLogs.SaveEvent(ScanEventType.BeatmapScanStarted);
+            await unitOfWork.CommitTransactionAsync(stoppingToken);
+            
             _logger.Log(LogLevel.Information, "Started rescanning leaderboards with firehose scores at {datetime}", DateTime.UtcNow);
             return;
         }
 
-        var latestRescannedMap = await beatmapRepository.GetLatestScannedBeatmapAsync(stoppingToken);
+        var latestRescannedMap = await unitOfWork.Beatmaps.GetLatestScannedBeatmapAsync(stoppingToken);
         
         if (latestRescannedMap is null) return;
         
@@ -155,9 +160,8 @@ public class FirehoseLeaderboardsScanService : BackgroundService
     /// <returns></returns>
     private async Task<Beatmap?> GetFinishingBeatmapAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
-        var latestMapWithFirehoseScores = await beatmapRepository.GetLatestBeatmapWithFirehoseScoresAsync(stoppingToken);
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        var latestMapWithFirehoseScores = await unitOfWork.Beatmaps.GetLatestBeatmapWithFirehoseScoresAsync(stoppingToken);
         return latestMapWithFirehoseScores;
     }
     
@@ -167,22 +171,13 @@ public class FirehoseLeaderboardsScanService : BackgroundService
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task FinishScanningAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
-        await scanLogsRepository.SaveEventAsync(ScanEventType.BeatmapScanFinished, stoppingToken);
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.BeatmapsetScanLogs.SaveEvent(ScanEventType.BeatmapScanFinished);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
+        
         _seedingState.IsSeeding = false;
         _logger.Log(LogLevel.Information, "Leaderboards scan complete");
-    }
-
-    /// <summary>
-    /// Save the scant timestamp for a list of <see cref="Beatmap.Id"/>s
-    /// </summary>
-    /// <param name="beatmapIds">The list of <see cref="Beatmap.Id"/>s</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task SaveScanTimestampAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var utils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-        await utils.SaveBeatmapScansTimestampsAsync(beatmapIds, stoppingToken);
     }
 }

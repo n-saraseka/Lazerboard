@@ -1,20 +1,16 @@
+using Lazerboard.Data.Database;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
-    IBeatmapRepository beatmapRepository,
-    ICountryRepository countryRepository,
-    IUserRepository userRepository,
-    IScoreRepository scoreRepository,
-    IUnlistedScoreRepository unlistedScoreRepository,
-    IScoreProcessor scoreProcessor,
+public class DataProcessor(IServiceProvider serviceProvider,
     IOsuEntityToDtoService entityToDtoService,
     ILogger<IDataProcessor> logger): IDataProcessor
 {
@@ -27,7 +23,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task ProcessBeatmapsetsAsync(IList<APIBeatmapset> beatmapsets, ScanEventType scanEventType, CancellationToken ct)
     {
         if (beatmapsets.Count == 0) return;
-        var existingBeatmapsets = await GetExistingBeatmapsetsAsync(beatmapsets.Select(bs => bs.Id).ToList(), ct);
+
+        List<Beatmapset> existingBeatmapsets;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingBeatmapsets = await unitOfWork.Beatmapsets.GetBulkAsync(beatmapsets.Select(bs => bs.Id).ToList(), ct);
+        }
         var existingBeatmapsetIds = existingBeatmapsets.Select(s => s.Id).ToList();
 
         var currentDateTime = DateTimeOffset.Now;
@@ -73,16 +75,15 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             bs.RankedDate = matchingApiBeatmapset.RankedDate;
             return bs;
         }).ToList();
-        
-        beatmapsetRepository.CreateBulk(beatmapsetDtos);
-        beatmapsetRepository.UpdateBulk(existingBeatmapsets);
-        try
+
+        using (var scope = serviceProvider.CreateScope())
         {
-            await beatmapsetRepository.SaveChangesAsync(ct);
-        }
-        catch (NpgsqlException exception)
-        {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsetsAsync | Beatmapsets: {beatmapsets}", beatmapsetDtos);
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            await unitOfWork.BeginTransactionAsync(ct);
+            unitOfWork.Beatmapsets.CreateBulk(beatmapsetDtos);
+            unitOfWork.Beatmapsets.UpdateBulk(existingBeatmapsets);
+            await unitOfWork.CommitTransactionAsync(ct);
         }
     }
 
@@ -94,7 +95,13 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task ProcessBeatmapsAsync(IList<APIBeatmap> beatmaps, CancellationToken ct)
     {
         if (beatmaps.Count == 0) return;
-        var existingBeatmaps = await GetExistingBeatmapsAsync(beatmaps.Select(b => b.Id).ToList(), ct);
+        
+        List<Beatmap> existingBeatmaps;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingBeatmaps = await unitOfWork.Beatmaps.GetBulkAsync(beatmaps.Select(b => b.Id).ToList(), ct);
+        }
         var existingIds = existingBeatmaps.Select(b => b.Id).ToList();
         
         var beatmapDtos = beatmaps
@@ -102,28 +109,17 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             .DistinctBy(b => b.Id)
             .ToList();
         var newBeatmaps = beatmapDtos.Where(b => !existingIds.Contains(b.Id)).ToList();
+        var beatmapsToUpdate = beatmapDtos.Where(b => existingIds.Contains(b.Id)).ToList();
 
-        if (newBeatmaps.Count == 0) return;
-        
-        beatmapRepository.CreateBulk(newBeatmaps);
-        try
+        using (var scope = serviceProvider.CreateScope())
         {
-            await beatmapRepository.SaveChangesAsync(ct);
-        }
-        catch (NpgsqlException exception)
-        {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessBeatmapsAsync | Beatmaps: {@beatmaps}", beatmapDtos);
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(ct);
+            unitOfWork.Beatmaps.CreateBulk(newBeatmaps);
+            unitOfWork.Beatmaps.UpdateBulk(beatmapsToUpdate);
+            await unitOfWork.CommitTransactionAsync(ct);
         }
     }
-    
-    public Task<List<Beatmap>> GetExistingBeatmapsAsync(IList<int> ids, CancellationToken ct) =>
-        beatmapRepository.GetBulkAsync(ids, ct);
-    
-    public Task<List<Beatmapset>> GetExistingBeatmapsetsAsync(IList<int> ids, CancellationToken ct) =>
-        beatmapsetRepository.GetBulkAsync(ids, ct);
-
-    public Task<List<User>> GetExistingUsersAsync(IList<int> ids, CancellationToken ct) =>
-        userRepository.GetBulkAsync(ids, ct);
 
     /// <summary>
     /// Check for existing country data and save new country DTOs to the database.
@@ -133,20 +129,25 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task ProcessCountriesAsync(IList<APICountry> countries, CancellationToken ct)
     {
         if (countries.Count == 0) return;
-        var existingCountries = await countryRepository.GetBulkAsync(countries.Select(c => c.Code), ct);
+
+        List<Country> existingCountries;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingCountries = await unitOfWork.Countries.GetBulkAsync(countries.Select(c => c.Code), ct);
+        }
+        
         var newCountries = countries.Where(co => !existingCountries.Select(c => c.Id).Contains(co.Code));
         var countryDtos = newCountries.Select(entityToDtoService.CountryEntityToDto).DistinctBy(c => c.Id).ToList();
 
         if (countryDtos.Count == 0) return;
-        
-        countryRepository.CreateBulk(countryDtos);
-        try
+
+        using (var scope = serviceProvider.CreateScope())
         {
-            await countryRepository.SaveChangesAsync(ct);
-        }
-        catch (NpgsqlException exception)
-        {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessCountriesAsync | Countries: {@countries}", countryDtos);
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(ct);
+            unitOfWork.Countries.CreateBulk(countryDtos);
+            await unitOfWork.CommitTransactionAsync(ct);
         }
     }
 
@@ -158,25 +159,31 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task ProcessUsersAsync(IList<APIUser> users, CancellationToken ct)
     {
         if (users.Count == 0) return;
-        var existingUsers = await GetExistingUsersAsync(users.Select(u => u.Id).ToList(), ct);
+
+        List<User> existingUsers;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingUsers = await unitOfWork.Users.GetBulkWithCountriesAsync(users.Select(u => u.Id).ToList(), ct);
+        }
         var existingIds = existingUsers.Select(u => u.Id).ToList();
         
         var userDtos = users.Select(entityToDtoService.UserEntityToDto).ToList();
         
         var newUsers = userDtos
             .Where(u => !existingIds.Contains(u.Id))
-            .DistinctBy(u => u.Id)
-            .ToList();
-        if (newUsers.Count == 0) return;
-        
-        userRepository.CreateBulk(newUsers);
-        try
+            .DistinctBy(u => u.Id);
+        var oldUsers = userDtos
+            .Where(u => existingIds.Contains(u.Id))
+            .DistinctBy(u => u.Id);
+
+        using (var scope = serviceProvider.CreateScope())
         {
-            await userRepository.SaveChangesAsync(ct);
-        }
-        catch (NpgsqlException exception)
-        {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessUsersAsync; Users: {users}", newUsers);
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(ct);
+            unitOfWork.Users.CreateBulk(newUsers);
+            unitOfWork.Users.UpdateBulk(oldUsers);
+            await unitOfWork.CommitTransactionAsync(ct);
         }
     }
     
@@ -188,19 +195,29 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     public async Task ProcessRemovedUsersAsync(IList<User> users, CancellationToken ct)
     {
         if (users.Count == 0) return;
-        var existingUsers = await userRepository.GetBulkAsync(users.Select(u => u.Id), ct);
+        
+        List<User> existingUsers;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingUsers = await unitOfWork.Users.GetBulkWithCountriesAsync(users.Select(u => u.Id).ToList(), ct);
+        }
+        var existingIds = existingUsers.Select(u => u.Id).ToList();
+        
         var newUsers = users
-            .Where(u => !existingUsers.Select(s => s.Id).Contains(u.Id))
+            .Where(u => !existingIds.Contains(u.Id))
+            .DistinctBy(u => u.Id);
+        var oldUsers = users
+            .Where(u => existingIds.Contains(u.Id))
             .DistinctBy(u => u.Id);
         
-        userRepository.CreateBulk(newUsers);
-        try
+        using (var scope = serviceProvider.CreateScope())
         {
-            await userRepository.SaveChangesAsync(ct);
-        }
-        catch (NpgsqlException exception)
-        {
-            logger.Log(LogLevel.Error, exception, "Method: ProcessRemovedUsersAsync; Users: {@users}", newUsers);
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(ct);
+            unitOfWork.Users.CreateBulk(newUsers);
+            unitOfWork.Users.UpdateBulk(oldUsers);
+            await unitOfWork.CommitTransactionAsync(ct);
         }
     }
     
@@ -209,7 +226,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
-    /// of top 100 for said mode should get removed or not</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task<int> ProcessScoresAsync(IList<APIScore> scores, 
         ScoreSource source,
@@ -221,9 +237,16 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         logger.Log(LogLevel.Information, "Processing {count} significant scores...", scores.Count);
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode });
-        var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, ct);
+
+        List<Score> existingScores;
+        Dictionary<int, Mode> modeData;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingScores = await unitOfWork.Scores.GetByBeatmapIdsAsync(beatmapIds, ct);
+            modeData = await unitOfWork.Beatmaps.GetModeDataAsync(beatmapIds, ct);
+        }
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
-        var modeData = await beatmapRepository.GetModeDataAsync(beatmapIds, ct);
 
         var updatedCount = 0;
         var createdCount = 0;
@@ -231,6 +254,10 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         
         foreach (var group in groupedScores)
         {
+            using var scope = serviceProvider.CreateScope();
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(ct);
+            
             var groupScores = group
                 .OrderByDescending(b => b.TotalScore)
                 .ThenBy(b => b.Date)
@@ -254,7 +281,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 // This is to prevent edge cases where there are somehow more than 100 scores per mode and combination,
                 // even though there were none before. We can't verify scores ranked above 100.
                 groupScores = groupScores.Where(s => s.Rank <= 100).ToList();
-                scoreRepository.CreateBulk(groupScores);
+                unitOfWork.Scores.CreateBulk(groupScores);
                 createdCount += groupScores.Count;
             }
             else
@@ -289,7 +316,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         }
                     }
                 }
-                scoreRepository.DeleteBulk(personalBestsForRemoval);
+                unitOfWork.Scores.DeleteBulk(personalBestsForRemoval);
                 beatmapScores = beatmapScores.Where(s => !personalBestsForRemoval.Select(pb => pb.Id).Contains(s.Id)).ToList();
                 deletedCount += personalBestsForRemoval.Count;
                 
@@ -328,7 +355,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     {
                         var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
                         
-                        scoreRepository.DeleteBulk(removedScores);
+                        unitOfWork.Scores.DeleteBulk(removedScores);
                         deletedCount += removedScores.Count;
                         
                         // If a score has all the necessary data, it doesn't get removed completely,
@@ -338,12 +365,12 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                             .Where(s => !scoresWithNullData.Contains(s.Id))
                             .Select(GetUnlsitedScoreFromScore)
                             .ToList();
-                        var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(scoresToUnlist.Select(s => s.Id), ct);
+                        var existingUnlistedScores = await unitOfWork.UnlistedScores.GetBulkAsync(scoresToUnlist.Select(s => s.Id), ct);
                         var existingScoreIds = existingUnlistedScores.Select(s => s.Id).ToList();
                         var newScoresToUnlist = scoresToUnlist.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
                         if (newScoresToUnlist.Count > 0)
                         {
-                            unlistedScoreRepository.CreateBulk(scoresToUnlist);
+                            unitOfWork.UnlistedScores.CreateBulk(scoresToUnlist);
                             logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", scoresToUnlist.Count);
                         }
                         
@@ -371,7 +398,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     var scoreIds = scoresOutsideOfBuffer.Select(s => s.Id).Distinct().ToList();
                     var oldScoresOutsideTop100 = oldScores.Where(s => scoreIds.Contains(s.Id)).ToList();
                     
-                    scoreRepository.DeleteBulk(oldScoresOutsideTop100);
+                    unitOfWork.Scores.DeleteBulk(oldScoresOutsideTop100);
                     
                     // This is pretty ugly and excessive, but you never know.
                     oldScores = oldScores.Where(s => !scoreIds.Contains(s.Id)).ToList();
@@ -382,33 +409,25 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
 
                 if (newScores.Count > 0)
                 {
-                    scoreRepository.CreateBulk(newScores);
+                    unitOfWork.Scores.CreateBulk(newScores);
                 }
                 
                 if (oldScores.Count > 0)
                 {
-                    scoreRepository.UpdateBulk(oldScores);
+                    unitOfWork.Scores.UpdateBulk(oldScores);
                 }
             
                 updatedCount += oldScores.Count;
                 createdCount += newScores.Count;
             }
+
+            await unitOfWork.CommitTransactionAsync(ct);
         }
 
-        try
-        {
-            await scoreRepository.SaveChangesAsync(ct);
+        logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}; Deleted scores: {deletedCount}", 
+            createdCount, updatedCount, deletedCount);
 
-            logger.Log(LogLevel.Information, "New scores: {createdCount}; Updated scores: {updatedCount}; Deleted scores: {deletedCount}", 
-                createdCount, updatedCount, deletedCount);
-
-            return createdCount;
-        }
-        catch (NpgsqlException exception)
-        {
-            logger.Log(LogLevel.Error, exception, "Couldn't process scores! Scores: {@scores}", scores);
-            return 0;
-        }
+        return createdCount;
     }
 
     /// <summary>
@@ -451,12 +470,4 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
         IsPerfectCombo = score.IsPerfectCombo,
         Statistics = score.Statistics
     };
-    
-    /// <summary>
-    /// Get max beatmapset ID from the database
-    /// </summary>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The highest <see cref="Score"/> ID</returns>
-    public Task<int> GetSecondHighestBeatmapsetIdAsync(CancellationToken cancellationToken) =>
-        scoreRepository.GetSecondHighestBeatmapsetIdAsync(cancellationToken);
 }

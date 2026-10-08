@@ -1,13 +1,15 @@
+using Lazerboard.Data.Database;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Work;
 using Microsoft.Extensions.Logging;
-using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Calculations;
+using Microsoft.Extensions.DependencyInjection;
 using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calculator, ILogger<IScoreProcessor> logger) : IScoreProcessor
+public class ScoreProcessor(IServiceProvider serviceProvider, ILogger<IScoreProcessor> logger) : IScoreProcessor
 {
     /// <summary>
     /// Check if a score is significant (higher than the min TotalScore and no better score set by user exists)
@@ -17,7 +19,9 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <returns>True if score is deemed significant, false otherwise</returns>
     public async Task<bool> CheckIfSignificantAsync(APIScore score, CancellationToken cancellationToken)
     {
-        var beatmapScores = await scoreRepository.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
+        using var scope = serviceProvider.CreateScope();
+        await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var beatmapScores = await unitOfWork.Scores.GetByBeatmapIdAsync(score.BeatmapId, cancellationToken);
         var scoresForMode = 
             beatmapScores
                 .Where(s => s.Mode == score.Mode)
@@ -41,13 +45,18 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>A dictionary of results of checks for every score ID</returns>
-    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<APIScore> scores, CancellationToken cancellationToken)
+    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IList<APIScore> scores, CancellationToken cancellationToken)
     {
         var dictionary = new Dictionary<ulong, bool>();
         var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         
-        var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
+        List<Score> existingScores;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingScores = await unitOfWork.Scores.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
+        }
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList(); 
         
         foreach (var group in groupedByBeatmapId)
@@ -96,13 +105,19 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>A dictionary of results of checks for every score ID</returns>
-    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IEnumerable<Score> scores, CancellationToken cancellationToken)
+    public async Task<Dictionary<ulong, bool>> CheckIfSignificantBulkAsync(IList<Score> scores, CancellationToken cancellationToken)
     {
         var dictionary = new Dictionary<ulong, bool>();
         var groupedByBeatmapId = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
+
+        List<Score> existingScores;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            existingScores = await unitOfWork.Scores.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
+        }
         
-        var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, cancellationToken);
         var groupedExistingScores = existingScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList(); 
         
         foreach (var group in groupedByBeatmapId)
@@ -187,6 +202,8 @@ public class ScoreProcessor(IScoreRepository scoreRepository, ICalculator calcul
     {
         if (score.PP != null) return;
         try {
+            using var scope = serviceProvider.CreateScope();
+            var calculator = scope.ServiceProvider.GetRequiredService<ICalculator>();
             var pp = await calculator.CalculateAsync(score, flatWorkingBeatmap, cancellationToken);
             score.PP = pp;
         }

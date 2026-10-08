@@ -10,6 +10,7 @@ using Lazerboard.Data.Database;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
@@ -38,7 +39,7 @@ var connectionString = new NpgsqlConnectionStringBuilder
     Password = dbConfig["Password"],
 };
 
-builder.Services.AddDbContext<ScoreDataContext>(
+builder.Services.AddDbContextFactory<ScoreDataContext>(
     opt =>
         opt.UseNpgsql(
                 connectionString.ConnectionString,
@@ -61,17 +62,18 @@ builder.Services.AddScoped<IUnlistedScoreRepository, UnlistedScoreRepository>();
 builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetRepository>();
 builder.Services.AddScoped<IUserScanLogRepository, UserScanLogRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 
 // Score fetching related
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
 builder.Services.AddScoped<IDirectApiFetcher, DirectApiFetcher>();
-builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
-builder.Services.AddScoped<IDataProcessor, DataProcessor>();
-builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
-builder.Services.AddScoped<IBeatmapUtils, BeatmapUtils>();
-builder.Services.AddScoped<IUserUtils, UserUtils>();
+builder.Services.AddSingleton<IScoreProcessor, ScoreProcessor>();
+builder.Services.AddSingleton<IDataProcessor, DataProcessor>();
+builder.Services.AddSingleton<IScoreFetchingUtils, ScoreFetchingUtils>();
+builder.Services.AddSingleton<IBeatmapUtils, BeatmapUtils>();
+builder.Services.AddSingleton<IUserUtils, UserUtils>();
 
 builder.Services.AddSingleton<ISeedingState, SeedingState>();
 

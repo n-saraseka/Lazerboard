@@ -1,4 +1,4 @@
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,12 +11,14 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 public class ScoresCountService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly ILogger<ScoresCountService> _logger;
     private readonly int _updateInterval;
 
-    public ScoresCountService(IServiceProvider serviceProvider, ILogger<ScoresCountService> logger)
+    public ScoresCountService(IServiceProvider serviceProvider, IUnitOfWorkFactory unitOfWorkFactory, ILogger<ScoresCountService> logger)
     {
         _serviceProvider = serviceProvider;
+        _unitOfWorkFactory = unitOfWorkFactory;
         _logger = logger;
         
         using var scope = _serviceProvider.CreateScope();
@@ -32,10 +34,10 @@ public class ScoresCountService : BackgroundService
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var scoresRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
+                var unitOfWork = _unitOfWorkFactory.Create();
                 var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
 
-                var scoresCount = await scoresRepository.GetAll().CountAsync(stoppingToken);
+                var scoresCount = await unitOfWork.Scores.GetAll().CountAsync(stoppingToken);
                 _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
                 await scoreCacheRepository.SetScoresCountAsync(scoresCount, TimeSpan.FromMinutes(_updateInterval + 10));
 

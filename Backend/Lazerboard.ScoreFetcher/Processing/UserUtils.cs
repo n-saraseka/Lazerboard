@@ -1,17 +1,16 @@
 using Lazerboard.Data.ApiFetchers;
+using Lazerboard.Data.Database;
 using Lazerboard.Data.Database.Entities;
-using Lazerboard.Data.Database.Repositories.Interfaces;
-using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.Database.Work;
+using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.BackgroundServices.ScanServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class UserUtils(IUserRepository userRepository,
-    IOsuApiFetcher osuApiFetcher,
-    IScoreRepository scoreRepository,
-    IUnlistedScoreRepository unlistedScoreRepository,
+public class UserUtils(IServiceProvider serviceProvider,
     IBeatmapUtils beatmapUtils,
     IScoreProcessor scoreProcessor,
     ILogger<IUserUtils> logger) : IUserUtils
@@ -28,9 +27,17 @@ public class UserUtils(IUserRepository userRepository,
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
     public async Task ProcessExistingUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
     {
+        if (users.Count == 0) return;
         var userIds = users.Select(u => u.Id).Distinct().ToList();
+
+        List<APIUser> existingUsers;
+
+        using (var scope = serviceProvider.CreateScope())
+        {
+            var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
+            existingUsers = await osuApiFetcher.GetUsersAsync(userIds, stoppingToken);
+        }
         
-        var existingUsers = await osuApiFetcher.GetUsersAsync(userIds, stoppingToken);
         var existingUserIds = existingUsers.Select(u => u.Id).ToList();
         
         var restrictedUsers = users.Where(u => !existingUserIds.Contains(u.Id)).ToList();
@@ -63,8 +70,15 @@ public class UserUtils(IUserRepository userRepository,
             
             return u;
         }).ToList();
-        userRepository.UpdateBulk(users);
-        await userRepository.SaveChangesAsync(stoppingToken);
+
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(stoppingToken);
+            unitOfWork.Users.UpdateBulk(users);
+            await unitOfWork.CommitTransactionAsync(stoppingToken);
+        }
+        
         logger.Log(LogLevel.Information, "Marked {userCount} users as restricted", restrictedUsers.Count);
     }
 
@@ -76,8 +90,16 @@ public class UserUtils(IUserRepository userRepository,
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
     public async Task ProcessRestrictedUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
     {
+        if (users.Count == 0) return;
         var userIds = users.Select(u => u.Id).Distinct().ToList();
-        var existingUsers = await osuApiFetcher.GetUsersAsync(userIds, stoppingToken);
+
+        List<APIUser> existingUsers;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
+            existingUsers = await osuApiFetcher.GetUsersAsync(userIds, stoppingToken);
+        }
+        
         var existingUserIds = existingUsers.Select(u => u.Id).ToList();
         
         var unrestrictedUsers = users
@@ -87,11 +109,16 @@ public class UserUtils(IUserRepository userRepository,
         var restrictedUserIds = userIds.Where(id => !unrestrictedUserIds.Contains(id)).ToList();
         
         // Clean up restricted user ID scores if failed to do so for some reason earlier.
-        var userIdsWithoutCleanedUpScores = await scoreRepository
-            .GetByUserIds(restrictedUserIds)
-            .Select(s => s.UserId)
-            .Distinct()
-            .ToListAsync(stoppingToken);
+        List<int> userIdsWithoutCleanedUpScores;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            userIdsWithoutCleanedUpScores = await unitOfWork.Scores
+                .GetByUserIds(restrictedUserIds)
+                .Select(s => s.UserId)
+                .Distinct()
+                .ToListAsync(stoppingToken);
+        }
 
         if (userIdsWithoutCleanedUpScores.Count > 0)
         {
@@ -125,8 +152,15 @@ public class UserUtils(IUserRepository userRepository,
             
             return u;
         }).ToList();
-        userRepository.UpdateBulk(users);
-        await userRepository.SaveChangesAsync(stoppingToken);
+
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await unitOfWork.BeginTransactionAsync(stoppingToken);
+            unitOfWork.Users.UpdateBulk(users);
+            await unitOfWork.CommitTransactionAsync(stoppingToken);
+        }
+        
         logger.Log(LogLevel.Information, "{userCount} users got unrestricted", unrestrictedUserIds.Count);
     }
 
@@ -136,23 +170,20 @@ public class UserUtils(IUserRepository userRepository,
         for (var i = 0; i < userIds.Count; i += UserBatchSize)
         {
             var usersBatch = userIds.Skip(i).Take(UserBatchSize).ToList();
-            var scoresQuery = unlistedScoreRepository.GetByUserIds(usersBatch);
+
+            IQueryable<UnlistedScore> scoresQuery; 
+            using (var scope = serviceProvider.CreateScope())
+            {
+                await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                scoresQuery = unitOfWork.UnlistedScores.GetByUserIds(usersBatch);
+            }
             var scoresBatch = await scoresQuery
                 .Take(ScoreBatchSize)
                 .ToListAsync(stoppingToken);
             
             while (scoresBatch.Count > 0)
             {
-                var reinstatedScores = scoresBatch.Select(GetScoreFromUnlistedScore).ToList();
-                
-                unlistedScoreRepository.DeleteBulk(scoresBatch);
-                var scoreIds = reinstatedScores.Select(s => s.Id).ToList();
-                var existingScores = await scoreRepository.GetBulkAsync(scoreIds, stoppingToken);
-                var existingScoreIds = existingScores.Select(s => s.Id).ToList();
-                
-                var newScores = reinstatedScores.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
-            
-                reinstatedCount += await ReprocessReaddedBeatmapRanksAsync(newScores, stoppingToken);
+                reinstatedCount += await ProcessReinstatedScoresAsync(scoresBatch, stoppingToken);
                 
                 scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
             }
@@ -169,37 +200,24 @@ public class UserUtils(IUserRepository userRepository,
     /// <returns>Number of removed scores</returns>
     private async Task RemoveUserScoresAsync(IList<int> userIds, CancellationToken stoppingToken)
     {
-        var query = scoreRepository.GetByUserIds(userIds);
-        var batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
+        IQueryable<Score> query;
+        List<Score> batch;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            query = unitOfWork.Scores.GetByUserIds(userIds);
+            batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
+        }
         if (batch.Count == 0) return;
         
         var deletedCount = 0;
         var unlistedCount = 0;
         while (batch.Count > 0)
         {
-            scoreRepository.DeleteBulk(batch);
+            var processingData = await ProcessRemovedScoresAsync(batch, stoppingToken);
             
-            var scoreIdsToRemove = GetScoreIdsWithNullData(batch);
-            var scoresToUnlist = batch
-                .Where(s => !scoreIdsToRemove.Contains(s.Id))
-                .Select(GetUnlistedScoreFromScore)
-                .ToList();
-            
-            var batchIds = scoresToUnlist.Select(s => s.Id).ToList();
-            var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(batchIds, stoppingToken);
-            var existingUnlistedIds = existingUnlistedScores.Select(s => s.Id);
-
-            var newUnlistedScores = scoresToUnlist.Where(s => !existingUnlistedIds.Contains(s.Id)).ToList();
-            var beatmapModes = newUnlistedScores
-                .GroupBy(s => s.BeatmapId)
-                .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
-            unlistedScoreRepository.CreateBulk(newUnlistedScores);
-            await scoreRepository.SaveChangesAsync(stoppingToken);
-            
-            await ReprocessRemovedBeatmapRanksAsync(beatmapModes, stoppingToken);
-            
-            deletedCount += scoreIdsToRemove.Count;
-            unlistedCount += scoresToUnlist.Count;
+            deletedCount += processingData.DeletedCount;
+            unlistedCount += processingData.UnlistedCount;
             batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
         }
         logger.Log(LogLevel.Information, "Deleted {deletedCount} restricted user scores", deletedCount);
@@ -280,61 +298,93 @@ public class UserUtils(IUserRepository userRepository,
     /// <summary>
     /// Update score ranks on beatmaps that had scores removed or unlisted
     /// </summary>
-    /// <param name="beatmapModes">A dictionary of <see cref="Beatmap.Id"/>s and the relevant score <see cref="Mode"/>s</param>
+    /// <param name="scores">A list of <see cref="Score"/>s for removal</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task ReprocessRemovedBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
+    private async Task<ScoresRemovalData> ProcessRemovedScoresAsync(List<Score> scores, CancellationToken stoppingToken)
     {
-        if (beatmapModes.Count == 0) return;
+        if (scores.Count == 0) return new ScoresRemovalData
+        {
+            UnlistedCount = 0,
+            DeletedCount = 0
+        };
+
+        var unlistedCount = 0;
+        var deletedCount = 0;
+        
+        var scoreIdsToRemove = GetScoreIdsWithNullData(scores);
+        var scoresToUnlist = scores
+            .Where(s => !scoreIdsToRemove.Contains(s.Id))
+            .Select(GetUnlistedScoreFromScore)
+            .ToList();
+        
+        var batchIds = scoresToUnlist.Select(s => s.Id).ToList();
+        using (var scope = serviceProvider.CreateScope())
+        {
+            await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var existingUnlistedScores = await unitOfWork.UnlistedScores.GetBulkAsync(batchIds, stoppingToken);
+            var existingUnlistedIds = existingUnlistedScores.Select(s => s.Id);
+
+            var newUnlistedScores = scoresToUnlist.Where(s => !existingUnlistedIds.Contains(s.Id)).ToList();
+
+            await unitOfWork.BeginTransactionAsync(stoppingToken);
+            unitOfWork.UnlistedScores.CreateBulk(newUnlistedScores);
+            await unitOfWork.CommitTransactionAsync(stoppingToken);
+            unlistedCount += newUnlistedScores.Count;
+        }
+        
+        var beatmapModes = scores
+            .GroupBy(s => s.BeatmapId)
+            .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
 
         var beatmapIds = beatmapModes.Keys;
         
         for (var i = 0; i < beatmapModes.Count; i += BeatmapBatchSize)
         {
             var batch = beatmapIds.Skip(i).Take(BeatmapBatchSize).ToList();
-            
-            var scores = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
-            var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
+
+            List<Score> beatmapScores;
+            using (var scope = serviceProvider.CreateScope())
+            {
+                await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                beatmapScores = await unitOfWork.Scores.GetByBeatmapIdsAsync(batch, stoppingToken);
+            }
+            var groupedScores = beatmapScores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
             foreach (var group in groupedScores)
             {
                 var beatmapId = group.Key.BeatmapId;
                 var mode = group.Key.Mode;
                 if (!beatmapModes[beatmapId].Contains(mode)) continue;
-                logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapId, mode);
-                var groupScores = group
-                    .OrderByDescending(s => s.TotalScore)
-                    .ThenBy(s => s.Date)
-                    .Select((s, index) =>
-                    {
-                        s.Rank = index + 1;
-                        return s;
-                    })
-                    .ToList();
-                // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
-                if (groupScores.Count < 100)
-                {
-                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
-                }
-                else
-                {
-                    scoreRepository.UpdateBulk(groupScores);
-                }
+                logger.Log(LogLevel.Information, "Processing removed scores for beatmap {beatmapId}, mode {mode}", beatmapId, mode);
+                
+                var existingScoreIds = group.Select(s => s.Id).ToList();
+                var scoresToDelete = scores.Where(s => existingScoreIds.Contains(s.Id)).ToList();
+                
+                await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
+
+                deletedCount += scoresToDelete.Count;
             }
-            await scoreRepository.SaveChangesAsync(stoppingToken);
         }
+
+        return new ScoresRemovalData
+        {
+            DeletedCount = deletedCount,
+            UnlistedCount = unlistedCount
+        };
     }
     
     /// <summary>
-    /// Update score ranks on beatmaps that had scores reinstated
+    /// Process reinstated scores and update beatmap ranks on them
     /// </summary>
     /// <param name="scores">A list of <see cref="Score"/>s</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     /// <returns>The reinstated scores count</returns>
-    private async Task<int> ReprocessReaddedBeatmapRanksAsync(List<Score> scores, CancellationToken stoppingToken)
+    private async Task<int> ProcessReinstatedScoresAsync(List<UnlistedScore> scores, CancellationToken stoppingToken)
     {
         if (scores.Count == 0) return 0;
         
-        var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scores, stoppingToken);
-        var relevantScores = scores.Where(s => checkResults[s.Id]).ToList();
+        var scoresToReinstate = scores.Select(GetScoreFromUnlistedScore).ToList();
+        var checkResults = await scoreProcessor.CheckIfSignificantBulkAsync(scoresToReinstate, stoppingToken);
+        var relevantScores = scoresToReinstate.Where(s => checkResults[s.Id]).ToList();
 
         if (relevantScores.Count == 0) return 0;
 
@@ -346,19 +396,34 @@ public class UserUtils(IUserRepository userRepository,
         for (var i = 0; i < beatmapIds.Count; i += BeatmapBatchSize)
         {
             var batch = beatmapIds.Skip(i).Take(BeatmapBatchSize).ToList();
+
+            List<Score> scoresBatch;
+            using (var scope = serviceProvider.CreateScope())
+            {
+                await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                scoresBatch = await unitOfWork.Scores.GetByBeatmapIdsAsync(batch, stoppingToken);
+            }
             
-            var scoresBatch = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
             var groupedScores = scoresBatch.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
             foreach (var group in groupedScores)
             {
                 var beatmapId = group.Key.BeatmapId;
                 var mode = group.Key.Mode;
                 if (!beatmapModes[beatmapId].Contains(mode)) continue;
+                using var scope = serviceProvider.CreateScope();
                 
                 logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapId, mode);
                 
                 var groupScores = group.ToList();
-                var newScores = relevantScores.Where(s => s.BeatmapId == beatmapId && s.Mode == mode).ToList();
+                var groupScoreIds = groupScores.Select(s => s.Id).ToList();
+                
+                var unlistedScoresToRemove = scores.Where(s => 
+                    s.BeatmapId == beatmapId 
+                    && s.Mode == mode).ToList();
+                var newScores = relevantScores.Where(s => 
+                    s.BeatmapId == beatmapId 
+                    && s.Mode == mode
+                    && !groupScoreIds.Contains(s.Id)).ToList();
                 
                 var allScores = groupScores
                     .Concat(newScores)
@@ -371,11 +436,20 @@ public class UserUtils(IUserRepository userRepository,
                     })
                     .ToList();
                 
-                scoreRepository.UpdateBulk(groupScores);
-                scoreRepository.CreateBulk(newScores);
+                await using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                await unitOfWork.BeginTransactionAsync(stoppingToken);
+                unitOfWork.Scores.UpdateBulk(groupScores);
+                unitOfWork.Scores.CreateBulk(newScores);
+                unitOfWork.UnlistedScores.DeleteBulk(unlistedScoresToRemove);
+                await unitOfWork.CommitTransactionAsync(stoppingToken);
             }
-            await scoreRepository.SaveChangesAsync(stoppingToken);
         }
         return relevantScores.Count;
+    }
+
+    private class ScoresRemovalData
+    {
+        public int DeletedCount { get; set; }
+        public int UnlistedCount { get; set; }
     }
 }

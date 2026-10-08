@@ -80,12 +80,4 @@ public class BaseRepository<T, TKey>(ScoreDataContext db) : IRepository<T, TKey>
     /// </summary>
     /// <param name="items"><see cref="IEnumerable{T}"/> containing populated objects of class <see cref="T"/></param>
     public void DeleteBulk(IEnumerable<T> items) => Set.RemoveRange(items);
-    
-    /// <summary>
-    /// Save changes made in this context to the DB
-    /// </summary>
-    /// <param name="cancellationToken">A CancellationToken to observe</param>
-    /// <exception cref="OperationCanceledException">If the CancellationToken is canceled</exception>
-    /// <returns>Task that represents the asynchronous save operation. Task result contains the number of state entries written to the DB</returns>
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => db.SaveChangesAsync(cancellationToken);
 }

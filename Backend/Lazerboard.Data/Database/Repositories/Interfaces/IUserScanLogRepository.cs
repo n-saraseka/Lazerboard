@@ -9,5 +9,5 @@ public interface IUserScanLogRepository
     Task<UserScanLog?> GetLatestFinishedScanAsync(CancellationToken cancellationToken = default);
     Task<UserScanLog?> GetLatestStartedCheckAsync(CancellationToken cancellationToken = default);
     Task<UserScanLog?> GetLatestFinishedCheckAsync(CancellationToken cancellationToken = default);
-    Task<int> SaveEventAsync(ScanEventType type, DateTime dateTime, CancellationToken cancellationToken = default);
+    void SaveEvent(ScanEventType type, DateTime dateTime);
 }

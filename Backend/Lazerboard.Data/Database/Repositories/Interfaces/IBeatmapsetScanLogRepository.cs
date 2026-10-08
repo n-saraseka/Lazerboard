@@ -15,5 +15,5 @@ public interface IBeatmapsetScanLogRepository : IRepository<BeatmapsetScanLog, i
     Task<BeatmapsetScanLog?> GetLatestFinishedSecondarySeedingAsync(CancellationToken cancellationToken = default);
     Task<BeatmapsetScanLog?> GetLatestStartedBeatmapScanAsync(CancellationToken cancellationToken = default);
     Task<BeatmapsetScanLog?> GetLatestFinishedBeatmapScanAsync(CancellationToken cancellationToken = default);
-    Task<int> SaveEventAsync(ScanEventType type, CancellationToken cancellationToken = default);
+    void SaveEvent(ScanEventType type);
 }

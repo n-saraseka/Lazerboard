@@ -109,7 +109,7 @@ public class ScoreProcessorTests
         var scores = new List<Score>();
         for (int i = 0; i < 100; i++)
         {
-            scores.Add(new Score()
+            scores.Add(new Score
             {
                 Id = (ulong)i + 1,
                 BeatmapId = 1,
@@ -142,7 +142,7 @@ public class ScoreProcessorTests
         var scores = new List<Score>();
         for (int i = 0; i < 100; i++)
         {
-            scores.Add(new Score()
+            scores.Add(new Score
             {
                 Id = (ulong)i + 1,
                 BeatmapId = 1,

@@ -16,5 +16,4 @@ public interface IRepository<T, TKey>
     void UpdateBulk(IEnumerable<T> items);
     void Delete(T item);
     void DeleteBulk(IEnumerable<T> items);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

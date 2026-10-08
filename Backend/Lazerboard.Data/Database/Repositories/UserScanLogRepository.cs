@@ -60,9 +60,7 @@ public class UserScanLogRepository(ScoreDataContext db) : BaseRepository<UserSca
     /// </summary>
     /// <param name="type">The <see cref="ScanEventType"/></param>
     /// <param name="dateTime">The <see cref="DateTime"/></param>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    /// <returns>Number of rows inserted into the DB</returns>
-    public async Task<int> SaveEventAsync(ScanEventType type, DateTime dateTime, CancellationToken cancellationToken = default)
+    public void SaveEvent(ScanEventType type, DateTime dateTime)
     {
         var newRow = new UserScanLog
         {
@@ -71,6 +69,5 @@ public class UserScanLogRepository(ScoreDataContext db) : BaseRepository<UserSca
         };
         
         Create(newRow);
-        return await SaveChangesAsync(cancellationToken);
     }
 }

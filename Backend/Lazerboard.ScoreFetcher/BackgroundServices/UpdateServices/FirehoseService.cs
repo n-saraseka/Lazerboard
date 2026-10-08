@@ -1,7 +1,7 @@
 using System.Text;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +10,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 
-public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseService> logger)
+public class FirehoseService(IServiceProvider serviceProvider,
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IScoreFetchingUtils scoreFetchingUtils,
+    IScoreProcessor scoreProcessor,
+    ILogger<FirehoseService> logger)
     : BackgroundService
 {
     private bool _catchUpOnExistingBeatmapScores;
@@ -30,18 +34,14 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
                 var scores = await FetchExistingBeatmapScoresAsync(stoppingToken);
                 if (scores.Count > 0)
                 {
-                    var significantScores = await GetExistingBeatmapScoresAsync(scores, stoppingToken);
+                    var significantScores = await scoreFetchingUtils.GetSignificantScoresAsync(scores, stoppingToken);
                     var scoresWithoutPp = significantScores.Where(s => s.PP == null).ToList();
                     var scoresWithPp = significantScores.Where(s => s.PP != null).ToList();
 
                     var groupedByBeatmapId = scoresWithoutPp.GroupBy(s => s.BeatmapId).ToList();
                     foreach (var group in groupedByBeatmapId)
                     {
-                        using var scope = serviceProvider.CreateScope();
-                        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-                        var scoreProcessor = scope.ServiceProvider.GetRequiredService<IScoreProcessor>();
-                        
-                        var flatWorkingBeatmap = await utils.GetFlatWorkingBeatmapAsync(group.Key, stoppingToken);
+                        var flatWorkingBeatmap = await scoreFetchingUtils.GetFlatWorkingBeatmapAsync(group.Key, stoppingToken);
                         var groupScores = group.ToList();
                         foreach (var score in groupScores)
                         {
@@ -50,7 +50,7 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
                     }
                         
                     var mergedScores = scoresWithPp.Concat(scoresWithoutPp).ToList();
-                    _insertedCount += await SaveExistingBeatmapScoresAsync(mergedScores, stoppingToken);
+                    _insertedCount += await scoreFetchingUtils.SaveScoreDataAsync(mergedScores, ScoreSource.ScoreFetcher, stoppingToken);
                 }
                 if (_catchUpOnExistingBeatmapScores) continue;
                 if (_insertedCount == 0)
@@ -135,43 +135,14 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     /// <returns>A list of valid beatmap IDs</returns>
     private async Task<List<int>> GetValidBeatmapIdsAsync(IList<int> ids, CancellationToken stoppingToken)
     {
-        using var scope = serviceProvider.CreateScope();
-        var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
+        await using var unitOfWork = unitOfWorkFactory.Create();
         
-        var beatmapsWithScores = await beatmapRepository.GetBeatmapsIdsWithScoresAsync(ids, stoppingToken);
+        var beatmapsWithScores = await unitOfWork.Beatmaps.GetBeatmapsIdsWithScoresAsync(ids, stoppingToken);
         var beatmapsFromProcessedMapsets =
-            await beatmapRepository.GetBeatmapsIdsFromProcessedMapsetsAync(ids, stoppingToken);
+            await unitOfWork.Beatmaps.GetBeatmapsIdsFromProcessedMapsetsAync(ids, stoppingToken);
 
         var validMapIds = beatmapsWithScores.Concat(beatmapsFromProcessedMapsets).Distinct().ToList();
         return ids.Where(id => validMapIds.Contains(id)).ToList();
-    }
-
-    /// <summary>
-    /// Get existing beatmap scores from the firehose endpoint
-    /// </summary>
-    /// <param name="scores">List of <see cref="APIScore"/>s</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>List of <see cref="APIScore"/>s</returns>
-    private async Task<List<APIScore>> GetExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        
-        var significantScores = await utils.GetSignificantScoresAsync(scores, stoppingToken);
-
-        return significantScores;
-    }
-
-    /// <summary>
-    /// Save data from existing beatmap scores
-    /// </summary>
-    /// <param name="scores">List of <see cref="APIScore"/>s</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task<int> SaveExistingBeatmapScoresAsync(IList<APIScore> scores, CancellationToken stoppingToken)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var utils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-        return await utils.SaveScoreDataAsync(scores, ScoreSource.ScoreFetcher, stoppingToken);
     }
 
     /// <summary>
@@ -180,9 +151,9 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     private async Task GetRestartCursorAsync(CancellationToken stoppingToken)
     {
-        using var scope = serviceProvider.CreateScope();
-        var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
-        var maxFirehoseScore = await scoreRepository.GetMaxFirehoseScoreAsync(stoppingToken);
+        await using var unitOfWork = unitOfWorkFactory.Create();
+        
+        var maxFirehoseScore = await unitOfWork.Scores.GetMaxFirehoseScoreAsync(stoppingToken);
         // If the score is too old or doesn't exist, use null cursor
         if (maxFirehoseScore is null) return;
         if (DateTime.UtcNow - maxFirehoseScore.Date >= TimeSpan.FromHours(6)) return;

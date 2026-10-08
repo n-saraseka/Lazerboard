@@ -2,7 +2,7 @@ using System.Text;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +15,9 @@ namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
 public class BeatmapsetUpdatesService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IBeatmapUtils _beatmapUtils;
+    private readonly IScoreFetchingUtils _scoreFetchingUtils;
     private readonly ILogger<BeatmapsetUpdatesService> _logger;
     private readonly double _apiInterval;
 
@@ -23,9 +26,16 @@ public class BeatmapsetUpdatesService : BackgroundService
     private string? _cursor;
     private int _repeatExponent;
 
-    public BeatmapsetUpdatesService(IServiceProvider serviceProvider, ILogger<BeatmapsetUpdatesService> logger)
+    public BeatmapsetUpdatesService(IServiceProvider serviceProvider,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        IBeatmapUtils beatmapUtils,
+        IScoreFetchingUtils scoreFetchingUtils,
+        ILogger<BeatmapsetUpdatesService> logger)
     {
         _serviceProvider = serviceProvider;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _beatmapUtils = beatmapUtils;
+        _scoreFetchingUtils = scoreFetchingUtils;
         _logger = logger;
         
         using var scope = _serviceProvider.CreateScope();
@@ -71,17 +81,11 @@ public class BeatmapsetUpdatesService : BackgroundService
                         DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate).Date),
                         DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate).Date));
 
-                    using (var scope = _serviceProvider.CreateScope())
-                    {
-                        var scoreFetchingUtils = scope.ServiceProvider.GetRequiredService<IScoreFetchingUtils>();
-                        await scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.MainSeedingStarted, stoppingToken);
-                    }
+                    await _scoreFetchingUtils.SaveAllBeatmapsetDataAsync(beatmapsets, ScanEventType.MainSeedingStarted, stoppingToken);
                     
                     foreach (var beatmapset in beatmapsets)
                     {
-                        using var scope = _serviceProvider.CreateScope();
-                        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                        await beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.MainSeedingStarted, stoppingToken);
+                        await _beatmapUtils.ProcessBeatmapsetAsync(beatmapset, ScanEventType.MainSeedingStarted, stoppingToken);
                     }
 
                     var latestMapset = beatmapsets.MaxBy(bs => bs.RankedDate);
@@ -129,19 +133,19 @@ public class BeatmapsetUpdatesService : BackgroundService
     private async Task GetRestartCursorAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        var startingBeatmapset = await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
+        var unitOfWork = _unitOfWorkFactory.Create();
+        
+        var startingBeatmapset = await unitOfWork.Beatmapsets.GetLatestMainProcessedMapsetAsync(stoppingToken);
 
         // If there is no main processed beatmapset, fall back to latest scanned beatmapset that has been processed
         // by the score fetcher. If that doesn't exist either, fall back to the second highest beatmapset.
         if (startingBeatmapset is null)
         {
-            startingBeatmapset = await beatmapsetRepository.GetLatestScannedMapsetAsync(stoppingToken);
+            startingBeatmapset = await unitOfWork.Beatmapsets.GetLatestScannedMapsetAsync(stoppingToken);
             if (startingBeatmapset is null)
             {
-                var dataProcessor = scope.ServiceProvider.GetRequiredService<IDataProcessor>();
-                var beatmapsetId = await dataProcessor.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
-                startingBeatmapset = await beatmapsetRepository.GetByIdAsync(beatmapsetId, stoppingToken);
+                var beatmapsetId = await unitOfWork.Scores.GetSecondHighestBeatmapsetIdAsync(stoppingToken);
+                startingBeatmapset = await unitOfWork.Beatmapsets.GetByIdAsync(beatmapsetId, stoppingToken);
             }
         }
 
@@ -167,12 +171,10 @@ public class BeatmapsetUpdatesService : BackgroundService
     /// <returns>True if there are no beatmapsets with null <see cref="Beatmapset.RankedDate"/>s and a scan hasn't been finished</returns>
     private async Task<bool> ShouldUpdateBeatmapsetsAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        var beatmapsetLogRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetScanLogRepository>();
+        await using var unitOfWork = _unitOfWorkFactory.Create();
         
-        var nullBeatmapset = await beatmapsetRepository.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
-        var finishedScan = await beatmapsetLogRepository.GetLatestFinishedScanAsync(stoppingToken);
+        var nullBeatmapset = await unitOfWork.Beatmapsets.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
+        var finishedScan = await unitOfWork.BeatmapsetScanLogs.GetLatestFinishedScanAsync(stoppingToken);
 
         return !(nullBeatmapset is null && finishedScan is null);
     }

@@ -14,20 +14,21 @@ namespace Lazerboard.ScoreFetcher.Tests.ScoreFetcherTests;
 [TestFixture]
 public class DataProcessorTests
 {
-    private DataProcessor _dataProcessor;
-    private Mock<IBeatmapsetRepository> _beatmapsetRepository;
-    private Mock<IBeatmapRepository> _beatmapRepository;
-    private Mock<ICountryRepository> _countryRepository;
-    private Mock<IUserRepository> _userRepository;
-    private Mock<IScoreRepository> _scoreRepository;
-    private Mock<IUnlistedScoreRepository> _unlistedScoreRepository;
-    private Mock<IOsuEntityToDtoService> _osuEntityToDtoService;
-    private Mock<IScoreProcessor> _scoreProcessor;
-    private Mock<ILogger<IDataProcessor>> _logger;
+    private DataProcessor _dataProcessor = null!;
+    private Mock<IServiceProvider> _serviceProvider = null!;
+    private Mock<IBeatmapsetRepository> _beatmapsetRepository = null!;
+    private Mock<IBeatmapRepository> _beatmapRepository = null!;
+    private Mock<ICountryRepository> _countryRepository = null!;
+    private Mock<IUserRepository> _userRepository = null!;
+    private Mock<IScoreRepository> _scoreRepository = null!;
+    private Mock<IUnlistedScoreRepository> _unlistedScoreRepository = null!;
+    private Mock<IOsuEntityToDtoService> _osuEntityToDtoService = null!;
+    private Mock<ILogger<IDataProcessor>> _logger = null!;
 
     [SetUp]
     public void Setup()
     {
+        _serviceProvider = new();
         _beatmapsetRepository = new();
         _beatmapRepository = new();
         _countryRepository = new();
@@ -35,15 +36,8 @@ public class DataProcessorTests
         _scoreRepository = new();
         _unlistedScoreRepository = new();
         _osuEntityToDtoService = new();
-        _scoreProcessor = new();
         _logger = new Mock<ILogger<IDataProcessor>>();
-        _dataProcessor = new DataProcessor(_beatmapsetRepository.Object, 
-            _beatmapRepository.Object, 
-            _countryRepository.Object, 
-            _userRepository.Object, 
-            _scoreRepository.Object,
-            _unlistedScoreRepository.Object,
-            _scoreProcessor.Object,
+        _dataProcessor = new DataProcessor(_serviceProvider.Object,
             _osuEntityToDtoService.Object,
             _logger.Object);
     }
@@ -246,9 +240,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -321,9 +312,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -374,9 +362,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -483,9 +468,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -573,9 +555,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -675,9 +654,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -775,9 +751,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         _unlistedScoreRepository.Setup(s => s.GetBulkAsync(It.IsAny<IEnumerable<ulong>>(), CancellationToken.None))
             .ReturnsAsync([]);
 
@@ -867,7 +840,6 @@ public class DataProcessorTests
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
-        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -883,9 +855,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         _unlistedScoreRepository.Setup(s => s.GetBulkAsync(It.IsAny<IEnumerable<ulong>>(), CancellationToken.None))
             .ReturnsAsync([]);
 
@@ -975,7 +944,6 @@ public class DataProcessorTests
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
-        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -991,9 +959,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         _unlistedScoreRepository.Setup(s => s.GetBulkAsync(It.IsAny<IEnumerable<ulong>>(), CancellationToken.None))
             .ReturnsAsync([new UnlistedScore
             {

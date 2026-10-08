@@ -1,20 +1,20 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.Database.Work;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 
-public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
-    IOsuApiFetcher osuApiFetcher, 
+public class BeatmapUtils(IServiceProvider serviceProvider,
+    IUnitOfWorkFactory unitOfWorkFactory,
     IScoreFetchingUtils utils,
     IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
-    IBeatmapsetRepository beatmapsetRepository,
-    IBeatmapRepository beatmapRepository) : IBeatmapUtils
+    ILogger<IBeatmapUtils> logger) : IBeatmapUtils
 {
     /// <summary>
     /// Get significant <see cref="APIBeatmap"/> leaderboard scores
@@ -25,7 +25,12 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     private async Task<List<APIScore>> GetBeatmapScoresAsync(int beatmapId, Mode mode, CancellationToken stoppingToken)
     {
         logger.Log(LogLevel.Information, "Processing beatmap {beatmapId}, mode: {mode}", beatmapId, mode);
-        var beatmapScores = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
+        BeatmapScores beatmapScores;
+        using (var scope = serviceProvider.CreateScope())
+        {
+            var osuApiFetcher = scope.ServiceProvider.GetRequiredService<IOsuApiFetcher>();
+            beatmapScores = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
+        }
                         
         var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
         return significantScores.DistinctBy(s => s.Id).ToList();
@@ -130,7 +135,8 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     public async Task SaveStartingTimestampAsync(IList<int> beatmapsetIds, ScanEventType eventType, CancellationToken stoppingToken)
     {
-        var dbBeatmapsets = await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken);
+        var unitOfWork = unitOfWorkFactory.Create();
+        var dbBeatmapsets = await unitOfWork.Beatmapsets.GetBulkAsync(beatmapsetIds, stoppingToken);
         var currentDateTime = DateTimeOffset.Now;
         foreach (var beatmapset in dbBeatmapsets)
         {
@@ -150,8 +156,10 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
                     break;
             }
         }
-        beatmapsetRepository.UpdateBulk(dbBeatmapsets);
-        await beatmapsetRepository.SaveChangesAsync(stoppingToken);
+
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.Beatmapsets.UpdateBulk(dbBeatmapsets);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
     }
 
     /// <summary>
@@ -162,7 +170,8 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     public async Task SaveFinishingTimestampAsync(IList<int> beatmapsetIds, ScanEventType eventType, CancellationToken stoppingToken)
     {
-        var dbBeatmapsets = await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken);
+        var unitOfWork = unitOfWorkFactory.Create();
+        var dbBeatmapsets = await unitOfWork.Beatmapsets.GetBulkAsync(beatmapsetIds, stoppingToken);
         var currentDateTime = DateTimeOffset.Now;
         foreach (var beatmapset in dbBeatmapsets)
         {
@@ -182,8 +191,10 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
                     break;
             }
         }
-        beatmapsetRepository.UpdateBulk(dbBeatmapsets);
-        await beatmapsetRepository.SaveChangesAsync(stoppingToken);
+        
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.Beatmapsets.UpdateBulk(dbBeatmapsets);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
     }
 
     /// <summary>
@@ -193,7 +204,8 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
     public async Task SaveBeatmapScansTimestampsAsync(IList<int> beatmapIds, CancellationToken stoppingToken)
     {
-        var dbBeatmaps = await beatmapRepository.GetBulkAsync(beatmapIds, stoppingToken);
+        var unitOfWork = unitOfWorkFactory.Create();
+        var dbBeatmaps = await unitOfWork.Beatmaps.GetBulkAsync(beatmapIds, stoppingToken);
         var currentDateTime = DateTime.UtcNow;
         
         dbBeatmaps = dbBeatmaps.Select(b =>
@@ -202,7 +214,8 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
             return b;
         }).ToList();
         
-        beatmapRepository.UpdateBulk(dbBeatmaps);
-        await beatmapRepository.SaveChangesAsync(stoppingToken);
+        await unitOfWork.BeginTransactionAsync(stoppingToken);
+        unitOfWork.Beatmaps.UpdateBulk(dbBeatmaps);
+        await unitOfWork.CommitTransactionAsync(stoppingToken);
     }
 }

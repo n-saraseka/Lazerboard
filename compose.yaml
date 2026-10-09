@@ -124,11 +124,12 @@ services:
       - main
   
   db:
-    image: postgres:18-alpine
+    image: ghcr.io/n-saraseka/lazerboard-db:master
     env_file:
       .env
     volumes:
       - ./db:/data/postgres
+      - ./pgbr:/var/lib/pgbackrest
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]

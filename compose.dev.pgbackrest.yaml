@@ -1,0 +1,130 @@
+networks:
+  main:
+
+services:
+  migrations:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard.Data/Dockerfile
+    depends_on:
+      "db":
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: on-failure:1
+    networks:
+      - main
+
+  scorefetcher:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard.ScoreFetcher/Dockerfile
+    depends_on:
+      "migrations":
+        condition: service_completed_successfully
+      "redis":
+        condition: service_healthy
+      "externalapis":
+        condition: service_started
+    env_file:
+      - .env
+    volumes:
+      - ./logs/scorefetcher:/app/Logs
+      - ./BeatmapCache:/app/BeatmapCache
+    restart: unless-stopped
+    networks:
+      - main
+  
+  discordhooks:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard.DiscordHooks/Dockerfile
+    depends_on:
+      "migrations":
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    volumes:
+      - ./logs/discordhooks:/app/Logs
+    restart: unless-stopped
+    networks:
+      - main
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard/Dockerfile
+    depends_on:
+      "migrations":
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    volumes:
+      - ./logs/backend:/app/Logs
+      - ./keys:/root/.aspnet/DataProtection-Keys
+    restart: unless-stopped
+    networks:
+      - main
+  
+  frontend:
+    build:
+      context: ./Frontend
+    depends_on:
+      "backend":
+        condition: service_started
+    volumes:
+      - ./Caddy/data:/data
+      - ./Caddy/config:/config
+      - ./Caddy/dev.Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    networks:
+      - main
+  
+  externalapis:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard.ExternalApis/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./logs/externalapis:/app/Logs
+    restart: unless-stopped
+    networks:
+      - main
+  
+  redis:
+    image: redis:8-alpine
+    env_file:
+      - .env
+    volumes:
+      - ./redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - main
+  
+  db:
+    build:
+      context: ./Backend
+      dockerfile: ./Lazerboard.Data/postgres.Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./db:/data/postgres
+      - ./pgbr:/var/lib/pgbackrest
+      - ./pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - main

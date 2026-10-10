@@ -10,7 +10,7 @@ In order to build the project, install [Docker](https://www.docker.com/) on your
 
 There are two build configurations:
 
-- Dev (`compose.dev.yaml`)
+- Dev (`compose.dev.yaml` and `compose.dev.pgbackrest.yaml`)
 - Production (`compose.yaml`)
 
 If you are looking to contribute, use the **dev** configuration. 
@@ -20,6 +20,10 @@ docker-compose -f compose.dev.yaml up -d
 ````
 
 The configuration is edited through a .env file. An example of a .env file with explanations is provided in the `.env.example` file.
+
+If you wish to run the configuration with **pgBackRest** with the purpose of testing backups,
+you can run the above command and specify the `compose.dev.pgbackrest.yaml` file instead. You will have to add your own `pgbackrest.conf` configuration file to the project's root folder.
+The documentation for that file can be found [here](https://pgbackrest.org/configuration.html).
 
 ## Testing the project
 

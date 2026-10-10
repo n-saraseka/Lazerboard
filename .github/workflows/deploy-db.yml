@@ -1,0 +1,32 @@
+name: Deploy Postgres image
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    name: deploy image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: install ssh keys
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+      - name: copy docker-compose to server
+        run: |
+          scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
+      - name: Login
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+          "echo '${{ secrets.PAT }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+      - name: deploy Postgres
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
+          docker compose pull db && UID=$(id -u) GID=$(id -g) docker compose up -d db"
+      - name: Logout
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup-post-deploy

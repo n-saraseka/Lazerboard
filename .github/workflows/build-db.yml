@@ -1,4 +1,4 @@
-name: Build backend image
+name: Build Postgres image
 on:
   push:
     branches: [ "master" ]

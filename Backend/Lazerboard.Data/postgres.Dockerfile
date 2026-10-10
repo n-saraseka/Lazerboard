@@ -20,7 +20,7 @@ cat >/docker-entrypoint-initdb.d/pgbackrest-archive.sh <<'EOF'
 set -e
 
 echo "archive_mode = on" >> "$PGDATA/postgresql.auto.conf"
-echo "archive_command = 'pgbackrest --stanza=demo archive-push %p'" >> "$PGDATA/postgresql.auto.conf"
+echo "archive_command = 'pgbackrest --stanza=main archive-push %p'" >> "$PGDATA/postgresql.auto.conf"
 EOF
 RUN chmod +x /docker-entrypoint-initdb.d/pgbackrest-archive.sh
 

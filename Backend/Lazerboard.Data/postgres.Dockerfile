@@ -13,10 +13,6 @@ lsb-release \
 RUN apt-get install -y pgbackrest \
 && rm -rf /var/lib/apt/lists/*
 
-# pgBackRest config
-RUN mkdir -p /etc/pgbackrest
-COPY pgbackrest.conf /etc/pgbackrest/pgbackrest.conf
-
 # Enable archive_mode + archive_command on first initdb
 RUN mkdir -p /docker-entrypoint-initdb.d && \
 cat >/docker-entrypoint-initdb.d/pgbackrest-archive.sh <<'EOF'

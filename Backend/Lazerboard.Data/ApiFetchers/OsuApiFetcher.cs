@@ -65,12 +65,17 @@ public class OsuApiFetcher : IOsuApiFetcher
     /// <returns>Populated BeatmapsetsResponse object</returns>
     public async Task<BeatmapsetsResponse> SearchBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
-        using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/beatmapsets?cursor={cursor}",
-            null,
-            ct);
+        var beatmapsetsText = "";
+        while (beatmapsetsText == "")
+        {
+            using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
+                $"{_apiUrl}/beatmapsets?cursor={cursor}",
+                null,
+                ct);
         
-        var beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
+            beatmapsetsText = await beatmapsetsResponse.Content.ReadAsStringAsync(ct);
+        }
+        
         var beatmapsets = JsonConvert.DeserializeObject<BeatmapsetsResponse>(beatmapsetsText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
         return beatmapsets;
@@ -91,12 +96,16 @@ public class OsuApiFetcher : IOsuApiFetcher
         var queryString = $"limit=100&legacy_only={legacyOnly}";
         if (mode != null) queryString += $"&mode={mode.ToString().ToLower()}";
         
-        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
-            null,
-            ct);
+        var scoresResponseText = "";
+        while (scoresResponseText == "")
+        {
+            using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+                $"{_apiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
+                null,
+                ct);
         
-        var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+            scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+        }
         
         var scores = JsonConvert.DeserializeObject<BeatmapScores>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
@@ -111,12 +120,16 @@ public class OsuApiFetcher : IOsuApiFetcher
     /// <returns>Populated ScoresResponse object</returns>
     public async Task<ScoresResponse> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
-        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/scores?cursor={cursor}", 
-            null,
-            ct);
+        var scoresResponseText = "";
+        while (scoresResponseText == "")
+        {
+            using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+                $"{_apiUrl}/scores?cursor={cursor}", 
+                null,
+                ct);
         
-        var scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+            scoresResponseText = await scoresResponse.Content.ReadAsStringAsync(ct);
+        }
 
         var scores = JsonConvert.DeserializeObject<ScoresResponse>(scoresResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         
@@ -140,13 +153,17 @@ public class OsuApiFetcher : IOsuApiFetcher
             {
                 var batch = userIds.Skip(i).Take(batchSize).ToList();
                 var queryString = string.Join("&", batch.Select(u => $"ids={u}"));
+                
+                var usersResponseText = "";
+                while (usersResponseText == "")
+                {
+                    using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
+                        $"{_apiUrl}/users?{queryString}", 
+                        null,
+                        ct);
         
-                using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
-                    $"{_apiUrl}/users?{queryString}", 
-                    null,
-                    ct);
-        
-                var usersResponseText = await usersResponse.Content.ReadAsStringAsync(ct);
+                    usersResponseText = await usersResponse.Content.ReadAsStringAsync(ct);
+                }
 
                 var userData = JsonConvert.DeserializeObject<Dictionary<string, APIUser[]>>(usersResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["users"];
                 
@@ -172,14 +189,16 @@ public class OsuApiFetcher : IOsuApiFetcher
         {
             var batch = beatmapIds.Skip(i).Take(batchSize).ToList();
             var queryString = string.Join("&", batch.Select(b => $"ids={b}"));
-
-            // parse beatmaps
-            using var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
-                $"{_apiUrl}/beatmaps?{queryString}", 
-                null, 
-                ct);
-        
-            var beatmapsResponseText = await beatmapsResponse.Content.ReadAsStringAsync(ct);
+            
+            var beatmapsResponseText = "";
+            while (beatmapsResponseText == "")
+            {
+                using var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
+                    $"{_apiUrl}/beatmaps?{queryString}", 
+                    null, 
+                    ct);
+                beatmapsResponseText = await beatmapsResponse.Content.ReadAsStringAsync(ct);
+            }
 
             APIBeatmap[] beatmapData = JsonConvert.DeserializeObject<Dictionary<string, APIBeatmap[]>>(beatmapsResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })["beatmaps"];
             beatmaps.AddRange(beatmapData);
@@ -196,12 +215,17 @@ public class OsuApiFetcher : IOsuApiFetcher
     /// <returns>The <see cref="APIBeatmapset"/></returns>
     public async Task<APIBeatmapset> GetBeatmapsetAsync(int beatmapsetId, CancellationToken ct = default)
     {
-        using var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
-            $"{_apiUrl}/beatmapsets/{beatmapsetId}", 
-            null,
-            ct);
+        var beatmapsetText = "";
+        while (beatmapsetText == "")
+        {
+            using var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
+                $"{_apiUrl}/beatmapsets/{beatmapsetId}", 
+                null,
+                ct);
         
-        var beatmapsetText = await beatmapsetResponse.Content.ReadAsStringAsync(ct);
+            beatmapsetText = await beatmapsetResponse.Content.ReadAsStringAsync(ct);
+        }
+        
         var beatmapset = JsonConvert.DeserializeObject<APIBeatmapset>(beatmapsetText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         return beatmapset;
     }

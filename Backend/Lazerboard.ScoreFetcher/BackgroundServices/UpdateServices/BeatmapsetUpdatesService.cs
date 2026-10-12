@@ -47,7 +47,14 @@ public class BeatmapsetUpdatesService : BackgroundService
             {
                 await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
                 shouldUpdate = await ShouldUpdateBeatmapsetsAsync(stoppingToken);
-                continue;
+                if (shouldUpdate)
+                {
+                    await GetRestartCursorAsync(stoppingToken);
+                }
+                else
+                {
+                    continue;
+                }
             }
             try
             {

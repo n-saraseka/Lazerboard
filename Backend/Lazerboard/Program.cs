@@ -9,6 +9,7 @@ using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using StackExchange.Redis;
 
@@ -56,6 +57,13 @@ builder.Services.AddRazorComponents();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Cloudflare
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedForHeaderName = "CF-Connecting-IP";
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
+
 // Caching
 var redisConfig = builder.Configuration.GetSection("Redis");
 var host = redisConfig["Host"];
@@ -82,7 +90,9 @@ builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         RateLimitPartition.GetTokenBucketLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "default",
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() 
+                          ?? httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() 
+                          ?? "default",
             factory: partition => new TokenBucketRateLimiterOptions
             {
                 AutoReplenishment = true,
@@ -106,6 +116,15 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsProduction())
+{
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedForHeaderName = "CF-Connecting-IP",
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
+}
 
 app.UseRateLimiter();
 

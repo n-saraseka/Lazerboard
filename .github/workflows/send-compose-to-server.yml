@@ -1,0 +1,26 @@
+name: Send .env file to server
+on:
+  push:
+    branches: [ "master" ]
+    paths: [ "compose.yaml" ]
+  workflow_dispatch:
+
+jobs:
+  create:
+    name: send file
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: install ssh keys
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+      - name: copy docker-compose to server
+        run: |
+          scp ./compose.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}/compose.yaml
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup-post-deploy

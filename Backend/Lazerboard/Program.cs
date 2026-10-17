@@ -58,11 +58,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Cloudflare
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
+if (builder.Environment.IsProduction())
 {
-    options.ForwardedForHeaderName = "CF-Connecting-IP";
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-});
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedForHeaderName = "CF-Connecting-IP";
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    });
+}
 
 // Caching
 var redisConfig = builder.Configuration.GetSection("Redis");

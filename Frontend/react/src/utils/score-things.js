@@ -148,8 +148,8 @@ export function sortedModAcronyms(acronyms) {
     }
     return acronyms.sort((a, b) => {
         if (modData[a].category === modData[b].category) {
-            const category = modData[a].category;
-            return acronymsByCategory[category].indexOf(a) - acronymsByCategory[category].indexOf(b);
+            // Reference: https://github.com/ppy/osu-web/blob/6bab9bbf0b700dd317694477917d6d069f937b9a/resources/js/cli/mod-names-generator.js#L29
+            return a.localeCompare(b, 'en', { numeric: true });
         }
         return categories.indexOf(modData[a].category) - categories.indexOf(modData[b].category);
     });

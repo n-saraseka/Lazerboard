@@ -1,8 +1,8 @@
-import ScoreMod from "./ScoreMod";
 import ModeWedge from "./ModeWedge.jsx";
 import {useState} from "react";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
-import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
+import {getPpColor, getRankTierColor, sortedModAcronyms} from "../../utils/score-things.js";
+import ScoreMods from "../Misc/ScoreMods.jsx";
 
 function ScoreCard({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -31,17 +31,7 @@ function ScoreCard({score, usingStandardized}) {
                     </a>
                 </div>
                 <div className="scorecard-column">
-                    <div className="mods">
-                        {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod key={modAcronym} acronym={modAcronym} speedChange={score.speedChange}/>)}
-                        {score.modAcronyms.length > 5 && (<>
-                            {!isExpanded && (
-                                <span className="mod mod-unknown mods-expand" title="Click to expand" onClick={() => setIsExpanded(true)}>
-                                {`+${score.modAcronyms.length - 5}`}
-                            </span>
-                            )}
-                            {isExpanded && score.modAcronyms.slice(5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
-                        </>)}
-                    </div>
+                    <ScoreMods modAcronyms={score.modAcronyms} speedChange={score.speedChange} isExpanded={isExpanded} setIsExpanded={setIsExpanded}/>
                 </div>
             </div>
             <div className="scorecard-row score-data">

@@ -136,6 +136,25 @@ export const allMods = {
     ]
 }
 
+export function sortedModAcronyms(acronyms) {
+    const categories = Object.keys(allMods);
+    const acronymsByCategory = {};
+    for (const cat of categories) {
+        acronymsByCategory[cat] = allMods[cat].map(m => m.acronym);
+    }
+    const modData = {};
+    for (const acronym of acronyms) {
+        modData[acronym] = getModData(acronym);
+    }
+    return acronyms.sort((a, b) => {
+        if (modData[a].category === modData[b].category) {
+            const category = modData[a].category;
+            return acronymsByCategory[category].indexOf(a) - acronymsByCategory[category].indexOf(b);
+        }
+        return categories.indexOf(modData[a].category) - categories.indexOf(modData[b].category);
+    });
+}
+
 export function getModData(acronym) {
     for (const cat of Object.keys(allMods)) {
         const mod = allMods[cat].find(m => m.acronym === acronym);

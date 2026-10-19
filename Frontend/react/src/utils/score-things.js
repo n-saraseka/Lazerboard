@@ -138,10 +138,6 @@ export const allMods = {
 
 export function sortedModAcronyms(acronyms) {
     const categories = Object.keys(allMods);
-    const acronymsByCategory = {};
-    for (const cat of categories) {
-        acronymsByCategory[cat] = allMods[cat].map(m => m.acronym);
-    }
     const modData = {};
     for (const acronym of acronyms) {
         modData[acronym] = getModData(acronym);

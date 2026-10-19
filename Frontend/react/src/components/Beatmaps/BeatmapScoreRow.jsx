@@ -1,8 +1,8 @@
-import ScoreMod from "../Scores/ScoreMod";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor, getPpColor} from "../../utils/score-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
+import ScoreMods from "../Misc/ScoreMods.jsx";
 
 function BeatmapScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -40,17 +40,7 @@ function BeatmapScoreRow({score, usingStandardized}) {
         </td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
         <td className="score-row-mods">
-            <div className="mods">
-                {score.modAcronyms.slice(0, 5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
-                {score.modAcronyms.length > 5 && (<>
-                    {!isExpanded && (
-                        <span className="mod mod-unknown mods-expand" title="Click to expand" onClick={() => setIsExpanded(true)}>
-                                {`+${score.modAcronyms.length - 5}`}
-                            </span>
-                    )}
-                    {isExpanded && score.modAcronyms.slice(5).map(modAcronym => <ScoreMod acronym={modAcronym} speedChange={score.speedChange}/>)}
-                </>)}
-            </div>
+            <ScoreMods modAcronyms={score.modAcronyms} speedChange={score.speedChange} isExpanded={isExpanded} setIsExpanded={setIsExpanded}/>
         </td>
     </tr>)
 }

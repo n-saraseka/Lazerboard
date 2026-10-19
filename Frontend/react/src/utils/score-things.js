@@ -136,6 +136,25 @@ export const allMods = {
     ]
 }
 
+export function sortedModAcronyms(acronyms) {
+    const categories = Object.keys(allMods);
+    const acronymsByCategory = {};
+    for (const cat of categories) {
+        acronymsByCategory[cat] = allMods[cat].map(m => m.acronym);
+    }
+    const modData = {};
+    for (const acronym of acronyms) {
+        modData[acronym] = getModData(acronym);
+    }
+    return acronyms.sort((a, b) => {
+        if (modData[a].category === modData[b].category) {
+            // Reference: https://github.com/ppy/osu-web/blob/6bab9bbf0b700dd317694477917d6d069f937b9a/resources/js/cli/mod-names-generator.js#L29
+            return a.localeCompare(b, 'en', { numeric: true });
+        }
+        return categories.indexOf(modData[a].category) - categories.indexOf(modData[b].category);
+    });
+}
+
 export function getModData(acronym) {
     for (const cat of Object.keys(allMods)) {
         const mod = allMods[cat].find(m => m.acronym === acronym);

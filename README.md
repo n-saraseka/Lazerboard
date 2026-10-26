@@ -35,6 +35,19 @@ The frontend is built on React. You can view your changes to the components usin
 npm run storybook
 ````
 
+## Monitoring
+
+This project supports infrastructure monitoring via following data sources: **Node Exporter** 
+for system information, **cAdvisor** for container metrics and **Caddy** metrics.
+
+Data scraping is configured through **Prometheus** and **Grafana**. 
+
+Grafana UI is available under the /grafana/ URL on the project domain, 
+and can be configured via web settings or the environment variables.
+
+Prometheus can be configured via the `prometheus.yml` file.
+
+
 ## Contribution guidelines
 
 *Contributions with AI-written code are not tolerated*. If there may be doubts, please disclose whether you've used AI for your Pull Request.

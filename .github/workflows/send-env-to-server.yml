@@ -33,6 +33,8 @@ jobs:
           osuapi_clientsecret: ${{ secrets.OSUAPI_CLIENTSECRET }}
           hooks_latestmapurl: ${{ secrets.HOOKS_SCANHOOKURL }}
           hooks_rescansurl: ${{ secrets.HOOKS_RESCANHOOKURL }}
+          grafana_user: ${{ secrets.GRAFANA_USER }}
+          grafana_password: ${{ secrets.GRAFANA_PASSWORD }}
           ssh_user: ${{ secrets.SSH_USER }}
           ssh_host: ${{ secrets.SSH_HOST }}
           work_dir: ${{ secrets.WORK_DIR }}

@@ -157,6 +157,7 @@ public class ScoresController(IScoreRepository scoreRepository,
 
         var filteredCommand = new ScoreQueryCommand
         {
+            IncludeConverts = command.IncludeConverts,
             StarRange = command.StarRange,
             CountryCode = command.CountryCode,
             Modes = [Mode.Mania]

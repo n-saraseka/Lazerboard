@@ -20,7 +20,9 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
         builder
             .HasIndex(s => s.ModAcronyms);
         builder
-            .HasIndex(s => new { s.UserId, s.Date, s.Mode});
+            .HasIndex(s => new { s.UserId, s.IsConvert, s.Date, s.Mode});
+        builder
+            .HasIndex(s => new { s.IsConvert, s.Date, s.Mode });
         builder
             .HasIndex(s => new { s.Date, s.Mode});
         builder

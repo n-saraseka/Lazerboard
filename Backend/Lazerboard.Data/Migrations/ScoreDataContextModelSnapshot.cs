@@ -416,14 +416,17 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("UserId", "SpeedChange")
                         .HasDatabaseName("ix_scores_user_id_speed_change");
 
-                    b.HasIndex("UserId", "Date", "Mode")
-                        .HasDatabaseName("ix_scores_user_id_date_mode");
+                    b.HasIndex("IsConvert", "Date", "Mode")
+                        .HasDatabaseName("ix_scores_is_convert_date_mode");
 
                     b.HasIndex("UserId", "Rank", "Mode")
                         .HasDatabaseName("ix_scores_user_id_rank_mode");
 
                     b.HasIndex("BeatmapId", "Mode", "TotalScore", "Date")
                         .HasDatabaseName("ix_scores_beatmap_id_mode_total_score_date");
+
+                    b.HasIndex("UserId", "IsConvert", "Date", "Mode")
+                        .HasDatabaseName("ix_scores_user_id_is_convert_date_mode");
 
                     b.ToTable("scores", (string)null);
                 });

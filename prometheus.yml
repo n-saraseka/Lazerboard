@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 30s
+  scrape_interval: 120s
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -13,7 +13,3 @@ scrape_configs:
   - job_name: 'caddy'
     static_configs: 
       - targets: ['frontend:2020']
-
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: ['cadvisor:8080']

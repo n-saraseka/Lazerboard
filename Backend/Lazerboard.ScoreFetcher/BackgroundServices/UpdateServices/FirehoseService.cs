@@ -17,7 +17,7 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     private string? _cursor;
     private int _insertedCount;
     private int _repeatExponent;
-    private readonly int _baseRepeatSeconds = 1;
+    private readonly int _baseRepeatSeconds = 10;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -55,7 +55,7 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
                 if (_catchUpOnExistingBeatmapScores) continue;
                 if (_insertedCount == 0)
                 {
-                    _repeatExponent = Math.Min(_repeatExponent + 1, 10);
+                    _repeatExponent = Math.Min(_repeatExponent + 1, 6);
                     logger.Log(LogLevel.Information, "No new scores inserted. Repeating in {interval} seconds", 
                         _baseRepeatSeconds * Math.Pow(2, _repeatExponent));
                 }
@@ -99,14 +99,14 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
                 return [];
             }
             
-            // 800k scores is around of 6 hours of missing scores
+            // 800k scores is around 6 hours of missing scores
             var catchUpScoreId = scores.Max(s => s.Id) - 800000;
             _cursor = Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {catchUpScoreId}}}"));
             return [];
         }
         _cursor = scoresResponse.Cursor;
 
-        if (scores.Length < 100 && _catchUpOnExistingBeatmapScores)
+        if (scores.Length < 150 && _catchUpOnExistingBeatmapScores)
         {
             _catchUpOnExistingBeatmapScores = false;
         }

@@ -38,7 +38,7 @@ npm run storybook
 ## Monitoring
 
 This project supports infrastructure monitoring via following data sources: **Node Exporter** 
-for system information, **cAdvisor** for container metrics and **Caddy** metrics.
+for system information and **Caddy** metrics.
 
 Data scraping is configured through **Prometheus** and **Grafana**. 
 

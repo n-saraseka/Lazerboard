@@ -159,12 +159,28 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         if (user == null) return NotFound("User not found");
         
         var context = scoreRepository.GetDbContext();
-        
-        var ranksQuery = mode == null
-            ? context.Database.SqlQuery<RankStats>(
-                $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 3 UNION ALL\n\tSELECT 8 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound")
-            : context.Database.SqlQuery<RankStats>(
-                $"WITH intervals AS(\n\tSELECT 1 AS rank_bound UNION ALL\n\tSELECT 3 UNION ALL\n\tSELECT 8 UNION ALL\n\tSELECT 25 UNION ALL\n\tSELECT 50 UNION ALL\n\tSELECT 100\n),\nscore_data AS (\nSELECT * FROM scores\nWHERE user_id = {userId} AND mode={mode})\nSELECT i.rank_bound, COUNT(*) as count\nFROM score_data s JOIN intervals i ON s.rank <= i.rank_bound\nGROUP BY i.rank_bound\nORDER BY i.rank_bound");
+
+        var sql = $@"
+                   SELECT i.rank_bound,
+                  CASE i.rank_bound
+                        WHEN 1   THEN top1  WHEN 3   THEN top3  WHEN 8   THEN top8
+                        WHEN 25  THEN top25 WHEN 50  THEN top50 WHEN 100 THEN top100
+                      END AS count
+                   FROM (
+                     SELECT
+                       COUNT(*) FILTER (WHERE rank <= 1)   AS top1,
+                       COUNT(*) FILTER (WHERE rank <= 3)   AS top3,
+                       COUNT(*) FILTER (WHERE rank <= 8)   AS top8,
+                       COUNT(*) FILTER (WHERE rank <= 25)  AS top25,
+                       COUNT(*) FILTER (WHERE rank <= 50)  AS top50,
+                       COUNT(*) FILTER (WHERE rank <= 100) AS top100
+                     FROM scores
+                     WHERE user_id = {userId} AND rank <= 100
+                   ) rank_distribution
+                   CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
+                   ORDER BY i.rank_bound";
+
+        var ranksQuery = context.Database.SqlQueryRaw<RankStats>(sql);
         
         var rankStats = await ranksQuery.ToListAsync(ct);
         

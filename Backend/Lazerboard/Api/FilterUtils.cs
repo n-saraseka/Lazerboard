@@ -13,7 +13,11 @@ public static class FilterUtils
     public static IQueryable<Score> FilterScoreQuery(IQueryable<Score> query,
         ScoreQueryCommand command)
     {
-        query = query.Where(s => command.Modes.Contains(s.Mode));
+        if (!(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
+        {
+            var modes = command.Modes.Distinct().ToList();
+            query = query.Where(s => modes.Contains(s.Mode));
+        }
 
         if (command.IncludeConverts != null)
         {

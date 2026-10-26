@@ -413,9 +413,6 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("Rank", "Mode")
                         .HasDatabaseName("ix_scores_rank_mode");
 
-                    b.HasIndex("TotalScore", "Mode")
-                        .HasDatabaseName("ix_scores_total_score_mode");
-
                     b.HasIndex("UserId", "Date", "Mode")
                         .HasDatabaseName("ix_scores_user_id_date_mode");
 

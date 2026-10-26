@@ -1,4 +1,4 @@
-name: Send .env file to server
+name: Send compose file to server
 on:
   push:
     branches: [ "master" ]

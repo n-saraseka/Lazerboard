@@ -9,7 +9,7 @@ import {debounce} from "../../utils/server-things.js";
 
 function ScoreRankingPage({countries}) {
     const [filters, setFilters] = useState({
-        rankRange: {min: 1, max: 100},
+        rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
         rateRange: {min: null, max: null},

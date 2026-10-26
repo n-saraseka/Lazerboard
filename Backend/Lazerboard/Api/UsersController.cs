@@ -42,9 +42,8 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
         
         var query = scoreRepository.GetByUserId(userId);
         
-        var latestDate = await query.MaxAsync(s => s.Date, ct);
-        var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.UnixEpoch);
-        var targetEndDate = command.DateRange[1] ?? DateOnly.FromDateTime(latestDate);
+        var targetStartDate = command.DateRange[0] ?? null;
+        var targetEndDate = command.DateRange[1] ?? null;
         
         var filteredCommand = new ScoreQueryCommand
         {

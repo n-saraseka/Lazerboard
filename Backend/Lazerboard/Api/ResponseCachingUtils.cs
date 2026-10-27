@@ -58,4 +58,21 @@ public static class ResponseCachingUtils
     public static ScoresResponse? GetDeserializedScoresResponse(string response) =>
         JsonConvert.DeserializeObject<ScoresResponse?>(response,
             new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+    
+    /// <summary>
+    /// Get serialized <see cref="UserRankingResponse"/> string
+    /// </summary>
+    /// <param name="response">The <see cref="UserRankingResponse"/></param>
+    /// <returns>The string</returns>
+    public static string GetSerializedUserRankingResponse(UserRankingResponse response) =>
+        JsonConvert.SerializeObject(response);
+    
+    /// <summary>
+    /// Get deserialized <see cref="UserRankingResponse"/> from string
+    /// </summary>
+    /// <param name="response">The serialized string</param>
+    /// <returns>The <see cref="ScoresResponse"/> or null</returns>
+    public static UserRankingResponse? GetDeserializedUserRankingResponse(string response) =>
+        JsonConvert.DeserializeObject<UserRankingResponse?>(response,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 }

@@ -17,6 +17,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     IScoreCacheRepository scoreCacheRepository) : ControllerBase
 {
     private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _rankingTtl = TimeSpan.FromMinutes(5);
     
     /// <summary>
     /// Get scores
@@ -156,9 +157,9 @@ public class ScoresController(IScoreRepository scoreRepository,
             IncludeConverts = command.IncludeConverts
         };
 
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
-
-        return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, ct));
+        return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, commandHash, false, ct));
     }
     
     /// <summary>
@@ -192,47 +193,77 @@ public class ScoresController(IScoreRepository scoreRepository,
             Modes = [Mode.Mania]
         };
         
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
-
-        return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, cancellationToken));
+        return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, commandHash, true, cancellationToken));
     }
 
-    private async Task<UserRankingResponse> GetRankingsFromQueryAsync(IQueryable<Score> query, 
+    private async Task<UserRankingResponse?> GetRankingsFromQueryAsync(IQueryable<Score> query, 
         int rankingAmount,
-        int rankingPage, 
+        int rankingPage,
+        string commandHash,
+        bool isManiaMillions,
         CancellationToken cancellationToken = default)
     {
-        var count = await query.Select(s => s.UserId).Distinct().CountAsync(cancellationToken);
-        
-        var pages = (int)Math.Ceiling((double)count / rankingAmount);
-        if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
-        
-        var group = await query
-            .GroupBy(s => s.UserId)
-            .Select(g => new
+        var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, rankingAmount, rankingPage);
+        var scoresResponseString = isManiaMillions
+            ? $"maniamillionsranking-{scoresQueryString}" 
+            : $"userranking-{scoresQueryString}";
+        var rankingResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
+
+        if (rankingResponseCache == null)
+        {
+            var count = await query.Select(s => s.UserId).Distinct().CountAsync(cancellationToken);
+
+            var pages = (int)Math.Ceiling((double)count / rankingAmount);
+            if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
+            
+            scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, rankingAmount, rankingPage);
+            scoresResponseString = isManiaMillions
+                ? $"maniamillionsranking-{scoresQueryString}" 
+                : $"userranking-{scoresQueryString}";
+
+            var group = await query
+                .GroupBy(s => s.UserId)
+                .Select(g => new
+                {
+                    g.First().UserId,
+                    ScoresCount = g.Count()
+                })
+                .OrderByDescending(r => r.ScoresCount)
+                .Skip((rankingPage - 1) * rankingAmount)
+                .Take(rankingAmount)
+                .ToListAsync(cancellationToken);
+
+            var users = await userRepository.GetBulkWithCountriesAsync(group.Select(g => g.UserId).ToList(),
+                cancellationToken);
+
+            var rankings = group.Select(g => new UserRanking
             {
-                g.First().UserId,
-                ScoresCount = g.Count()
-            })
-            .OrderByDescending(r => r.ScoresCount)
-            .Skip((rankingPage - 1) * rankingAmount)
-            .Take(rankingAmount)
-            .ToListAsync(cancellationToken);
-        
-        var users = await userRepository.GetBulkWithCountriesAsync(group.Select(g => g.UserId).ToList(),
-            cancellationToken);
+                Rank = (rankingPage - 1) * rankingAmount + group.IndexOf(g) + 1,
+                ScoresCount = g.ScoresCount,
+                User = users.First(u => u.Id == g.UserId)
+            }).ToList();
+            
+            var response = new UserRankingResponse
+            {
+                UserRankings = rankings,
+                Count = count
+            };
+            
+            var serializedString = ResponseCachingUtils.GetSerializedUserRankingResponse(response);
+            
+            if (rankingPage < 3)
+            {
+                await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _rankingTtl);
+            }
 
-        var rankings = group.Select(g => new UserRanking
+            return response;
+        }
+        else
         {
-            Rank = (rankingPage - 1) * rankingAmount + group.IndexOf(g) + 1,
-            ScoresCount = g.ScoresCount,
-            User = users.First(u => u.Id == g.UserId)
-        }).ToList();
-
-        return new UserRankingResponse
-        {
-            UserRankings = rankings,
-            Count = count
-        };
+            var response = ResponseCachingUtils.GetDeserializedUserRankingResponse(rankingResponseCache);
+            return response;
+        }
     }
 }

@@ -68,8 +68,8 @@ public class UsersController(IScoreRepository scoreRepository,
         };
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
-        var commandHash = FilterUtils.GetScoreQueryHashForCache(filteredCommand);
-        var scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
+        var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
         var scoresResponseString = $"userscores-{userId}-{scoresQueryString}";
         
         var scoresResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
@@ -80,7 +80,7 @@ public class UsersController(IScoreRepository scoreRepository,
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
             
-            scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
+            scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
             scoresResponseString = $"userscores-{userId}-{scoresQueryString}";
             
             query = query
@@ -103,7 +103,7 @@ public class UsersController(IScoreRepository scoreRepository,
                 Count = count
             };
 
-            var serializedString = FilterUtils.GetSerializedScoresResponse(scoresResponse);
+            var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
             
             if (page < 3)
             {
@@ -114,7 +114,7 @@ public class UsersController(IScoreRepository scoreRepository,
         }
         else
         {
-            var scoresResponse = FilterUtils.GetDeserializedScoresResponse(scoresResponseCache);
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache);
             return Ok(scoresResponse);
         }
     }

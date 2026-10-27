@@ -65,8 +65,8 @@ public class ScoresController(IScoreRepository scoreRepository,
         
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
-        var commandHash = FilterUtils.GetScoreQueryHashForCache(filteredCommand);
-        var scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
+        var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
         var scoresResponseString = $"globalscores-{scoresQueryString}";
         
         var scoresResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
@@ -77,7 +77,7 @@ public class ScoresController(IScoreRepository scoreRepository,
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
             
-            scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
+            scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
             scoresResponseString = $"globalscores-{scoresQueryString}";
             
             query = query
@@ -101,7 +101,7 @@ public class ScoresController(IScoreRepository scoreRepository,
                 Count = count
             };
 
-            var serializedString = FilterUtils.GetSerializedScoresResponse(scoresResponse);
+            var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
             
             if (page < 3)
             {
@@ -112,7 +112,7 @@ public class ScoresController(IScoreRepository scoreRepository,
         }
         else
         {
-            var scoresResponse = FilterUtils.GetDeserializedScoresResponse(scoresResponseCache);
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache);
             return Ok(scoresResponse);
         }
     }

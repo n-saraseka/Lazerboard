@@ -47,8 +47,14 @@ public static class FilterUtils
         if (command.PpRange[0] != null) query = query.Where(s => s.PP >= command.PpRange[0]);
         if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]);
 
-        if (command.AccuracyRange[0] != null) query = query.Where(s => s.Accuracy >= command.AccuracyRange[0] / 100.0f);
-        if (command.AccuracyRange[1] != null) query = query.Where(s => s.Accuracy <= command.AccuracyRange[1] / 100.0f);
+        if (command.AccuracyRange[0] != null) {
+            var acc = command.AccuracyRange[0] / 100.0f;
+            query = query.Where(s => s.Accuracy >= acc);
+        }
+        if (command.AccuracyRange[1] != null) {
+            var acc = command.AccuracyRange[1] / 100.0f
+            query = query.Where(s => s.Accuracy <= acc);
+        }
 
         // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
         // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed

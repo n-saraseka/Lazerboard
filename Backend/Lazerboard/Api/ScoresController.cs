@@ -104,7 +104,8 @@ public class ScoresController(IScoreRepository scoreRepository,
 
             var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
             
-            if (page < 3)
+            // Only cache the first 5 or the last 5 pages.
+            if (page <= 5 || pages - scoresPage <= 5)
             {
                 await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _scoresTtl);
             }
@@ -253,7 +254,8 @@ public class ScoresController(IScoreRepository scoreRepository,
             
             var serializedString = ResponseCachingUtils.GetSerializedUserRankingResponse(response);
             
-            if (rankingPage < 3)
+            // Only cache the first 5 or the last 5 pages.
+            if (rankingPage <= 5 || pages - rankingPage <= 5)
             {
                 await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _rankingTtl);
             }

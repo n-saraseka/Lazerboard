@@ -105,7 +105,8 @@ public class UsersController(IScoreRepository scoreRepository,
 
             var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
             
-            if (page < 3)
+            // Only cache the first 5 or the last 5 pages.
+            if (page <= 5 || pages - scoresPage <= 5)
             {
                 await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _scoresTtl);
             }

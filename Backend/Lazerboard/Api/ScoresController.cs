@@ -17,7 +17,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     IScoreCacheRepository scoreCacheRepository) : ControllerBase
 {
     private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
-    private readonly TimeSpan _rankingTtl = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _rankingTtl = TimeSpan.FromMinutes(30);
     
     /// <summary>
     /// Get scores

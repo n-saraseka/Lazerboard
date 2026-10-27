@@ -52,7 +52,7 @@ public static class FilterUtils
             query = query.Where(s => s.Accuracy >= acc);
         }
         if (command.AccuracyRange[1] != null) {
-            var acc = command.AccuracyRange[1] / 100.0f
+            var acc = command.AccuracyRange[1] / 100.0f;
             query = query.Where(s => s.Accuracy <= acc);
         }
 

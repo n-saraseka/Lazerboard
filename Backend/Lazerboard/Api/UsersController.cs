@@ -5,12 +5,16 @@ using Microsoft.EntityFrameworkCore;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.Redis.Repositories.Interfaces;
 
 namespace Lazerboard.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IScoreRepository scoreRepository, IUserRepository userRepository, IBeatmapRepository beatmapRepository) : ControllerBase
+public class UsersController(IScoreRepository scoreRepository, 
+    IUserRepository userRepository,
+    IBeatmapRepository beatmapRepository,
+    IScoreCacheRepository scoreCacheRepository) : ControllerBase
 {
     /// <summary>
     /// Get user scores
@@ -60,17 +64,25 @@ public class UsersController(IScoreRepository scoreRepository, IUserRepository u
             IsDescending = command.IsDescending,
             IncludeConverts = command.IncludeConverts
         };
-        
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
+
+        var commandHash = FilterUtils.GetScoreQueryHashForCache(filteredCommand);
+        var scoresCountCacheString = $"userscores-count-{userId}-{commandHash}";
+        var count = await scoreCacheRepository.GetScoresCountAsync(scoresCountCacheString) ?? await query.CountAsync(ct);
         
-        var count = await query.CountAsync(ct);
         var pages = (int)Math.Ceiling((double)count / scoresAmount);
         if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
         
-        query = query
-            .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+        var scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
+        var scoresCacheString = $"userscores-{userId}-{scoresQueryString}";
+        var scores = await scoreCacheRepository.GetScoresAsync(scoresCacheString);
 
-        var scores = await query.ToListAsync(ct);
+        if (scores is null)
+        {
+            query = query
+                .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+            scores = await query.ToListAsync(ct);
+        }
         
         var beatmaps = await beatmapRepository
             .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);

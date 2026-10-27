@@ -37,7 +37,7 @@ public class ScoresCountService : BackgroundService
 
                 var scoresCount = await scoresRepository.GetAll().CountAsync(stoppingToken);
                 _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
-                await scoreCacheRepository.SetScoresCountAsync(scoresCount, TimeSpan.FromMinutes(_updateInterval + 10));
+                await scoreCacheRepository.SetAllScoresCountAsync(scoresCount, TimeSpan.FromMinutes(_updateInterval + 10));
 
                 await Task.Delay(TimeSpan.FromMinutes(_updateInterval), stoppingToken);
             }

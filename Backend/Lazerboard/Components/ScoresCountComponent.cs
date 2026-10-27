@@ -9,7 +9,7 @@ public class ScoresCountComponent(IScoreCacheRepository scoreCache) : ViewCompon
 {
     public async Task<string> InvokeAsync()
     {
-        var count = await scoreCache.GetScoresCountAsync();
+        var count = await scoreCache.GetAllScoresCountAsync();
         return count.HasValue ? count.Value.ToString() : "not available";
     }
 }

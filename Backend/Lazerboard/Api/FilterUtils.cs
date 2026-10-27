@@ -1,4 +1,5 @@
 using Lazerboard.Data.Database.Entities;
+using Newtonsoft.Json;
 
 namespace Lazerboard.Api;
 
@@ -108,5 +109,29 @@ public static class FilterUtils
         }
 
         return query;
+    }
+
+    /// <summary>
+    /// Get score query key for cache
+    /// </summary>
+    /// <param name="commandHash">The <see cref="ScoreQueryCommand"/> hash code</param>
+    /// <param name="amount">Amount of scores to return</param>
+    /// <param name="page">Page (defaults to 1)</param>
+    /// <returns></returns>
+    public static string GetScoreQueryKeyForCache(string commandHash, int? amount, int? page)
+    {
+        var pagePortion = page.HasValue ? $"{page.Value}" : "";
+        var amountPortion = amount.HasValue ? $"{amount.Value}" : "";
+
+        return $"{commandHash}-{pagePortion}-{amountPortion}";
+    }
+    
+    public static string GetScoreQueryHashForCache(ScoreQueryCommand command)
+    {
+        command.Modes = command.Modes.OrderBy(m => m).ToArray();
+        command.IncludeMods = command.IncludeMods.OrderBy(m => m).ToArray();
+        command.ExcludeMods = command.ExcludeMods.OrderBy(m => m).ToArray();
+
+        return command.GetHashCode().ToString();
     }
 }

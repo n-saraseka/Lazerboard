@@ -38,12 +38,6 @@ inputs:
   hooks_rescansurl:
     description: 'Beatmapset rescans discord hook URL'
     required: true
-  grafana_user:
-    description: 'The Grafana user name'
-    required: true
-  grafana_password:
-    description: 'The Grafana password'
-    required: true
   ssh_user:
     description: 'SSH username'
     required: true
@@ -106,9 +100,5 @@ runs:
         echo "DiscordHooks__Scans__HookURL=${{ inputs.hooks_rescansurl }}" >> .env
         echo "DiscordHooks__Scans__Enabled=false" >> .env
         echo "DiscordHooks__Scans__UpdateIntervalMinutes=30" >> .env
-        echo "GF_SECURITY_ADMIN_USER=${{ inputs.grafana_user }}" >> .env
-        echo "GF_SECURITY_ADMIN_PASSWORD=${{ inputs.grafana_password }}" >> .env
-        echo "GF_SERVER_ROOT_URL=https://lazerboard.melguy.com/grafana/" >> .env
-        echo "GF_SERVER_SERVE_FROM_SUB_PATH=true" >> .env
         scp ./.env ${{ inputs.ssh_user }}@${{ inputs.ssh_host }}:${{ inputs.work_dir }}/.env
         

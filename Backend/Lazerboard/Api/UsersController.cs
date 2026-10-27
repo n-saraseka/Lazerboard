@@ -16,6 +16,8 @@ public class UsersController(IScoreRepository scoreRepository,
     IBeatmapRepository beatmapRepository,
     IScoreCacheRepository scoreCacheRepository) : ControllerBase
 {
+    private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
+    
     /// <summary>
     /// Get user scores
     /// </summary>
@@ -68,7 +70,13 @@ public class UsersController(IScoreRepository scoreRepository,
 
         var commandHash = FilterUtils.GetScoreQueryHashForCache(filteredCommand);
         var scoresCountCacheString = $"userscores-count-{userId}-{commandHash}";
-        var count = await scoreCacheRepository.GetScoresCountAsync(scoresCountCacheString) ?? await query.CountAsync(ct);
+        var count = await scoreCacheRepository.GetScoresCountAsync(scoresCountCacheString);
+
+        if (count is null)
+        {
+            count = await query.CountAsync(ct);
+            await scoreCacheRepository.SetScoresCountAsync(scoresCountCacheString, count.Value, _scoresTtl);
+        }
         
         var pages = (int)Math.Ceiling((double)count / scoresAmount);
         if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
@@ -82,22 +90,28 @@ public class UsersController(IScoreRepository scoreRepository,
             query = query
                 .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
             scores = await query.ToListAsync(ct);
-        }
-        
-        var beatmaps = await beatmapRepository
-            .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
+            
+            var beatmaps = await beatmapRepository
+                .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
 
-        scores = scores.Select(s =>
-        {
-            s.Beatmap = beatmaps.First(b => b.Id == s.BeatmapId);
-            s.User = user;
-            return s;
-        }).ToList();
+            scores = scores.Select(s =>
+            {
+                s.Beatmap = beatmaps.First(b => b.Id == s.BeatmapId);
+                s.User = user;
+                return s;
+            }).ToList();
+
+            // I am evil and worry about OOMs. Sorry. Only 3 pages with certain filter at a time.
+            if (page < 3)
+            {
+                await scoreCacheRepository.SetScoresAsync(scoresCacheString, scores, _scoresTtl);
+            }
+        }
 
         return Ok(new ScoresResponse
         {
             Scores = scores,
-            Count = count,
+            Count = count.Value,
         });
     }
 

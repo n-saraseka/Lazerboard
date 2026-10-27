@@ -53,7 +53,7 @@ public class ScoreCacheRepository (IConnectionMultiplexer connectionMultiplexer)
     public async Task SetScoresAsync(string key, List<Score> scores, TimeSpan ttl)
     {
         var db = connectionMultiplexer.GetDatabase();
-        var serializedValue = JsonConvert.SerializeObject(scores);
+        var serializedValue = JsonConvert.SerializeObject(scores, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
         await db.StringSetAsync(key, serializedValue, ttl);
     }
 

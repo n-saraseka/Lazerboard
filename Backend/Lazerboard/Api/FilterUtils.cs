@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Lazerboard.Data.Database.Entities;
 using Newtonsoft.Json;
 
@@ -132,6 +134,11 @@ public static class FilterUtils
         command.IncludeMods = command.IncludeMods.OrderBy(m => m).ToArray();
         command.ExcludeMods = command.ExcludeMods.OrderBy(m => m).ToArray();
 
-        return command.GetHashCode().ToString();
+        using var sha256 = SHA256.Create();
+        var serializedString = JsonConvert.SerializeObject(command);
+        var bytes = Encoding.UTF8.GetBytes(serializedString);
+        var hashBytes = sha256.ComputeHash(bytes);
+            
+        return Convert.ToHexString(hashBytes);
     }
 }

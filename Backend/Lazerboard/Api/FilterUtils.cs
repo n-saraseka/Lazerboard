@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
 using Newtonsoft.Json;
 
@@ -111,34 +112,5 @@ public static class FilterUtils
         }
 
         return query;
-    }
-
-    /// <summary>
-    /// Get score query key for cache
-    /// </summary>
-    /// <param name="commandHash">The <see cref="ScoreQueryCommand"/> hash code</param>
-    /// <param name="amount">Amount of scores to return</param>
-    /// <param name="page">Page (defaults to 1)</param>
-    /// <returns></returns>
-    public static string GetScoreQueryKeyForCache(string commandHash, int? amount, int? page)
-    {
-        var pagePortion = page.HasValue ? $"{page.Value}" : "";
-        var amountPortion = amount.HasValue ? $"{amount.Value}" : "";
-
-        return $"{commandHash}-{pagePortion}-{amountPortion}";
-    }
-    
-    public static string GetScoreQueryHashForCache(ScoreQueryCommand command)
-    {
-        command.Modes = command.Modes.OrderBy(m => m).ToArray();
-        command.IncludeMods = command.IncludeMods.OrderBy(m => m).ToArray();
-        command.ExcludeMods = command.ExcludeMods.OrderBy(m => m).ToArray();
-
-        using var sha256 = SHA256.Create();
-        var serializedString = JsonConvert.SerializeObject(command);
-        var bytes = Encoding.UTF8.GetBytes(serializedString);
-        var hashBytes = sha256.ComputeHash(bytes);
-            
-        return Convert.ToHexString(hashBytes);
     }
 }

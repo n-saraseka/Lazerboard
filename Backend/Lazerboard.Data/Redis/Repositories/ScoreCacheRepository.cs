@@ -41,32 +41,15 @@ public class ScoreCacheRepository (IConnectionMultiplexer connectionMultiplexer)
         return (int)value;
     }
 
-    public async Task<List<Score>?> GetScoresAsync(string key)
+    public async Task<string?> GetSerializedResponseAsync(string key)
     {
         var db = connectionMultiplexer.GetDatabase();
-        var stringValue = await db.StringGetAsync(key);
-        if (!stringValue.HasValue) return null;
-        var listValue = JsonConvert.DeserializeObject<List<Score>>(stringValue!, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-        return listValue;
+        return await db.StringGetAsync(key);
     }
     
-    public async Task SetScoresAsync(string key, List<Score> scores, TimeSpan ttl)
+    public async Task SetSerializedResponseAsync(string key, string serializedResponse, TimeSpan ttl)
     {
         var db = connectionMultiplexer.GetDatabase();
-        var serializedValue = JsonConvert.SerializeObject(scores, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-        await db.StringSetAsync(key, serializedValue, ttl);
-    }
-
-    public async Task<int?> GetScoresCountAsync(string key)
-    {
-        var db = connectionMultiplexer.GetDatabase();
-        var value = await db.StringGetAsync(key);
-        return (int?)value;
-    }
-
-    public async Task SetScoresCountAsync(string key, int scoreCount, TimeSpan ttl)
-    {
-        var db = connectionMultiplexer.GetDatabase();
-        await db.StringSetAsync(key, scoreCount, ttl);
+        await db.StringSetAsync(key, serializedResponse, ttl);
     }
 }

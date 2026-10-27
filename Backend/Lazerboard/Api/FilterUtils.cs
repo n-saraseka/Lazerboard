@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
 using Newtonsoft.Json;
 
@@ -141,4 +142,12 @@ public static class FilterUtils
             
         return Convert.ToHexString(hashBytes);
     }
+
+    public static string GetSerializedScoresResponse(ScoresResponse response) =>
+        JsonConvert.SerializeObject(response,
+            new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+    
+    public static ScoresResponse? GetDeserializedScoresResponse(string response) =>
+        JsonConvert.DeserializeObject<ScoresResponse?>(response,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 }

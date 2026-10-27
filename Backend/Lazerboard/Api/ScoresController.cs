@@ -66,27 +66,23 @@ public class ScoresController(IScoreRepository scoreRepository,
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
         var commandHash = FilterUtils.GetScoreQueryHashForCache(filteredCommand);
-        var scoresCountCacheString = $"globalscores-count-{commandHash}";
-        var count = await scoreCacheRepository.GetScoresCountAsync(scoresCountCacheString);
-
-        if (count is null)
-        {
-            count = await query.CountAsync(ct);
-            await scoreCacheRepository.SetScoresCountAsync(scoresCountCacheString, count.Value, _scoresTtl);
-        }
-        
-        var pages = (int)Math.Ceiling((double)count / scoresAmount);
-        if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
-        
         var scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
-        var scoresCacheString = $"globalscores-{scoresQueryString}";
-        var scores = await scoreCacheRepository.GetScoresAsync(scoresCacheString);
-
-        if (scores is null)
+        var scoresResponseString = $"globalscores-{scoresQueryString}";
+        
+        var scoresResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
+        
+        if (scoresResponseCache is null)
         {
+            var count = await query.CountAsync(ct);
+            var pages = (int)Math.Ceiling((double)count / scoresAmount);
+            if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
+            
+            scoresQueryString = FilterUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
+            scoresResponseString = $"globalscores-{scoresQueryString}";
+            
             query = query
                 .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
-            scores = await query.ToListAsync(ct);
+            var scores = await query.ToListAsync(ct);
             
             var beatmaps = await beatmapRepository
                 .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
@@ -98,19 +94,27 @@ public class ScoresController(IScoreRepository scoreRepository,
                 s.User = users.First(u => u.Id == s.UserId);
                 return s;
             }).ToList();
+
+            var scoresResponse = new ScoresResponse
+            {
+                Scores = scores,
+                Count = count
+            };
+
+            var serializedString = FilterUtils.GetSerializedScoresResponse(scoresResponse);
             
-            // I am evil and worry about OOMs. Sorry. Only 3 pages with certain filter at a time.
             if (page < 3)
             {
-                await scoreCacheRepository.SetScoresAsync(scoresCacheString, scores, _scoresTtl);
+                await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _scoresTtl);
             }
+            
+            return Ok(scoresResponse);
         }
-
-        return Ok(new ScoresResponse
+        else
         {
-            Scores = scores,
-            Count = count.Value
-        });
+            var scoresResponse = FilterUtils.GetDeserializedScoresResponse(scoresResponseCache);
+            return Ok(scoresResponse);
+        }
     }
 
     /// <summary>

@@ -41,7 +41,7 @@ const mockProps = {
             id: 'NO',
             name: 'Norway'
         }],
-    filters: {country: {id: 'All', name: 'All countries'}},
+    filters: {country: null},
     setFilters: () => {},
 };
 

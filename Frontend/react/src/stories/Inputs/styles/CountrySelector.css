@@ -3,6 +3,18 @@
     border-radius: 0.25em;
 }
 
+.selector-top input {
+    border: none;
+    font-family: "Cascadia Mono", monospace;
+    padding: 0 0;
+    width: 100%;
+    font-size: 1em;
+}
+
+.selector-top input:focus {
+    outline: none;
+}
+
 .selector {
     position: relative;
     display: inline-block;

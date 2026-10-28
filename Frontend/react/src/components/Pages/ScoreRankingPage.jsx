@@ -13,7 +13,7 @@ function ScoreRankingPage({countries}) {
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
         rateRange: {min: null, max: null},
-        country: {id: "All", name: "All countries"},
+        country: null,
         includeMods: [],
         excludeMods: [],
         lenientMode: true,

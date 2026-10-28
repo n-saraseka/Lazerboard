@@ -10,4 +10,5 @@ RUN npm run build
 FROM caddy:2-alpine AS caddy
 COPY --from=react app/build /srv/www/react
 COPY ./images /srv/www/images/
+COPY ./favicon /srv/www/favicon/
 COPY ./styles /srv/www/styles/

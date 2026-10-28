@@ -4,13 +4,22 @@
     <title>@ViewData["Title"] / Lazerboard</title>
     <link rel="stylesheet" href="/styles/styles.css">
     @await RenderSectionAsync("Styles", required: false)
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png?v=20261028" sizes="96x96"/>
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg?v=20261028"/>
+    <link rel="shortcut icon" href="/favicon/favicon.ico?v=20261028"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png?v=20261028"/>
+    <meta name="apple-mobile-web-app-title" content="Lazerboard"/>
+    <link rel="manifest" href="/favicon/site.webmanifest?v=20261028"/>
     <meta name="description" content="Lazerboard: a database of all osu!lazer leaderboards with various statistics"/>
     <meta name="keywords" content="osu, leaderboard, lazer, osu!, osu!lazer, statistics, osu statistics, osu! stats, osu! statistics, rankings, osu! rankings, osu rankings, osu leaderboards, osu leaderboard farming"/>
 </head>
 <body>
 <header>
     <div class="logo-navigation">
-        <a asp-controller="General" asp-action="Index" class="logo"><strong>Lazerboard</strong></a>
+        <a asp-controller="General" asp-action="Index" class="logo">
+            <img src="/images/icon-dark.png" alt="Logo" class="logo-image">
+            <strong>Lazerboard</strong>
+        </a>
         <ul class="navigation">
             <li>
                 <a asp-controller="General" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>

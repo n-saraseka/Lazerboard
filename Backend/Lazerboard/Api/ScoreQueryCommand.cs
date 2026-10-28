@@ -28,22 +28,22 @@ public class ScoreQueryCommand
     /// <summary>
     /// A <see cref="List{int}"/> with two <see cref="Score.PP"/> values
     /// </summary>
-    public List<int?> PpRange { get; set; } = [null, null];
+    public List<float?> PpRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{double}"/> with two <see cref="Score.Accuracy"/> values
+    /// A <see cref="List{float}"/> with two <see cref="Score.Accuracy"/> values
     /// </summary>
-    public List<double?> AccuracyRange { get; set; } = [null, null];
+    public List<float?> AccuracyRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{double}"/> with two <see cref="Score.SpeedChange"/> values
+    /// A <see cref="List{float}"/> with two <see cref="Score.SpeedChange"/> values
     /// </summary>
     public List<double?> SpeedRange { get; set; } = [null, null];
     
     /// <summary>
     /// A <see cref="List{double}"/> with two <see cref="Beatmap.Difficulty"/> values
     /// </summary>
-    public List<double?> StarRange { get; set; } = [null, null];
+    public List<float?> StarRange { get; set; } = [null, null];
     
     /// <summary>
     /// An array of mod acronyms to include in <see cref="Score"/>s

@@ -62,7 +62,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                     await ProcessUsersAsync(batch, stoppingToken);
                 }
                 _existingCheckStart = _existingCheckStart.Add(_checkInterval);
-                _existingCheckFinish = _existingCheckStart.Subtract(_lookbackInterval);
+                _existingCheckFinish = _existingCheckFinish.Add(_checkInterval);
                 if (!_shouldCatchUp)
                 {
                     await FinishUserCheckAsync(stoppingToken);

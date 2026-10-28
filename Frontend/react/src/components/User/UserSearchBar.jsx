@@ -7,15 +7,18 @@ import {debounce} from "../../utils/server-things.js";
 function UserSearchBar() {
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [searchFinished, setSearchFinished] = useState(false);
     const [users, setUsers] = useState([])
 
     async function getUsers(query) {
         setIsLoading(true);
         setIsError(false);
+        setSearchFinished(false);
         
         if (query.length === 0) {
             setIsLoading(false);
             setUsers([]);
+            setSearchFinished(true);
             return;
         }
 
@@ -43,6 +46,7 @@ function UserSearchBar() {
         }
 
         setIsLoading(false);
+        setSearchFinished(true);
     }
     
     const debouncedGetUsers = debounce(getUsers, 250);
@@ -54,11 +58,12 @@ function UserSearchBar() {
             </div>
             <div className="search-results">
                 {isError
-                    ? (<Error/>)
+                    ? (<div className="search-result"><Error/></div>)
                     : isLoading
-                        ? (<Loader/>)
-                        : users.length > 0 &&
-                        users.map(user => (<UserSearchResult user={user}/>))
+                        ? (<div className="search-result"><Loader/></div>)
+                        : users.length > 0
+                            ? users.map(user => (<UserSearchResult user={user}/>))
+                            : searchFinished && <div className="search-result">No users found!</div>
                 }
             </div>
         </div>

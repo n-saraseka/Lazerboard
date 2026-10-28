@@ -93,6 +93,7 @@ runs:
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
         echo "UserUpdatesIntervalHours=2" >> .env
+        echo "UserUpdatesLookbackHours=24" >> .env
         echo "RestrictedUsersUpdateIntervalHours=12" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=false" >> .env

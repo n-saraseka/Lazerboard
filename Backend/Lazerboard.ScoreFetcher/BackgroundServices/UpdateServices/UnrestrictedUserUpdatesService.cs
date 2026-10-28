@@ -16,8 +16,8 @@ public class UnrestrictedUserUpdatesService : BackgroundService
     private readonly ILogger<UnrestrictedUserUpdatesService> _logger;
 
     private const int BatchSize = 50;
+    private readonly TimeSpan _checkInterval;
     private readonly TimeSpan _lookbackInterval;
-    private readonly TimeSpan _lookBackJitter; // For when there are scores in the previous interval inserted post-check
     private DateTime _existingCheckStart;
     private DateTime _existingCheckFinish;
     
@@ -34,8 +34,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         var existingUsersUpdateHours = config.GetValue<double>("UserUpdatesIntervalHours");
-        _lookbackInterval = TimeSpan.FromHours(existingUsersUpdateHours);
-        _lookBackJitter = TimeSpan.FromMinutes(45);
+        var existingLookbackHours = config.GetValue<double>("UserUpdatesLookbackHours");
+        _checkInterval = TimeSpan.FromHours(existingUsersUpdateHours);
+        _lookbackInterval = TimeSpan.FromHours(existingLookbackHours);
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +44,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         await GetStartingDateTime(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
-            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - _existingCheckFinish  > _lookbackInterval;
+            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - _existingCheckFinish  > _checkInterval;
             if (_shouldStartCheck)
             {
                 await StartUserCheckAsync(stoppingToken);
@@ -60,13 +61,13 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessUsersAsync(batch, stoppingToken);
                 }
-                _existingCheckStart = _existingCheckStart.Add(_lookbackInterval).Subtract(_lookBackJitter);
-                _existingCheckFinish = _existingCheckFinish.Add(_lookbackInterval).Add(_lookBackJitter);
+                _existingCheckStart = _existingCheckStart.Add(_checkInterval);
+                _existingCheckFinish = _existingCheckStart.Subtract(_lookbackInterval);
                 if (!_shouldCatchUp)
                 {
                     await FinishUserCheckAsync(stoppingToken);
                     _shouldStartCheck = true;
-                    await Task.Delay(_lookbackInterval, stoppingToken);
+                    await Task.Delay(_checkInterval, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -136,9 +137,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
             if (_shouldStartCheck)
             {
                 var currentDateTime = DateTime.UtcNow;
-                _existingCheckFinish = currentDateTime - _existingCheckFinish < _lookbackInterval 
+                _existingCheckFinish = currentDateTime - _existingCheckFinish < _checkInterval 
                     ? currentDateTime 
-                    : _existingCheckFinish.Add(_lookbackInterval);
+                    : _existingCheckFinish.Add(_checkInterval);
             }
         }
         _existingCheckStart = _existingCheckFinish.Subtract(_lookbackInterval);

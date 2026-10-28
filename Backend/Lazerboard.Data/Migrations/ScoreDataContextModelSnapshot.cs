@@ -401,14 +401,17 @@ namespace OsuScoreStats.Migrations
                     b.HasKey("Id")
                         .HasName("pk_scores");
 
-                    b.HasIndex("ModAcronyms")
-                        .HasDatabaseName("ix_scores_mod_acronyms");
-
                     b.HasIndex("ScoreSource")
                         .HasDatabaseName("ix_scores_score_source");
 
-                    b.HasIndex("Date", "Mode")
-                        .HasDatabaseName("ix_scores_date_mode");
+                    b.HasIndex("Accuracy", "Mode")
+                        .HasDatabaseName("ix_scores_accuracy_mode");
+
+                    b.HasIndex("PP", "Mode")
+                        .HasDatabaseName("ix_scores_pp_mode");
+
+                    b.HasIndex("SpeedChange", "Mode")
+                        .HasDatabaseName("ix_scores_speed_change_mode");
 
                     b.HasIndex("UserId", "BeatmapId")
                         .HasDatabaseName("ix_scores_user_id_beatmap_id");

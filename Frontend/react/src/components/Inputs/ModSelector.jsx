@@ -22,7 +22,10 @@ function ModSelector({availableMods, filters, setFilters, excludeMode, refetchSc
         <>
             <div className="selector selector-mods">
                 <div className="selector-item top-selector" onClick={() => setIsExpanded(!isExpanded)}>
-                    <span>Click to select</span>
+                    <span>{excludeMode 
+                        ? (filters.excludeMods.length > 0 ? `${filters.excludeMods.length} selected` : "None selected")
+                        : (filters.includeMods.length > 0 ? `${filters.includeMods.length} selected` : "None selected")
+                        }</span>
                     <div className="selector-chevron"></div>
                 </div>
                 <div className="selector-items" style={{display: isExpanded ? "block" : "none"}}>

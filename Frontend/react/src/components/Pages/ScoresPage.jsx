@@ -17,13 +17,13 @@ function ScoresPage({countries}) {
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
-        includeConverts: false,
+        excludeConverts: true,
         dateRange: {min: null, max: null},
         rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
         accRange: {min: null, max: null},
         rateRange: {min: null, max: null},
-        country: {id: "All", name: "All countries"},
+        country: null,
         includeMods: [],
         excludeMods: [],
         lenientMode: true,

@@ -229,8 +229,8 @@ export function createScoreQueryCommand(filters) {
         scoreQueryCommand.starRange = [filters.starRange.min, filters.starRange.max];
     }
 
-    if (filters.country !== undefined) {
-        scoreQueryCommand.countryCode = filters.country.id === "All" ? null : filters.country.id;
+    if (filters.country !== undefined && filters.country !== null) {
+        scoreQueryCommand.countryCode = filters.country.id;
     }
 
     if (filters.includeMods !== undefined) {
@@ -247,8 +247,8 @@ export function createScoreQueryCommand(filters) {
         scoreQueryCommand.isDescending = (filters.sortDir === "desc");
     }
     
-    if (filters.includeConverts !== undefined) {
-        scoreQueryCommand.includeConverts = filters.includeConverts;
+    if (filters.excludeConverts !== undefined) {
+        scoreQueryCommand.excludeConverts = filters.excludeConverts;
     }
     
     return scoreQueryCommand;

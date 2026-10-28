@@ -16,9 +16,8 @@ const mockProps = {
         id: 'UA',
         name: 'Ukraine'
     },
-    isPartOfList: false,
-    onClickAction: () => console.log('clicked'),
-    hasChevron: true
+    isHeaderRow: true,
+    onClickAction: () => console.log('clicked')
 };
 
 export const Default = {

@@ -61,7 +61,7 @@ public class ScoresController(IScoreRepository scoreRepository,
             CountryCode = command.CountryCode,
             SortBy = command.SortBy,
             IsDescending = command.IsDescending,
-            IncludeConverts = command.IncludeConverts
+            ExcludeConverts = command.ExcludeConverts
         };
         
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
@@ -155,7 +155,7 @@ public class ScoresController(IScoreRepository scoreRepository,
             ExcludeMods = command.ExcludeMods,
             LenientMode = command.LenientMode,
             CountryCode = command.CountryCode,
-            IncludeConverts = command.IncludeConverts
+            ExcludeConverts = command.ExcludeConverts
         };
 
         var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
@@ -188,7 +188,7 @@ public class ScoresController(IScoreRepository scoreRepository,
 
         var filteredCommand = new ScoreQueryCommand
         {
-            IncludeConverts = command.IncludeConverts,
+            ExcludeConverts = command.ExcludeConverts,
             StarRange = command.StarRange,
             CountryCode = command.CountryCode,
             Modes = [Mode.Mania]

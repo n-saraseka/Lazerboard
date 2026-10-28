@@ -48,6 +48,14 @@ header {
 
 .logo {
     text-decoration: none;
+    display: flex;
+    gap: 15px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.logo-image {
+    height: 1.5em;
 }
 
 .navigation a {

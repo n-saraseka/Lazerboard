@@ -2,8 +2,7 @@ import {useState} from "react";
 import CountrySelectorRow from "./CountrySelectorRow.jsx";
 
 function CountrySelector({countries, filters, setFilters, refetchScores}) {
-    const allCountries = [{ id: "All", name: "All countries" }].concat(countries);
-    const [filteredCountries, setFilteredCountries] = useState(allCountries);
+    const [filteredCountries, setFilteredCountries] = useState(countries);
     const [dropdownEnabled, setDropdownEnabled] = useState(false);
     
     const filterCountries = (searchValue) => {

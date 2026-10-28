@@ -31,9 +31,7 @@
     <div class="about-section">
         <h1>How do I submit a score?</h1>
         <div class="about-explanation">
-            <p>The scores are fetched live using <a href="https://osu.ppy.sh/docs/index.html#get-scores">osu! API</a>. At worst, processing a new batch of scores would take 
-                around 15 minutes (that is if every score received is on the leaderboard, which many of them aren't most of the time, so it usually takes 2 minutes at most).</p>
-            <p><strong>Note</strong>: At this moment, scores are fetched through scanning existing beatmap leaderboards from oldest to newest with additional live scores catch-up once every 30 minutes.</p>
+            <p>The scores are fetched live using <a href="https://osu.ppy.sh/docs/index.html#get-scores">osu! API</a>. A new batch is processed every 10 seconds.</p>
         </div>
     </div>
     <div class="about-section">
@@ -48,6 +46,8 @@
                 <li>PP</li>
                 <li>Accuracy</li>
                 <li>Date and time set</li>
+                <li>Country</li>
+                <li>Whether to include or exclude converted scores.</li>
             </ul>
             <p>Along with that, you can view <a asp-controller="ScoreRanking" asp-action="ScoreRanking">global rankings</a> 
                 based on the amount of scores set with selected filters.</p>
@@ -68,9 +68,13 @@
     <div class="about-section">
         <h1>My score doesn't appear here!</h1>
         <div class="about-explanation">
-            <p>The website focuses on scores that appear in the top 100 rankings on a map, or the extended rankings if the database allows for that. 
-                If a score is lower than the lowest stored score in the database and there are more than 100 scores stored on the map, 
-                it won't be collected as its rank can't be estimated accurately. We apologize for the inconvenience.</p>
+            <p>The website focuses on scores that appear in the top 100 rankings on a map. If your score is outside the top 100, it won't be collected. We apologize for the inconvenience.</p>
+        </div>
+    </div>
+    <div class="about-section">
+        <h1>What about cheaters?</h1>
+        <div class="about-explanation">
+            <p>There are considerations for removing scores from users who got restricted for foul play. All scores set in the last 24 hours are checked every 2 hours to ensure as many cheated scores are caught as possible. We may add additional reporting functionality in the future.</p>
         </div>
     </div>
     <div class="about-section">

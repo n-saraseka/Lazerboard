@@ -45,10 +45,10 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                 { isMania
                     ? <>
                         <tr>
-                            <td>Include converts:</td>
+                            <td>Exclude converts:</td>
                             <td>
-                                <input name="includeConverts" id="includeConverts" type="checkbox" checked={filters.includeConverts} onClick={() => {
-                                    const newFilters = {...filters, includeConverts: !filters.includeConverts}
+                                <input name="includeConverts" id="excludeConverts" type="checkbox" checked={filters.excludeConverts} onClick={() => {
+                                    const newFilters = {...filters, excludeConverts: !filters.excludeConverts}
                                     setFilters(newFilters);
                                 }}/>
                             </td>

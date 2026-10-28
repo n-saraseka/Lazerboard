@@ -247,8 +247,8 @@ export function createScoreQueryCommand(filters) {
         scoreQueryCommand.isDescending = (filters.sortDir === "desc");
     }
     
-    if (filters.includeConverts !== undefined) {
-        scoreQueryCommand.includeConverts = filters.includeConverts;
+    if (filters.excludeConverts !== undefined) {
+        scoreQueryCommand.excludeConverts = filters.excludeConverts;
     }
     
     return scoreQueryCommand;

@@ -64,7 +64,7 @@ public class UsersController(IScoreRepository scoreRepository,
             LenientMode = command.LenientMode,
             SortBy = command.SortBy,
             IsDescending = command.IsDescending,
-            IncludeConverts = command.IncludeConverts
+            ExcludeConverts = command.ExcludeConverts
         };
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 

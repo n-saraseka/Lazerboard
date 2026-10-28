@@ -76,7 +76,7 @@ public class ScoreQueryCommand
     public bool? IsDescending { get; set; }
     
     /// <summary>
-    /// Whether to include scores that have the <see cref="Score.IsConvert"/> flag set to true or not
+    /// Whether to exclude scores that have the <see cref="Score.IsConvert"/> flag set to true or not
     /// </summary>
-    public bool? IncludeConverts { get; set; }
+    public bool? ExcludeConverts { get; set; }
 }

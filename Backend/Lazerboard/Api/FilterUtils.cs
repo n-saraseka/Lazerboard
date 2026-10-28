@@ -23,9 +23,9 @@ public static class FilterUtils
             query = query.Where(s => modes.Contains(s.Mode));
         }
 
-        if (command.IncludeConverts != null)
+        if (command.ExcludeConverts != null)
         {
-            query = !command.IncludeConverts.Value ? query.Where(s => s.IsConvert == false) : query;
+            query = command.ExcludeConverts.Value ? query.Where(s => s.IsConvert == false) : query;
         }
         
         if (command.DateRange[0] != null)

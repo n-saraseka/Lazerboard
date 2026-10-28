@@ -9,6 +9,11 @@ lazer.board {
     handle /api/* {
         reverse_proxy backend:8080
     }
+    
+    handle /favicon/* {
+        root * /srv/www
+        file_server
+    }
 
     handle /styles/* {
         root * /srv/www

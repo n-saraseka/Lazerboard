@@ -11,13 +11,9 @@ public class OsuApiQueue : IDisposable
     private readonly PriorityQueue<Request, decimal> _pendingRequests = new();
     
     private decimal _virtualTime;
+    private const decimal MaxWeight = 3;
 
-    private const decimal HighPriorityWeight = 2;
-    private const decimal LowPriorityWeight = 1;
-    private readonly decimal _maxWeight;
-
-    private decimal _lastHighFinishTime;
-    private decimal _lastLowFinishTime;
+    private readonly Dictionary<decimal, decimal> _finishTimes = new();
 
     private int _availableTokens;
     private const int MaxTokens = 1;
@@ -34,32 +30,30 @@ public class OsuApiQueue : IDisposable
         _refillTimer.Elapsed += OnRefillTimerActivated;
         _refillTimer.AutoReset = true;
         _refillTimer.Enabled = true;
-        
-        _maxWeight = Math.Max(HighPriorityWeight, LowPriorityWeight);
+        for (var i = 1; i <= MaxTokens; i++) _finishTimes[i] = 0;
     }
 
     /// <summary>
     /// Wait for an available WFQ token
     /// </summary>
-    /// <param name="isHighPriority">Whether the request is high priority or not</param>
+    /// <param name="priority">Priority number</param>
     /// <param name="token">A <see cref="CancellationToken"/></param>
     /// <returns>The request <see cref="Task"/> to await</returns>
-    public Task WaitForAvailableTokensAsync(bool isHighPriority, CancellationToken token)
+    public Task WaitForAvailableTokensAsync(decimal priority, CancellationToken token)
     {
         var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_stateLock)
         {
-            var requestTime = isHighPriority ? _maxWeight / HighPriorityWeight : _maxWeight / LowPriorityWeight;
+            var requestTime = priority / MaxWeight;
             
             // In case there are many requests from the same queue and the virtual time hasn't shifted,
             // we use the last finish time from that priority queue
-            var lastFinish = isHighPriority ? _lastHighFinishTime : _lastLowFinishTime;
+            var lastFinish = _finishTimes[priority];
             var startTime = Math.Max(_virtualTime, lastFinish);
             
             var finishTime = startTime + requestTime;
-            if (isHighPriority) _lastHighFinishTime = finishTime;
-                                else _lastLowFinishTime = finishTime;
+            _finishTimes[priority] = finishTime;
             _pendingRequests.Enqueue(new Request(completionSource, finishTime, token), finishTime);
             GrantAvailableTokens();
         }

@@ -222,41 +222,18 @@ public class UserUtils(IUserRepository userRepository,
     private async Task ReprocessBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
     {
         if (beatmapModes.Count == 0) return;
-
-        var beatmapIds = beatmapModes.Keys;
-        
         for (var i = 0; i < beatmapModes.Count; i += BeatmapBatchSize)
         {
-            var batch = beatmapIds.Skip(i).Take(BeatmapBatchSize).ToList();
-            
-            var scores = await scoreRepository.GetByBeatmapIdsAsync(batch, stoppingToken);
-            var groupedScores = scores.GroupBy(s => new { s.BeatmapId, s.Mode }).ToList();
-            foreach (var group in groupedScores)
+            var batch = beatmapModes.Skip(i).Take(BeatmapBatchSize).ToList();
+            foreach (var beatmapMode in batch)
             {
-                var beatmapId = group.Key.BeatmapId;
-                var mode = group.Key.Mode;
-                if (!beatmapModes[beatmapId].Contains(mode)) continue;
-                logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapId, mode);
-                var groupScores = group
-                    .OrderByDescending(s => s.TotalScore)
-                    .ThenBy(s => s.Date)
-                    .Select((s, index) =>
-                    {
-                        s.Rank = index + 1;
-                        return s;
-                    })
-                    .ToList();
-                // Reprocess beatmap scores separately after fetching if there are less than 100 scores.
-                if (groupScores.Count < 100)
+                foreach (var mode in beatmapMode.Value)
                 {
-                    await beatmapUtils.ProcessLeaderboardAsync(beatmapId, mode, stoppingToken);
-                }
-                else
-                {
-                    scoreRepository.UpdateBulk(groupScores);
+                    logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapMode.Key, mode);
+                    // We handle removing user scores inside the DataProcessor.
+                    await beatmapUtils.ProcessLeaderboardAsync(beatmapMode.Key, mode, stoppingToken);
                 }
             }
-            await scoreRepository.SaveChangesAsync(stoppingToken);
         }
     }
     

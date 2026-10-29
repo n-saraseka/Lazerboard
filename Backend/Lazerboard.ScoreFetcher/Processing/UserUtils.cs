@@ -173,79 +173,16 @@ public class UserUtils(IUserRepository userRepository,
         var batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
         if (batch.Count == 0) return;
         
-        var deletedCount = 0;
-        var unlistedCount = 0;
         while (batch.Count > 0)
         {
             scoreRepository.DeleteBulk(batch);
-            
-            var scoreIdsToRemove = GetScoreIdsWithNullData(batch);
-            var scoresToUnlist = batch
-                .Where(s => !scoreIdsToRemove.Contains(s.Id))
-                .Select(GetUnlistedScoreFromScore)
-                .ToList();
-            
-            var batchIds = scoresToUnlist.Select(s => s.Id).ToList();
-            var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(batchIds, stoppingToken);
-            var existingUnlistedIds = existingUnlistedScores.Select(s => s.Id);
-
-            var newUnlistedScores = scoresToUnlist.Where(s => !existingUnlistedIds.Contains(s.Id)).ToList();
-            var beatmapModes = newUnlistedScores
+            var beatmapModes = batch
                 .GroupBy(s => s.BeatmapId)
                 .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
-            unlistedScoreRepository.CreateBulk(newUnlistedScores);
-            await scoreRepository.SaveChangesAsync(stoppingToken);
-            
-            await ReprocessRemovedBeatmapRanksAsync(beatmapModes, stoppingToken);
-            
-            deletedCount += scoreIdsToRemove.Count;
-            unlistedCount += scoresToUnlist.Count;
+            await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
             batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
         }
-        logger.Log(LogLevel.Information, "Deleted {deletedCount} restricted user scores", deletedCount);
-        logger.Log(LogLevel.Information, "Unlisted {unlistedCount} restricted user scores", unlistedCount);
     }
-    
-    /// <summary>
-    /// Get score IDs with null new column data
-    /// </summary>
-    /// <param name="scores">List of <see cref="Score"/>s</param>
-    /// <returns>List of <see cref="Score"/> IDs</returns>
-    private List<ulong> GetScoreIdsWithNullData(IList<Score> scores) =>
-        scores.Where(s =>
-                s.IsConvert == null || s.IsLazerScore == null || s.Statistics == null || s.IsPerfectCombo == null)
-            .Select(s => s.Id)
-            .ToList();
-    
-    /// <summary>
-    /// Get a <see cref="UnlistedScore"/> from <see cref="Score"/> data
-    /// </summary>
-    /// <param name="score">The <see cref="Score"/></param>
-    /// <returns>The corresponding <see cref="UnlistedScore"/></returns>
-    private UnlistedScore GetUnlistedScoreFromScore(Score score) => new()
-    {
-        Id = score.Id,
-        Date = score.Date,
-        Mode = score.Mode,
-        BeatmapId = score.BeatmapId,
-        UserId = score.UserId,
-        Grade = score.Grade,
-        ModAcronyms = score.ModAcronyms,
-        SpeedChange = score.SpeedChange,
-        Accuracy = score.Accuracy,
-        Combo = score.Combo,
-        Misses = score.Misses,
-        TotalScore = score.TotalScore,
-        ClassicTotalScore = score.ClassicTotalScore,
-        LegacyTotalScore = score.LegacyTotalScore,
-        PP = score.PP,
-        Rank = score.Rank,
-        ScoreSource = score.ScoreSource,
-        IsConvert = score.IsConvert,
-        IsLazerScore = score.IsLazerScore,
-        IsPerfectCombo = score.IsPerfectCombo,
-        Statistics = score.Statistics
-    };
     
     /// <summary>
     /// Get a <see cref="Score"/> from <see cref="UnlistedScore"/> data
@@ -282,7 +219,7 @@ public class UserUtils(IUserRepository userRepository,
     /// </summary>
     /// <param name="beatmapModes">A dictionary of <see cref="Beatmap.Id"/>s and the relevant score <see cref="Mode"/>s</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    private async Task ReprocessRemovedBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
+    private async Task ReprocessBeatmapRanksAsync(Dictionary<int, List<Mode>> beatmapModes, CancellationToken stoppingToken)
     {
         if (beatmapModes.Count == 0) return;
 

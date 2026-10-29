@@ -67,7 +67,10 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                 {
                     await FinishUserCheckAsync(stoppingToken);
                     _shouldStartCheck = true;
-                    await Task.Delay(_checkInterval, stoppingToken);
+                    // This is kind of a bandaid fix for lengthy user checks, but it's good enough. Ensures that the checks
+                    // occur on a sort-of 2 hour basis, without an actual timer.
+                    var waitInterval = _existingCheckStart - DateTime.UtcNow;
+                    await Task.Delay(waitInterval, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

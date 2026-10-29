@@ -251,5 +251,9 @@ export function createScoreQueryCommand(filters) {
         scoreQueryCommand.excludeConverts = filters.excludeConverts;
     }
     
+    if (filters.beatmapStatus !== undefined && filters.beatmapStatus !== "all") {
+        scoreQueryCommand.beatmapStatus = parseInt(filters.beatmapStatus);
+    }
+    
     return scoreQueryCommand;
 }

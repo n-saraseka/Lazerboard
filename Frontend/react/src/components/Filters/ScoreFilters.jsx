@@ -236,6 +236,23 @@ function ScoreFilters({isUser, filters, setFilters, refetchScores, countries}) {
                     </tr>
                 )}
                 <tr>
+                    <td>Beatmap status:</td>
+                    <td>
+                        <div className="filter-container">
+                            <select name="scores-sort" id="scores-sort" value={filters.beatmapStatus} onChange={(e) => {
+                                const allFilters = {...filters, beatmapStatus: e.target.value};
+                                setFilters(allFilters);
+                                refetchScores(allFilters);
+                            }}>
+                                <option value="all">All</option>
+                                <option value="1">Ranked</option>
+                                <option value="2">Approved</option>
+                                <option value="4">Loved</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
                     <td>Sort:</td>
                     <td>
                         <div className="filter-container">

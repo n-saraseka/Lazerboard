@@ -16,5 +16,7 @@ public class BeatmapConfiguration : IEntityTypeConfiguration<Beatmap>
             .HasIndex(b => b.Difficulty);
         builder
             .HasIndex(b => b.Mode);
+        builder
+            .HasIndex(b => b.Status);
     }
 }

@@ -100,6 +100,9 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("Mode")
                         .HasDatabaseName("ix_beatmaps_mode");
 
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_beatmaps_status");
+
                     b.ToTable("beatmaps", (string)null);
                 });
 

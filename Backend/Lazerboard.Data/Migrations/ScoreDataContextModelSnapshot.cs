@@ -404,6 +404,9 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("ScoreSource")
                         .HasDatabaseName("ix_scores_score_source");
 
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_scores_user_id");
+
                     b.HasIndex("UserId", "BeatmapId")
                         .HasDatabaseName("ix_scores_user_id_beatmap_id");
 

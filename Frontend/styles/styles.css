@@ -671,13 +671,12 @@ input:focus, select:focus {
 }
 
 .score-mode {
-    flex: 1 1;
-    width: 100%;
+    flex: 5 1;
     padding: 0.5em 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0 0 1em 1em;
+    border-radius: 0 0 0 1em;
 }
 
 .color-osu {
@@ -696,13 +695,17 @@ input:focus, select:focus {
     background-color: rgb(100, 100, 200);
 }
 
-.mode-icon {
+.mode-icon, .status-icon {
     height: 2em;
     width: 2em;
     mask-size: contain;
     mask-repeat: no-repeat;
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
+}
+
+.score-mode > .mode-icon {
+    background-color: white;
 }
 
 .mode-osu {
@@ -895,4 +898,67 @@ body {
     mask-image: url("../images/chevron.svg");
     -webkit-mask-image: url("../images/chevron.svg");
     background-color: rgb(35, 35, 35);
+}
+
+.status-graveyard {
+    background-color: #000000;
+    color: #5c6970;
+}
+
+.status-wip {
+    background-color: #000000;
+    color: #5c6970;
+}
+
+.status-pending {
+    background-color: #ffd966;
+    color: #394246;
+}
+
+.status-ranked, .status-approved {
+    background-color: #b3ff66;
+    color: #394246;
+}
+
+.status-qualified {
+    background-color: #66ccff;
+    color: #394246;
+}
+
+.status-loved {
+    background-color: #ff66ab;
+    color: #394246;
+}
+
+.score-mode-status {
+    flex: 1 1;
+    display: flex;
+    width: 100%;
+}
+
+.score-status {
+    flex: 1 1;
+    padding: 0.5em 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 0 1em 0;
+}
+
+.status-icon.status-ranked {
+    mask-image: url("../images/ranked.svg");
+    -webkit-mask-image: url("../images/ranked.svg");
+    background-color: #394246;
+}
+
+.status-icon.status-approved {
+    mask-image: url("../images/approved.svg");
+    -webkit-mask-image: url("../images/approved.svg");
+    background-color: #394246;
+}
+
+.status-icon.status-loved {
+    mask-image: url("../../images/loved.svg");
+    -webkit-mask-image: url("../../images/loved.svg");
+    background-color: #394246;
 }

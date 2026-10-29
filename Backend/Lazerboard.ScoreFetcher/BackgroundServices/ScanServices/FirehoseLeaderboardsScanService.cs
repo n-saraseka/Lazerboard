@@ -19,6 +19,8 @@ public class FirehoseLeaderboardsScanService : BackgroundService
     private const int BatchSize = 50;
     private bool _shouldFinishAfterThisBatch;
     private int? _latestMapId;
+
+    private Beatmap? _finishingBeatmap;
     
     public FirehoseLeaderboardsScanService(IServiceProvider serviceProvider, ILogger<FirehoseLeaderboardsScanService> logger, ISeedingState seedingState)
     {
@@ -30,11 +32,7 @@ public class FirehoseLeaderboardsScanService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var finishingBeatmap = await GetFinishingBeatmapAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Finishing beatmap ID: {finishingMapId}", finishingBeatmap?.Id);
-        await GetStartingDataAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Starting beatmap ID: {startingMapId}", _latestMapId);
-        
+        await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -47,7 +45,7 @@ public class FirehoseLeaderboardsScanService : BackgroundService
                     break;
                 }
 
-                if (finishingBeatmap is not null && beatmaps.Select(b => b.Id).Contains(finishingBeatmap.Id))
+                if (_finishingBeatmap is not null && beatmaps.Select(b => b.Id).Contains(_finishingBeatmap.Id))
                 {
                     _shouldFinishAfterThisBatch = true;
                 }
@@ -99,10 +97,22 @@ public class FirehoseLeaderboardsScanService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Critical, ex, "Beatmapset seeding service failed!");
-                throw;
+                _logger.Log(LogLevel.Critical, ex, "Firehose leaderboards scan service failed!");
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for firehose leaderboards scan service
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        _finishingBeatmap = await GetFinishingBeatmapAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Finishing beatmap ID: {finishingMapId}", _finishingBeatmap?.Id);
+        await GetStartingDataAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Starting beatmap ID: {startingMapId}", _latestMapId);
     }
     
     /// <summary>

@@ -24,6 +24,8 @@ public class BeatmapsetSeedingService : BackgroundService
     private readonly bool _onlyUpdateMapsetData;
     private bool _shouldFinishAfterThisBatch;
     private string? _cursor;
+
+    private Beatmapset? _finishingBeatmapset;
     
     public BeatmapsetSeedingService(IServiceProvider serviceProvider, ILogger<BeatmapsetSeedingService> logger, ISeedingState seedingState)
     {
@@ -42,11 +44,7 @@ public class BeatmapsetSeedingService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {beatmapsetId}", finishingBeatmapset?.Id);
-        await GetStartingCursorAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Restart cursor for beatmapset seeding: {cursor}", _cursor);
-        
+        await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -59,8 +57,8 @@ public class BeatmapsetSeedingService : BackgroundService
                     break;
                 }
 
-                if (finishingBeatmapset is not null &&
-                    beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
+                if (_finishingBeatmapset is not null &&
+                    beatmapsets.Select(bs => bs.Id).Contains(_finishingBeatmapset.Id))
                 {
                     _shouldFinishAfterThisBatch = true;
                 }
@@ -119,9 +117,21 @@ public class BeatmapsetSeedingService : BackgroundService
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Beatmapset seeding service failed!");
-                throw;
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for beatmapset seeding service
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        _finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {beatmapsetId}", _finishingBeatmapset?.Id);
+        await GetStartingCursorAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Restart cursor for beatmapset seeding: {cursor}", _cursor);
     }
     
     /// <summary>

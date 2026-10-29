@@ -33,7 +33,7 @@ public class RestrictedUserUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _restrictedCheckFinish = DateTime.UtcNow - _lookbackInterval;
+        DoStartupLogic();
         while (!stoppingToken.IsCancellationRequested)
         {
             await StartUserCheckAsync(stoppingToken);
@@ -59,9 +59,17 @@ public class RestrictedUserUpdatesService : BackgroundService
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Restricted user updates service failed!");
-                throw;
+                DoStartupLogic();
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for restricted user updates service
+    /// </summary>
+    private void DoStartupLogic()
+    {
+        _restrictedCheckFinish = DateTime.UtcNow - _lookbackInterval;
     }
 
     /// <summary>

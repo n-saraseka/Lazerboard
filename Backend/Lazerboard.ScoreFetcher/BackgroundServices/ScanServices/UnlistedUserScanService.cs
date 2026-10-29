@@ -20,7 +20,6 @@ public class UnlistedUserScanService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await GetStartingDataAsync(stoppingToken);
-        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -60,7 +59,7 @@ public class UnlistedUserScanService(
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Critical, ex, "Unlisted user scan service failed!");
-                throw;
+                await GetStartingDataAsync(stoppingToken);
             }
         }
     }

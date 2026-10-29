@@ -21,6 +21,8 @@ public class RescanAllMapsService : BackgroundService
     private DateTimeOffset? _latestRankedDate;
     private int? _latestMapsetId;
     
+    private Beatmapset? _finishingBeatmapset;
+    
     public RescanAllMapsService(IServiceProvider serviceProvider, ILogger<RescanAllMapsService> logger, ISeedingState seedingState)
     {
         _serviceProvider = serviceProvider;
@@ -31,11 +33,7 @@ public class RescanAllMapsService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {finishingMapsetId}", finishingBeatmapset?.Id);
-        await GetStartingDataAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Starting mapset ID: {startingMapsetId}", _latestMapsetId);
-        
+        await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -48,8 +46,8 @@ public class RescanAllMapsService : BackgroundService
                     break;
                 }
 
-                if (finishingBeatmapset is not null &&
-                    beatmapsets.Select(bs => bs.Id).Contains(finishingBeatmapset.Id))
+                if (_finishingBeatmapset is not null &&
+                    beatmapsets.Select(bs => bs.Id).Contains(_finishingBeatmapset.Id))
                 {
                     _shouldFinishAfterThisBatch = true;
                 }
@@ -94,10 +92,22 @@ public class RescanAllMapsService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Critical, ex, "Beatmapset seeding service failed!");
-                throw;
+                _logger.Log(LogLevel.Critical, ex, "Rescan service failed!");
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for rescan service
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        _finishingBeatmapset = await GetFinishingBeatmapsetAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Finishing beatmapset ID: {finishingMapsetId}", _finishingBeatmapset?.Id);
+        await GetStartingDataAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Starting mapset ID: {startingMapsetId}", _latestMapsetId);
     }
     
     /// <summary>

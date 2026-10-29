@@ -20,7 +20,7 @@ public class DirectApiService(HttpClient httpClient, ILogger<DirectApiService> l
         var requestMessage = new HttpRequestMessage(method, requestString);
         requestMessage.Content = content;
 
-        await centralizedRateLimiter.WaitForAvailableTokenAsync(true, ct);
+        await centralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
         logger.Log(LogLevel.Information, "Request to osu.direct API: {requestString}", requestString);
         var response = await httpClient.SendAsync(requestMessage, ct);
         

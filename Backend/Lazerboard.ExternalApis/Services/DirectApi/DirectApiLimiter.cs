@@ -22,7 +22,7 @@ public class DirectApiLimiter : ICentralizedRateLimiter
         });
     }
     
-    public async Task WaitForAvailableTokenAsync(bool isHighPriority, CancellationToken ct)
+    public async Task WaitForAvailableTokenAsync(decimal priority, CancellationToken ct)
     {
         using var lease = await _rateLimiter.AcquireAsync(1, ct);
     }

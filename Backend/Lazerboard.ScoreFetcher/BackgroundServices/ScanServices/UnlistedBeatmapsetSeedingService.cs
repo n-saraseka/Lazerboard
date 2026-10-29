@@ -17,22 +17,17 @@ public class UnlistedBeatmapsetSeedingService(
     : BackgroundService
 {
     private int _offset;
-    private int? _latestMapsetId;
+    private Beatmapset? _startingBeatmapset;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var startingBeatmapset = await GetStartingBeatmapsetAsync(stoppingToken);
-        if (startingBeatmapset is not null)
-        {
-            logger.Log(LogLevel.Information, "Starting unlisted beatmapset ID: {beatmapsetId}", startingBeatmapset.Id);
-        }
-        seedingState.IsSeeding = true;
+        await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 var beatmapsets = _offset == 0
-                    ? await GetRelevantBeatmapsetBatchAsync(startingBeatmapset, stoppingToken)
+                    ? await GetRelevantBeatmapsetBatchAsync(_startingBeatmapset, stoppingToken)
                     : await GetNextBeatmapsetBatchAsync(stoppingToken);
                 if (beatmapsets.Count == 0)
                 {
@@ -41,10 +36,10 @@ public class UnlistedBeatmapsetSeedingService(
                 }
                 
                 var ids = beatmapsets.Select(bs => bs.Id).ToList();
-                if (startingBeatmapset is not null && ids.Contains(startingBeatmapset.Id))
+                if (_startingBeatmapset is not null && ids.Contains(_startingBeatmapset.Id))
                 {
-                    beatmapsets = beatmapsets.Skip(ids.IndexOf(startingBeatmapset.Id) + 1).ToList();
-                    startingBeatmapset = null;
+                    beatmapsets = beatmapsets.Skip(ids.IndexOf(_startingBeatmapset.Id) + 1).ToList();
+                    _startingBeatmapset = null;
                 }
 
                 if (beatmapsets.Count == 0) continue; // Could happen if the starting beatmapset is last in relevant batch
@@ -83,10 +78,25 @@ public class UnlistedBeatmapsetSeedingService(
             }
             catch (Exception ex)
             {
-                logger.Log(LogLevel.Critical, ex, "Unlisted leaderboard seeding service failed!");
-                throw;
+                logger.Log(LogLevel.Critical, ex, "Unlisted beatmapset seeding service failed!");
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for unlisted beatmapset seeding service
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        _offset = 0;
+        _startingBeatmapset = await GetStartingBeatmapsetAsync(stoppingToken);
+        if (_startingBeatmapset is not null)
+        {
+            logger.Log(LogLevel.Information, "Starting unlisted beatmapset ID: {beatmapsetId}", _startingBeatmapset.Id);
+        }
+        seedingState.IsSeeding = true;
     }
 
     /// <summary>

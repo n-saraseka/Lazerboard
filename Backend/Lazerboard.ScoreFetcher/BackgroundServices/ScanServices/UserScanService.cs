@@ -18,9 +18,6 @@ public class UserScanService(
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await GetStartingDataAsync(stoppingToken);
-        logger.Log(LogLevel.Information, "Starting user ID: {startingUserId}", _latestUserId);
-        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -52,9 +49,19 @@ public class UserScanService(
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Critical, ex, "User scan service failed!");
-                throw;
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for user scans service
+    /// </summary>
+    /// <param name="stoppingToken"></param>
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        await GetStartingDataAsync(stoppingToken);
+        logger.Log(LogLevel.Information, "Starting user ID: {startingUserId}", _latestUserId);
     }
 
     /// <summary>

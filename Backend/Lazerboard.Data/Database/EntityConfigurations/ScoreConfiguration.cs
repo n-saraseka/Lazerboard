@@ -35,11 +35,11 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => new { s.BeatmapId, s.Mode, s.TotalScore, s.Date });
         // Filter specific indices
         builder
-            .HasIndex(s => new { s.Mode, s.SpeedChange });
+            .HasIndex(s => new { s.Mode, s.SpeedChange, s.UserId });
         builder
-            .HasIndex(s => new { s.Mode, s.Accuracy });
+            .HasIndex(s => new { s.Mode, s.Accuracy, s.UserId });
         builder
-            .HasIndex(s => new { s.Mode, s.PP });
+            .HasIndex(s => new { s.Mode, s.PP, s.UserId });
         builder
             .HasIndex(s => s.ScoreSource);
         builder.ComplexProperty(s => s.Statistics, stats => stats.ToJson());

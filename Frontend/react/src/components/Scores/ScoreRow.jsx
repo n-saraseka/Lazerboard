@@ -1,4 +1,4 @@
-import {modeEnumToString} from "../../utils/beatmap-things.js";
+import {beatmapStatusEnumToText, modeEnumToString, modeEnumToDisplayString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useState} from "react";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
@@ -8,10 +8,15 @@ import ScoreMods from "../Misc/ScoreMods.jsx";
 function ScoreRow({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
     const modeString = modeEnumToString(score.mode);
+    const modeDisplayString = modeEnumToDisplayString(score.mode);
+    const statusString = beatmapStatusEnumToText(score.beatmap.status);
     
     return (<tr className="score-row">
         <td className="score-row-mode">
-            <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}}></div>
+            <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}} title={modeDisplayString}></div>
+        </td>
+        <td className="score-row-status">
+            <div className={`status-icon status-${statusString.toLowerCase()}`} style={{backgroundColor: "white"}} title={statusString}></div>
         </td>
         <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-country">

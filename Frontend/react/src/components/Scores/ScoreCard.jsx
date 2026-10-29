@@ -3,6 +3,7 @@ import {useState} from "react";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import {getPpColor, getRankTierColor, sortedModAcronyms} from "../../utils/score-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
+import StatusWedge from "./StatusWedge.jsx";
 
 function ScoreCard({score, usingStandardized}) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -78,7 +79,10 @@ function ScoreCard({score, usingStandardized}) {
                 </div>
             </div>
         </div>
-        <ModeWedge mode={score.mode}/>
+        <div className="score-mode-status">
+            <ModeWedge mode={score.mode}/>
+            <StatusWedge status={score.beatmap.status}/>
+        </div>
     </div>)
 }
 

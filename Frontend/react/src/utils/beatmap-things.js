@@ -26,6 +26,19 @@ export function modeEnumToString(mode) {
     }
 }
 
+export function modeEnumToDisplayString(mode) {
+    switch (mode) {
+        case 0:
+            return 'osu!';
+        case 1:
+            return 'osu!taiko';
+        case 2:
+            return 'osu!catch';
+        case 3:
+            return 'osu!mania';
+    }
+}
+
 export function beatmapStatusEnumToText(beatmapStatus) {
     switch (beatmapStatus) {
         case -2:

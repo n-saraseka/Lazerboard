@@ -38,9 +38,7 @@ public class BeatmapsetUpdatesService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await GetRestartCursorAsync(stoppingToken);
-        _logger.Log(LogLevel.Information, "Restart cursor for beatmapset updates: {cursor}", _cursor);
-        var shouldUpdate = await ShouldUpdateBeatmapsetsAsync(stoppingToken);
+        var shouldUpdate = await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
             if (!shouldUpdate)
@@ -102,10 +100,22 @@ public class BeatmapsetUpdatesService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Critical, ex, "Leaderboard seeding service failed!");
-                throw;
+                _logger.Log(LogLevel.Critical, ex, "Beatmapset updates service failed!");
+                shouldUpdate = await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for beatmapset updates service
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A <see cref="bool"/> value that represents whether to update beatmapset data or not</returns>
+    private async Task<bool> DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        await GetRestartCursorAsync(stoppingToken);
+        _logger.Log(LogLevel.Information, "Restart cursor for beatmapset updates: {cursor}", _cursor);
+        return await ShouldUpdateBeatmapsetsAsync(stoppingToken);
     }
     
     /// <summary>

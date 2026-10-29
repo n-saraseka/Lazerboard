@@ -77,7 +77,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Unrestricted user updates service failed!");
-                throw;
+                await GetStartingDateTime(stoppingToken);
             }
         }
     }

@@ -21,8 +21,7 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await GetRestartCursorAsync(stoppingToken);
-        logger.Log(LogLevel.Information, "Restart cursor for the firehose: {cursor}", _cursor);
+        await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -74,8 +73,19 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Critical, ex, "Firehose service failed!");
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Do startup logic for the firehose service
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
+    {
+        await GetRestartCursorAsync(stoppingToken);
+        logger.Log(LogLevel.Information, "Restart cursor for the firehose: {cursor}", _cursor);
     }
 
     /// <summary>

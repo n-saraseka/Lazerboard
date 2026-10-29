@@ -69,7 +69,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                     _shouldStartCheck = true;
                     // This is kind of a bandaid fix for lengthy user checks, but it's good enough. Ensures that the checks
                     // occur on a sort-of 2 hour basis, without an actual timer.
-                    var waitInterval = _existingCheckStart - DateTime.UtcNow;
+                    var waitInterval = _existingCheckFinish - DateTime.UtcNow;
                     await Task.Delay(waitInterval, stoppingToken);
                 }
             }

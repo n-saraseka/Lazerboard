@@ -30,7 +30,7 @@ public class OsuApiQueue : IDisposable
         _refillTimer.Elapsed += OnRefillTimerActivated;
         _refillTimer.AutoReset = true;
         _refillTimer.Enabled = true;
-        for (var i = 1; i <= MaxTokens; i++) _finishTimes[i] = 0;
+        for (var i = 1; i <= MaxWeight; i++) _finishTimes[i] = 0;
     }
 
     /// <summary>

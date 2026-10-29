@@ -19,6 +19,11 @@ public static class FilterUtils
             query = query.Where(s => modes.Contains(s.Mode));
         }
 
+        if (command.BeatmapStatus != null)
+        {
+            query = query.Where(s => s.Beatmap.Status == command.BeatmapStatus);
+        }
+
         if (command.ExcludeConverts != null)
         {
             query = command.ExcludeConverts.Value ? query.Where(s => s.IsConvert == false) : query;

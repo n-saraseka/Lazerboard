@@ -18,6 +18,8 @@ public class ScoresController(IScoreRepository scoreRepository,
 {
     private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
     private readonly TimeSpan _rankingTtl = TimeSpan.FromMinutes(30);
+    private readonly BeatmapStatus[] _eligibleStatuses =
+        [BeatmapStatus.Ranked, BeatmapStatus.Approved, BeatmapStatus.Loved];
     
     /// <summary>
     /// Get scores
@@ -41,6 +43,10 @@ public class ScoresController(IScoreRepository scoreRepository,
         if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
+        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
+        {
+            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
+        }
 
         var query = scoreRepository.GetAll();
         
@@ -61,7 +67,8 @@ public class ScoresController(IScoreRepository scoreRepository,
             CountryCode = command.CountryCode,
             SortBy = command.SortBy,
             IsDescending = command.IsDescending,
-            ExcludeConverts = command.ExcludeConverts
+            ExcludeConverts = command.ExcludeConverts,
+            BeatmapStatus = command.BeatmapStatus
         };
         
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
@@ -141,6 +148,10 @@ public class ScoresController(IScoreRepository scoreRepository,
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
+        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
+        {
+            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
+        }
         
         var query = scoreRepository.GetAll();
         
@@ -155,7 +166,8 @@ public class ScoresController(IScoreRepository scoreRepository,
             ExcludeMods = command.ExcludeMods,
             LenientMode = command.LenientMode,
             CountryCode = command.CountryCode,
-            ExcludeConverts = command.ExcludeConverts
+            ExcludeConverts = command.ExcludeConverts,
+            BeatmapStatus = command.BeatmapStatus
         };
 
         var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);

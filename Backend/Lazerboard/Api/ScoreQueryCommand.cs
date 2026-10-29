@@ -79,4 +79,9 @@ public class ScoreQueryCommand
     /// Whether to exclude scores that have the <see cref="Score.IsConvert"/> flag set to true or not
     /// </summary>
     public bool? ExcludeConverts { get; set; }
+    
+    /// <summary>
+    /// The <see cref="BeatmapStatus"/> to filter for. Set to null if you don't want to filter by beatmap status.
+    /// </summary>
+    public BeatmapStatus? BeatmapStatus { get; set; }
 }

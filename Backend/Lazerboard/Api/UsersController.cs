@@ -17,6 +17,8 @@ public class UsersController(IScoreRepository scoreRepository,
     IScoreCacheRepository scoreCacheRepository) : ControllerBase
 {
     private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
+    private readonly BeatmapStatus[] _eligibleStatuses =
+        [BeatmapStatus.Ranked, BeatmapStatus.Approved, BeatmapStatus.Loved];
     
     /// <summary>
     /// Get user scores
@@ -42,6 +44,10 @@ public class UsersController(IScoreRepository scoreRepository,
         if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
+        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
+        {
+            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
+        }
         
         var user = await userRepository.GetByIdWithCountryAsync(userId, ct);
         if (user == null) return NotFound("User not found");
@@ -64,7 +70,8 @@ public class UsersController(IScoreRepository scoreRepository,
             LenientMode = command.LenientMode,
             SortBy = command.SortBy,
             IsDescending = command.IsDescending,
-            ExcludeConverts = command.ExcludeConverts
+            ExcludeConverts = command.ExcludeConverts,
+            BeatmapStatus = command.BeatmapStatus
         };
         query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 

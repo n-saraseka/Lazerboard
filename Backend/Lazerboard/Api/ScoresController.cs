@@ -195,6 +195,10 @@ public class ScoresController(IScoreRepository scoreRepository,
         var rankingAmount = amount ?? 10;
         
         if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
+        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
+        {
+            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
+        }
         
         var query = scoreRepository.GetAll().Where(s => s.TotalScore == 1000000);
 
@@ -203,7 +207,8 @@ public class ScoresController(IScoreRepository scoreRepository,
             ExcludeConverts = command.ExcludeConverts,
             StarRange = command.StarRange,
             CountryCode = command.CountryCode,
-            Modes = [Mode.Mania]
+            Modes = [Mode.Mania],
+            BeatmapStatus = command.BeatmapStatus
         };
         
         var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);

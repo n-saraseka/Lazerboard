@@ -446,6 +446,12 @@ input:focus, select:focus {
     height: 1em;
 }
 
+.score-row-status .status-icon {
+    width: 1em;
+    height: 1em;
+    background-color: white;
+}
+
 .score-row-mods .mods {
     justify-content: flex-start;
 }

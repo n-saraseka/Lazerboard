@@ -93,7 +93,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
     return (<>
         <div className="beatmapset-modes">
             <div className="beatmapset-card" style={
-                {background: `url("https://assets.ppy.sh/beatmaps/${beatmapset.id}/covers/cover@2x.jpg") center, rgba(0, 0, 0, 0.7)`}
+                {background: `url("https://assets.ppy.sh/beatmaps/${beatmapset.id}/covers/cover@2x.jpg") center / cover, rgba(0, 0, 0, 0.7)`}
             }>
                 <h1><a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}#${modeEnumToString(currentMode)}`}>{`${beatmapset.artist} - ${beatmapset.title}`}</a></h1>
                 <MappedBy user={beatmapset.user}/>

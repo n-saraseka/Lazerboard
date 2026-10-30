@@ -308,6 +308,8 @@ input:focus, select:focus {
 .options-wrapper {
     /* overflow: hidden; */
     max-height: 1000px;
+    max-width: 100%;
+    overflow-x: auto;
     /* transition: max-height 1s ease-in-out; */
 }
 
@@ -832,6 +834,7 @@ body {
     position: relative;
     display: inline-block;
     width: 250px;
+    max-width: 100%;
 }
 
 .selector-countries {
@@ -841,7 +844,7 @@ body {
 .selector-items {
     background-color: white;
     position: absolute;
-    max-height: 200px;
+    max-height: 150px;
     width: 100%;
     z-index: 100;
     overflow-x: auto;
@@ -1075,6 +1078,12 @@ body {
     }
 }
 
+@media (max-width: 800px) {
+    .options {
+        font-size: 0.9em;
+    }
+}
+
 @media (max-width: 650px) {
     .scores {
         grid-template-columns: repeat(1, 1fr);
@@ -1101,16 +1110,28 @@ body {
     .footer-links li::after {
         content: "";
     }
-}
-
-@media (max-width: 650px) {
     footer {
         gap: 4em;
     }
+    .options {
+        font-size: 0.75em;
+    }
+    .selector-countries {
+        width: 300px;
+    }
+    .selector-items {
+        max-height: 100px;
+    }
 }
 
-@media (max-width: 450px) {
+@media (max-width: 500px) {
     footer {
         gap: 3em;
+    }
+    .options {
+        font-size: 0.7em;
+    }
+    .selector-items {
+        max-height: 100px;
     }
 }

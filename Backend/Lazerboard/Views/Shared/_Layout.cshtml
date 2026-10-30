@@ -20,6 +20,9 @@
             <img src="/images/icon-dark.png" alt="Logo" class="logo-image">
             <strong>Lazerboard</strong>
         </a>
+        <div class="burger-icon active"></div>
+    </div>
+    <div class="navigation-main">
         <ul class="navigation">
             <li>
                 <a asp-controller="General" asp-action="Index" class="@(ViewData["ActivePage"] == "home" ? "active" : "inactive")">Home page</a>
@@ -34,8 +37,8 @@
                 <a asp-controller="ScoreRanking" asp-action="ManiaMillions" class="@(ViewData["ActivePage"] == "maniamillions" ? "active" : "inactive")">Mania millions</a>
             </li>
         </ul>
+        <div class="react-app header-search" data-component="UserSearchBar"></div>
     </div>
-    <div class="react-app" data-component="UserSearchBar"></div>
 </header>
 <div class="container">
     @RenderBody()
@@ -57,5 +60,6 @@
     </ul>
 </footer>
 <script type="module" src="/react/assets/index.js"></script>
+<script src="/scripts/header.js"></script>
 </body>
 </html>

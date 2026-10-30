@@ -14,6 +14,11 @@ lazer.board {
         root * /srv/www
         file_server
     }
+    
+    handle /scripts/* {
+        root * /srv/www
+        file_server
+    }
 
     handle /styles/* {
         root * /srv/www

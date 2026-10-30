@@ -12,3 +12,4 @@ COPY --from=react app/build /srv/www/react
 COPY ./images /srv/www/images/
 COPY ./favicon /srv/www/favicon/
 COPY ./styles /srv/www/styles/
+COPY ./scripts /srv/www/scripts/

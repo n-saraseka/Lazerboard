@@ -385,7 +385,7 @@ input:focus, select:focus {
 
 .scores {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     grid-column-gap: 1em;
     grid-row-gap: 1em;
     font-size: 0.8em;
@@ -964,7 +964,25 @@ body {
 }
 
 .status-icon.status-loved {
-    mask-image: url("../../images/loved.svg");
-    -webkit-mask-image: url("../../images/loved.svg");
+    mask-image: url("../images/loved.svg");
+    -webkit-mask-image: url("../images/loved.svg");
     background-color: #394246;
+}
+
+@media (max-width: 1280px) {
+    .scores {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 950px) {
+    .scores {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 650px) {
+    .scores {
+        grid-template-columns: repeat(1, 1fr);
+    }
 }

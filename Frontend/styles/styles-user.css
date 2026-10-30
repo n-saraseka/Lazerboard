@@ -76,6 +76,9 @@
 }
 
 .chart-wrapper {
+    position: relative;
+    min-width: 0;
+    height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,4 +90,26 @@
 
 .card-stats-column.collapsed {
     display: none;
+}
+
+@media (max-width: 1280px) {
+    .card-stats {
+        flex-direction: column;
+    }
+    .card-stats .card-stats-column:first-child, .card-stats .card-stats-column:last-child {
+        flex: 1 1;
+    }
+    .card-stats .card-stats-column {
+        align-self: center;
+    }
+
+    .card-stats .card-stats-column:last-child {
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .player-stats {
+        grid-template-columns: 1fr;
+    }
 }

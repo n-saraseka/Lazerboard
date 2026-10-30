@@ -234,6 +234,10 @@ input:focus, select:focus {
     border-radius: 1em;
 }
 
+.component-container .table-wrapper {
+    max-width: 100%;
+}
+
 .pages {
     display: flex;
     list-style-type: none;

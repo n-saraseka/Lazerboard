@@ -53,7 +53,6 @@ public class UsersController(IScoreRepository scoreRepository,
         if (user == null) return NotFound("User not found");
         
         var query = scoreRepository.GetByUserId(userId);
-        var countQuery = query;
         
         var targetStartDate = command.DateRange[0] ?? null;
         var targetEndDate = command.DateRange[1] ?? null;
@@ -84,7 +83,7 @@ public class UsersController(IScoreRepository scoreRepository,
 
         if (scoresResponseCache is null)
         {
-            var count = await countQuery.CountAsync(ct);
+            var count = await query.CountAsync(ct);
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
             

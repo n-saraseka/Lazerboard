@@ -1061,11 +1061,11 @@ body {
     }
     .burger-icon {
         display: block;
-        width: 1.2em;
-        height: 1.2em;
+        width: 1.5em;
+        height: 1.5em;
     }
     .logo-image {
-        height: 1.1em;
+        height: 1.5em;
     }
     header .react-app {
         width: 100%;

@@ -1,15 +1,15 @@
 .user-card {
     display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
     gap: 1em;
     background-color: rgb(30, 30, 30);
     padding: 1em;
     border-radius: 1em;
 }
 
-.user-card-row {
+.user-card-column {
     display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     gap: 1em;
 }
 
@@ -42,6 +42,13 @@
     font-weight: bold;
 }
 
+.user-card .user-avatar {
+    width: 5em;
+    height: 5em;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.5);
+}
+
 .card-stats {
     display: flex;
     align-items: flex-start;
@@ -59,7 +66,7 @@
 }
 
 .card-stats .card-stats-column:last-child {
-    flex: 4 1;
+    flex: 3 1;
     align-items: center;
     justify-content: center;
 }

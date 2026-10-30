@@ -254,7 +254,7 @@ input:focus, select:focus {
 
 .container {
     flex-grow: 1;
-    width: 80%;
+    width: calc(80% - 2em);
     background-color: rgb(25, 25, 25);
     padding: 1em;
     border-radius: 1em;
@@ -1014,6 +1014,9 @@ body {
     .logo-image {
         height: 1.5em;
     }
+    .container {
+        width: calc(90% - 2em);
+    }
 }
 
 @media (max-width: 900px) {
@@ -1064,5 +1067,9 @@ body {
 @media (max-width: 650px) {
     .scores {
         grid-template-columns: repeat(1, 1fr);
+    }
+    .container {
+        width: calc(100% - 2em);
+        border-radius: 0;
     }
 }

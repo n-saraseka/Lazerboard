@@ -43,6 +43,8 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
         builder
             .HasIndex(s => new { s.Mode, s.PP, s.UserId });
         builder
+            .HasIndex(s => new { s.BeatmapId, s.UserId });
+        builder
             .HasIndex(s => s.ScoreSource);
         builder.ComplexProperty(s => s.Statistics, stats => stats.ToJson());
     }

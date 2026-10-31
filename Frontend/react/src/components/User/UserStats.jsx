@@ -101,6 +101,7 @@ function UserStats({data, loadingData, errorData}) {
                             },
                             scales: gridOptions,
                             responsive: true,
+                            maintainAspectRatio: false,
                         }}/>
                 }
             </div>
@@ -119,7 +120,8 @@ function UserStats({data, loadingData, errorData}) {
                                     }
                                 },
                                 scales: gridOptions,
-                                responsive: true
+                                responsive: true,
+                                maintainAspectRatio: false,
                             }}/>
                 }
             </div>
@@ -141,7 +143,8 @@ function UserStats({data, loadingData, errorData}) {
                                     }
                                 },
                                 scales: gridOptions,
-                                responsive: true
+                                responsive: true,
+                                maintainAspectRatio: false,
                             }}/>
                 }
             </div>
@@ -163,7 +166,8 @@ function UserStats({data, loadingData, errorData}) {
                                     }
                                 },
                                 scales: gridOptions,
-                                responsive: true
+                                responsive: true,
+                                maintainAspectRatio: false,
                             }}/>
                 }
             </div>

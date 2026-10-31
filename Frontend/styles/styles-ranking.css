@@ -18,3 +18,15 @@
     background-color: rgb(180, 180, 180);
     cursor: pointer;
 }
+
+@media (max-width: 600px) {
+    .user-ranking {
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 450px) {
+    .user-ranking {
+        font-size: 1em;
+    }
+}

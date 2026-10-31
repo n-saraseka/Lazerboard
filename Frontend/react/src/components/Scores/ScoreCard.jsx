@@ -10,7 +10,7 @@ function ScoreCard({score, usingStandardized}) {
     
     return (<div className="score-card">
         <div className="score" style={
-            {background: `url("https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg") center, rgba(0, 0, 0, 0.7)`}
+            {background: `url("https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg") center / cover, rgba(0, 0, 0, 0.7)`}
         }>
             <div className="scorecard-row title-row">
                 <div className="scorecard-column title-column">

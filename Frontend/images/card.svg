@@ -1,23 +1,8 @@
-<?xml version="1.0" ?>
-
-<!--
-    Title: Note Document Paper Sheet
-    Author: AkashRajDahal
-    Source: https://www.svgrepo.com/svg/390665/note-document-paper-sheet
-    License: CC-BY
--->
-
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg fill="#000000" width="800px" height="800px" viewBox="0 0 31.412 31.412" xmlns="http://www.w3.org/2000/svg">
-
-<g transform="translate(-418.052 -322.633)">
-
-<path d="M445.517,324.633a1.949,1.949,0,0,1,1.947,1.947V350.1a1.949,1.949,0,0,1-1.947,1.947H422a1.95,1.95,0,0,1-1.947-1.947V326.58A1.949,1.949,0,0,1,422,324.633h23.518m0-2H422a3.947,3.947,0,0,0-3.947,3.947V350.1A3.947,3.947,0,0,0,422,354.045h23.518a3.947,3.947,0,0,0,3.947-3.947V326.58a3.947,3.947,0,0,0-3.947-3.947Z"/>
-
-<path d="M441.782,335.587H425.971a1,1,0,1,1,0-2h15.811a1,1,0,0,1,0,2Z"/>
-
-<path d="M441.782,343.493H425.971a1,1,0,1,1,0-2h15.811a1,1,0,0,1,0,2Z"/>
-
-</g>
-
+<svg 
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ width="1026px" height="844px">
+<path fill-rule="evenodd"  stroke="rgb(0, 0, 0)" stroke-width="80px" stroke-linecap="butt" stroke-linejoin="miter" fill="none"
+ d="M100.240,80.528 L1005.760,80.528 C1016.806,80.528 1025.760,89.482 1025.760,100.528 L1025.760,823.472 C1025.760,834.518 1016.806,843.472 1005.760,843.472 L100.240,843.472 C89.194,843.472 80.240,834.518 80.240,823.472 L80.240,100.528 C80.240,89.482 89.194,80.528 100.240,80.528 Z" transform="translate(-41 -40)"/>
+<path fill-rule="evenodd"  fill="rgb(0, 0, 0)" d="M0.755,0.642 L888.267,0.642 L888.267,270.673 L0.755,270.673 L0.755,0.642 Z" transform="translate(69 533) scale(0.990986 1)"/>
 </svg>

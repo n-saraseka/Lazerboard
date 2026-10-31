@@ -8,8 +8,8 @@ RUN npm run build
 
 # Copy all artifacts to caddy
 FROM caddy:2-alpine AS caddy
-COPY --from=react app/build /srv/www/react
-COPY ./images /srv/www/images/
-COPY ./favicon /srv/www/favicon/
-COPY ./styles /srv/www/styles/
-COPY ./scripts /srv/www/scripts/
+COPY --from=react app/build /srv/www/static/react
+COPY ./images /srv/www/static/images/
+COPY ./favicon /srv/www/static/favicon/
+COPY ./styles /srv/www/static/styles/
+COPY ./scripts /srv/www/static/scripts/

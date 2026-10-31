@@ -62,6 +62,7 @@ services:
     volumes:
       - ./logs/backend:/app/Logs
       - ./keys:/root/.aspnet/DataProtection-Keys
+      - caddy-assets:/caddy-assets
     restart: unless-stopped
     networks:
       - main
@@ -76,6 +77,7 @@ services:
       - ./Caddy/data:/data
       - ./Caddy/config:/config
       - ./Caddy/dev.Caddyfile:/etc/caddy/Caddyfile
+      - caddy-assets:/srv/www/
     ports:
       - "80:80"
       - "443:443"

@@ -10,6 +10,7 @@ using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using Serilog;
 using StackExchange.Redis;
 
@@ -128,6 +129,10 @@ if (app.Environment.IsProduction())
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
 }
+
+app.Environment.WebRootFileProvider = new CompositeFileProvider(
+    app.Environment.WebRootFileProvider,
+    new PhysicalFileProvider("/caddy-assets"));
 
 app.UseRateLimiter();
 

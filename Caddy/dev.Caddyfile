@@ -13,6 +13,7 @@ lazer.board {
     handle /static/* {
         root * /srv/www
         file_server
+        header Cache-Control "no-cache"
     }
     
     handle {

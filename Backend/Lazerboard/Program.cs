@@ -130,10 +130,6 @@ if (app.Environment.IsProduction())
     });
 }
 
-app.Environment.WebRootFileProvider = new CompositeFileProvider(
-    app.Environment.WebRootFileProvider,
-    new PhysicalFileProvider("/caddy-assets"));
-
 app.UseRateLimiter();
 
 // Configure the HTTP request pipeline.

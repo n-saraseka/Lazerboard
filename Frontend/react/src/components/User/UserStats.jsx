@@ -40,12 +40,13 @@ function UserStats({data, loadingData, errorData}) {
     }
     
     if (data.ranks !== null) {
+        const nonZeroData = data.ranks.filter((item) => item.count > 0);
         rankStats = {
-            labels: data.ranks.map((item) => `Top ${item.rankBound}`),
+            labels: nonZeroData.map((item) => `Top ${item.rankBound}`),
             datasets: [{
                 label: 'Count',
-                data: data.ranks.map((item) => item.count),
-                backgroundColor: data.ranks.map((item) => getRankTierColor(item.rankBound))
+                data: nonZeroData.map((item) => item.count),
+                backgroundColor: nonZeroData.map((item) => getRankTierColor(item.rankBound))
             }],
         }
     }

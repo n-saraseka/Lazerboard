@@ -360,6 +360,8 @@ input:focus, select:focus {
     mask-repeat: no-repeat;
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
     background-color: rgb(35, 35, 35);
 }
 
@@ -726,6 +728,8 @@ input:focus, select:focus {
     mask-repeat: no-repeat;
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
 }
 
 .score-mode > .mode-icon {
@@ -779,6 +783,8 @@ input:focus, select:focus {
     mask-repeat: no-repeat;
     -webkit-mask-size: cover;
     -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
     animation: spin 1.5s linear infinite;
 }
 
@@ -811,6 +817,8 @@ body {
     mask-repeat: no-repeat;
     -webkit-mask-size: cover;
     -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
 }
 
 .selector-top, .selector-items  {
@@ -995,6 +1003,8 @@ body {
     mask-repeat: no-repeat;
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
     mask-image: url("../images/burger-menu.svg");
     -webkit-mask-image: url("../images/burger-menu.svg");
     background-color: white;

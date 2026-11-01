@@ -1,6 +1,6 @@
 import "chart.js/auto";
 import { Line, Bar } from 'react-chartjs-2'
-import { defaults } from 'chart.js'
+import { defaults, Chart } from 'chart.js'
 import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
 import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
@@ -23,6 +23,38 @@ function UserStats({data, loadingData, errorData}) {
             }
         }
     }
+    
+    const responsiveFontPlugin = {
+        id: 'responsivefont',
+        beforeLayout: (chart) => {
+            const chartWidth = chart.width;
+            const fontSize = 16;
+            const fontSizeTooltip = 14;
+            const baseWidth = 600;
+            const widthRatio = chartWidth / baseWidth;
+            
+            const calculateFontSize = (baseSize) => {
+                return Math.floor(baseSize * widthRatio);
+            }
+
+            // Because chart.js is scuffed and won't instantiate these if there are no custom options specified.
+            chart.options.scales.x.ticks.font = {};
+            chart.options.scales.y.ticks.font = {};
+            chart.options.plugins.legend.labels.font = {};
+            chart.options.plugins.title.font = {};
+            chart.options.plugins.tooltip.titleFont = {};
+            chart.options.plugins.tooltip.bodyFont = {};
+            
+            chart.options.scales.x.ticks.font.size = calculateFontSize(fontSize);
+            chart.options.scales.y.ticks.font.size = calculateFontSize(fontSize);
+            chart.options.plugins.legend.labels.font.size = calculateFontSize(fontSize);
+            chart.options.plugins.title.font.size = calculateFontSize(fontSize);
+            chart.options.plugins.tooltip.titleFont.size = calculateFontSize(fontSizeTooltip);
+            chart.options.plugins.tooltip.bodyFont.size = calculateFontSize(fontSizeTooltip);
+        }
+    };
+    
+    Chart.register(responsiveFontPlugin);
     
     let history, rankStats, starStats, speedStats;
     

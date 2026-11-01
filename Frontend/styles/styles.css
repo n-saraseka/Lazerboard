@@ -407,7 +407,7 @@ input:focus, select:focus {
     grid-template-columns: repeat(4, 1fr);
     grid-column-gap: 1em;
     grid-row-gap: 1em;
-    font-size: 0.9em;
+    font-size: 0.8em;
     overflow-wrap: anywhere;
 }
 
@@ -1075,6 +1075,9 @@ body {
     .logo strong {
         font-size: 1.25em;
     }
+    .scores {
+        font-size: 0.9em;
+    }
 }
 
 @media (max-width: 800px) {
@@ -1092,6 +1095,9 @@ body {
 @media (max-width: 650px) {
     .scores {
         grid-template-columns: repeat(1, 1fr);
+    }
+    .scores {
+        font-size: 1em;
     }
     footer {
         flex-direction: row;

@@ -27,9 +27,14 @@ function ScoreRow({score, usingStandardized}) {
             </a>
         </td>
         <td className="score-beatmap">
-            <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
-                {`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} [${score.beatmap.difficultyName}]`}
-            </a>
+            <div className="score-beatmap-container">
+                <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
+                    {`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title}`}
+                </a>
+                <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
+                    {`[${score.beatmap.difficultyName}]`}
+                </a>
+            </div>
         </td>
         <td className="score-row-country">
             <img

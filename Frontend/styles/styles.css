@@ -622,6 +622,7 @@ input:focus, select:focus {
     font-weight: 350;
     border-collapse: collapse;
     white-space: nowrap;
+    width: 100%;
 }
 
 .scores-table thead {

@@ -307,7 +307,6 @@ input:focus, select:focus {
 
 .options-wrapper {
     /* overflow: hidden; */
-    max-height: 1000px;
     max-width: 100%;
     overflow-x: auto;
     /* transition: max-height 1s ease-in-out; */
@@ -1027,7 +1026,7 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
     body {
-        font-size: 1.2em;
+        font-size: 1.5em;
     }
     header, .navigation-main, .navigation {
         flex-direction: column;
@@ -1041,11 +1040,11 @@ body {
     }
     .burger-icon {
         display: block;
-        width: 1.5em;
-        height: 1.5em;
+        width: 2em;
+        height: 2em;
     }
     .logo-image {
-        height: 1.5em;
+        height: 1.75em;
     }
     header .react-app {
         width: 100%;
@@ -1056,14 +1055,24 @@ body {
     .search-results {
         width: calc(100% - 2em);
     }
-}
-
-@media (max-width: 1000px) {
     .container {
-        width: calc(90% - 2em);
+        width: calc(100% - 2em);
+        border-radius: 0;
     }
-    .options {
-        font-size: 0.8em;
+    .component-container {
+        width: calc(100% - 2em);
+    }
+    .options-wrapper {
+        width: 100%;
+    }
+    .selector-mods {
+        width: 300px;
+    }
+    .selector-countries {
+        width: 600px;
+    }
+    .logo strong {
+        font-size: 1.25em;
     }
 }
 
@@ -1074,15 +1083,14 @@ body {
     .selector-items {
         max-height: 100px;
     }
+    .options {
+        font-size: 0.9em;
+    }
 }
 
 @media (max-width: 650px) {
     .scores {
         grid-template-columns: repeat(1, 1fr);
-    }
-    .container {
-        width: calc(100% - 2em);
-        border-radius: 0;
     }
     footer {
         flex-direction: row;
@@ -1104,9 +1112,6 @@ body {
     }
     footer {
         gap: 4em;
-    }
-    .options {
-        font-size: 0.7em;
     }
 }
 

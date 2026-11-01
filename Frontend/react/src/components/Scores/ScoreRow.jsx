@@ -19,6 +19,18 @@ function ScoreRow({score, usingStandardized}) {
             <div className={`status-icon status-${statusString.toLowerCase()}`} style={{backgroundColor: "white"}} title={statusString}></div>
         </td>
         <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
+        <td className="score-row-map-image">
+            <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
+                <img src={`https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg`} alt="Beatmap image" onError={(event) => {
+                    event.target.style.display = 'none';
+                }}/>
+            </a>
+        </td>
+        <td className="score-beatmap">
+            <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
+                {`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} [${score.beatmap.difficultyName}]`}
+            </a>
+        </td>
         <td className="score-row-country">
             <img
                 src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}
@@ -51,18 +63,6 @@ function ScoreRow({score, usingStandardized}) {
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
         <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
-        <td className="score-row-map-image">
-            <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
-                <img src={`https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg`} alt="Beatmap image" onError={(event) => {
-                    event.target.style.display = 'none';
-                }}/>
-            </a>
-        </td>
-        <td className="score-beatmap">
-            <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
-                {`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} [${score.beatmap.difficultyName}]`}
-            </a>
-        </td>
     </tr>)
 }
 

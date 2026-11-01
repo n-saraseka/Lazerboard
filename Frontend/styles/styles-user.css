@@ -109,13 +109,9 @@
     .card-stats .card-stats-column {
         align-self: center;
     }
-
     .card-stats .card-stats-column:last-child {
         width: 100%;
     }
-}
-
-@media (max-width: 900px) {
     .player-stats {
         grid-template-columns: 1fr;
     }

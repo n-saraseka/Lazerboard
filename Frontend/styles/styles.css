@@ -407,7 +407,8 @@ input:focus, select:focus {
     grid-template-columns: repeat(4, 1fr);
     grid-column-gap: 1em;
     grid-row-gap: 1em;
-    font-size: 0.8em;
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
 }
 
 .score-card {

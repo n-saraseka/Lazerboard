@@ -115,4 +115,7 @@
     .player-stats {
         grid-template-columns: 1fr;
     }
+    .chart-wrapper {
+        height: 450px;
+    }
 }

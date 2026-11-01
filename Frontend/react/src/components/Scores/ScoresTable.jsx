@@ -9,6 +9,7 @@ function ScoresTable({scores, usingStandardized}) {
                     <td></td>
                     <td></td>
                     <td>Rank</td>
+                    <td colSpan="2">Beatmap</td>
                     <td colSpan="2">Player</td>
                     <td>Date</td>
                     <td>PP</td>
@@ -17,7 +18,6 @@ function ScoresTable({scores, usingStandardized}) {
                     <td>Combo</td>
                     <td>Accuracy</td>
                     <td>Misses</td>
-                    <td colSpan="2">Beatmap</td>
                 </tr>
                 </thead>
                 <tbody>

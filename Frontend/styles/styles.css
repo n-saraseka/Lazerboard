@@ -472,10 +472,6 @@ input:focus, select:focus {
     background-color: white;
 }
 
-.score-row-mods .mods {
-    justify-content: flex-start;
-}
-
 .score-row-mods .mod {
     font-weight: 400;
 }
@@ -561,6 +557,7 @@ input:focus, select:focus {
 
 .scores-table .mods {
     justify-content: flex-start;
+    flex-wrap: nowrap;
 }
 
 .mods .mod {
@@ -622,9 +619,9 @@ input:focus, select:focus {
 }
 
 .scores-table {
-    width: 100%;
     font-weight: 350;
     border-collapse: collapse;
+    white-space: nowrap;
 }
 
 .scores-table thead {
@@ -633,6 +630,18 @@ input:focus, select:focus {
 
 .scores-table td {
     padding: 0.1em 0.3em 0.1em 0.3em;
+}
+
+.score-beatmap-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.score-beatmap-container a {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .score-row-map-image img {

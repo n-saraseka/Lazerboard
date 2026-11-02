@@ -28,8 +28,8 @@ function UserStats({data, loadingData, errorData}) {
         id: 'responsivefont',
         beforeLayout: (chart) => {
             const chartWidth = chart.width;
-            const fontSize = 16;
-            const fontSizeTooltip = 14;
+            const fontSize = 18;
+            const fontSizeTooltip = 16;
             const baseWidth = 600;
             const widthRatio = chartWidth / baseWidth;
             

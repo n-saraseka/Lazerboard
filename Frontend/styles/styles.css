@@ -1095,6 +1095,24 @@ body {
     .scores {
         font-size: 1em;
     }
+    footer {
+        flex-direction: row;
+        gap: 5em;
+        justify-content: center;
+        align-items: flex-start;
+    }
+    .meta-stuff {
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+    .footer-links {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+    .footer-links li::after {
+        content: "";
+    }
 }
 
 @media (max-width: 800px) {
@@ -1115,27 +1133,6 @@ body {
     }
     .scores {
         font-size: 1em;
-    }
-    footer {
-        flex-direction: row;
-        gap: 5em;
-        justify-content: center;
-        align-items: flex-start;
-    }
-    .meta-stuff {
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-    .footer-links {
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-    .footer-links li::after {
-        content: "";
-    }
-    footer {
-        gap: 4em;
     }
 }
 

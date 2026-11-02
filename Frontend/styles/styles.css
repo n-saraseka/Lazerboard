@@ -1039,6 +1039,12 @@ body {
     body {
         font-size: 1.5em;
     }
+    header {
+        font-size: 1.3em;
+    }
+    .collapse-button {
+        font-size: 1.2em;
+    }
     header, .navigation-main, .navigation {
         flex-direction: column;
         justify-content: flex-start;
@@ -1086,7 +1092,7 @@ body {
         font-size: 1.25em;
     }
     .scores {
-        font-size: 0.9em;
+        font-size: 1em;
     }
 }
 

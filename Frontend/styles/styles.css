@@ -496,6 +496,7 @@ input:focus, select:focus {
 
 .scorecard-row .scorecard-column:last-child {
     align-items: flex-end;
+    text-align: right;
 }   
 
 .scorecard-column {

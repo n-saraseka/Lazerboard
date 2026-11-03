@@ -17,6 +17,7 @@ public class UsersController(IScoreRepository scoreRepository,
     IScoreCacheRepository scoreCacheRepository) : ControllerBase
 {
     private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _statsTtl = TimeSpan.FromMinutes(5);
     private readonly BeatmapStatus[] _eligibleStatuses =
         [BeatmapStatus.Ranked, BeatmapStatus.Approved, BeatmapStatus.Loved];
     
@@ -165,72 +166,90 @@ public class UsersController(IScoreRepository scoreRepository,
             BeatmapStatus = command.BeatmapStatus
         };
         
-        var filterText = FilterUtils.GetFilterText(filteredCommand);
-        filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
-        var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
-        
-        var context = scoreRepository.GetDbContext();
-        
-        // The score counts history
-        var historySql = $@"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count
-                    FROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM {tableString}
-                    WHERE user_id = {userId}{filterText}
-                    GROUP BY month
-                    ORDER BY month ASC)";
-        var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql);
-        var history = await historyQuery.ToListAsync(ct);
-        
-        // The rank distribution
-        var ranksSql = $@"SELECT i.rank_bound,
-                    CASE i.rank_bound
-                        WHEN 1   THEN top1  WHEN 3   THEN top3  WHEN 8   THEN top8
-                        WHEN 25  THEN top25 WHEN 50  THEN top50 WHEN 100 THEN top100
-                    END AS count
-                    FROM (
-                        SELECT
-                        COUNT(*) FILTER (WHERE s.rank <= 1)   AS top1,
-                        COUNT(*) FILTER (WHERE s.rank <= 3)   AS top3,
-                        COUNT(*) FILTER (WHERE s.rank <= 8)   AS top8,
-                        COUNT(*) FILTER (WHERE s.rank <= 25)  AS top25,
-                        COUNT(*) FILTER (WHERE s.rank <= 50)  AS top50,
-                        COUNT(*) FILTER (WHERE s.rank <= 100) AS top100
-                    FROM {tableString}
-                    WHERE user_id = {userId}{filterText}
-                    ) rank_distribution
-                    CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
-                    ORDER BY i.rank_bound";
-        var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql);
-        var rankStats = await ranksQuery.ToListAsync(ct);
-        
-        // The star distribution
-        tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, true);
-        var starSql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
-                    FROM {tableString}
-                    WHERE user_id = {userId}{filterText}
-                    GROUP BY sr_bracket
-                    ORDER BY sr_bracket";
-        var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql);
-        var starStats = await starsQuery.ToListAsync(ct);
-        
-        // The speed distribution
-        tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
-        var speedSql = $@"SELECT CASE WHEN speed_change < 1
-                    THEN FLOOR(speed_change * 20) / 20
-                    ELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count
-                    FROM {tableString}
-                    WHERE user_id = {userId} AND speed_change IS NOT NULL{filterText}
-                    GROUP BY speed_bracket
-                    ORDER BY speed_bracket";
-        var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql);
-        var speedStats = await speedQuery.ToListAsync(ct);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
+        var cacheKey = ResponseCachingUtils.GetUserStatsKeyForCache(commandHash, userId);
 
-        return Ok(new
+        var userStatsCache = await scoreCacheRepository.GetSerializedResponseAsync(cacheKey);
+
+        if (userStatsCache is null)
         {
-            History = history,
-            RankDistribution = rankStats,
-            StarsDistribution = starStats,
-            SpeedDistribution = speedStats,
-        });
+            var filterText = FilterUtils.GetFilterText(filteredCommand);
+            filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
+            var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+            
+            var context = scoreRepository.GetDbContext();
+            
+            // The score counts history
+            var historySql = $@"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count
+                        FROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM {tableString}
+                        WHERE user_id = {userId}{filterText}
+                        GROUP BY month
+                        ORDER BY month ASC)";
+            var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql);
+            var history = await historyQuery.ToListAsync(ct);
+            
+            // The rank distribution
+            var ranksSql = $@"SELECT i.rank_bound,
+                        CASE i.rank_bound
+                            WHEN 1   THEN top1  WHEN 3   THEN top3  WHEN 8   THEN top8
+                            WHEN 25  THEN top25 WHEN 50  THEN top50 WHEN 100 THEN top100
+                        END AS count
+                        FROM (
+                            SELECT
+                            COUNT(*) FILTER (WHERE s.rank <= 1)   AS top1,
+                            COUNT(*) FILTER (WHERE s.rank <= 3)   AS top3,
+                            COUNT(*) FILTER (WHERE s.rank <= 8)   AS top8,
+                            COUNT(*) FILTER (WHERE s.rank <= 25)  AS top25,
+                            COUNT(*) FILTER (WHERE s.rank <= 50)  AS top50,
+                            COUNT(*) FILTER (WHERE s.rank <= 100) AS top100
+                        FROM {tableString}
+                        WHERE user_id = {userId}{filterText}
+                        ) rank_distribution
+                        CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
+                        ORDER BY i.rank_bound";
+            var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql);
+            var rankStats = await ranksQuery.ToListAsync(ct);
+            
+            // The star distribution
+            tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, true);
+            var starSql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
+                        FROM {tableString}
+                        WHERE user_id = {userId}{filterText}
+                        GROUP BY sr_bracket
+                        ORDER BY sr_bracket";
+            var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql);
+            var starStats = await starsQuery.ToListAsync(ct);
+            
+            // The speed distribution
+            tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+            var speedSql = $@"SELECT CASE WHEN speed_change < 1
+                        THEN FLOOR(speed_change * 20) / 20
+                        ELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count
+                        FROM {tableString}
+                        WHERE user_id = {userId} AND speed_change IS NOT NULL{filterText}
+                        GROUP BY speed_bracket
+                        ORDER BY speed_bracket";
+            var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql);
+            var speedStats = await speedQuery.ToListAsync(ct);
+
+            var statsResponse = new UserStatsResponse
+            {
+                History = history,
+                RankDistribution = rankStats,
+                StarsDistribution = starStats,
+                SpeedDistribution = speedStats
+            };
+            
+            var serializedString = ResponseCachingUtils.GetSerializedUserStatsResponse(statsResponse);
+            await scoreCacheRepository.SetSerializedResponseAsync(cacheKey, serializedString, _statsTtl);
+
+            return Ok(statsResponse);
+        }
+        else
+        {
+            var statsResponse = ResponseCachingUtils.GetDeserializedUserStatsResponse(userStatsCache);
+            return Ok(statsResponse);
+        }
     }
 
     /// <summary>

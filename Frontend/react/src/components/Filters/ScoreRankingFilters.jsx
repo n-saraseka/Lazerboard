@@ -179,15 +179,15 @@ function ScoreRankingFilters({isMania, filters, setFilters, countries}) {
                             <td>Speed:</td>
                             <td>
                                 <div className="filter-container">
-                                    <label htmlFor="rateMin">From: <input id="rateMin" name="rateMin" type="number" step={1}
-                                                                          min={0} max={2} value={filters.rateRange.min} onChange={(e) => {
+                                    <label htmlFor="rateMin">From: <input id="rateMin" name="rateMin" type="number" step={0.05}
+                                                                          min={0.1} max={2} value={filters.rateRange.min} onChange={(e) => {
                                         const allFilters = {...filters, 
                                             rateRange: {...filters.rateRange, min: e.target.value === '' ? null : e.target.value}};
                                         setFilters(allFilters);
                                     }}/>
                                     </label>
-                                    <label htmlFor="rateMax">to: <input id="rateMax" name="rateMax" type="number" step={1}
-                                                                        min={0} max={2} value={filters.rateRange.max} onChange={(e) => {
+                                    <label htmlFor="rateMax">to: <input id="rateMax" name="rateMax" type="number" step={0.05}
+                                                                        min={0.1} max={2} value={filters.rateRange.max} onChange={(e) => {
                                         const allFilters = {...filters, 
                                             rateRange: {...filters.rateRange, max: e.target.value === '' ? null : e.target.value}};
                                         setFilters(allFilters);

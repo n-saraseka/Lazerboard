@@ -143,7 +143,7 @@ public static class FilterUtils
 
         if (command.ExcludeConverts != null && command.ExcludeConverts.Value)
         {
-            filters.Add($"is_convert = FALSE");
+            filters.Add("is_convert = FALSE");
         }
         
         if (command.DateRange[0] != null)
@@ -189,18 +189,18 @@ public static class FilterUtils
             {
                 case true when command.IncludeMods.Length != 0:
                     var mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
-                    filters.Add($"mods <@ ARRAY[{string.Join(",", mods)}]");
+                    filters.Add($"mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
                     break;
                 case false:
                     if (command.IncludeMods.Length > 0)
                     {
                         mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
-                        filters.Add($"mods @> ARRAY[{string.Join(",", mods)}]");
-                        filters.Add($"mods <@ ARRAY[{string.Join(",", mods)}]");
+                        filters.Add($"mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
+                        filters.Add($"mod_acronyms <@ ARRAY[{string.Join(",", mods)}]");
                     }
                     else
                     {
-                        filters.Add("cardinality(mods) = 0");
+                        filters.Add("cardinality(mod_acronyms) = 0");
                     }
                     break;
             }
@@ -209,7 +209,7 @@ public static class FilterUtils
         if (command.ExcludeMods.Length > 0)
         {
             var mods = command.ExcludeMods.Select(m => $"'{m}'").Distinct().ToList();
-            filters.Add($"mods NOT <@ ARRAY[{string.Join(",", mods)}]");
+            filters.Add($"NOT mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
         }
         
         if (command.CountryCode != null) filters.Add($"u.country_code != {command.CountryCode}");

@@ -121,7 +121,7 @@ public class ScoresController(IScoreRepository scoreRepository,
         }
         else
         {
-            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache);
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache, false);
             return Ok(scoresResponse);
         }
     }

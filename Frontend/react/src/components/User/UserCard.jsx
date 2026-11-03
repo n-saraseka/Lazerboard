@@ -1,6 +1,6 @@
 import { getEncodedCountry } from "../../utils/user-things.js";
 
-function UserCard({user, scoreCount}) {
+function UserCard({user, scoreCount, filteredCount}) {
     return (
         <div className="user-card">
             <div className="user-card-column">
@@ -22,7 +22,7 @@ function UserCard({user, scoreCount}) {
                 <div className="user-card-row">
                     <span className="scores-amount">
                         { scoreCount === null ? 'Loading scores...' : `${scoreCount} ${scoreCount === 1
-                            ? "score" : "scores"} stored in the database`}
+                            ? "score" : "scores"} stored${scoreCount !== filteredCount ? ` (${filteredCount} filtered)` : ""}`}
                     </span>
                 </div>
             </div>

@@ -70,7 +70,6 @@ public class UsersController(IScoreRepository scoreRepository,
             ExcludeConverts = command.ExcludeConverts,
             BeatmapStatus = command.BeatmapStatus
         };
-        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
         var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
         var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
@@ -81,6 +80,10 @@ public class UsersController(IScoreRepository scoreRepository,
         if (scoresResponseCache is null)
         {
             var count = await query.CountAsync(ct);
+            
+            query = FilterUtils.FilterScoreQuery(query, filteredCommand);
+            var filteredCount = await query.CountAsync(ct);
+            
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
             
@@ -101,10 +104,11 @@ public class UsersController(IScoreRepository scoreRepository,
                 return s;
             }).ToList();
             
-            var scoresResponse = new ScoresResponse
+            var scoresResponse = new UserScoresResponse
             {
                 Scores = scores,
-                Count = count
+                Count = count,
+                FilteredCount = filteredCount
             };
 
             var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
@@ -119,7 +123,7 @@ public class UsersController(IScoreRepository scoreRepository,
         }
         else
         {
-            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache);
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache, true);
             return Ok(scoresResponse);
         }
     }

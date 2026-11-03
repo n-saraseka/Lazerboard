@@ -61,16 +61,22 @@ function UserPage({user}) {
         speed: false,
     });
     
-    const getUserHistory = useCallback(async () => {
+    const getUserHistory = useCallback(async (filterOptions) => {
         setStatsLoading(prevState => ({...prevState, history: true}));
         setStatsError(prevState => ({...prevState, history: false}));
+
+        const command = createScoreQueryCommand(filterOptions);
 
         const params = new URLSearchParams();
 
         try {
             const response = await fetch(`/api/users/${user.id}/history?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {
@@ -90,19 +96,25 @@ function UserPage({user}) {
     }, [])
 
     useEffect( () => {
-        getUserHistory();
+        getUserHistory(filters);
     }, []);
 
-    const getUserRanks = useCallback(async () => {
+    const getUserRanks = useCallback(async (filterOptions) => {
         setStatsLoading(prevState => ({...prevState, ranks: true}));
         setStatsError(prevState => ({...prevState, ranks: false}));
+
+        const command = createScoreQueryCommand(filterOptions);
 
         const params = new URLSearchParams();
 
         try {
             const response = await fetch(`/api/users/${user.id}/rankdistribution?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {
@@ -122,19 +134,25 @@ function UserPage({user}) {
     }, [])
 
     useEffect( () => {
-        getUserRanks();
+        getUserRanks(filters);
     }, []);
 
-    const getUserStars = useCallback(async () => {
+    const getUserStars = useCallback(async (filterOptions) => {
         setStatsLoading(prevState => ({...prevState, stars: true}));
         setStatsError(prevState => ({...prevState, stars: false}));
+
+        const command = createScoreQueryCommand(filterOptions);
 
         const params = new URLSearchParams();
 
         try {
             const response = await fetch(`/api/users/${user.id}/stardistribution?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {
@@ -154,19 +172,25 @@ function UserPage({user}) {
     }, [])
 
     useEffect( () => {
-        getUserStars();
+        getUserStars(filters);
     }, []);
 
-    const getUserSpeed = useCallback(async () => {
+    const getUserSpeed = useCallback(async (filterOptions) => {
         setStatsLoading(prevState => ({...prevState, speed: true}));
         setStatsError(prevState => ({...prevState, speed: false}));
+
+        const command = createScoreQueryCommand(filterOptions);
 
         const params = new URLSearchParams();
 
         try {
             const response = await fetch(`/api/users/${user.id}/speeddistribution?` + params.toString(), {
-                method: "GET",
-                headers: { "Accept": "application/json" },
+                method: "POST",
+                body: JSON.stringify(command),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
             });
 
             if (response.ok) {
@@ -186,7 +210,7 @@ function UserPage({user}) {
     }, [])
 
     useEffect( () => {
-        getUserSpeed();
+        getUserSpeed(filters);
     }, []);
 
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {

@@ -199,6 +199,15 @@ footer {
     border-radius: 1em 1em 0 0;
 }
 
+.calc-button {
+    align-self: center;
+}
+
+.calc-button:hover {
+    background-color: rgb(180, 180, 180);
+    cursor: pointer;
+}
+
 input[type="number"], input[type="text"], input[type="date"], select, .calc-button {
     font-size: 1em;
     padding: 0.5em;

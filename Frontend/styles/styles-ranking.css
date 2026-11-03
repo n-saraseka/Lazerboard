@@ -10,15 +10,6 @@
     height: 2.5em;
 }
 
-.calc-button {
-    align-self: center;
-}
-
-.calc-button:hover {
-    background-color: rgb(180, 180, 180);
-    cursor: pointer;
-}
-
 @media (max-width: 600px) {
     .user-ranking {
         font-size: 1.1em;

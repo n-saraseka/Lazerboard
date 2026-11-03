@@ -38,11 +38,25 @@ function ScoresPage({countries}) {
     const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
-
+    
+    const [dateRangeString, setDateRangeString] = useState(" from today");
 
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
+
+        if (filterOptions.dateRange.min === null && filterOptions.dateRange.max === null) {
+            setDateRangeString(' from today');
+        }
+        else {
+            let tempString = ' from ';
+            const dateStrings = [];
+            [filterOptions.dateRange.min, filterOptions.dateRange.max].forEach((dateFilter) => {
+                dateStrings.push((dateFilter === null || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
+            });
+            tempString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
+            setDateRangeString(tempString);
+        }
 
         const command = createScoreQueryCommand(filterOptions);
 
@@ -101,27 +115,17 @@ function ScoresPage({countries}) {
         () => debounce(getScores, 250),
         [currentPage]
     );
-
-    let dateRangeString;
-    if (filters.dateRange.min === null && filters.dateRange.max === null) {
-        dateRangeString = ' from today';
-    }
-    else {
-        dateRangeString = ' from ';
-        const dateStrings = [];
-        [filters.dateRange.min, filters.dateRange.max].forEach((dateFilter) => {
-            dateStrings.push((dateFilter === null || dateFilter === currentDate)  ? 'today' : dateStringFromDatetime(dateFilter));
-        });
-        dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
-    }
     
     return (<>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
-            <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}
-                          refetchScores={(newFilters) => debouncedGetScores(newFilters, currentPage)}/>
+            <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
-        <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
+        <button className="calc-button" disabled={isLoading}
+                onClick={() => debouncedGetScores(filters, currentPage)}>
+            Get scores
+        </button>
+        <h1 className="section-header">{ scoresCount === 0 ? 'No scores to show...' : `All scores${dateRangeString}:` }</h1>
         <div className="component-container">
             {isError
                 ? (<Error/>)

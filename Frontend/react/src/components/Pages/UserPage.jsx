@@ -47,6 +47,8 @@ function UserPage({user}) {
     const [statsLoading, setStatsLoading] = useState(true);
     const [statsError, setStatsError] = useState(false);
     
+    const [dateRangeString, setDateRangeString] = useState("");
+    
     const getUserStats = useCallback(async (filterOptions) => {
         setStatsLoading(true);
         setStatsError(false);
@@ -84,6 +86,20 @@ function UserPage({user}) {
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
+
+        if (filterOptions.dateRange.min !== null || filterOptions.dateRange.max !== null) {
+            let tempDateString = ' from ';
+            const dateStrings = [];
+            dateStrings.push(filterOptions.dateRange.min === null ? '' : (filterOptions.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filterOptions.dateRange.min)))
+            dateStrings.push((filterOptions.dateRange.max === null || filterOptions.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filterOptions.dateRange.max));
+            if (dateStrings[0] === '') {
+                tempDateString += `until ${dateStrings[1]}`;
+            }
+            else {
+                tempDateString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
+            }
+            setDateRangeString(tempDateString);
+        }
 
         const command = createScoreQueryCommand(filterOptions);
 
@@ -157,21 +173,7 @@ function UserPage({user}) {
         () => debounce(getData, 250),
         [currentPage]
     );
-
-    let dateRangeString = '';
-    if (filters.dateRange.min !== null || filters.dateRange.max !== null) {
-        dateRangeString = ' from ';
-        const dateStrings = [];
-        dateStrings.push(filters.dateRange.min === null ? '' : (filters.dateRange.min === currentDate ? 'today' : dateStringFromDatetime(filters.dateRange.min)))
-        dateStrings.push((filters.dateRange.max === null || filters.dateRange.max === currentDate)  ? 'today' : dateStringFromDatetime(filters.dateRange.max));
-        if (dateStrings[0] === '') {
-            dateRangeString += `until ${dateStrings[1]}`;
-        }
-        else {
-            dateRangeString += dateStrings[0] === dateStrings[1] ? dateStrings[0] : 'between ' + dateStrings.join(' and ');
-        }
-    }
-
+    
     return (<>
         <div className="card-stats">
             <div className="card-stats-column">
@@ -196,7 +198,7 @@ function UserPage({user}) {
                 onClick={() => debouncedGetData(filters, currentPage)}>
             Get user scores
         </button>
-        <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
+        <h1 className="section-header">{ scoresCount === 0 ? 'No scores to show...' : `All scores${dateRangeString}:` }</h1>
         <div className="component-container">
             {isError
                 ? (<Error/>)

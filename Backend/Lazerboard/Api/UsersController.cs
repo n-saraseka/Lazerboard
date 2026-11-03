@@ -130,10 +130,11 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <param name="userId">The <see cref="User"/> ID</param>
     /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="UserHistory"/></returns>
-    [HttpPost("{userId:int}/history")]
+    /// <returns>The statistics.</returns>
+    [HttpPost("{userId:int}/stats")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserHistory(int userId, [FromBody] ScoreQueryCommand command, CancellationToken ct = default)
+    public async Task<IActionResult> GetUserStats(int userId, [FromBody] ScoreQueryCommand command,
+        CancellationToken ct = default)
     {
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
@@ -163,120 +164,20 @@ public class UsersController(IScoreRepository scoreRepository,
         var filterText = FilterUtils.GetFilterText(filteredCommand);
         filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
         var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
-
+        
         var context = scoreRepository.GetDbContext();
         
-        var sql = $@"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count
+        // The score counts history
+        var historySql = $@"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count
                     FROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM {tableString}
                     WHERE user_id = {userId}{filterText}
                     GROUP BY month
                     ORDER BY month ASC)";
-        
-        var historyQuery = context.Database.SqlQueryRaw<UserHistory>(sql);
-
+        var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql);
         var history = await historyQuery.ToListAsync(ct);
         
-        return Ok(new { History = history });
-    }
-    
-    /// <summary>
-    /// Get <see cref="User"/>'s star rating distribution across their saved scores
-    /// </summary>
-    /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="command">The specified <see cref="ScoreQueryCommand"/></param>
-    /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="UserStars"/></returns>
-    [HttpPost("{userId:int}/stardistribution")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetUserStarDistribution(int userId, [FromBody] ScoreQueryCommand command, CancellationToken ct = default)
-    {
-        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
-            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
-        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
-        {
-            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
-        }
-        
-        var user = await userRepository.GetByIdAsync(userId, ct);
-        if (user == null) return NotFound("User not found");
-        
-        var filteredCommand = new ScoreQueryCommand
-        {
-            Modes = command.Modes,
-            DateRange = command.DateRange,
-            RankRange = command.RankRange,
-            PpRange = command.PpRange,
-            AccuracyRange = command.AccuracyRange,
-            SpeedRange = command.SpeedRange,
-            IncludeMods = command.IncludeMods,
-            ExcludeMods = command.ExcludeMods,
-            LenientMode = command.LenientMode,
-            ExcludeConverts = command.ExcludeConverts,
-            BeatmapStatus = command.BeatmapStatus
-        };
-        
-        var filterText = FilterUtils.GetFilterText(filteredCommand);
-        filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
-        var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, true);
-        
-        var context = scoreRepository.GetDbContext();
-        
-        var sql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
-                    FROM {tableString}
-                    WHERE user_id = {userId}{filterText}
-                    GROUP BY sr_bracket
-                    ORDER BY sr_bracket";
-
-        var starsQuery = context.Database.SqlQueryRaw<UserStars>(sql);
-        
-        var starStats = await starsQuery.ToListAsync(ct);
-        
-        return Ok(new { StarStats = starStats });
-    }
-    
-    /// <summary>
-    /// Get <see cref="User"/>'s top 100 rank distribution across their saved scores
-    /// </summary>
-    /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="command">The specified <see cref="ScoreQueryCommand"/></param>
-    /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="RankStats"/></returns>
-    [HttpPost("{userId:int}/rankdistribution")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetUserRankDistribution(int userId, [FromBody] ScoreQueryCommand command, CancellationToken ct = default)
-    {
-        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
-            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
-        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
-        {
-            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
-        }
-        
-        var user = await userRepository.GetByIdAsync(userId, ct);
-        if (user == null) return NotFound("User not found");
-        
-        var filteredCommand = new ScoreQueryCommand
-        {
-            Modes = command.Modes,
-            DateRange = command.DateRange,
-            RankRange = command.RankRange,
-            PpRange = command.PpRange,
-            AccuracyRange = command.AccuracyRange,
-            SpeedRange = command.SpeedRange,
-            IncludeMods = command.IncludeMods,
-            ExcludeMods = command.ExcludeMods,
-            LenientMode = command.LenientMode,
-            ExcludeConverts = command.ExcludeConverts,
-            BeatmapStatus = command.BeatmapStatus
-        };
-        
-        var filterText = FilterUtils.GetFilterText(filteredCommand);
-        filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
-        var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
-        
-        var context = scoreRepository.GetDbContext();
-
-        var sql = $@"SELECT i.rank_bound,
+        // The rank distribution
+        var ranksSql = $@"SELECT i.rank_bound,
                     CASE i.rank_bound
                         WHEN 1   THEN top1  WHEN 3   THEN top3  WHEN 8   THEN top8
                         WHEN 25  THEN top25 WHEN 50  THEN top50 WHEN 100 THEN top100
@@ -294,69 +195,38 @@ public class UsersController(IScoreRepository scoreRepository,
                     ) rank_distribution
                     CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
                     ORDER BY i.rank_bound";
-
-        var ranksQuery = context.Database.SqlQueryRaw<RankStats>(sql);
-        
+        var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql);
         var rankStats = await ranksQuery.ToListAsync(ct);
         
-        return Ok(new { RankStats = rankStats });
-    }
-    
-    /// <summary>
-    /// Get <see cref="User"/>'s speed change distribution across their saved scores
-    /// </summary>
-    /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="command">The specified <see cref="ScoreQueryCommand"/></param>
-    /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="UserSpeedStats"/></returns>
-    [HttpPost("{userId:int}/speeddistribution")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetUserSpeedDistribution(int userId, [FromBody] ScoreQueryCommand command, CancellationToken ct = default)
-    {
-        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
-            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
-        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
-        {
-            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
-        }
+        // The star distribution
+        tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, true);
+        var starSql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
+                    FROM {tableString}
+                    WHERE user_id = {userId}{filterText}
+                    GROUP BY sr_bracket
+                    ORDER BY sr_bracket";
+        var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql);
+        var starStats = await starsQuery.ToListAsync(ct);
         
-        var user = await userRepository.GetByIdAsync(userId, ct);
-        if (user == null) return NotFound("User not found");
-        
-        var filteredCommand = new ScoreQueryCommand
-        {
-            Modes = command.Modes,
-            DateRange = command.DateRange,
-            RankRange = command.RankRange,
-            PpRange = command.PpRange,
-            AccuracyRange = command.AccuracyRange,
-            SpeedRange = command.SpeedRange,
-            IncludeMods = command.IncludeMods,
-            ExcludeMods = command.ExcludeMods,
-            LenientMode = command.LenientMode,
-            ExcludeConverts = command.ExcludeConverts,
-            BeatmapStatus = command.BeatmapStatus
-        };
-        
-        var filterText = FilterUtils.GetFilterText(filteredCommand);
-        filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
-        var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
-        
-        var context = scoreRepository.GetDbContext();
-
-        var sql = $@"SELECT CASE WHEN speed_change < 1
+        // The speed distribution
+        tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+        var speedSql = $@"SELECT CASE WHEN speed_change < 1
                     THEN FLOOR(speed_change * 20) / 20
                     ELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count
                     FROM {tableString}
                     WHERE user_id = {userId} AND speed_change IS NOT NULL{filterText}
                     GROUP BY speed_bracket
                     ORDER BY speed_bracket";
-        
-        var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(sql);
-
+        var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql);
         var speedStats = await speedQuery.ToListAsync(ct);
-        
-        return Ok(new { SpeedStats = speedStats });
+
+        return Ok(new
+        {
+            History = history,
+            RankDistribution = rankStats,
+            StarsDistribution = starStats,
+            SpeedDistribution = speedStats,
+        });
     }
 
     /// <summary>

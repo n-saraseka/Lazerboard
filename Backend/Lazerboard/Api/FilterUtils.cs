@@ -136,28 +136,13 @@ public static class FilterUtils
             filters.Add($"mode = ANY({string.Join(",", modes)})");
         }
         
-        if (command.BeatmapStatus != null)
-        {
-            filters.Add($"b.status = '{command.BeatmapStatus.Value.ToString().ToLower()}'");
-        }
+        if (command.BeatmapStatus != null) filters.Add($"b.status = '{command.BeatmapStatus.Value.ToString().ToLower()}'");
 
-        if (command.ExcludeConverts != null && command.ExcludeConverts.Value)
-        {
-            filters.Add($"is_convert = FALSE");
-        }
+        if (command.ExcludeConverts != null && command.ExcludeConverts.Value) filters.Add("is_convert = FALSE");
         
-        if (command.DateRange[0] != null)
-        {
-            var minDate = DateTime
-                .SpecifyKind(command.DateRange[0]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc);
-            filters.Add($"date >= {minDate}");
-        }
-        if (command.DateRange[1] != null)
-        {
-            var maxDate = DateTime
-                .SpecifyKind(command.DateRange[1]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc).AddDays(1);
-            filters.Add($"date < {maxDate}");
-        }
+        if (command.DateRange[0] != null) filters.Add($"date >= '{command.DateRange[0]}'");
+        if (command.DateRange[1] != null) filters.Add($"date <= '{command.DateRange[1]}'");
+
         
         if (command.RankRange[0] != null) filters.Add($"rank >= {command.RankRange[0]}");
         if (command.RankRange[1] != null) filters.Add($"rank <= {command.RankRange[1]}");
@@ -189,18 +174,18 @@ public static class FilterUtils
             {
                 case true when command.IncludeMods.Length != 0:
                     var mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
-                    filters.Add($"mods <@ ARRAY[{string.Join(",", mods)}]");
+                    filters.Add($"mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
                     break;
                 case false:
                     if (command.IncludeMods.Length > 0)
                     {
                         mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
-                        filters.Add($"mods @> ARRAY[{string.Join(",", mods)}]");
-                        filters.Add($"mods <@ ARRAY[{string.Join(",", mods)}]");
+                        filters.Add($"mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
+                        filters.Add($"mod_acronyms <@ ARRAY[{string.Join(",", mods)}]");
                     }
                     else
                     {
-                        filters.Add("cardinality(mods) = 0");
+                        filters.Add("cardinality(mod_acronyms) = 0");
                     }
                     break;
             }
@@ -209,10 +194,10 @@ public static class FilterUtils
         if (command.ExcludeMods.Length > 0)
         {
             var mods = command.ExcludeMods.Select(m => $"'{m}'").Distinct().ToList();
-            filters.Add($"mods NOT <@ ARRAY[{string.Join(",", mods)}]");
+            filters.Add($"NOT mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
         }
         
-        if (command.CountryCode != null) filters.Add($"u.country_code != {command.CountryCode}");
+        if (command.CountryCode != null) filters.Add($"u.country_code = '{command.CountryCode}'");
         
         return string.Join(" AND ",  filters);
     }

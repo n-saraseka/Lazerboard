@@ -13,7 +13,7 @@ public static class ResponseCachingUtils
     /// <param name="commandHash">The <see cref="ScoreQueryCommand"/> hash code</param>
     /// <param name="amount">Amount of scores to return</param>
     /// <param name="page">Page (defaults to 1)</param>
-    /// <returns></returns>
+    /// <returns>The cache string</returns>
     public static string GetScoreQueryKeyForCache(string commandHash, int? amount, int? page)
     {
         var pagePortion = page.HasValue ? $"{page.Value}" : "";
@@ -45,7 +45,7 @@ public static class ResponseCachingUtils
     /// Get serialized <see cref="ScoresResponse"/> string
     /// </summary>
     /// <param name="response">The <see cref="ScoresResponse"/></param>
-    /// <returns>The string</returns>
+    /// <returns>The serialized string</returns>
     public static string GetSerializedScoresResponse(ScoresResponse response) =>
         JsonConvert.SerializeObject(response,
             new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
@@ -75,8 +75,34 @@ public static class ResponseCachingUtils
     /// Get deserialized <see cref="UserRankingResponse"/> from string
     /// </summary>
     /// <param name="response">The serialized string</param>
-    /// <returns>The <see cref="ScoresResponse"/> or null</returns>
+    /// <returns>The <see cref="UserRankingResponse"/> or null</returns>
     public static UserRankingResponse? GetDeserializedUserRankingResponse(string response) =>
         JsonConvert.DeserializeObject<UserRankingResponse?>(response,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+    
+    /// <summary>
+    /// Get user stats key for cache
+    /// </summary>
+    /// <param name="commandHash">The <see cref="ScoreQueryCommand"/> hash code</param>
+    /// <param name="userId">The user ID</param>
+    /// <returns>The cache string</returns>
+    public static string GetUserStatsKeyForCache(string commandHash, int userId) =>
+        $"stats-{userId}-{commandHash}";
+    
+    /// <summary>
+    /// Get serialized <see cref="UserStatsResponse"/> string
+    /// </summary>
+    /// <param name="response">The <see cref="UserStatsResponse"/></param>
+    /// <returns>The serialized string</returns>
+    public static string GetSerializedUserStatsResponse(UserStatsResponse response) =>
+        JsonConvert.SerializeObject(response);
+    
+    /// <summary>
+    /// Get deserialized <see cref="UserStatsResponse"/> from string
+    /// </summary>
+    /// <param name="response">The serialized string</param>
+    /// <returns>The <see cref="UserStatsResponse"/> or null</returns>
+    public static UserStatsResponse? GetDeserializedUserStatsResponse(string response) =>
+        JsonConvert.DeserializeObject<UserStatsResponse?>(response,
             new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 }

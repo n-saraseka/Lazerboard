@@ -4,13 +4,11 @@ import { defaults, Chart } from 'chart.js'
 import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
 import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
-import Loader from "../Misc/Loader.jsx";
-import Error from "../Misc/Error.jsx";
 
 defaults.font.family = "'Cascadia Mono', monospace";
 defaults.color = "white";
 
-function UserStats({data, loadingData, errorData}) {
+function UserStats({data}) {
     const gridOptions = {
         x: {
             grid: {
@@ -71,8 +69,8 @@ function UserStats({data, loadingData, errorData}) {
         };
     }
     
-    if (data.ranks !== null) {
-        const nonZeroData = data.ranks.filter((item) => item.count > 0);
+    if (data.rankDistribution !== null) {
+        const nonZeroData = data.rankDistribution.filter((item) => item.count > 0);
         rankStats = {
             labels: nonZeroData.map((item) => `Top ${item.rankBound}`),
             datasets: [{
@@ -83,8 +81,8 @@ function UserStats({data, loadingData, errorData}) {
         }
     }
     
-    if (data.stars !== null) {
-        const nonZeroData = data.stars.filter((item) => item.count > 0);
+    if (data.starsDistribution !== null) {
+        const nonZeroData = data.starsDistribution.filter((item) => item.count > 0);
         
         starStats = {
             labels: nonZeroData.map((item) => item.srBracket),
@@ -98,13 +96,13 @@ function UserStats({data, loadingData, errorData}) {
         }
     }
     
-    if (data.speed != null) {
+    if (data.speedDistribution != null) {
         speedStats = {
-            labels: data.speed.map((item) => `${item.speedBracket}x`),
+            labels: data.speedDistribution.map((item) => `${item.speedBracket}x`),
             datasets: [{
                 label: 'Count',
-                data: data.speed.map((item) => item.count),
-                backgroundColor: data.speed.map((item) => getSpeedColor(item.speedBracket))
+                data: data.speedDistribution.map((item) => item.count),
+                backgroundColor: data.speedDistribution.map((item) => getSpeedColor(item.speedBracket))
             }]
         }
     }
@@ -112,97 +110,74 @@ function UserStats({data, loadingData, errorData}) {
     return (
         <div className="player-stats">
             <div className="chart-wrapper">
-                { loadingData.history
-                    ? <Loader/>
-                    : errorData.history
-                        ? <Error/>
-                        : <Line data={history} options={{
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: "Top 100 leaderboard count history"
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                }
-                            },
-                            elements: {
-                                line: {
-                                    borderWidth: 4
-                                }
-                            },
-                            scales: gridOptions,
-                            responsive: true,
-                            maintainAspectRatio: false,
-                        }}/>
-                }
+                <Line data={history} options={{
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "Top 100 leaderboard count history"
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderWidth: 4
+                        }
+                    },
+                    scales: gridOptions,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }}/>
             </div>
             <div className="chart-wrapper">
-                {
-                    loadingData.ranks
-                        ? <Loader/>
-                        : errorData.ranks
-                            ? <Error/>
-                            : <Bar data={rankStats} options={{
-                                indexAxis: 'y',
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: "Rank distribution",
-                                    }
-                                },
-                                scales: gridOptions,
-                                responsive: true,
-                                maintainAspectRatio: false,
-                            }}/>
-                }
+                <Bar data={rankStats} options={{
+                    indexAxis: 'y',
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "Rank distribution",
+                        }
+                    },
+                    scales: gridOptions,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }}/>
             </div>
             <div className="chart-wrapper">
-                {
-                    loadingData.stars
-                        ? <Loader/>
-                        : errorData.stars
-                            ? <Error/>
-                            : <Bar data={starStats} options={{
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: "Star rating distribution"
-                                    },
-                                    tooltip: {
-                                        mode: 'index',
-                                        intersect: false,
-                                    }
-                                },
-                                scales: gridOptions,
-                                responsive: true,
-                                maintainAspectRatio: false,
-                            }}/>
-                }
+                <Bar data={starStats} options={{
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "Star rating distribution"
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: gridOptions,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }}/>
             </div>
             <div className="chart-wrapper">
-                {
-                    loadingData.speed
-                        ? <Loader/>
-                        : errorData.speed
-                            ? <Error/>
-                            : <Bar data={speedStats} options={{
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: "Speed distribution"
-                                    },
-                                    tooltip: {
-                                        mode: 'index',
-                                        intersect: false,
-                                    }
-                                },
-                                scales: gridOptions,
-                                responsive: true,
-                                maintainAspectRatio: false,
-                            }}/>
-                }
+                <Bar data={speedStats} options={{
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "Speed distribution"
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: gridOptions,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }}/>
             </div>
         </div>
     )

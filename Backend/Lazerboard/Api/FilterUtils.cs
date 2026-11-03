@@ -120,4 +120,126 @@ public static class FilterUtils
 
         return query;
     }
+
+    /// <summary>
+    /// Get filter string from a <see cref="ScoreQueryCommand"/>
+    /// </summary>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
+    /// <returns>The filter string</returns>
+    public static string GetFilterText(ScoreQueryCommand command)
+    {
+        var filters = new List<string>();
+        
+        if (!(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
+        {
+            var modes = command.Modes.Select(m => $"'{m.ToString()}'".ToLower()).Distinct().ToList();
+            filters.Add($"mode = ANY({string.Join(",", modes)})");
+        }
+        
+        if (command.BeatmapStatus != null)
+        {
+            filters.Add($"b.status = '{command.BeatmapStatus.Value.ToString().ToLower()}'");
+        }
+
+        if (command.ExcludeConverts != null && command.ExcludeConverts.Value)
+        {
+            filters.Add($"is_convert = FALSE");
+        }
+        
+        if (command.DateRange[0] != null)
+        {
+            var minDate = DateTime
+                .SpecifyKind(command.DateRange[0]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc);
+            filters.Add($"date >= {minDate}");
+        }
+        if (command.DateRange[1] != null)
+        {
+            var maxDate = DateTime
+                .SpecifyKind(command.DateRange[1]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc).AddDays(1);
+            filters.Add($"date < {maxDate}");
+        }
+        
+        if (command.RankRange[0] != null) filters.Add($"rank >= {command.RankRange[0]}");
+        if (command.RankRange[1] != null) filters.Add($"rank <= {command.RankRange[1]}");
+
+        if (command.PpRange[0] != null) filters.Add($"pp >= {command.PpRange[0]}");
+        if (command.PpRange[1] != null) filters.Add($"pp <= {command.PpRange[0]}");
+
+        if (command.AccuracyRange[0] != null) {
+            var acc = command.AccuracyRange[0] / 100.0f;
+            filters.Add($"accuracy >= {acc}");
+        }
+        if (command.AccuracyRange[1] != null) {
+            var acc = command.AccuracyRange[1] / 100.0f;
+            filters.Add($"accuracy <= {acc}");
+        }
+
+        // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
+        // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
+        if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) filters.Add("speed_change IS NOT NULL");
+        if (command.SpeedRange[0] != null) filters.Add($"speed_change >= {command.SpeedRange[0]}");
+        if (command.SpeedRange[1] != null) filters.Add($"speed_change <= {command.SpeedRange[1]}");
+
+        if (command.StarRange[0] != null) filters.Add($"b.difficulty >= {command.StarRange[0]}");
+        if (command.StarRange[1] != null) filters.Add($"b.difficulty <= {command.StarRange[1]}");
+
+        if (command.LenientMode != null)
+        {
+            switch (command.LenientMode)
+            {
+                case true when command.IncludeMods.Length != 0:
+                    var mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
+                    filters.Add($"mods <@ ARRAY[{string.Join(",", mods)}]");
+                    break;
+                case false:
+                    if (command.IncludeMods.Length > 0)
+                    {
+                        mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
+                        filters.Add($"mods @> ARRAY[{string.Join(",", mods)}]");
+                        filters.Add($"mods <@ ARRAY[{string.Join(",", mods)}]");
+                    }
+                    else
+                    {
+                        filters.Add("cardinality(mods) = 0");
+                    }
+                    break;
+            }
+        }
+
+        if (command.ExcludeMods.Length > 0)
+        {
+            var mods = command.ExcludeMods.Select(m => $"'{m}'").Distinct().ToList();
+            filters.Add($"mods NOT <@ ARRAY[{string.Join(",", mods)}]");
+        }
+        
+        if (command.CountryCode != null) filters.Add($"u.country_code != {command.CountryCode}");
+        
+        return string.Join(" AND ",  filters);
+    }
+
+    /// <summary>
+    /// Get table string from <see cref="ScoreQueryCommand"/>
+    /// </summary>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
+    /// <param name="joinBeatmaps">Whether to add an INNER JOIN on beatmaps anyway</param>
+    /// <returns>The string</returns>
+    public static string GetTableStringWithJoins(ScoreQueryCommand command, bool joinBeatmaps)
+    {
+        var tableString = "scores s";
+        var joins = new List<string>();
+        if (command.BeatmapStatus != null || joinBeatmaps)
+        {
+            joins.Add("INNER JOIN beatmaps b ON s.beatmap_id = b.id");
+        }
+
+        if (command.CountryCode != null)
+        {
+            joins.Add("INNER JOIN users u ON s.user_id = u.id");
+        }
+
+        if (joins.Count == 0) return tableString;
+        
+        var joinsString = string.Join(" ", joins);
+        return $"{tableString} {joinsString}";
+    }
 }

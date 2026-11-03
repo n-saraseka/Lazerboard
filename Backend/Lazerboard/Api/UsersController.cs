@@ -54,13 +54,10 @@ public class UsersController(IScoreRepository scoreRepository,
         
         var query = scoreRepository.GetByUserId(userId);
         
-        var targetStartDate = command.DateRange[0] ?? null;
-        var targetEndDate = command.DateRange[1] ?? null;
-        
         var filteredCommand = new ScoreQueryCommand
         {
             Modes = command.Modes,
-            DateRange = [targetStartDate, targetEndDate],
+            DateRange = command.DateRange,
             RankRange = command.RankRange,
             PpRange = command.PpRange,
             AccuracyRange = command.AccuracyRange,
@@ -73,7 +70,6 @@ public class UsersController(IScoreRepository scoreRepository,
             ExcludeConverts = command.ExcludeConverts,
             BeatmapStatus = command.BeatmapStatus
         };
-        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
         var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
         var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
@@ -84,6 +80,10 @@ public class UsersController(IScoreRepository scoreRepository,
         if (scoresResponseCache is null)
         {
             var count = await query.CountAsync(ct);
+            
+            query = FilterUtils.FilterScoreQuery(query, filteredCommand);
+            var filteredCount = await query.CountAsync(ct);
+            
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
             
@@ -104,10 +104,11 @@ public class UsersController(IScoreRepository scoreRepository,
                 return s;
             }).ToList();
             
-            var scoresResponse = new ScoresResponse
+            var scoresResponse = new UserScoresResponse
             {
                 Scores = scores,
-                Count = count
+                Count = count,
+                FilteredCount = filteredCount
             };
 
             var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
@@ -122,7 +123,7 @@ public class UsersController(IScoreRepository scoreRepository,
         }
         else
         {
-            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache);
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache, true);
             return Ok(scoresResponse);
         }
     }
@@ -131,124 +132,105 @@ public class UsersController(IScoreRepository scoreRepository,
     /// Get <see cref="User"/>'s top 100 scores count history
     /// </summary>
     /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="mode">The specified <see cref="Mode"/></param>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="UserHistory"/></returns>
-    [HttpGet("{userId:int}/history")]
+    /// <returns>The statistics.</returns>
+    [HttpPost("{userId:int}/stats")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserHistory(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
+    public async Task<IActionResult> GetUserStats(int userId, [FromBody] ScoreQueryCommand command,
+        CancellationToken ct = default)
     {
+        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
+            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
+        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
+        {
+            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
+        }
+        
         var user = await userRepository.GetByIdAsync(userId, ct);
         if (user == null) return NotFound("User not found");
         
+        var filteredCommand = new ScoreQueryCommand
+        {
+            Modes = command.Modes,
+            DateRange = command.DateRange,
+            RankRange = command.RankRange,
+            PpRange = command.PpRange,
+            AccuracyRange = command.AccuracyRange,
+            SpeedRange = command.SpeedRange,
+            IncludeMods = command.IncludeMods,
+            ExcludeMods = command.ExcludeMods,
+            LenientMode = command.LenientMode,
+            ExcludeConverts = command.ExcludeConverts,
+            BeatmapStatus = command.BeatmapStatus
+        };
+        
+        var filterText = FilterUtils.GetFilterText(filteredCommand);
+        filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
+        var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+        
         var context = scoreRepository.GetDbContext();
         
-        var historyQuery = mode == null
-            ? context.Database.SqlQuery<UserHistory>(
-                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId}\nGROUP BY month\nORDER BY month ASC)")
-            : context.Database.SqlQuery<UserHistory>(
-                $"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count\nFROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM scores\nWHERE user_id = {userId} AND mode={mode}\nGROUP BY month\nORDER BY month ASC)");
-
+        // The score counts history
+        var historySql = $@"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count
+                    FROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM {tableString}
+                    WHERE user_id = {userId}{filterText}
+                    GROUP BY month
+                    ORDER BY month ASC)";
+        var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql);
         var history = await historyQuery.ToListAsync(ct);
         
-        return Ok(new { History = history });
-    }
-    
-    /// <summary>
-    /// Get <see cref="User"/>'s star rating distribution across their saved scores
-    /// </summary>
-    /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="mode">The specified <see cref="Mode"/></param>
-    /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="UserStars"/></returns>
-    [HttpGet("{userId:int}/stardistribution")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetUserStarDistribution(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
-    {
-        var user = await userRepository.GetByIdAsync(userId, ct);
-        if (user == null) return NotFound("User not found");
-        
-        var context = scoreRepository.GetDbContext();
-        
-        var starsQuery = mode == null
-            ? context.Database.SqlQuery<UserStars>(
-                $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId}\nGROUP BY sr_bracket\nORDER BY sr_bracket")
-            : context.Database.SqlQuery<UserStars>(
-                $"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count\nFROM scores s INNER JOIN beatmaps b ON s.beatmap_id = b.id \nWHERE user_id = {userId} AND s.mode={mode}\nGROUP BY sr_bracket\nORDER BY sr_bracket");
-        
-        var starStats = await starsQuery.ToListAsync(ct);
-        
-        return Ok(new { StarStats = starStats });
-    }
-    
-    /// <summary>
-    /// Get <see cref="User"/>'s top 100 rank distribution across their saved scores
-    /// </summary>
-    /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="mode">The specified <see cref="Mode"/></param>
-    /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="RankStats"/></returns>
-    [HttpGet("{userId:int}/rankdistribution")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetUserRankDistribution(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
-    {
-        var user = await userRepository.GetByIdAsync(userId, ct);
-        if (user == null) return NotFound("User not found");
-        
-        var context = scoreRepository.GetDbContext();
-
-        var sql = $@"
-                   SELECT i.rank_bound,
-                  CASE i.rank_bound
+        // The rank distribution
+        var ranksSql = $@"SELECT i.rank_bound,
+                    CASE i.rank_bound
                         WHEN 1   THEN top1  WHEN 3   THEN top3  WHEN 8   THEN top8
                         WHEN 25  THEN top25 WHEN 50  THEN top50 WHEN 100 THEN top100
-                      END AS count
-                   FROM (
-                     SELECT
-                       COUNT(*) FILTER (WHERE rank <= 1)   AS top1,
-                       COUNT(*) FILTER (WHERE rank <= 3)   AS top3,
-                       COUNT(*) FILTER (WHERE rank <= 8)   AS top8,
-                       COUNT(*) FILTER (WHERE rank <= 25)  AS top25,
-                       COUNT(*) FILTER (WHERE rank <= 50)  AS top50,
-                       COUNT(*) FILTER (WHERE rank <= 100) AS top100
-                     FROM scores
-                     WHERE user_id = {userId} AND rank <= 100
-                   ) rank_distribution
-                   CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
-                   ORDER BY i.rank_bound";
-
-        var ranksQuery = context.Database.SqlQueryRaw<RankStats>(sql);
-        
+                    END AS count
+                    FROM (
+                        SELECT
+                        COUNT(*) FILTER (WHERE s.rank <= 1)   AS top1,
+                        COUNT(*) FILTER (WHERE s.rank <= 3)   AS top3,
+                        COUNT(*) FILTER (WHERE s.rank <= 8)   AS top8,
+                        COUNT(*) FILTER (WHERE s.rank <= 25)  AS top25,
+                        COUNT(*) FILTER (WHERE s.rank <= 50)  AS top50,
+                        COUNT(*) FILTER (WHERE s.rank <= 100) AS top100
+                    FROM {tableString}
+                    WHERE user_id = {userId}{filterText}
+                    ) rank_distribution
+                    CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
+                    ORDER BY i.rank_bound";
+        var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql);
         var rankStats = await ranksQuery.ToListAsync(ct);
         
-        return Ok(new { RankStats = rankStats });
-    }
-    
-    /// <summary>
-    /// Get <see cref="User"/>'s speed change distribution across their saved scores
-    /// </summary>
-    /// <param name="userId">The <see cref="User"/> ID</param>
-    /// <param name="mode">The specified <see cref="Mode"/></param>
-    /// <param name="ct">A <see cref="CancellationToken"/></param>
-    /// <returns>The <see cref="UserSpeedStats"/></returns>
-    [HttpGet("{userId:int}/speeddistribution")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetUserSpeedDistribution(int userId, [FromQuery] Mode? mode, CancellationToken ct = default)
-    {
-        var user = await userRepository.GetByIdAsync(userId, ct);
-        if (user == null) return NotFound("User not found");
+        // The star distribution
+        tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, true);
+        var starSql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
+                    FROM {tableString}
+                    WHERE user_id = {userId}{filterText}
+                    GROUP BY sr_bracket
+                    ORDER BY sr_bracket";
+        var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql);
+        var starStats = await starsQuery.ToListAsync(ct);
         
-        var context = scoreRepository.GetDbContext();
-        
-        var speedQuery = mode == null
-            ? context.Database.SqlQuery<UserSpeedStats>(
-                $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores\nWHERE user_id = {userId} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket")
-            : context.Database.SqlQuery<UserSpeedStats>(
-                $"SELECT CASE WHEN speed_change < 1 \nTHEN FLOOR(speed_change * 20) / 20 \nELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count\nFROM scores \nWHERE user_id = {userId} AND mode = {mode} AND speed_change IS NOT NULL\nGROUP by speed_bracket\nORDER BY speed_bracket");
-
+        // The speed distribution
+        tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+        var speedSql = $@"SELECT CASE WHEN speed_change < 1
+                    THEN FLOOR(speed_change * 20) / 20
+                    ELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count
+                    FROM {tableString}
+                    WHERE user_id = {userId} AND speed_change IS NOT NULL{filterText}
+                    GROUP BY speed_bracket
+                    ORDER BY speed_bracket";
+        var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql);
         var speedStats = await speedQuery.ToListAsync(ct);
-        
-        return Ok(new { SpeedStats = speedStats });
+
+        return Ok(new
+        {
+            History = history,
+            RankDistribution = rankStats,
+            StarsDistribution = starStats,
+            SpeedDistribution = speedStats,
+        });
     }
 
     /// <summary>

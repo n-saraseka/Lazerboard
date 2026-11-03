@@ -47,7 +47,7 @@ function ScoresPage({countries}) {
         const command = createScoreQueryCommand(filterOptions);
 
         const params = new URLSearchParams();
-        params.append("amount", filters.amount.toString());
+        params.append("amount", filterOptions.amount.toString());
         params.append("page", pageNumber.toString());
 
         setIsLoading(true);

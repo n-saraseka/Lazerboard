@@ -190,9 +190,12 @@ function UserPage({user}) {
         </div>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
-            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} 
-                          refetchScores={(newFilters, affectsCount) => debouncedGetData(newFilters, affectsCount)}/>
+            <ScoreFilters isUser={true} filters={filters} setFilters={setFilters}/>
         </div>
+        <button className="calc-button" disabled={isLoading && statsLoading}
+                onClick={() => debouncedGetData(filters, currentPage)}>
+            Get user scores
+        </button>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
             {isError

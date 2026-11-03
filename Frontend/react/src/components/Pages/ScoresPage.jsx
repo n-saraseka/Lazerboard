@@ -118,9 +118,12 @@ function ScoresPage({countries}) {
     return (<>
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
-            <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}
-                          refetchScores={(newFilters) => debouncedGetScores(newFilters, currentPage)}/>
+            <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
+        <button className="calc-button" disabled={isLoading}
+                onClick={() => debouncedGetScores(filters, currentPage)}>
+            Get scores
+        </button>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">
             {isError

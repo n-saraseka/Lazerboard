@@ -1,7 +1,7 @@
 import {useState} from "react";
 import CountrySelectorRow from "./CountrySelectorRow.jsx";
 
-function CountrySelector({countries, filters, setFilters, refetchScores}) {
+function CountrySelector({countries, filters, setFilters}) {
     const [filteredCountries, setFilteredCountries] = useState(countries);
     const [dropdownEnabled, setDropdownEnabled] = useState(false);
     
@@ -12,16 +12,10 @@ function CountrySelector({countries, filters, setFilters, refetchScores}) {
         if (respectiveCountry !== undefined) {
             const newFilters = {...filters, country: respectiveCountry}
             setFilters(newFilters);
-            if (refetchScores !== undefined) {
-                refetchScores(newFilters);
-            }
         }
         else {
             const newFilters = {...filters, country: null}
             setFilters(newFilters);
-            if (refetchScores !== undefined) {
-                refetchScores(newFilters);
-            }
         }
     }
     
@@ -50,9 +44,6 @@ function CountrySelector({countries, filters, setFilters, refetchScores}) {
                                         onClickAction={() => {
                                             const newFilters = {...filters, country: c}
                                             setFilters(newFilters);
-                                            if (refetchScores !== undefined) {
-                                                refetchScores(newFilters);
-                                            }
                                             setDropdownEnabled(false);
                                         }}/>
                 )) }

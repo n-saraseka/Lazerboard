@@ -1,7 +1,7 @@
 import {useState} from "react";
 import ModSelectorRow from "./ModSelectorRow.jsx";
 
-function ModSelector({availableMods, filters, setFilters, excludeMode, refetchScores}) {
+function ModSelector({availableMods, filters, setFilters, excludeMode}) {
     function updateMods(mod) {
         let newMods;
         if (excludeMode) {
@@ -12,9 +12,6 @@ function ModSelector({availableMods, filters, setFilters, excludeMode, refetchSc
         }
         const newFilters = excludeMode ? {...filters, excludeMods: newMods} : {...filters, includeMods: newMods}
         setFilters(newFilters);
-        if (refetchScores !== undefined) {
-            refetchScores(newFilters, true);
-        }
     }
     
     const [isExpanded, setIsExpanded] = useState(false);
@@ -39,9 +36,6 @@ function ModSelector({availableMods, filters, setFilters, excludeMode, refetchSc
                     <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() => {
                         const newFilters = {...filters, lenientMode: !filters.lenientMode}
                         setFilters(newFilters);
-                        if (refetchScores !== undefined) {
-                            refetchScores(newFilters);
-                        }
                     }}/>
                     <label htmlFor="lenientMode">Allow other mods</label>
             </>)}

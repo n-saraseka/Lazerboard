@@ -78,11 +78,7 @@ function UserPage({user}) {
         }
 
         setStatsLoading(false);
-    }, [])
-
-    useEffect( () => {
-        getUserStats(filters);
-    }, []);
+    }, [filters])
 
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
@@ -135,12 +131,21 @@ function UserPage({user}) {
         setIsLoading(false);
     }, [currentPage]);
 
-    useEffect( () => {
-        getScores(filters);
-    }, []);
-
     const debouncedGetScores = useMemo(
         () => debounce(getScores, 250),
+        [currentPage]
+    );
+
+    const getData = useCallback(async (filterOptions) => {
+        await Promise.all([getScores(filterOptions, currentPage), getUserStats(filterOptions)]);
+    }, [filters]);
+
+    useEffect( () => {
+        getData(filters);
+    }, []);
+
+    const debouncedGetData = useMemo(
+        () => debounce(getData, 250),
         [currentPage]
     );
 
@@ -177,7 +182,7 @@ function UserPage({user}) {
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
             <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} 
-                          refetchScores={(newFilters) => debouncedGetScores(newFilters, currentPage)}/>
+                          refetchScores={(newFilters) => debouncedGetData(newFilters)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">

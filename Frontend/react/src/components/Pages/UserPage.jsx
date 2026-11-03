@@ -140,12 +140,17 @@ function UserPage({user}) {
         [currentPage]
     );
 
-    const getData = useCallback(async (filterOptions) => {
-        await Promise.all([getScores(filterOptions, currentPage), getUserStats(filterOptions)]);
+    const getData = useCallback(async (filterOptions, affectsCount) => {
+        if (affectsCount) {
+            await Promise.all([getScores(filterOptions, currentPage), getUserStats(filterOptions)]);
+        }
+        else {
+            await getScores(filterOptions, currentPage);
+        }
     }, [filters]);
 
     useEffect( () => {
-        getData(filters);
+        getData(filters, true);
     }, []);
 
     const debouncedGetData = useMemo(
@@ -186,7 +191,7 @@ function UserPage({user}) {
         <h1 className="section-header">Score filters:</h1>
         <div className="component-container">
             <ScoreFilters isUser={true} filters={filters} setFilters={setFilters} 
-                          refetchScores={(newFilters) => debouncedGetData(newFilters)}/>
+                          refetchScores={(newFilters, affectsCount) => debouncedGetData(newFilters, affectsCount)}/>
         </div>
         <h1 className="section-header">{`All scores${dateRangeString}:`}</h1>
         <div className="component-container">

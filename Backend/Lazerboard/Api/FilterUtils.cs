@@ -1,4 +1,6 @@
+using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
+using Npgsql;
 
 namespace Lazerboard.Api;
 
@@ -125,63 +127,117 @@ public static class FilterUtils
     /// Get filter string from a <see cref="ScoreQueryCommand"/>
     /// </summary>
     /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
-    /// <returns>The filter string</returns>
-    public static string GetFilterText(ScoreQueryCommand command)
+    /// <returns>The corresponding <see cref="ScoreFiltersData"/></returns>
+    public static ScoreFiltersData GetFilterText(ScoreQueryCommand command)
     {
         var filters = new List<string>();
+        var parameters = new List<object>();
         
         if (!(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
         {
-            var modes = command.Modes.Select(m => $"'{m.ToString()}'".ToLower()).Distinct().ToList();
-            filters.Add($"mode = ANY({string.Join(",", modes)})");
+            var modes = command.Modes.Distinct().ToList();
+            parameters.Add(new NpgsqlParameter("@modes", modes));
+            filters.Add("s.mode = ANY(@modes)");
         }
-        
-        if (command.BeatmapStatus != null) filters.Add($"b.status = '{command.BeatmapStatus.Value.ToString().ToLower()}'");
+
+        if (command.BeatmapStatus != null)
+        {
+            parameters.Add(new NpgsqlParameter("@status", command.BeatmapStatus.Value.ToString().ToLower()));
+            filters.Add("b.status = @status");
+        }
 
         if (command.ExcludeConverts != null && command.ExcludeConverts.Value) filters.Add("is_convert = FALSE");
-        
-        if (command.DateRange[0] != null) filters.Add($"date >= '{command.DateRange[0]}'");
-        if (command.DateRange[1] != null) filters.Add($"date <= '{command.DateRange[1]}'");
 
-        
-        if (command.RankRange[0] != null) filters.Add($"rank >= {command.RankRange[0]}");
-        if (command.RankRange[1] != null) filters.Add($"rank <= {command.RankRange[1]}");
+        if (command.DateRange[0] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@dateMin", command.DateRange[0]));
+            filters.Add("date >= @dateMin");
+        }
 
-        if (command.PpRange[0] != null) filters.Add($"pp >= {command.PpRange[0]}");
-        if (command.PpRange[1] != null) filters.Add($"pp <= {command.PpRange[0]}");
+        if (command.DateRange[1] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@dateMax", command.DateRange[1]));
+            filters.Add("date <= @dateMax");
+        }
+
+
+        if (command.RankRange[0] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@rankMin", command.RankRange[0]));
+            filters.Add("rank >= @rankMin");
+        }
+        if (command.RankRange[1] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@rankMax", command.RankRange[1]));
+            filters.Add("rank <= @rankMax");
+        }
+
+        if (command.PpRange[0] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@ppMin", command.PpRange[0]));
+            filters.Add("pp >= @ppMin");
+        }
+
+        if (command.PpRange[1] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@ppMax", command.PpRange[1]));
+            filters.Add("pp <= @ppMax");
+        }
 
         if (command.AccuracyRange[0] != null) {
             var acc = command.AccuracyRange[0] / 100.0f;
-            filters.Add($"accuracy >= {acc}");
+            parameters.Add(new NpgsqlParameter("@accMin", acc));
+            filters.Add("accuracy >= @accMin");
         }
         if (command.AccuracyRange[1] != null) {
             var acc = command.AccuracyRange[1] / 100.0f;
-            filters.Add($"accuracy <= {acc}");
+            parameters.Add(new NpgsqlParameter("@accMax", acc));
+            filters.Add("accuracy <= @accMax");
         }
 
         // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
         // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
         if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) filters.Add("speed_change IS NOT NULL");
-        if (command.SpeedRange[0] != null) filters.Add($"speed_change >= {command.SpeedRange[0]}");
-        if (command.SpeedRange[1] != null) filters.Add($"speed_change <= {command.SpeedRange[1]}");
+        if (command.SpeedRange[0] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@speedMin", command.SpeedRange[0]));
+            filters.Add("speed_change >= @speedMin");
+        }
 
-        if (command.StarRange[0] != null) filters.Add($"b.difficulty >= {command.StarRange[0]}");
-        if (command.StarRange[1] != null) filters.Add($"b.difficulty <= {command.StarRange[1]}");
+        if (command.SpeedRange[1] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@speedMax", command.SpeedRange[1]));
+            filters.Add("speed_change <= @speedMax");
+        }
+
+        if (command.StarRange[0] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@starMin", command.StarRange[0]));
+            filters.Add("b.difficulty >= @starMin");
+        }
+
+        if (command.StarRange[1] != null)
+        {
+            parameters.Add(new NpgsqlParameter("@starMax", command.StarRange[1]));
+            filters.Add("b.difficulty <= @starMax");
+        }
 
         if (command.LenientMode != null)
         {
             switch (command.LenientMode)
             {
                 case true when command.IncludeMods.Length != 0:
-                    var mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
-                    filters.Add($"mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
+                    var mods = command.IncludeMods.Select(m => m).Distinct().ToList();
+                    parameters.Add(new NpgsqlParameter("@includeMods", mods));
+                    filters.Add("mod_acronyms @> ARRAY[@includeMods]");
                     break;
                 case false:
                     if (command.IncludeMods.Length > 0)
                     {
                         mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
-                        filters.Add($"mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
-                        filters.Add($"mod_acronyms <@ ARRAY[{string.Join(",", mods)}]");
+                        parameters.Add(new NpgsqlParameter("@includeMods", mods));
+                        filters.Add("mod_acronyms @> ARRAY[@includeMods]");
+                        filters.Add("mod_acronyms <@ ARRAY[@includeMods]");
                     }
                     else
                     {
@@ -194,12 +250,21 @@ public static class FilterUtils
         if (command.ExcludeMods.Length > 0)
         {
             var mods = command.ExcludeMods.Select(m => $"'{m}'").Distinct().ToList();
-            filters.Add($"NOT mod_acronyms @> ARRAY[{string.Join(",", mods)}]");
+            parameters.Add(new NpgsqlParameter("@excludeMods", mods));
+            filters.Add("NOT mod_acronyms @> ARRAY[@excludeMods]");
         }
-        
-        if (command.CountryCode != null) filters.Add($"u.country_code = '{command.CountryCode}'");
-        
-        return string.Join(" AND ",  filters);
+
+        if (command.CountryCode != null)
+        {
+            parameters.Add(new NpgsqlParameter("@countryCode", command.CountryCode));
+            filters.Add("u.country_code = @countryCode");
+        }
+
+        return new ScoreFiltersData
+        {
+            FilterText = string.Join(" AND ", filters),
+            Parameters = parameters.ToArray()
+        };
     }
 
     /// <summary>

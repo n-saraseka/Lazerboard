@@ -227,14 +227,14 @@ public static class FilterUtils
             switch (command.LenientMode)
             {
                 case true when command.IncludeMods.Length != 0:
-                    var mods = command.IncludeMods.Select(m => m).Distinct().ToList();
+                    var mods = command.IncludeMods.Distinct().ToList();
                     parameters.Add(new NpgsqlParameter("@includeMods", mods));
                     filters.Add("mod_acronyms @> ARRAY[@includeMods]");
                     break;
                 case false:
                     if (command.IncludeMods.Length > 0)
                     {
-                        mods = command.IncludeMods.Select(m => $"'{m}'").Distinct().ToList();
+                        mods = command.IncludeMods.Distinct().ToList();
                         parameters.Add(new NpgsqlParameter("@includeMods", mods));
                         filters.Add("mod_acronyms @> ARRAY[@includeMods]");
                         filters.Add("mod_acronyms <@ ARRAY[@includeMods]");
@@ -249,7 +249,7 @@ public static class FilterUtils
 
         if (command.ExcludeMods.Length > 0)
         {
-            var mods = command.ExcludeMods.Select(m => $"'{m}'").Distinct().ToList();
+            var mods = command.ExcludeMods.Distinct().ToList();
             parameters.Add(new NpgsqlParameter("@excludeMods", mods));
             filters.Add("NOT mod_acronyms @> ARRAY[@excludeMods]");
         }

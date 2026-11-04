@@ -173,8 +173,9 @@ public class UsersController(IScoreRepository scoreRepository,
 
         if (userStatsCache is null)
         {
-            var filterText = FilterUtils.GetFilterText(filteredCommand);
-            filterText = filterText.Length == 0 ? "" : $" AND {filterText}";
+            var filterData = FilterUtils.GetFilterText(filteredCommand);
+            var filterText = filterData.FilterText.Length == 0 ? "" : $" AND {filterData.FilterText}";
+            var parameters = filterData.Parameters;
             var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
             
             var context = scoreRepository.GetDbContext();
@@ -185,7 +186,7 @@ public class UsersController(IScoreRepository scoreRepository,
                         WHERE user_id = {userId}{filterText}
                         GROUP BY month
                         ORDER BY month ASC)";
-            var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql);
+            var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql, parameters);
             var history = await historyQuery.ToListAsync(ct);
             
             // The rank distribution
@@ -207,7 +208,7 @@ public class UsersController(IScoreRepository scoreRepository,
                         ) rank_distribution
                         CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
                         ORDER BY i.rank_bound";
-            var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql);
+            var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql, parameters);
             var rankStats = await ranksQuery.ToListAsync(ct);
             
             // The star distribution
@@ -217,7 +218,7 @@ public class UsersController(IScoreRepository scoreRepository,
                         WHERE user_id = {userId}{filterText}
                         GROUP BY sr_bracket
                         ORDER BY sr_bracket";
-            var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql);
+            var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql, parameters);
             var starStats = await starsQuery.ToListAsync(ct);
             
             // The speed distribution
@@ -229,7 +230,7 @@ public class UsersController(IScoreRepository scoreRepository,
                         WHERE user_id = {userId} AND speed_change IS NOT NULL{filterText}
                         GROUP BY speed_bracket
                         ORDER BY speed_bracket";
-            var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql);
+            var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql, parameters);
             var speedStats = await speedQuery.ToListAsync(ct);
 
             var statsResponse = new UserStatsResponse

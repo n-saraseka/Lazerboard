@@ -190,7 +190,7 @@ function UserPage({user}) {
                         : <UserStats data={userData}/>)}
             </div>
         </div>
-        <h1 className="section-header">Score filters:</h1>
+        <h1 className="section-header">Filter user scores:</h1>
         <div className="component-container">
             <ScoreFilters isUser={true} filters={filters} setFilters={setFilters}/>
         </div>

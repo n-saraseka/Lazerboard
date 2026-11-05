@@ -2,7 +2,6 @@
 
 @{
     ViewBag.Title = "Home";
-    ViewData["ActivePage"] = "home";
 }
 
-<div class="react-app" data-component="ScoresPage" data-props='@Json.Serialize(Model)'></div>
+<div class="react-app" data-page="scores" data-count='@ViewData["ScoresCount"]' data-props='@Json.Serialize(Model)'></div>

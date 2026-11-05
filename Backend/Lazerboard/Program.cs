@@ -176,9 +176,9 @@ app.MapControllerRoute(
     defaults: new { controller = "ScoreRanking", action = "ScoreRanking"});
 
 app.MapControllerRoute(
-    name: "maniamillions",
-    pattern: "maniamillions",
-    defaults: new { controller = "ScoreRanking", action = "ManiaMillions"});
+    name: "millionsranking",
+    pattern: "millionsranking",
+    defaults: new { controller = "ScoreRanking", action = "MillionsRanking"});
 
 app.MapControllers();
 

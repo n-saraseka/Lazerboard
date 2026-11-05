@@ -117,7 +117,7 @@ function ScoresPage({countries}) {
     );
     
     return (<>
-        <h1 className="section-header">Score filters:</h1>
+        <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
             <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>

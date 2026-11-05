@@ -2,11 +2,10 @@
 
 @{
     ViewBag.Title = $"{Model.Beatmapset.Artist} - {Model.Beatmapset.Title}";
-    ViewData["ActivePage"] = "beatmap";
 }
 
 @section Styles {
     <link rel="stylesheet" href="/static/styles/styles-beatmapset.css">
 }
 
-<div class="react-app" data-component="BeatmapsetPage" data-props='@Json.Serialize(Model)'></div>
+<div class="react-app" data-page="beatmap" data-props='@Json.Serialize(Model)'></div>

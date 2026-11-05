@@ -12,4 +12,3 @@ COPY --from=react app/build /srv/www/static/react
 COPY ./images /srv/www/static/images/
 COPY ./favicon /srv/www/static/favicon/
 COPY ./styles /srv/www/static/styles/
-COPY ./scripts /srv/www/static/scripts/

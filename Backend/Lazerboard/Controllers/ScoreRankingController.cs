@@ -19,7 +19,7 @@ public class ScoreRankingController(ICountryRepository countryRepository) : Cont
         return View(viewModel);
     }
     
-    public async Task<IActionResult> ManiaMillions(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> MillionsRanking(CancellationToken cancellationToken = default)
     {
         var countries = await countryRepository.GetAll().OrderBy(c => c.Name).ToListAsync(cancellationToken);
 

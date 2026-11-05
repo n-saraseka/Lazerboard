@@ -73,7 +73,7 @@ function ScoreRankingPage({countries}) {
     );
 
     return (<>
-        <h1 className="section-header">Score filters:</h1>
+        <h1 className="section-header">Filter rankings:</h1>
         <div className="component-container">
             <ScoreRankingFilters isMania={true} filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
@@ -81,7 +81,7 @@ function ScoreRankingPage({countries}) {
                 onClick={() => debouncedGetRankings(filters, currentPage)}>
             Get ranking
         </button>
-        <h1 className="section-header">User rankings:</h1>
+        <h1 className="section-header">User ranking:</h1>
         <div className="component-container">
             {isError
                 ? (<Error/>)

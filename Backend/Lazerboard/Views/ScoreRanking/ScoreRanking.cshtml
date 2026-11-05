@@ -2,11 +2,10 @@
 
 @{
     ViewBag.Title = "User ranking";
-    ViewData["ActivePage"] = "scoreranking";
 }
 
 @section Styles {
     <link rel="stylesheet" href="/static/styles/styles-ranking.css">
 }
 
-<div class="react-app" data-component="ScoreRankingPage" data-props='@Json.Serialize(Model)'></div>
+<div class="react-app" data-page="userranking" data-count='@ViewData["ScoresCount"]' data-props='@Json.Serialize(Model)'></div>

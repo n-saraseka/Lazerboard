@@ -2,11 +2,10 @@
 
 @{
     ViewBag.Title = "Mania millions ranking";
-    ViewData["ActivePage"] = "maniamillions";
 }
 
 @section Styles {
     <link rel="stylesheet" href="/static/styles/styles-ranking.css">
 }
 
-<div class="react-app" data-component="ManiaRankingPage" data-props='@Json.Serialize(Model)'></div>
+<div class="react-app" data-page="millionsranking" data-count='@ViewData["ScoresCount"]' data-props='@Json.Serialize(Model)'></div>

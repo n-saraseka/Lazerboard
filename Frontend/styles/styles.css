@@ -1034,6 +1034,32 @@ body {
     background-color: rgb(180, 180, 180);
 }
 
+.navigation-right {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+}
+
+.user-preferences {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+}
+
+.scoring-preference {
+    font-weight: bold;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+.scoring-preference.inactive {
+    color: rgb(90, 90, 90);
+}
+
+.scoring-preference:hover {
+    text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
+}
+
 @media (max-width: 1500px) {
     .scores {
         grid-template-columns: repeat(3, 1fr);
@@ -1054,7 +1080,7 @@ body {
     .collapse-button {
         font-size: 1.2em;
     }
-    header, .navigation-main, .navigation {
+    header, .navigation-main, .navigation, .navigation-right {
         flex-direction: column;
         justify-content: flex-start;
         align-items: flex-start;

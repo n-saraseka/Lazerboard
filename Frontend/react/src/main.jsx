@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import Page from './components/Pages/Page.jsx';
@@ -33,9 +32,7 @@ document.querySelectorAll(".react-app").forEach((el) => {
         const props = rawProps ? JSON.parse(rawProps) : {};
 
         createRoot(el).render(
-            <StrictMode>
-                <Page currentPage={currentPage} scoresCount={count} pageComponent={<Component {...props}/>}/>
-            </StrictMode>,
+            <Page currentPage={currentPage} scoresCount={count} pageComponent={<Component {...props}/>}/>
         );
     }
 })

@@ -1,12 +1,14 @@
 import ModeWedge from "./ModeWedge.jsx";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import {getPpColor, getRankTierColor, sortedModAcronyms} from "../../utils/score-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
 import StatusWedge from "./StatusWedge.jsx";
+import {PreferencesContext} from "../Header/Preferences/PreferencesContext.jsx";
 
-function ScoreCard({score, usingStandardized}) {
+function ScoreCard({score}) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const { preferences, setPreferences } = useContext(PreferencesContext);
     
     return (<div className="score-card">
         <div className="score" style={
@@ -64,13 +66,13 @@ function ScoreCard({score, usingStandardized}) {
                 <div className="scorecard-column">
                     <div className="score-total">
                         <a href={`https://osu.ppy.sh/scores/${score.id}`}
-                           title={usingStandardized ? "Standardised score" : "Classic score"}
+                           title={preferences.preferStandardizedScoring ? "Standardised score" : "Classic score"}
                            className="score-primary">
-                            {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
+                            {preferences.preferStandardizedScoring ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
                         </a>
-                        <span title={usingStandardized ? "Classic score" : "Standardised score"}
+                        <span title={preferences.preferStandardizedScoring ? "Classic score" : "Standardised score"}
                               className="score-secondary">
-                            {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
+                            {preferences.preferStandardizedScoring ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
                         </span>
                     </div>
                 </div>

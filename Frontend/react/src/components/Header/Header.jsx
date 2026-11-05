@@ -1,5 +1,6 @@
-import UserSearchBar from "../User/UserSearchBar.jsx";
+import UserSearchBar from "./UserSearchBar.jsx";
 import { useState } from "react";
+import UserPreferences from "./Preferences/UserPreferences.jsx";
 
 function Header({currentPage}) {
     const [burgerActive, setBurgerActive] = useState(true);
@@ -26,7 +27,10 @@ function Header({currentPage}) {
                     <a href="/millionsranking" className={currentPage === "millionsranking" ? 'active' : 'inactive'}>Mania millions</a>
                 </li>
             </ul>
-            <UserSearchBar/>
+            <div className="navigation-right">
+                <UserPreferences/>
+                <UserSearchBar/>
+            </div>
         </div>
     </header>
 }

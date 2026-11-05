@@ -1,12 +1,14 @@
 import {beatmapStatusEnumToText, modeEnumToString, modeEnumToDisplayString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
+import {PreferencesContext} from "../Header/Preferences/PreferencesContext.jsx";
 
-function ScoreRow({score, usingStandardized}) {
+function ScoreRow({score}) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const { preferences, setPreferences } = useContext(PreferencesContext);
     const modeString = modeEnumToString(score.mode);
     const modeDisplayString = modeEnumToDisplayString(score.mode);
     const statusString = beatmapStatusEnumToText(score.beatmap.status);
@@ -56,12 +58,12 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-total">
             <div className="score-total">
                 <a href={`https://osu.ppy.sh/scores/${score.id}`}
-                   title={usingStandardized ? "Standardised score" : "Classic score"}
+                   title={preferences.preferStandardizedScoring ? "Standardised score" : "Classic score"}
                    className="score-primary">
-                    {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
+                    {preferences.preferStandardizedScoring ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
                 </a>
-                <span title={usingStandardized ? "Classic score" : "Standardised score"} className="score-secondary">
-                    {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
+                <span title={preferences.preferStandardizedScoring ? "Classic score" : "Standardised score"} className="score-secondary">
+                    {preferences.preferStandardizedScoring ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
                 </span>
             </div>
         </td>

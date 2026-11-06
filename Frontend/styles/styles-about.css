@@ -27,7 +27,7 @@
 
 /* Light theme */
 body:has(.theme-preference.light) .about-explanation {
-    background-color: hsl(45, 70%, 85%);
+    background-color: hsl(45, 35%, 85%);
 }
 
 body:has(.theme-preference.light) .about a {

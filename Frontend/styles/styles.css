@@ -153,6 +153,10 @@ div.search::before {
     border-radius: 0.5em;
 }
 
+.country-img {
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
+}
+
 .search-result .country-img {
     height: 1em;
 }
@@ -640,6 +644,7 @@ input:focus, select:focus {
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
+    border-radius: 1em;
 }
 
 .scores-table {
@@ -1112,12 +1117,12 @@ input:focus, select:focus {
     background-color: rgb(90, 90, 90);
 }
 
-.theme-preference.light .icon-day, .icon-day:hover {
-    background-color: #E8C02C;
+.theme-preference.light .icon-day, .theme-icon.icon-day:hover {
+    background-color: #d9b325;
 }
 
 .theme-preference.dark .icon-day {
-    background-color: #6A550C;
+    background-color: #6a550c;
 }
 
 .theme-toggle {
@@ -1154,14 +1159,14 @@ input:focus, select:focus {
 
 /* Light theme */
 body:has(.theme-preference.light) {
-    background-color: hsl(45, 70%, 98%);
+    background-color: hsl(45, 35%, 98%);
     color: rgb(35, 35, 35);
 }
 
 body:has(.theme-preference.light) header,
 body:has(.theme-preference.light) footer,
 body:has(.theme-preference.light) .container {
-    background-color: hsl(45, 70%, 80%);
+    background-color: hsl(45, 35%, 80%);
 }
 
 body:has(.theme-preference.light) .navigation a.inactive {
@@ -1169,7 +1174,7 @@ body:has(.theme-preference.light) .navigation a.inactive {
 }
 
 body:has(.theme-preference.light) .search-result {
-    background-color: hsl(45, 70%, 90%);
+    background-color: hsl(45, 35%, 90%);
     text-decoration-color: rgb(35, 35, 35);
 }
 
@@ -1178,23 +1183,23 @@ body:has(.theme-preference.light) .search-result * {
 }
 
 body:has(.theme-preference.light) .search-result:hover {
-    background-color: hsl(45, 70%, 70%);
+    background-color: hsl(45, 35%, 70%);
 }
 
 body:has(.theme-preference.light) .component-container, body:has(.theme-preference.light) .page {
-    background-color: hsl(45, 70%, 90%);
+    background-color: hsl(45, 35%, 90%);
 }
 
 body:has(.theme-preference.light) .page.active, body:has(.theme-preference.light) .page-navigation:hover {
-    background-color: hsl(45, 70%, 70%);
+    background-color: hsl(45, 35%, 70%);
 }
 
 body:has(.theme-preference.light) .collapse-button {
-    background-color: hsl(45, 70%, 70%);
+    background-color: hsl(45, 35%, 70%);
 }
 
 body:has(.theme-preference.light) .collapse-button:hover {
-    background-color: hsl(45, 70%, 55%);
+    background-color: hsl(45, 35%, 55%);
 }
 
 body:has(.theme-preference.light) .scores-table tr td a,
@@ -1206,15 +1211,15 @@ body:has(.theme-preference.light) footer a {
 }
 
 body:has(.theme-preference.light) .scores-table thead {
-    background-color: hsl(45, 70%, 70%);
+    background-color: hsl(45, 35%, 70%);
 }
 
 body:has(.theme-preference.light) .scores-table tbody tr:nth-child(odd) {
-    background-color: hsl(45, 20%, 90%);
+    background-color: hsl(45, 20%, 95%);
 }
 
 body:has(.theme-preference.light) .scores-table tbody tr:nth-child(even) {
-    background-color: hsl(45, 20%, 85%);
+    background-color: hsl(45, 20%, 90%);
 }
 
 body:has(.theme-preference.light) .burger-icon {
@@ -1257,7 +1262,8 @@ body:has(.theme-preference.light) .loader {
 body:has(.theme-preference.light) .scores-table .score-difficulty-name:hover,
 body:has(.theme-preference.light) .scores-table .score-beatmap:hover,
 body:has(.theme-preference.light) .scores-table .score-primary:hover,
-body:has(.theme-preference.light) .scores-table .score-row-player-name a:hover {
+body:has(.theme-preference.light) .scores-table .score-row-player-name a:hover,
+body:has(.theme-preference.light) .scoring-preference:hover{
     text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.3);
 }
 

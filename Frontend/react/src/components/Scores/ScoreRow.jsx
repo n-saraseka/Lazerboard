@@ -1,24 +1,29 @@
 import {beatmapStatusEnumToText, modeEnumToString, modeEnumToDisplayString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
-import {useState} from "react";
+import {useContext, useState, useMemo} from "react";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
-function ScoreRow({score, usingStandardized}) {
+function ScoreRow({score}) {
     const [isExpanded, setIsExpanded] = useState(false);
     const modeString = modeEnumToString(score.mode);
     const modeDisplayString = modeEnumToDisplayString(score.mode);
     const statusString = beatmapStatusEnumToText(score.beatmap.status);
+
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+    const themePreference = useMemo(() => preferences.theme ?? 'dark', [preferences.theme]);
+    const scoreDisplayPreference = useMemo(() => preferences.preferStandardizedScoring ?? true, [preferences.preferStandardizedScoring]);
     
     return (<tr className="score-row">
         <td className="score-row-mode">
-            <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}} title={modeDisplayString}></div>
+            <div className={`mode-icon mode-${modeString}`} title={modeDisplayString}></div>
         </td>
         <td className="score-row-status">
-            <div className={`status-icon status-${statusString.toLowerCase()}`} style={{backgroundColor: "white"}} title={statusString}></div>
+            <div className={`status-icon status-${statusString.toLowerCase()}`} title={statusString}></div>
         </td>
-        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(themePreference, score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-map-image">
             <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
                 <img src={`https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg`} alt="Beatmap image" onError={(event) => {
@@ -47,7 +52,7 @@ function ScoreRow({score, usingStandardized}) {
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
-        <td className="score-row-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+        <td className="score-row-pp" style={{color: getPpColor(themePreference, score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
             {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
         </td>
         <td className="score-row-mods">
@@ -56,12 +61,12 @@ function ScoreRow({score, usingStandardized}) {
         <td className="score-row-total">
             <div className="score-total">
                 <a href={`https://osu.ppy.sh/scores/${score.id}`}
-                   title={usingStandardized ? "Standardised score" : "Classic score"}
+                   title={scoreDisplayPreference ? "Standardised score" : "Classic score"}
                    className="score-primary">
-                    {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
+                    {scoreDisplayPreference ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
                 </a>
-                <span title={usingStandardized ? "Classic score" : "Standardised score"} className="score-secondary">
-                    {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
+                <span title={scoreDisplayPreference ? "Classic score" : "Standardised score"} className="score-secondary">
+                    {scoreDisplayPreference ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
                 </span>
             </div>
         </td>

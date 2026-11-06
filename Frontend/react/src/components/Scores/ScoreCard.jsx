@@ -1,12 +1,16 @@
 import ModeWedge from "./ModeWedge.jsx";
-import {useState} from "react";
+import {useContext, useState, useMemo} from "react";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
-import {getPpColor, getRankTierColor, sortedModAcronyms} from "../../utils/score-things.js";
+import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
 import StatusWedge from "./StatusWedge.jsx";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
-function ScoreCard({score, usingStandardized}) {
+function ScoreCard({score}) {
     const [isExpanded, setIsExpanded] = useState(false);
+    
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+    const scoreDisplayPreference = useMemo(() => preferences.preferStandardizedScoring ?? true, [preferences.preferStandardizedScoring]);
     
     return (<div className="score-card">
         <div className="score" style={
@@ -37,7 +41,7 @@ function ScoreCard({score, usingStandardized}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</strong>
+                    <strong className="score-rank" style={{color: getRankTierColor('dark', score.rank)}}>{`#${score.rank}`}</strong>
                 </div>
                 <div className="scorecard-column">
                     <div className="score-combo-misses">
@@ -52,7 +56,7 @@ function ScoreCard({score, usingStandardized}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+                    <strong className="score-pp" style={{color: getPpColor('dark', score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
                         {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
                     </strong>
                 </div>
@@ -64,13 +68,13 @@ function ScoreCard({score, usingStandardized}) {
                 <div className="scorecard-column">
                     <div className="score-total">
                         <a href={`https://osu.ppy.sh/scores/${score.id}`}
-                           title={usingStandardized ? "Standardised score" : "Classic score"}
+                           title={scoreDisplayPreference ? "Standardised score" : "Classic score"}
                            className="score-primary">
-                            {usingStandardized ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
+                            {scoreDisplayPreference ? score.totalScore.toLocaleString('en-US') : score.classicTotalScore.toLocaleString('en-US')}
                         </a>
-                        <span title={usingStandardized ? "Classic score" : "Standardised score"}
+                        <span title={scoreDisplayPreference ? "Classic score" : "Standardised score"}
                               className="score-secondary">
-                            {usingStandardized ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
+                            {scoreDisplayPreference ? score.classicTotalScore.toLocaleString('en-US') : score.totalScore.toLocaleString('en-US')}
                         </span>
                     </div>
                 </div>

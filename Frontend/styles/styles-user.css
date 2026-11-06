@@ -4,6 +4,7 @@
     background-color: rgb(30, 30, 30);
     padding: 1em;
     border-radius: 1em;
+    transition: background-color 0.3s ease-in-out;
 }
 
 .user-card-column {
@@ -34,12 +35,18 @@
 
 .country-img {
     height: 1.5em;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
 }
 
 .user-name {
     color: white;
     font-size: 1.5em;
     font-weight: bold;
+    transition: color 0.3s ease-in-out;
+}
+
+.user-name:hover {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
 }
 
 .user-card .user-avatar {
@@ -90,6 +97,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1em;
+    border-radius: 1em;
+    background-color: rgb(30, 30, 30);
+    transition: background-color 0.3s ease-in-out;
 }
 
 .card-stats:has(.card-stats-column.collapsed) .card-stats-column:first-child {
@@ -98,6 +109,23 @@
 
 .card-stats-column.collapsed {
     display: none;
+}
+
+/* Light theme */
+body:has(.theme-preference.light) .user-card {
+    background-color: hsl(45, 35%, 90%);
+}
+
+body:has(.theme-preference.light) .user-name {
+    color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .user-name:hover {
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body:has(.theme-preference.light) .chart-wrapper {
+    background-color: hsl(45, 35%, 90%);
 }
 
 @media (max-width: 1280px) {

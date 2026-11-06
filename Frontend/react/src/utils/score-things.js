@@ -173,28 +173,40 @@ export function getSpeedColor(speed) {
     return 'rgb(255, 204, 34)';
 }
 
-const rankTierColorSpectrum = d3.scaleLinear()
+const rankTierColorSpectrumLight = d3.scaleLinear()
+    .domain([1, 2, 3, 4, 25, 50, 100])
+    .clamp(true)
+    .range(["hsl(45, 75%, 58.5%)", "hsl(180, 20% , 55%)", "hsl(20, 60% , 45%)", "hsl(100, 40%, 45%)", "hsl(150, 40%, 45%)", "hsl(200, 80%, 55%)", "hsl(0, 0%, 72%)"])
+    .interpolate(d3.interpolateRgb.gamma(2.2));
+
+const rankTierColorSpectrumDark = d3.scaleLinear()
     .domain([1, 2, 3, 4, 25, 50, 100])
     .clamp(true)
     .range(["hsl(45, 75%, 65%)", "hsl(180, 20% , 60%)", "hsl(20, 60% , 50%)", "hsl(100, 40%, 50%)", "hsl(150, 40%, 50%)", "hsl(200, 80%, 60%)", "hsl(0, 0%, 80%)"])
     .interpolate(d3.interpolateRgb.gamma(2.2));
 
-export function getRankTierColor(rank) {
+export function getRankTierColor(theme, rank) {
     if (rank === 1) return "hsl(45, 75%, 65%)";
     if (rank > 100) return "hsl(0, 0%, 80%)";
-    return rankTierColorSpectrum(rank);
+    return theme === 'light' ? rankTierColorSpectrumLight(rank) : rankTierColorSpectrumDark(rank);
 }
 
-const ppColorSpectrum = d3.scaleLinear()
+const ppColorSpectrumDark = d3.scaleLinear()
     .domain([0, 250, 500, 1000, 1500, 2000, 2500])
     .clamp(true)
     .range(["#ffffff", "hsl(180, 80%, 50%)", "hsl(210, 50%, 50%)", "hsl(240, 40%, 50%)", "hsl(270, 60%, 60%)", "hsl(300, 40%, 50%)", "hsl(330, 50%, 50%)"])
     .interpolate(d3.interpolateRgb.gamma(2.2));
 
-export function getPpColor(pp) {
+const ppColorSpectrumLight = d3.scaleLinear()
+    .domain([0, 250, 500, 1000, 1500, 2000, 2500])
+    .clamp(true)
+    .range(["rgb(35, 35, 35)", "hsl(180, 80%, 50%)", "hsl(210, 50%, 50%)", "hsl(240, 40%, 50%)", "hsl(270, 60%, 60%)", "hsl(300, 40%, 50%)", "hsl(330, 50%, 50%)"])
+    .interpolate(d3.interpolateRgb.gamma(2.2));
+
+export function getPpColor(theme, pp) {
     if (pp === null) return "rgb(150, 150, 150)";
     if (pp > 2500) return "hsl(330, 50%, 50%)";
-    return ppColorSpectrum(pp);
+    return theme === 'light' ? ppColorSpectrumLight(pp) : ppColorSpectrumDark(pp);
 }
 
 export function createScoreQueryCommand(filters) {

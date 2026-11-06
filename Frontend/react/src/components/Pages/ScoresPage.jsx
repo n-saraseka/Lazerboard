@@ -1,23 +1,32 @@
 import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
 import ScoreFilters from '../Filters/ScoreFilters';
-import {useState, useMemo, useEffect, useCallback} from "react";
+import {useState, useMemo, useEffect, useCallback, useContext} from "react";
 import Pagination from "../Misc/Pagination.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import {createScoreQueryCommand} from "../../utils/score-things.js";
 import {debounce} from "../../utils/server-things.js";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function ScoresPage({countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
-
-    const [filters, setFilters] = useState({
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+    const globalPreferences = useMemo(() => preferences.globalPreferences ?? {
         view: 'cards',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
+        beatmapStatus: 'all',
+        amount: 25
+    }, [preferences.globalPreferences]);
+
+    const [filters, setFilters] = useState({
+        view: globalPreferences.view,
+        modes: globalPreferences.modes,
+        excludeConverts: globalPreferences.excludeConverts,
         dateRange: {min: null, max: null},
         rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
@@ -29,8 +38,18 @@ function ScoresPage({countries}) {
         lenientMode: true,
         sortBy: 'pp',
         sortDir: 'desc',
-        amount: 25,
+        amount: globalPreferences.amount,
+        beatmapStatus: globalPreferences.beatmapStatus,
     });
+    
+    useEffect(() => setPreferences({...preferences, 
+            globalPreferences: {...globalPreferences,
+                view: filters.view,
+                modes: filters.modes, 
+                excludeConverts: filters.excludeConverts, 
+                amount: filters.amount, 
+                beatmapStatus: filters.beatmapStatus}
+    }), [filters]);
     
     const [currentPage, setCurrentPage] = useState(1);
     const [scoresCount, setScoresCount] = useState(0);

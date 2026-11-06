@@ -24,3 +24,16 @@
     padding: 0.5em;
     width: fit-content;
 }
+
+/* Light theme */
+body:has(.theme-preference.light) .about-explanation {
+    background-color: hsl(45, 35%, 85%);
+}
+
+body:has(.theme-preference.light) .about a {
+    color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .about strong {
+    color: #d10046;
+}

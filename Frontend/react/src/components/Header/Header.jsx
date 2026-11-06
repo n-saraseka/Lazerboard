@@ -1,6 +1,6 @@
 import UserSearchBar from "./UserSearchBar.jsx";
 import { useState } from "react";
-import UserPreferences from "./Preferences/UserPreferences.jsx";
+import UserPreferences from "../Preferences/UserPreferences.jsx";
 
 function Header({currentPage}) {
     const [burgerActive, setBurgerActive] = useState(true);

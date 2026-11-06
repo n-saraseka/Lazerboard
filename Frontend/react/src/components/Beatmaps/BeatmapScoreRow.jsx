@@ -3,7 +3,7 @@ import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor, getPpCo
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useContext, useState} from "react";
 import ScoreMods from "../Misc/ScoreMods.jsx";
-import {PreferencesContext} from "../Header/Preferences/PreferencesContext.jsx";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function BeatmapScoreRow({score}) {
     const [isExpanded, setIsExpanded] = useState(false);

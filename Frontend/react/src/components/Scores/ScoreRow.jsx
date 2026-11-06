@@ -4,7 +4,7 @@ import {useContext, useState} from "react";
 import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
-import {PreferencesContext} from "../Header/Preferences/PreferencesContext.jsx";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function ScoreRow({score}) {
     const [isExpanded, setIsExpanded] = useState(false);

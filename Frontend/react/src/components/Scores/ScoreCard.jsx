@@ -4,7 +4,7 @@ import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-th
 import {getPpColor, getRankTierColor, sortedModAcronyms} from "../../utils/score-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
 import StatusWedge from "./StatusWedge.jsx";
-import {PreferencesContext} from "../Header/Preferences/PreferencesContext.jsx";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function ScoreCard({score}) {
     const [isExpanded, setIsExpanded] = useState(false);

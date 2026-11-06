@@ -96,7 +96,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
                 {background: `url("https://assets.ppy.sh/beatmaps/${beatmapset.id}/covers/cover@2x.jpg") center / cover, rgba(0, 0, 0, 0.7)`}
             }>
                 <h1><a href={`https://osu.ppy.sh/beatmapsets/${beatmapset.id}#${modeEnumToString(currentMode)}`}>{`${beatmapset.artist} - ${beatmapset.title}`}</a></h1>
-                <MappedBy user={beatmapset.user}/>
+                <MappedBy user={beatmapset.user} rankedDate={beatmapset.rankedDate}/>
                 <div className="difficulties">
                     {beatmaps.map((beatmap, index) => (
                         <DifficultyIcon difficulty={beatmap.difficulty}

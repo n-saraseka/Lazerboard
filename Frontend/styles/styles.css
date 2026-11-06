@@ -1031,12 +1031,12 @@ input:focus, select:focus {
     -webkit-mask-image: url("../images/ranked.svg");
 }
 
-.score-status .status-icon.status-approved {
+.status-icon.status-approved {
     mask-image: url("../images/approved.svg");
     -webkit-mask-image: url("../images/approved.svg");
 }
 
-.score-status .status-icon.status-loved {
+.status-icon.status-loved {
     mask-image: url("../images/loved.svg");
     -webkit-mask-image: url("../images/loved.svg");
 }

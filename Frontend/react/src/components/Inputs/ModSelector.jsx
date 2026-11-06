@@ -18,7 +18,7 @@ function ModSelector({availableMods, filters, setFilters, excludeMode}) {
     return (
         <>
             <div className="selector selector-mods">
-                <div className="selector-item top-selector" onClick={() => setIsExpanded(!isExpanded)}>
+                <div className="selector-item selector-top" onClick={() => setIsExpanded(!isExpanded)}>
                     <span>{excludeMode 
                         ? (filters.excludeMods.length > 0 ? `${filters.excludeMods.length} selected` : "None selected")
                         : (filters.includeMods.length > 0 ? `${filters.includeMods.length} selected` : "None selected")

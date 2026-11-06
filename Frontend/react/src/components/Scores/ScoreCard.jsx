@@ -54,7 +54,7 @@ function ScoreCard({score}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+                    <strong className="score-pp" style={{color: getPpColor(preferences.theme, score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
                         {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
                     </strong>
                 </div>

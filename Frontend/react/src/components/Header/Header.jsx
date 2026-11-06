@@ -1,13 +1,18 @@
 import UserSearchBar from "./UserSearchBar.jsx";
-import { useState } from "react";
+import {useContext, useMemo, useState} from "react";
 import UserPreferences from "../Preferences/UserPreferences.jsx";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function Header({currentPage}) {
     const [burgerActive, setBurgerActive] = useState(true);
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+    const preference = useMemo(() => preferences.theme ?? 'dark',
+        [preferences]) ;
+    
     return <header>
         <div className="logo-navigation">
             <a href="/" className="logo">
-                <img src="/static/images/icon-dark.png" alt="Logo" className="logo-image"/>
+                <img src={`/static/images/icon-${preferences.theme}.png`} alt="Logo" className="logo-image"/>
                 <strong>Lazerboard</strong>
             </a>
             <div className={`burger-icon ${burgerActive ? 'active' : 'inactive'}`} onClick={() => setBurgerActive(!burgerActive)}></div>

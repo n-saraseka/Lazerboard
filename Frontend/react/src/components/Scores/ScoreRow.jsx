@@ -15,10 +15,10 @@ function ScoreRow({score}) {
     
     return (<tr className="score-row">
         <td className="score-row-mode">
-            <div className={`mode-icon mode-${modeString}`} style={{backgroundColor: "white"}} title={modeDisplayString}></div>
+            <div className={`mode-icon mode-${modeString}`} title={modeDisplayString}></div>
         </td>
         <td className="score-row-status">
-            <div className={`status-icon status-${statusString.toLowerCase()}`} style={{backgroundColor: "white"}} title={statusString}></div>
+            <div className={`status-icon status-${statusString.toLowerCase()}`} title={statusString}></div>
         </td>
         <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-map-image">
@@ -49,7 +49,7 @@ function ScoreRow({score}) {
             <a href={`/users/${score.user.id}`}>{score.user.username}</a>
         </td>
         <td className="score-row-date" title={dateFromDateTime(score.date)}>{timeElapsedFromDateTime(score.date)}</td>
-        <td className="score-row-pp" style={{color: getPpColor(score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
+        <td className="score-row-pp" style={{color: getPpColor(preferences.theme, score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>
             {`${score.pp === null ? '-' : score.pp.toFixed(0)}pp`}
         </td>
         <td className="score-row-mods">

@@ -8,8 +8,7 @@ function AboutPage() {
                     focusing on the version of leaderboards that appears in the rapidly growing <a
                         href="https://osu.ppy.sh/wiki/en/Help_centre/Upgrading_to_lazer">osu!lazer</a> client.
                     It provides an ability to view these scores with filters and see various user statistics based on
-                    their leaderboard plays and placements, including
-                    <a href="/scoreranking">global rankings</a>.</p>
+                    their leaderboard plays and placements, including <a href="/scoreranking">global rankings</a>.</p>
             </div>
         </div>
         <div className="about-section">
@@ -20,9 +19,8 @@ function AboutPage() {
                     neither of them provide the information that this project does. <strong>This is the first and only
                         project that provides information based on osu!lazer beatmap rankings,
                         including new gameplay mods, new score multipliers and Performance Points recalculation of
-                        scores with mods that are not eligible for ranking just yet.</strong>
-                    If you want to compete with other players in osu!lazer leaderboard efficiency, see currently unranked
-                    top scores,
+                        scores with mods that are not eligible for ranking just yet.</strong> If you
+                    want to compete with other players in osu!lazer leaderboard efficiency, see currently unranked top scores,
                     or to see who ranks the highest with features unique to osu!lazer in <strong>all modes</strong>,
                     this is the place to go.</p>
             </div>
@@ -49,11 +47,11 @@ function AboutPage() {
                     <li>Country</li>
                     <li>Whether to include or exclude converted scores.</li>
                 </ul>
-                <p>Along with that, you can view <a href="/scoreranking">global rankings</a>
-                    based on the amount of scores set with selected filters.</p>
+                <p>Along with that, you can view <a href="/scoreranking">global rankings</a> based 
+                    on the amount of scores set with selected filters.</p>
                 <p>For the <a href="https://osu.ppy.sh/wiki/en/Game_mode/osu%21mania">osu!mania</a> enthusiasts,
                     there also are global rankings based on how many <a href="/millionsranking">1 million (perfect) scores</a> a user has.</p>
-                <p>Alongside these, there are <a href="/b/75">beatmap rankings</a> and<a href="/users/7562902">user pages.</a></p>
+                <p>Alongside these, there are <a href="/b/75">beatmap rankings</a> and <a href="/users/7562902">user pages.</a></p>
                 <p>The beatmap pages allow you to sort the leaderboards by different columns and view the leaderboards
                     of all available modes of the beatmap.</p>
                 <p>Besides providing all leaderboard scores set by user with the ability to filter them, the user pages
@@ -84,10 +82,10 @@ function AboutPage() {
         <div className="about-section">
             <h1>I found a bug / want to suggest a feature / have another question!</h1>
             <div className="about-explanation">
-                <p>For any bug reports, feature requests or questions, feel free to report them on
-                    <a href="https://github.com/n-saraseka/Lazerboard/issues">Github</a>,
-                    <a href="https://discord.com/invite/Z3rWRrznfd">Discord</a> or 
-                    <a href="https://osu.ppy.sh/users/8706541">via osu! DM</a>.</p>
+                <p>For any bug reports, feature requests or questions, feel free to report them on <a
+                    href="https://github.com/n-saraseka/Lazerboard/issues">Github</a>, <a 
+                    href="https://discord.com/invite/Z3rWRrznfd">Discord</a> or <a href="https://osu.ppy.sh/users/8706541">
+                        via osu! DM</a>.</p>
             </div>
         </div>
     </div>

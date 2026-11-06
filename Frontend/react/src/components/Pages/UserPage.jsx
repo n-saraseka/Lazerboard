@@ -1,7 +1,7 @@
 import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
 import ScoreFilters from '../Filters/ScoreFilters';
-import {useState, useEffect, useCallback, useMemo} from "react";
+import {useState, useEffect, useCallback, useMemo, useContext} from "react";
 import Pagination from "../Misc/Pagination.jsx";
 import UserCard from "../User/UserCard.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
@@ -11,16 +11,25 @@ import {createScoreQueryCommand} from "../../utils/score-things.js";
 import UserStats from "../User/UserStats.jsx";
 import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 import {debounce} from "../../utils/server-things.js";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function UserPage({user}) {
     const currentDate = new Date().toISOString().split("T")[0];
-    
-    const [filters, setFilters] = useState({
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+    const globalPreferences = useMemo(() => preferences.globalPreferences ?? {
         view: 'cards',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
+        beatmapStatus: 'all',
+        amount: 25
+    }, [preferences.globalPreferences]);
+    
+    const [filters, setFilters] = useState({
+        view: globalPreferences.view,
+        modes: globalPreferences.modes,
+        excludeConverts: globalPreferences.excludeConverts,
         dateRange: {min: null, max: null},
         rankRange: {min: null, max: null},
         ppRange: {min: null, max: null},
@@ -31,8 +40,18 @@ function UserPage({user}) {
         lenientMode: true,
         sortBy: 'date',
         sortDir: 'desc',
-        amount: 25,
+        amount: globalPreferences.amount,
+        beatmapStatus: globalPreferences.beatmapStatus,
     });
+
+    useEffect(() => setPreferences({...preferences,
+        globalPreferences: {...globalPreferences,
+            view: filters.view,
+            modes: filters.modes,
+            excludeConverts: filters.excludeConverts,
+            amount: filters.amount,
+            beatmapStatus: filters.beatmapStatus}
+    }), [filters]);
     
     const [currentPage, setCurrentPage] = useState(1);
     const [scoresCount, setScoresCount] = useState(null);
@@ -204,7 +223,7 @@ function UserPage({user}) {
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : scoresCount > 0 && (filters.view === 'cards'
+                    : filteredCount > 0 && (filters.view === 'cards'
                         ? <ScoresGrid scores={allScores} usingStandardized={true}/>
                         : <ScoresTable scores={allScores} usingStandardized={true}/>))}
         </div>

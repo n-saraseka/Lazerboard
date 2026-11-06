@@ -4,10 +4,10 @@ import {PreferencesContext} from "./PreferencesContext.jsx";
 function ThemePreference() {
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const preference = useMemo(() => preferences.theme ?? 'dark',
-        [preferences]) ;
+        [preferences.theme]) ;
 
     const setThemePreference = () => {
-        const newPreferences = {...preferences, theme: preferences.theme === 'dark' ? 'light' : 'dark'};
+        const newPreferences = {...preferences, theme: preference === 'dark' ? 'light' : 'dark'};
         setPreferences(newPreferences);
     }
     

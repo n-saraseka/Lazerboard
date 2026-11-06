@@ -4,10 +4,10 @@ import { useContext, useMemo } from "react";
 function ScoringPreference() {
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const preference = useMemo(() => preferences.preferStandardizedScoring ?? true,
-        [preferences]); 
+        [preferences.preferStandardizedScoring]); 
     
     const setScoringPreference = () => {
-        const newPreferences = {...preferences, preferStandardizedScoring: !preferences.preferStandardizedScoring};
+        const newPreferences = {...preferences, preferStandardizedScoring: !preference};
         setPreferences(newPreferences);
     }
     

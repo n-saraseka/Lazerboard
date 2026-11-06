@@ -1,4 +1,4 @@
-import {useState, useMemo,} from "react";
+import {useState, useMemo, useContext, useEffect,} from "react";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
@@ -6,14 +6,39 @@ import Loader from "../Misc/Loader.jsx";
 import {createScoreQueryCommand} from "../../utils/score-things.js";
 import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
 import {debounce} from "../../utils/server-things.js";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function ScoreRankingPage({countries}) {
-    const [filters, setFilters] = useState({
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+    const globalPreferences = useMemo(() => preferences.globalPreferences ?? {
+        view: 'cards',
+        modes: Array(4).fill(0).map((m, i) => {
+            return { value: i, enabled: true };
+        }),
         excludeConverts: true,
+        beatmapStatus: 'all',
+        amount: 25
+    }, [preferences.globalPreferences]);
+    const rankingPreferences = useMemo(() => preferences.rankingPreferences ?? {
+        amount: 10
+    }, [preferences.rankingPreferences]);
+    
+    const [filters, setFilters] = useState({
+        excludeConverts: globalPreferences.excludeConverts,
         starRange: {min: null, max: null},
         country: null,
-        amount: 10
+        amount: rankingPreferences.amount,
+        beatmapStatus: globalPreferences.beatmapStatus,
     });
+
+    useEffect(() => setPreferences({...preferences,
+        globalPreferences: {...globalPreferences,
+            excludeConverts: filters.excludeConverts,
+            beatmapStatus: filters.beatmapStatus},
+        rankingPreferences: {...rankingPreferences,
+            amount: filters.amount}
+    }), [filters]);
+    
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
 

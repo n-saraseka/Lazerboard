@@ -95,7 +95,7 @@ header {
 
 div.search {
     padding: 0.5em;
-    border: 2px solid black;
+    border: 0.15em solid black;
     background-color: white;
     border-radius: 0.5em;
     position: relative;
@@ -211,7 +211,7 @@ input[type="number"], input[type="text"], input[type="date"], select, .calc-butt
     font-size: 1em;
     padding: 0.5em;
     border-radius: 0.25em;
-    border: 2px solid black;
+    border: 0.15em solid black;
     font-family: "Cascadia Mono", monospace;
 }
 
@@ -350,6 +350,7 @@ input:focus, select:focus {
 
 .view-filter {
     padding: 0.5em;
+    border: 0.15em solid black;
     border-radius: 0.25em;
     display: flex;
     gap: 0.5em;
@@ -542,7 +543,7 @@ input:focus, select:focus {
     font-weight: bold;
 }
 
-.score-difficulty-name:hover, .score-song-name:hover, .score-primary:hover, .score-row-player-name a:hover {
+.score-difficulty-name:hover, .score-song-name:hover, .score-beatmap:hover, .score-primary:hover, .score-row-player-name a:hover {
     text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
 }
 
@@ -853,7 +854,7 @@ input:focus, select:focus {
 }
 
 .selector-top, .selector-items  {
-    border: 2px solid black;
+    border: 0.15em solid black;
     border-radius: 0.25em;
 }
 
@@ -1125,7 +1126,7 @@ input:focus, select:focus {
     border-radius: 1em;
     cursor: pointer;
     transition: border-color, background-color 0.3s ease-in-out;
-    border-width: 0.25em;
+    border-width: 0.15em;
     border-style: solid;
 }
 
@@ -1224,16 +1225,17 @@ body:has(.theme-preference.light) .filter-container .mode-icon {
     background-color: rgb(35, 35, 35);
 }
 
-body:has(.theme-preference.light) .score-secondary {
-    color: rgb(35, 35, 35);
+body:has(.theme-preference.light) .score-row-total .score-secondary {
+    color: rgba(35, 35, 35, 0.5);
 }
 
+body:has(.theme-preference.light) .view-active,
 body:has(.theme-preference.light) .view-filter:hover {
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 body:has(.theme-preference.light) .filter-container .mode-icon-wrapper:hover {
-    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
 }
 
 body:has(.theme-preference.light) .score-row-mode .mode-icon {
@@ -1250,6 +1252,41 @@ body:has(.theme-preference.light) .score-perfect {
 
 body:has(.theme-preference.light) .loader {
     background-color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .scores-table .score-difficulty-name:hover,
+body:has(.theme-preference.light) .scores-table .score-beatmap:hover,
+body:has(.theme-preference.light) .scores-table .score-primary:hover,
+body:has(.theme-preference.light) .scores-table .score-row-player-name a:hover {
+    text-shadow: 0 0 0.5em rgba(0, 0, 0, 0.3);
+}
+
+body:has(.theme-preference.light) .grade-f {
+    color: rgb(160, 54, 54);
+}
+
+body:has(.theme-preference.light) .grade-d {
+    color: rgb(204, 72, 72);
+}
+
+body:has(.theme-preference.light) .grade-c {
+    color: rgb(204, 124, 75);
+}
+
+body:has(.theme-preference.light) .grade-b {
+    color: rgb(187, 151, 58);
+}
+
+body:has(.theme-preference.light) .grade-a {
+    color: rgb(109, 174, 26);
+}
+
+body:has(.theme-preference.light) .grade-s, .grade-x {
+    color: rgb(180, 160, 80);
+}
+
+body:has(.theme-preference.light) .grade-sh, .grade-xh {
+    color: rgb(173, 192, 199);
 }
 
 /* Media rules */

@@ -4,20 +4,30 @@ import { defaults, Chart } from 'chart.js'
 import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
 import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
-
-defaults.font.family = "'Cascadia Mono', monospace";
-defaults.color = "white";
+import {useContext} from "react";
+import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function UserStats({data}) {
+    const { preferences, setPreferences } = useContext(PreferencesContext);
+
+    defaults.font.family = "'Cascadia Mono', monospace";
+    defaults.color = preferences.theme === 'light' ? 'rgb(35, 35, 35)' : 'white';
+    
     const gridOptions = {
         x: {
             grid: {
-                color: 'rgb(45, 45, 45)'
+                color: preferences.theme === 'light' ? 'rgb(90, 90, 90)' : 'rgb(45, 45, 45)'
+            },
+            border: {
+                color: preferences.theme === 'light' ? 'rgb(90, 90, 90)' : 'rgb(45, 45, 45)'
             }
         },
         y: {
             grid: {
-                color: 'rgb(45, 45, 45)'
+                color: preferences.theme === 'light' ? 'rgb(90, 90, 90)' : 'rgb(45, 45, 45)'
+            },
+            border: {
+                color: preferences.theme === 'light' ? 'rgb(90, 90, 90)' : 'rgb(45, 45, 45)'
             }
         }
     }
@@ -62,8 +72,8 @@ function UserStats({data}) {
             datasets: [{
                 label: 'Count',
                 data: data.history.map((item) => item.monthlyCount),
-                backgroundColor: 'rgb(180, 180, 180)',
-                borderColor: 'rgb(180, 180, 180)',
+                backgroundColor: preferences.theme === 'light' ? 'rgb(90, 90, 90)' : 'rgb(180, 180, 180)',
+                borderColor: preferences.theme === 'light' ? 'rgb(90, 90, 90)'  : 'rgb(180, 180, 180)',
                 pointRadius: 0
             }]
         };

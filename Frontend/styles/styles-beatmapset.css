@@ -22,6 +22,7 @@
 .mode-selection .mode-icon {
     width: 3em;
     height: 3em;
+    background-color: white;
 }
 
 .beatmapset-card {
@@ -103,4 +104,18 @@
 .beatmap-status {
     padding: 0.25em 0.5em;
     border-radius: 1em;
+}
+
+/* Light theme */
+body:has(.theme-preference.light) .beatmapset-card {
+    color: white;
+}
+
+body:has(.theme-preference.light) .mode-selection .mode-icon {
+    background-color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .mode-selection .mode-icon-wrapper:hover,
+body:has(.theme-preference.light) .mode-icon-wrapper.active {
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
 }

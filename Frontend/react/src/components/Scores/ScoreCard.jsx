@@ -39,7 +39,7 @@ function ScoreCard({score}) {
             </div>
             <div className="scorecard-row score-data">
                 <div className="scorecard-column">
-                    <strong className="score-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</strong>
+                    <strong className="score-rank" style={{color: getRankTierColor('dark', score.rank)}}>{`#${score.rank}`}</strong>
                 </div>
                 <div className="scorecard-column">
                     <div className="score-combo-misses">

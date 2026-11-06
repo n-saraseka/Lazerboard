@@ -86,7 +86,7 @@ function UserStats({data}) {
             datasets: [{
                 label: 'Count',
                 data: nonZeroData.map((item) => item.count),
-                backgroundColor: nonZeroData.map((item) => getRankTierColor(item.rankBound))
+                backgroundColor: nonZeroData.map((item) => getRankTierColor(preferences.theme, item.rankBound))
             }],
         }
     }

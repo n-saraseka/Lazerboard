@@ -97,6 +97,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1em;
+    border-radius: 1em;
+    background-color: rgb(30, 30, 30);
+    transition: background-color 0.3s ease-in-out;
 }
 
 .card-stats:has(.card-stats-column.collapsed) .card-stats-column:first-child {
@@ -118,6 +122,10 @@ body:has(.theme-preference.light) .user-name {
 
 body:has(.theme-preference.light) .user-name:hover {
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body:has(.theme-preference.light) .chart-wrapper {
+    background-color: hsl(45, 35%, 90%);
 }
 
 @media (max-width: 1280px) {

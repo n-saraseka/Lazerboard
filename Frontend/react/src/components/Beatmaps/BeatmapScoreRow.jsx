@@ -10,7 +10,7 @@ function BeatmapScoreRow({score}) {
     const { preferences, setPreferences } = useContext(PreferencesContext);
     
     return (<tr className="score-row">
-        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(preferences.theme, score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-country">
             <img
                 src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(score.user.countryCode)}.svg`}

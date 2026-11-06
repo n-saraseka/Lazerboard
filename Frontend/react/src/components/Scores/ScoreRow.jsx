@@ -20,7 +20,7 @@ function ScoreRow({score}) {
         <td className="score-row-status">
             <div className={`status-icon status-${statusString.toLowerCase()}`} title={statusString}></div>
         </td>
-        <td className="score-row-rank" style={{color: getRankTierColor(score.rank)}}>{`#${score.rank}`}</td>
+        <td className="score-row-rank" style={{color: getRankTierColor(preferences.theme, score.rank)}}>{`#${score.rank}`}</td>
         <td className="score-row-map-image">
             <a href={`/b/${score.beatmap.id}?mode=${score.mode}`}>
                 <img src={`https://assets.ppy.sh/beatmaps/${score.beatmap.beatmapset.id}/covers/cover@2x.jpg`} alt="Beatmap image" onError={(event) => {

@@ -53,7 +53,7 @@ function UserSearchBar() {
 
     return (
         <div className="search-bar">
-            <div className="search">
+            <div className="search-icon">
                 <input type="text" className="search" placeholder="Search users..." onChange={(event) => debouncedGetUsers(event.target.value)}/>
             </div>
             <div className="search-results">

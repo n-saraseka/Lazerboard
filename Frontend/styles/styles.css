@@ -93,25 +93,30 @@ header {
     width: auto;
 }
 
-div.search {
-    padding: 0.5em;
-    border: 0.15em solid black;
-    background-color: white;
-    border-radius: 0.5em;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
+.search-bar {
     width: 300px;
+    position: relative;
 }
 
-div.search input[type="text"] {
+.search-icon {
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    font-size: 1em;
+    padding: 0.5em;
+    border-radius: 0.25em;
+    border: 0.15em solid black;
+    align-items: center;
+    background-color: white;
+}
+
+input[type="text"].search {
     padding: 0;
     border: none;
     width: 100%;
 }
 
-div.search::before {
+.search-icon::before {
     display: block;
     width: 1em;
     height: 1em;
@@ -167,7 +172,9 @@ div.search::before {
 
 .search-results {
     position: absolute;
-    width: calc(300px + 1em);
+    top: 100%;
+    left: 0;
+    width: 100%;
     max-height: 200px;
     overflow-x: hidden;
     overflow-y: auto;
@@ -1322,7 +1329,12 @@ body:has(.theme-preference.light) .grade-sh, .grade-xh {
         justify-content: flex-start;
         align-items: flex-start;
         gap: 1em;
-        width: calc(100% - 2em);
+    }
+    .navigation-main > * {
+        width: 100%;
+    }
+    .navigation-right > * {
+        width: 100%;
     }
     .logo-navigation:has(.burger-icon.active) + .navigation-main {
         display: none;
@@ -1335,11 +1347,8 @@ body:has(.theme-preference.light) .grade-sh, .grade-xh {
     .logo-image {
         height: 1.75em;
     }
-    div.search {
-        width: calc(100% - 1em);
-    }
-    .search-results {
-        width: calc(100% - 2em);
+    .search-bar {
+        width: 100%;
     }
     .container {
         width: calc(100% - 2em);

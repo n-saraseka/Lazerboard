@@ -1022,22 +1022,23 @@ input:focus, select:focus {
     border-radius: 0 0 1em 0;
 }
 
+.score-status .status-icon {
+    background-color: #394246;
+}
+
 .status-icon.status-ranked {
     mask-image: url("../images/ranked.svg");
     -webkit-mask-image: url("../images/ranked.svg");
-    background-color: #394246;
 }
 
-.status-icon.status-approved {
+.score-status .status-icon.status-approved {
     mask-image: url("../images/approved.svg");
     -webkit-mask-image: url("../images/approved.svg");
-    background-color: #394246;
 }
 
-.status-icon.status-loved {
+.score-status .status-icon.status-loved {
     mask-image: url("../images/loved.svg");
     -webkit-mask-image: url("../images/loved.svg");
-    background-color: #394246;
 }
 
 .burger-icon {
@@ -1254,7 +1255,7 @@ body:has(.theme-preference.light) .score-row-mode .mode-icon {
     background-color: rgb(35, 35, 35);
 }
 
-body:has(.theme-preference.light) .score-row-mode .status-icon {
+body:has(.theme-preference.light) .score-row-status .status-icon {
     background-color: rgb(35, 35, 35);
 }
 

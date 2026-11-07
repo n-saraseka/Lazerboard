@@ -44,7 +44,7 @@ public class OsuApiService
     /// <param name="priority">Request priority</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Request response text</returns>
-    private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod method, 
+    private async Task<HttpResponseMessage> SendClientRequestAsync(HttpMethod method, 
         string requestString,
         HttpContent? content,
         bool isTokenRequest = false,
@@ -67,11 +67,35 @@ public class OsuApiService
         return response;
     }
     
+    private async Task<HttpResponseMessage> SendUserRequestAsync(HttpMethod method, 
+        string requestString,
+        HttpContent? content,
+        TokenInfo? token,
+        bool isAuthRequest = false,
+        bool isTokenRequest = false,
+        decimal priority = 1,
+        CancellationToken ct = default)
+    {
+        var requestMessage = new HttpRequestMessage(method, requestString);
+        requestMessage.Content = content;
+        if (!isTokenRequest && !isAuthRequest)
+        {
+            requestMessage.Headers.Add("Authorization", "Bearer " + token!.AccessToken);
+            requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
+        }
+
+        await _centralizedRateLimiter.WaitForAvailableTokenAsync(priority, ct);
+        _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
+        var response = await _httpClient.SendAsync(requestMessage, ct);
+        
+        return response;
+    }
+    
     /// <summary>
     /// Set fresh token data for API access
     /// </summary>
     /// <param name="ct">Cancellation token</param>
-    private async Task SetTokenAsync(CancellationToken ct = default)
+    private async Task GetClientTokenAsync(CancellationToken ct = default)
     {
         var seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         
@@ -82,8 +106,7 @@ public class OsuApiService
         data.Add("scope", "public");
         var dataJson = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore});
         
-        // getting the token
-        using var tokenResponse = await SendRequestAsync(HttpMethod.Post, 
+        using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
             ApiTokenUrl, 
             new StringContent(dataJson, Encoding.UTF8, "application/json"),
             true,
@@ -91,10 +114,80 @@ public class OsuApiService
             ct);
         
         var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
-
-        // writing new token data
+        
         _token = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         _token!.ExpiresIn += seconds;
+    }
+
+    /// <summary>
+    /// Get user token for API access
+    /// </summary>
+    /// <param name="code">The authorization code</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The respective <see cref="TokenInfo"/></returns>
+    public async Task<TokenInfo> GetUserTokenAsync(string code, CancellationToken ct = default)
+    {
+        await TokenSemaphore.WaitAsync(ct);
+        try
+        {
+            var seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        
+            var data = new Dictionary<string, string>();
+            data.Add("client_id", _apiClientId);
+            data.Add("client_secret", _apiClientSecret);
+            data.Add("grant_type", "authorization_code");
+            var dataJson = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore});
+        
+            using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
+                ApiTokenUrl, 
+                new StringContent(dataJson, Encoding.UTF8, "application/json"),
+                true,
+                1,
+                ct);
+        
+            var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
+        
+            var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            tokenInfo!.ExpiresIn += seconds;
+            return tokenInfo;
+        }
+        finally
+        {
+            TokenSemaphore.Release();
+        }
+    }
+    
+    public async Task<TokenInfo> RefreshTokenAsync(string refreshToken, CancellationToken ct = default)
+    {
+        await TokenSemaphore.WaitAsync(ct);
+        try
+        {
+            var seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        
+            var data = new Dictionary<string, string>();
+            data.Add("client_id", _apiClientId);
+            data.Add("client_secret", _apiClientSecret);
+            data.Add("grant_type", "refresh_token");
+            data.Add("refresh_token", refreshToken);
+            var dataJson = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore});
+        
+            using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
+                ApiTokenUrl, 
+                new StringContent(dataJson, Encoding.UTF8, "application/json"),
+                true,
+                1,
+                ct);
+        
+            var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
+        
+            var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            tokenInfo!.ExpiresIn += seconds;
+            return tokenInfo;
+        }
+        finally
+        {
+            TokenSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -105,10 +198,10 @@ public class OsuApiService
     /// <returns>The JSON string</returns>
     public async Task<string> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
-        using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsetsResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}&nsfw=true", 
             null, 
-            false, 
+            false,
             2,
             ct);
 
@@ -123,10 +216,10 @@ public class OsuApiService
     /// <returns>The JSON string</returns>
     public async Task<string> GetBeatmapsetAsync(int id, CancellationToken ct = default)
     {
-        using var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsetResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/{id}", 
-            null, 
-            false, 
+            null,
+            false,
             2,
             ct);
         
@@ -147,10 +240,10 @@ public class OsuApiService
         var queryString = $"limit=100&legacy_only={legacyOnly}";
         if (mode != null) queryString += $"&mode={mode.ToString()!.ToLower()}";
         
-        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var scoresResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
-            null, 
-            false, 
+            null,
+            false,
             2,
             ct);
 
@@ -167,10 +260,10 @@ public class OsuApiService
     /// <returns>The JSON string</returns>
     public async Task<string> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
-        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var scoresResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/scores?cursor_string={cursor}", 
             null, 
-            false, 
+            false,
             1,
             ct);
         
@@ -214,10 +307,10 @@ public class OsuApiService
         var queryString = string.Join("&", ids.Select(b => $"ids[]={b}"));
 
         // parse beatmaps
-        using var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps?{queryString}", 
             null, 
-            false, 
+            false,
             2,
             ct);
         
@@ -239,7 +332,7 @@ public class OsuApiService
 
         var queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
         
-        using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var usersResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/users?{queryString}", 
             null, 
             false,
@@ -262,12 +355,17 @@ public class OsuApiService
             var seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             if (_token == null || seconds > _token.ExpiresIn - 60)
-                await SetTokenAsync(ct);
+                await GetClientTokenAsync(ct);
             return _token!;
         }
         finally
         {
             TokenSemaphore.Release();
         }
+    }
+
+    private async Task RequestAuthorizationAsync(CancellationToken ct)
+    {
+        
     }
 }

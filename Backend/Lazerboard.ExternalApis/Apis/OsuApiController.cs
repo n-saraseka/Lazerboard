@@ -103,4 +103,16 @@ public class OsuApiController(OsuApiService osuApiService) : ControllerBase
         var stream = await osuApiService.DownloadBeatmapAsync(id, ct);
         return File(stream, "text/plain", $"{id}.osu");
     }
+
+    public async Task<IActionResult> GetUserTokenAsync(string code, CancellationToken ct = default)
+    {
+        var token = await osuApiService.GetUserTokenAsync(code, ct);
+        return Ok(token);
+    }
+
+    public async Task<IActionResult> RefreshTokenAsync(TokenInfo token, CancellationToken ct = default)
+    {
+        var refreshToken = await osuApiService.RefreshTokenAsync(token.RefreshToken, ct);
+        return Ok(refreshToken);
+    }
 }

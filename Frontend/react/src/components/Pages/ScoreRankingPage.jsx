@@ -40,7 +40,6 @@ function ScoreRankingPage({countries}) {
     
     useEffect(() => setPreferences({...preferences,
         globalPreferences: {...globalPreferences,
-            view: filters.view,
             modes: filters.modes,
             excludeConverts: filters.excludeConverts,
             beatmapStatus: filters.beatmapStatus},

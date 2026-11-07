@@ -25,11 +25,13 @@ function ModSelector({availableMods, filters, setFilters, excludeMode}) {
                         }</span>
                     <div className="selector-chevron"></div>
                 </div>
-                <div className="selector-items" style={{display: isExpanded ? "block" : "none"}}>
-                    { availableMods.map((m, index) => (
-                        <ModSelectorRow key={index} acronym={m} mods={excludeMode ? filters.excludeMods : filters.includeMods} 
-                                        setMods={() => updateMods(m)}/>
-                    )) }
+                <div className="items-wrapper" style={{display: isExpanded ? "block" : "none"}}>
+                    <div className="selector-items">
+                        { availableMods.map((m, index) => (
+                            <ModSelectorRow key={index} acronym={m} mods={excludeMode ? filters.excludeMods : filters.includeMods}
+                                            setMods={() => updateMods(m)}/>
+                        )) }
+                    </div>
                 </div>
             </div>
             {!excludeMode && (<>

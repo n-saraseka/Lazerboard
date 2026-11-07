@@ -36,17 +36,19 @@ function CountrySelector({countries, filters, setFilters}) {
                                     onClickAction={setDropdownOrDoNothing}
                                     onTextChangeAction={filterCountries}/>
             </div>
-            <div className="selector-items" style={{display: dropdownEnabled ? "block" : "none"}}>
-                { filteredCountries.map((c, index) => (
-                    <CountrySelectorRow key={index} 
-                                        country={c}
-                                        isHeaderRow={false}
-                                        onClickAction={() => {
-                                            const newFilters = {...filters, country: c}
-                                            setFilters(newFilters);
-                                            setDropdownEnabled(false);
-                                        }}/>
-                )) }
+            <div className="items-wrapper" style={{display: dropdownEnabled ? "block" : "none"}}>
+                <div className="selector-items">
+                    { filteredCountries.map((c, index) => (
+                        <CountrySelectorRow key={index}
+                                            country={c}
+                                            isHeaderRow={false}
+                                            onClickAction={() => {
+                                                const newFilters = {...filters, country: c}
+                                                setFilters(newFilters);
+                                                setDropdownEnabled(false);
+                                            }}/>
+                    )) }
+                </div>
             </div>
         </div>
     )

@@ -865,7 +865,7 @@ input:focus, select:focus {
     -webkit-mask-position: center;
 }
 
-.selector-top, .selector-items  {
+.selector-top, .items-wrapper  {
     border: 0.15em solid black;
     border-radius: 0.25em;
 }
@@ -893,26 +893,36 @@ input:focus, select:focus {
     width: 400px;
 }
 
-.selector-items {
+.items-wrapper {
     background-color: white;
     position: absolute;
     max-height: 150px;
+    box-sizing: border-box;
     width: 100%;
-    z-index: 100;
     overflow-x: auto;
     overflow-y: auto;
+    z-index: 100;
+}
+
+.selector-items {
+    width: max-content;
 }
 
 .selector-item {
     border-radius: 0.25em;
 }
 
+.selector-items .selector-item {
+    box-sizing: content-box;
+    width: 100%;
+}
+
 .selector-items > .selector-item:first-child {
-    border-radius: 0.25em 0.25em 0 0;
+    border-radius: 0 0 0.25em 0.25em;
 }
 
 .selector-items > .selector-item:last-child {
-    border-radius: 0 0 0.25em 0.25em;
+    border-radius: 0.25em 0.25em 0 0;
 }
 
 .top-selector > .selector-item {
@@ -923,7 +933,6 @@ input:focus, select:focus {
     display: flex;
     gap: 1em;
     justify-content: space-between;
-    height: 1em;
     padding: 0.5em;
     background-color: white;
     color: black;
@@ -974,7 +983,7 @@ input:focus, select:focus {
     -webkit-mask-position: center;
     mask-image: url("../images/chevron.svg");
     -webkit-mask-image: url("../images/chevron.svg");
-    background-color: rgb(35, 35, 35);
+    background-color: black;
 }
 
 .status-graveyard {

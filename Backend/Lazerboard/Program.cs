@@ -1,5 +1,7 @@
+using System.Net;
 using System.Text.Json;
 using System.Threading.RateLimiting;
+using Lazerboard.Data.ApiFetchers;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Lazerboard.Data.Database;
@@ -7,10 +9,14 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
+using Lazerboard.Data.OsuEntities.OsuEntityToDtoService;
 using Lazerboard.Data.Redis.Repositories;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Http.Resilience;
+using Polly;
 using Serilog;
 using StackExchange.Redis;
 
@@ -19,12 +25,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
+#region Database
+
 var dbConfig = builder.Configuration.GetSection("Database");
 
 var connectionString = new NpgsqlConnectionStringBuilder
 {
     Host = dbConfig["Host"],
-    Port = int.Parse(dbConfig["Port"]),
+    Port = int.Parse(dbConfig["Port"]!),
     Database = dbConfig["Database"],
     Username = dbConfig["Username"],
     Password = dbConfig["Password"],
@@ -42,7 +50,6 @@ builder.Services.AddDbContext<ScoreDataContext>(
                 .CommandTimeout(300))
                 .UseSnakeCaseNamingConvention());
 
-// Database related
 builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();
 builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
@@ -57,7 +64,9 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddRazorComponents();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+#endregion
 
+#region Web
 // Cloudflare
 if (builder.Environment.IsProduction())
 {
@@ -67,27 +76,6 @@ if (builder.Environment.IsProduction())
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     });
 }
-
-// Caching
-var redisConfig = builder.Configuration.GetSection("Redis");
-var host = redisConfig["Host"];
-var username = redisConfig["Username"];
-var password = redisConfig["Password"];
-builder.Services.AddSingleton<IConnectionMultiplexer>(_ => 
-    ConnectionMultiplexer.Connect(new ConfigurationOptions
-    {
-        EndPoints = { { host, 6379 } },
-        User = username,
-        Password = password
-    }));
-builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
-
-// Logs
-builder.Host.UseSerilog((context, services, configuration) =>
-    configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-    );
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
@@ -118,6 +106,139 @@ builder.Services.AddRateLimiter(options =>
         await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken);
     };
 });
+#endregion
+
+#region Auth
+
+builder.Services.AddSingleton<IOsuApiFetcher, OsuApiFetcher>();
+builder.Services.AddHttpClient<OsuApiFetcher>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
+    {
+        resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
+        {
+            ShouldHandle = static args => args.Outcome switch
+            {
+                { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
+                _ => PredicateResult.False()
+            },
+            
+            MaxRetryAttempts = 5,
+            Delay = TimeSpan.FromSeconds(5),
+            
+            OnRetry = args =>
+            {
+                var logger = context.ServiceProvider.GetRequiredService<ILogger<OsuApiFetcher>>();
+                
+                logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
+                    args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);
+                
+                return default;
+            }
+        });
+    });
+builder.Services.AddSingleton<IOsuEntityToDtoService, OsuEntityToDtoService>();
+var externalApisConfig = builder.Configuration.GetSection("ExternalApis");
+var osuConfig = externalApisConfig.GetSection("OsuApi");
+
+var externalHost = externalApisConfig.GetValue<string>("Host");
+var externalPort = externalApisConfig.GetValue<int>("Port");
+var externalAddress = osuConfig.GetValue<string>("BaseAddress");
+
+var externalBuilder = new UriBuilder
+{
+    Scheme = "http",
+    Host = externalHost,
+    Port = externalPort,
+    Path = externalAddress
+};
+        
+var externalUrl = externalBuilder.Uri.ToString();
+
+Console.WriteLine(externalAddress);
+Console.WriteLine(externalUrl);
+
+builder.Services.AddAuthentication("InternalCookies")
+    .AddCookie("InternalCookies", options =>
+    {
+        options.LoginPath = string.Empty;
+        options.AccessDeniedPath = string.Empty;
+        options.LogoutPath = string.Empty;
+        options.Cookie.Path = "/";
+        options.SlidingExpiration = true;
+        options.Events.OnValidatePrincipal = context =>
+        {
+            var name = context.Principal?.Identity?.Name;
+            if (string.IsNullOrEmpty(name) || !long.TryParse(name, out _))
+            {
+                context.RejectPrincipal();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+
+            return Task.CompletedTask;
+        };
+
+        static Task UnauthorizedRedirect(RedirectContext<CookieAuthenticationOptions> context)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+            return Task.CompletedTask;
+        }
+
+        options.Events.OnRedirectToLogin = UnauthorizedRedirect;
+        options.Events.OnRedirectToAccessDenied = UnauthorizedRedirect;
+    })
+    .AddCookie("ExternalCookies")
+    .AddOAuth("osu-user", options =>
+    {
+        options.SignInScheme = "ExternalCookies";
+
+        options.TokenEndpoint = $"{externalUrl}/usertoken";
+        options.AuthorizationEndpoint = "https://osu.ppy.sh/oauth/authorize";
+        options.ClientId = osuConfig["ClientId"]!;
+        options.ClientSecret = osuConfig["ClientSecret"]!;
+        options.CallbackPath = osuConfig["CallbackUrl"];
+
+        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
+        options.SaveTokens = true;
+
+        options.Events.OnRemoteFailure = ctx =>
+        {
+            Console.WriteLine(ctx.Failure);
+            ctx.Response.Redirect("/");
+            ctx.HandleResponse();
+            return Task.CompletedTask;
+        };
+
+        options.Validate();
+    }); 
+#endregion
+
+// Caching
+var redisConfig = builder.Configuration.GetSection("Redis");
+var host = redisConfig["Host"]!;
+var username = redisConfig["Username"];
+var password = redisConfig["Password"];
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ => 
+    ConnectionMultiplexer.Connect(new ConfigurationOptions
+    {
+        EndPoints = { { host, 6379 } },
+        User = username,
+        Password = password
+    }));
+builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
+
+// osu! API
+builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
+
+// Logs
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+    );
 
 var app = builder.Build();
 

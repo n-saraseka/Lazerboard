@@ -4,7 +4,7 @@ using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
-using Lazerboard.ScoreFetcher.OsuEntityToDtoService;
+using Lazerboard.Data.OsuEntities.OsuEntityToDtoService;
 
 namespace Lazerboard.ScoreFetcher.Processing;
 

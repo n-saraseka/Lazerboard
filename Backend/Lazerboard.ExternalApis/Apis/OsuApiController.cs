@@ -7,7 +7,7 @@ namespace Lazerboard.ExternalApis.Apis;
 
 [ApiController]
 [Route("osuapi")]
-public class OsuApiController(OsuApiService osuApiService) : ControllerBase
+public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiController> logger) : ControllerBase
 {
     /// <summary>
     /// Get beatmapsets from the API beatmapsets search endpoint (sorted by date ranked, ascending)
@@ -104,15 +104,42 @@ public class OsuApiController(OsuApiService osuApiService) : ControllerBase
         return File(stream, "text/plain", $"{id}.osu");
     }
 
-    public async Task<IActionResult> GetUserTokenAsync(string code, CancellationToken ct = default)
+    /// <summary>
+    /// Get a user token
+    /// </summary>
+    /// <param name="tokenCommand">The <see cref="TokenCommand"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="TokenInfo"/></returns>
+    [HttpPost("usertoken")]
+    public async Task<IActionResult> GetUserTokenAsync(CancellationToken ct = default)
     {
-        var token = await osuApiService.GetUserTokenAsync(code, ct);
-        return Ok(token);
+        var form = await Request.ReadFormAsync(ct);
+        var tokenCommand = new TokenCommand
+        {
+            Code = form["code"],
+            RedirectUri = form["redirect_uri"],
+            RefreshToken = form["refresh_token"]
+        };
+        var token = await osuApiService.GetUserTokenAsync(tokenCommand, ct);
+        return Ok(new Dictionary<string, object?>
+            {
+                ["access_token"] = token.AccessToken,
+                ["token_type"] = token.TokenType,
+                ["refresh_token"] = token.RefreshToken,
+                ["expires_in"] = token.ExpiresIn
+            });
     }
 
-    public async Task<IActionResult> RefreshTokenAsync(TokenInfo token, CancellationToken ct = default)
+    /// <summary>
+    /// Get own user info
+    /// </summary>
+    /// <param name="token">The user <see cref="TokenInfo.AccessToken"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="APIUser"/></returns>
+    [HttpGet("userinfo")]
+    public async Task<IActionResult> GetUserInfoAsync(string token, CancellationToken ct = default)
     {
-        var refreshToken = await osuApiService.RefreshTokenAsync(token.RefreshToken, ct);
-        return Ok(refreshToken);
+        var user = await osuApiService.GetUserInfoAsync(token, ct);
+        return Ok(user);
     }
 }

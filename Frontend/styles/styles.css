@@ -83,7 +83,7 @@ header {
 .user-avatar {
     width: 5em;
     height: 5em;
-    border-radius: 1em;
+    border-radius: 20%;
     object-fit: contain;
     background: rgba(0, 0, 0, 0.5);
 }
@@ -1165,6 +1165,42 @@ input:focus, select:focus {
     transform: translateX(calc(100% + 0.5em));
 }
 
+.authorized-user {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 0.5em;
+    border-radius: 0.15em;
+    background-color: rgb(45, 45, 45);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color, background-color 0.3s ease-in-out;
+}
+
+.authorized-user .user-avatar {
+    width: 2em;
+    height: 2em;
+}
+
+.authorized-user:hover {
+    background-color: rgb(40, 40, 40);
+}
+
+.login-button {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    background-color: hsl(0, 42%, 63%);
+    text-align: center;
+    padding: 0.5em;
+    transition: color, background-color 0.3s ease-in-out;
+}
+
+.login-button:hover {
+    background-color: hsl(0, 42%, 50%);
+}
+
 /* Light theme */
 body:has(.theme-preference.light) {
     background-color: hsl(45, 35%, 98%);
@@ -1301,6 +1337,15 @@ body:has(.theme-preference.light) .grade-s, .grade-x {
 
 body:has(.theme-preference.light) .grade-sh, .grade-xh {
     color: rgb(173, 192, 199);
+}
+
+body:has(.theme-preference.light) .authorized-user {
+    background-color: hsl(45, 35%, 70%);
+    color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .authorized-user:hover {
+    background-color: hsl(45, 35%, 55%);
 }
 
 /* Media rules */

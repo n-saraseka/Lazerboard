@@ -1,18 +1,39 @@
 import UserSearchBar from "./UserSearchBar.jsx";
-import {useContext, useMemo, useState} from "react";
+import {useCallback, useContext, useEffect, useMemo, useState} from "react";
 import UserPreferences from "../Preferences/UserPreferences.jsx";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
+import UserButton from "./UserButton.jsx";
+import LoginButton from "./LoginButton.jsx";
 
 function Header({currentPage}) {
     const [burgerActive, setBurgerActive] = useState(true);
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const preference = useMemo(() => preferences.theme ?? 'dark',
-        [preferences]) ;
+        [preferences.theme]);
+    const [checkedIfLoggedIn, setCheckedIfLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState(null);
+
+    const getUser = useCallback(async () => {
+        const response = await fetch("/api/users/me");
+
+        if (response.ok) {
+            const json = await response.json();
+            setUser(json);
+            setIsLoggedIn(true);
+        }
+
+        setCheckedIfLoggedIn(true);
+    }, [currentPage])
+
+    useEffect(() => {
+        getUser();
+    }, []);
     
     return <header>
         <div className="logo-navigation">
             <a href="/" className="logo">
-                <img src={`/static/images/icon-${preferences.theme}.png`} alt="Logo" className="logo-image"/>
+                <img src={`/static/images/icon-${preference}.png`} alt="Logo" className="logo-image"/>
                 <strong>Lazerboard</strong>
             </a>
             <div className={`burger-icon ${burgerActive ? 'active' : 'inactive'}`} onClick={() => setBurgerActive(!burgerActive)}></div>
@@ -33,6 +54,11 @@ function Header({currentPage}) {
                 </li>
             </ul>
             <div className="navigation-right">
+                {checkedIfLoggedIn && (
+                    isLoggedIn
+                        ? (<UserButton user={user}/>)
+                        : (<LoginButton/>)
+                )}
                 <UserPreferences/>
                 <UserSearchBar/>
             </div>

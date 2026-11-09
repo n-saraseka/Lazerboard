@@ -1165,6 +1165,10 @@ input:focus, select:focus {
     transform: translateX(calc(100% + 0.5em));
 }
 
+.header-user-profile {
+    position: relative;
+}
+
 .authorized-user {
     display: flex;
     gap: 10px;
@@ -1176,6 +1180,7 @@ input:focus, select:focus {
     text-decoration: none;
     font-weight: bold;
     transition: color, background-color 0.3s ease-in-out;
+    cursor: pointer;
 }
 
 .authorized-user .user-avatar {
@@ -1185,6 +1190,30 @@ input:focus, select:focus {
 
 .authorized-user:hover {
     background-color: rgb(40, 40, 40);
+}
+
+.header-user-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    border-radius: 0.15em;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-user-dropdown a {
+    background-color: rgb(55, 55, 55);
+    padding: 0.5em;
+    width: 100%;
+    color: white;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: color, background-color 0.3s ease-in-out;
+}
+
+.header-user-dropdown a:hover {
+    background-color: rgb(45, 45, 45);
 }
 
 .login-button {
@@ -1339,13 +1368,25 @@ body:has(.theme-preference.light) .grade-sh, .grade-xh {
     color: rgb(173, 192, 199);
 }
 
-body:has(.theme-preference.light) .authorized-user {
-    background-color: hsl(45, 35%, 70%);
+body:has(.theme-preference.light) .header-user-profile {
     color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .authorized-user {
+    background-color: hsl(45, 35%, 65%);
 }
 
 body:has(.theme-preference.light) .authorized-user:hover {
     background-color: hsl(45, 35%, 55%);
+}
+
+body:has(.theme-preference.light) .header-user-dropdown a {
+    background-color: hsl(45, 35%, 80%);
+    color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .header-user-dropdown a:hover {
+    background-color: hsl(45, 35%, 65%);
 }
 
 /* Media rules */
@@ -1435,6 +1476,9 @@ body:has(.theme-preference.light) .authorized-user:hover {
     }
     .calc-button {
         font-size: 1.2em;
+    }
+    .header-user-dropdown {
+        position: relative;
     }
 }
 

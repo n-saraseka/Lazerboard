@@ -67,15 +67,6 @@ builder.Services.AddSwaggerGen();
 #endregion
 
 #region Web
-// Cloudflare
-if (builder.Environment.IsProduction())
-{
-    builder.Services.Configure<ForwardedHeadersOptions>(options =>
-    {
-        options.ForwardedForHeaderName = "CF-Connecting-IP";
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    });
-}
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
@@ -247,7 +238,15 @@ if (app.Environment.IsProduction())
     });
 }
 
+app.Use((context, next) =>
+{
+    context.Request.Scheme = "https";
+    return next(context);
+});
+
 app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

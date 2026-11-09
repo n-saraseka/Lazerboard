@@ -155,9 +155,6 @@ var externalBuilder = new UriBuilder
         
 var externalUrl = externalBuilder.Uri.ToString();
 
-Console.WriteLine(externalAddress);
-Console.WriteLine(externalUrl);
-
 builder.Services.AddAuthentication("InternalCookies")
     .AddCookie("InternalCookies", options =>
     {
@@ -206,7 +203,6 @@ builder.Services.AddAuthentication("InternalCookies")
 
         options.Events.OnRemoteFailure = ctx =>
         {
-            Console.WriteLine(ctx.Failure);
             ctx.Response.Redirect("/");
             ctx.HandleResponse();
             return Task.CompletedTask;

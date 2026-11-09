@@ -10,7 +10,7 @@ function UserButton({user}) {
         {showDropdown && (
             <div className="header-user-dropdown">
                 <a href={`/users/${user.id}`}>Profile</a>
-                <a href="/oauth/signout">Sign out</a>
+                <a href="/oauth/signout">Log out</a>
             </div>
         )}
     </div>)

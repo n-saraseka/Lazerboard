@@ -140,10 +140,6 @@ public class OsuApiService
             }
             else throw new InvalidOperationException($"{nameof(tokenCommand)} doesn't have code or refresh token filled out!");
             var dataString = string.Join("&", data.Select(x => $"{x.Key}={x.Value}"));
-            
-            await _centralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
-            
-            _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", ApiTokenUrl);
         
             using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
                 ApiTokenUrl, 

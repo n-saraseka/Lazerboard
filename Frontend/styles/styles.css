@@ -1220,14 +1220,14 @@ input:focus, select:focus {
     color: white;
     text-decoration: none;
     font-weight: bold;
-    background-color: hsl(0, 42%, 63%);
+    background-color: hsl(340, 100%, 65%);
     text-align: center;
     padding: 0.5em;
     transition: color, background-color 0.3s ease-in-out;
 }
 
 .login-button:hover {
-    background-color: hsl(0, 42%, 50%);
+    background-color: hsl(340, 100%, 30%);
 }
 
 /* Light theme */
@@ -1374,6 +1374,7 @@ body:has(.theme-preference.light) .header-user-profile {
 
 body:has(.theme-preference.light) .authorized-user {
     background-color: hsl(45, 35%, 65%);
+    color: rgb(35, 35, 35);
 }
 
 body:has(.theme-preference.light) .authorized-user:hover {
@@ -1381,7 +1382,7 @@ body:has(.theme-preference.light) .authorized-user:hover {
 }
 
 body:has(.theme-preference.light) .header-user-dropdown a {
-    background-color: hsl(45, 35%, 80%);
+    background-color: hsl(45, 35%, 72%);
     color: rgb(35, 35, 35);
 }
 
@@ -1417,14 +1418,14 @@ body:has(.theme-preference.light) .header-user-dropdown a:hover {
         align-items: flex-start;
         gap: 1em;
     }
-    .navigation-main > * {
-        width: 100%;
-    }
-    .navigation-right > * {
-        width: 100%;
-    }
     .logo-navigation:has(.burger-icon.active) + .navigation-main {
         display: none;
+    }
+    .navigation-right {
+        width: 100%;
+    }
+    .header-user-profile {
+        width: 100%;
     }
     .burger-icon {
         display: block;

@@ -7,7 +7,7 @@ namespace Lazerboard.ExternalApis.Apis;
 
 [ApiController]
 [Route("osuapi")]
-public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiController> logger) : ControllerBase
+public class OsuApiController(OsuApiService osuApiService) : ControllerBase
 {
     /// <summary>
     /// Get beatmapsets from the API beatmapsets search endpoint (sorted by date ranked, ascending)
@@ -107,7 +107,6 @@ public class OsuApiController(OsuApiService osuApiService, ILogger<OsuApiControl
     /// <summary>
     /// Get a user token
     /// </summary>
-    /// <param name="tokenCommand">The <see cref="TokenCommand"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>The <see cref="TokenInfo"/></returns>
     [HttpPost("usertoken")]

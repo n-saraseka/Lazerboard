@@ -19,7 +19,7 @@ public class OAuthController(ILogger<OAuthController> logger,
     /// <summary>
     /// osu! API authentication
     /// </summary>
-    [HttpGet("auth")]
+    [HttpGet("login")]
     [ProducesResponseType(StatusCodes.Status302Found)]
     public IActionResult Authenticate()
     {
@@ -69,7 +69,7 @@ public class OAuthController(ILogger<OAuthController> logger,
         if (existingUser is null)
         {
             var dbUser = osuEntityToDtoService.UserEntityToDto(user);
-            logger.Log(LogLevel.Information, "osu! API user {userID} logged in for the first time", dbUser.Id);
+            logger.Log(LogLevel.Information, "osu! user {userID} logged in for the first time", dbUser.Id);
             userRepository.Create(dbUser);
         }
         else
@@ -80,8 +80,10 @@ public class OAuthController(ILogger<OAuthController> logger,
         }
         await userRepository.SaveChangesAsync(ct);
 
-        var tokenExpiration = await HttpContext.GetTokenAsync("ExternalCookies", "expires_at");
-        var tokenExpirationDate = tokenExpiration != null ? DateTime.Parse(tokenExpiration).ToUniversalTime() : DateTime.UtcNow.AddDays(1);
+        var tokenExpiration = await HttpContext.GetTokenAsync("ExternalCookies", "expires_in");
+        var tokenExpirationDate = tokenExpiration != null 
+            ? DateTime.UtcNow.Add(TimeSpan.FromSeconds(int.Parse(tokenExpiration))) 
+            : DateTime.UtcNow.AddDays(1);
 
         var claims = new List<Claim>
         {

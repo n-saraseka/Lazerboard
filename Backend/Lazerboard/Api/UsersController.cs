@@ -25,11 +25,16 @@ public class UsersController(IScoreRepository scoreRepository,
 
     private int UserId => int.Parse(HttpContext.User.Identity!.Name!);
 
+    /// <summary>
+    /// Get authorized user's data
+    /// </summary>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns><see cref="User"/> or null</returns>
     [Authorize]
     [HttpGet("me")]
-    public async Task<User?> GetSelf()
+    public async Task<User?> GetSelf(CancellationToken ct)
     {
-        var user = await userRepository.GetByIdAsync(UserId);
+        var user = await userRepository.GetByIdAsync(UserId, ct);
 
         if (user is null)
         {

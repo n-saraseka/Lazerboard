@@ -1,4 +1,3 @@
-using System.Text;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +10,6 @@ public class OsuApiFetcher : IOsuApiFetcher
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiUrl;
-    private readonly ILogger<IOsuApiFetcher> _logger;
     
     public OsuApiFetcher(HttpClient httpClient, IConfiguration config, ILogger<IOsuApiFetcher> logger)
     {
@@ -33,8 +31,6 @@ public class OsuApiFetcher : IOsuApiFetcher
         };
         
         _apiUrl = builder.Uri.ToString();
-
-        _logger = logger;
     }
     
     /// <summary>

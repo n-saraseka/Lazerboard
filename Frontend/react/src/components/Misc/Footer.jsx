@@ -19,6 +19,7 @@ function Footer({scoresCount}) {
             <ul className="footer-links">
                 <li><a href="https://github.com/n-saraseka/Lazerboard/"><strong>Source code</strong></a></li>
                 <li><a href="https://discord.com/invite/Z3rWRrznfd">Discord</a></li>
+                <li><a href="https://www.donationalerts.com/r/somemelguy">Support project</a></li>
             </ul>
         </div>
     </footer>

@@ -3,7 +3,7 @@ function AboutPage() {
         <div className="about-section">
             <h1>What is this exactly?</h1>
             <div className="about-explanation">
-                <p>This is Lazerboard - a database of all top 100 scores (and a change) on all <a
+                <p>This is Lazerboard - a database of all top 100 scores on all <a
                     href="https://osu.ppy.sh">osu!</a> beatmaps that have a leaderboard,
                     focusing on the version of leaderboards that appears in the rapidly growing <a
                         href="https://osu.ppy.sh/wiki/en/Help_centre/Upgrading_to_lazer">osu!lazer</a> client.

@@ -121,42 +121,34 @@ public class OsuApiService
     /// <returns>The respective <see cref="TokenInfo"/></returns>
     public async Task<TokenInfo> GetUserTokenAsync(TokenCommand tokenCommand, CancellationToken ct = default)
     {
-        await TokenSemaphore.WaitAsync(ct);
-        try
+        var data = new Dictionary<string, string>();
+        data.Add("client_id", _apiClientId);
+        data.Add("client_secret", _apiClientSecret);
+        if (tokenCommand.Code != null)
         {
-            var data = new Dictionary<string, string>();
-            data.Add("client_id", _apiClientId);
-            data.Add("client_secret", _apiClientSecret);
-            if (tokenCommand.Code != null)
-            {
-                data.Add("grant_type", "authorization_code");
-                data.Add("code", tokenCommand.Code);
-                data.Add("redirect_uri", tokenCommand.RedirectUri!);
-            }
-            else if (tokenCommand.RefreshToken != null)
-            {
-                data.Add("grant_type", "refresh_token");
-                data.Add("refresh_token", tokenCommand.RefreshToken);
-            }
-            else throw new InvalidOperationException($"{nameof(tokenCommand)} doesn't have code or refresh token filled out!");
-            var dataString = string.Join("&", data.Select(x => $"{x.Key}={x.Value}"));
-        
-            using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
-                ApiTokenUrl, 
-                new StringContent(dataString, Encoding.UTF8, "application/x-www-form-urlencoded"),
-                true,
-                1,
-                ct);
-        
-            var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
-        
-            var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-            return tokenInfo!;
+            data.Add("grant_type", "authorization_code");
+            data.Add("code", tokenCommand.Code);
+            data.Add("redirect_uri", tokenCommand.RedirectUri!);
         }
-        finally
+        else if (tokenCommand.RefreshToken != null)
         {
-            TokenSemaphore.Release();
+            data.Add("grant_type", "refresh_token");
+            data.Add("refresh_token", tokenCommand.RefreshToken);
         }
+        else throw new InvalidOperationException($"{nameof(tokenCommand)} doesn't have code or refresh token filled out!");
+        var dataString = string.Join("&", data.Select(x => $"{x.Key}={x.Value}"));
+        
+        using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
+            ApiTokenUrl, 
+            new StringContent(dataString, Encoding.UTF8, "application/x-www-form-urlencoded"),
+            true,
+            1,
+            ct);
+        
+        var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
+        
+        var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        return tokenInfo!;
     }
 
     /// <summary>
@@ -335,8 +327,6 @@ public class OsuApiService
 
     public async Task<string> GetUserInfoAsync(string token, CancellationToken ct)
     {
-        await _centralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
-        
         using var userResponse = await SendUserRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/me", 
             null, 

@@ -904,16 +904,12 @@ input:focus, select:focus {
     z-index: 100;
 }
 
-.selector-items {
-    width: max-content;
-}
-
 .selector-item {
     border-radius: 0.25em;
 }
 
 .selector-items .selector-item {
-    box-sizing: content-box;
+    box-sizing: border-box;
     width: 100%;
 }
 

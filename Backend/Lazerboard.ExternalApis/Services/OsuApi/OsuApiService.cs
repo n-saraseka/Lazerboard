@@ -71,16 +71,18 @@ public class OsuApiService
     private async Task<HttpResponseMessage> SendUserRequestAsync(HttpMethod method, 
         string requestString,
         HttpContent? content,
-        string accessToken,
-        decimal priority = 1,
+        string? accessToken,
         CancellationToken ct = default)
     {
         var requestMessage = new HttpRequestMessage(method, requestString);
         requestMessage.Content = content;
-        requestMessage.Headers.Add("Authorization", "Bearer " + accessToken);
-        requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
+        if (accessToken != null)
+        {
+            requestMessage.Headers.Add("Authorization", "Bearer " + accessToken);
+            requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
+        }
 
-        await _centralizedRateLimiter.WaitForAvailableTokenAsync(priority, ct);
+        await _centralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
         _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         
@@ -137,12 +139,13 @@ public class OsuApiService
         }
         else throw new InvalidOperationException($"{nameof(tokenCommand)} doesn't have code or refresh token filled out!");
         var dataString = string.Join("&", data.Select(x => $"{x.Key}={x.Value}"));
+
+        await _centralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
         
-        using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
+        using var tokenResponse = await SendUserRequestAsync(HttpMethod.Post, 
             ApiTokenUrl, 
             new StringContent(dataString, Encoding.UTF8, "application/x-www-form-urlencoded"),
-            true,
-            1,
+            null,
             ct);
         
         var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
@@ -331,7 +334,6 @@ public class OsuApiService
             $"{BaseApiUrl}/me", 
             null, 
             token,
-            1,
             ct);
         
         return await userResponse.Content.ReadAsStringAsync(ct);

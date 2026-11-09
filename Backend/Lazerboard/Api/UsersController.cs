@@ -6,6 +6,7 @@ using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Lazerboard.Api;
 
@@ -14,12 +15,38 @@ namespace Lazerboard.Api;
 public class UsersController(IScoreRepository scoreRepository, 
     IUserRepository userRepository,
     IBeatmapRepository beatmapRepository,
-    IScoreCacheRepository scoreCacheRepository) : ControllerBase
+    IScoreCacheRepository scoreCacheRepository,
+    ILogger<UsersController> logger) : ControllerBase
 {
     private readonly TimeSpan _scoresTtl = TimeSpan.FromMinutes(5);
     private readonly TimeSpan _statsTtl = TimeSpan.FromMinutes(5);
     private readonly BeatmapStatus[] _eligibleStatuses =
         [BeatmapStatus.Ranked, BeatmapStatus.Approved, BeatmapStatus.Loved];
+
+    private int UserId => int.Parse(HttpContext.User.Identity!.Name!);
+
+    /// <summary>
+    /// Get authorized user's data
+    /// </summary>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns><see cref="User"/> or null</returns>
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<User?> GetSelf(CancellationToken ct)
+    {
+        var user = await userRepository.GetByIdAsync(UserId, ct);
+
+        if (user is null)
+        {
+            logger.Log(LogLevel.Information, $"User {UserId} not found, logging out...");
+            await HttpContext.SignOutAsync("InternalCookies");
+            
+            await HttpContext.ForbidAsync();
+            return null;
+        }
+
+        return user;
+    }
     
     /// <summary>
     /// Get user scores

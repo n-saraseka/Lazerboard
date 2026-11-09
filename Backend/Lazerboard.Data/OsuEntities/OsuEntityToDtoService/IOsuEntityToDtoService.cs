@@ -3,7 +3,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 
-namespace Lazerboard.ScoreFetcher.OsuEntityToDtoService;
+namespace Lazerboard.Data.OsuEntities.OsuEntityToDtoService;
 
 public interface IOsuEntityToDtoService
 {

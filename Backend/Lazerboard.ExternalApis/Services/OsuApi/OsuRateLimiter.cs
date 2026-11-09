@@ -7,4 +7,9 @@ public class OsuRateLimiter(OsuApiQueue queue) : ICentralizedRateLimiter
     {
         await queue.WaitForAvailableTokensAsync(priority, ct);
     }
+
+    public async Task EnqueueAndShiftTheRestAsync(CancellationToken ct)
+    {
+        await queue.EnqueueAndShiftTheRestAsync(ct);
+    }
 }

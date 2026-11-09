@@ -10,7 +10,6 @@ public class OsuApiFetcher : IOsuApiFetcher
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiUrl;
-    private readonly ILogger<IOsuApiFetcher> _logger;
     
     public OsuApiFetcher(HttpClient httpClient, IConfiguration config, ILogger<IOsuApiFetcher> logger)
     {
@@ -32,8 +31,6 @@ public class OsuApiFetcher : IOsuApiFetcher
         };
         
         _apiUrl = builder.Uri.ToString();
-
-        _logger = logger;
     }
     
     /// <summary>
@@ -238,4 +235,20 @@ public class OsuApiFetcher : IOsuApiFetcher
     /// <returns>The beatmap file <see cref="Stream"/></returns>
     public async Task<Stream> DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default) =>
         await _httpClient.GetStreamAsync($"{_apiUrl}/beatmaps/{beatmapId}/download", ct);
+
+    public async Task<APIUser> GetUserInfoAsync(string token, CancellationToken ct = default)
+    {
+        var userResponseText = "";
+        while (userResponseText == "") 
+        {
+            using var userResponse = await SendRequestAsync(HttpMethod.Get,
+                $"{_apiUrl}/userinfo?token={token}",
+                null,
+                ct);
+            userResponseText = await userResponse.Content.ReadAsStringAsync(ct);
+        }
+        
+        var user = JsonConvert.DeserializeObject<APIUser>(userResponseText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        return user;
+    }
 }

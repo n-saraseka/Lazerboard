@@ -12,6 +12,7 @@ public class OsuApiService
     private ILogger<OsuApiService> _logger;
     private readonly OsuRateLimiter _centralizedRateLimiter;
     private static TokenInfo? _token;
+    private static DateTimeOffset _tokenExpiryTime;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
     private const string BaseApiUrl = "https://osu.ppy.sh/api/v2";
     private const string ApiTokenUrl = "https://osu.ppy.sh/oauth/token";
@@ -44,7 +45,7 @@ public class OsuApiService
     /// <param name="priority">Request priority</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Request response text</returns>
-    private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod method, 
+    private async Task<HttpResponseMessage> SendClientRequestAsync(HttpMethod method, 
         string requestString,
         HttpContent? content,
         bool isTokenRequest = false,
@@ -67,14 +68,33 @@ public class OsuApiService
         return response;
     }
     
+    private async Task<HttpResponseMessage> SendUserRequestAsync(HttpMethod method, 
+        string requestString,
+        HttpContent? content,
+        string? accessToken,
+        CancellationToken ct = default)
+    {
+        var requestMessage = new HttpRequestMessage(method, requestString);
+        requestMessage.Content = content;
+        if (accessToken != null)
+        {
+            requestMessage.Headers.Add("Authorization", "Bearer " + accessToken);
+            requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
+        }
+
+        await _centralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
+        _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
+        var response = await _httpClient.SendAsync(requestMessage, ct);
+        
+        return response;
+    }
+    
     /// <summary>
     /// Set fresh token data for API access
     /// </summary>
     /// <param name="ct">Cancellation token</param>
-    private async Task SetTokenAsync(CancellationToken ct = default)
+    private async Task GetClientTokenAsync(CancellationToken ct = default)
     {
-        var seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        
         var data = new Dictionary<string, string>();
         data.Add("client_id", _apiClientId);
         data.Add("client_secret", _apiClientSecret);
@@ -82,8 +102,7 @@ public class OsuApiService
         data.Add("scope", "public");
         var dataJson = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore});
         
-        // getting the token
-        using var tokenResponse = await SendRequestAsync(HttpMethod.Post, 
+        using var tokenResponse = await SendClientRequestAsync(HttpMethod.Post, 
             ApiTokenUrl, 
             new StringContent(dataJson, Encoding.UTF8, "application/json"),
             true,
@@ -91,10 +110,48 @@ public class OsuApiService
             ct);
         
         var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
-
-        // writing new token data
+        
         _token = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-        _token!.ExpiresIn += seconds;
+        _tokenExpiryTime = DateTimeOffset.UtcNow.AddSeconds(_token!.ExpiresIn);
+    }
+
+    /// <summary>
+    /// Get user token for API access
+    /// </summary>
+    /// <param name="tokenCommand">The <see cref="TokenCommand"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The respective <see cref="TokenInfo"/></returns>
+    public async Task<TokenInfo> GetUserTokenAsync(TokenCommand tokenCommand, CancellationToken ct = default)
+    {
+        var data = new Dictionary<string, string>();
+        data.Add("client_id", _apiClientId);
+        data.Add("client_secret", _apiClientSecret);
+        if (tokenCommand.Code != null)
+        {
+            data.Add("grant_type", "authorization_code");
+            data.Add("code", tokenCommand.Code);
+            data.Add("redirect_uri", tokenCommand.RedirectUri!);
+        }
+        else if (tokenCommand.RefreshToken != null)
+        {
+            data.Add("grant_type", "refresh_token");
+            data.Add("refresh_token", tokenCommand.RefreshToken);
+        }
+        else throw new InvalidOperationException($"{nameof(tokenCommand)} doesn't have code or refresh token filled out!");
+        var dataString = string.Join("&", data.Select(x => $"{x.Key}={x.Value}"));
+
+        await _centralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
+        
+        using var tokenResponse = await SendUserRequestAsync(HttpMethod.Post, 
+            ApiTokenUrl, 
+            new StringContent(dataString, Encoding.UTF8, "application/x-www-form-urlencoded"),
+            null,
+            ct);
+        
+        var tokenText = await tokenResponse.Content.ReadAsStringAsync(ct);
+        
+        var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(tokenText, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        return tokenInfo!;
     }
 
     /// <summary>
@@ -105,10 +162,10 @@ public class OsuApiService
     /// <returns>The JSON string</returns>
     public async Task<string> GetBeatmapsetsAsync(string? cursor, CancellationToken ct = default)
     {
-        using var beatmapsetsResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsetsResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/search?sort=ranked_asc&cursor_string={cursor}&nsfw=true", 
             null, 
-            false, 
+            false,
             2,
             ct);
 
@@ -123,10 +180,10 @@ public class OsuApiService
     /// <returns>The JSON string</returns>
     public async Task<string> GetBeatmapsetAsync(int id, CancellationToken ct = default)
     {
-        using var beatmapsetResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsetResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmapsets/{id}", 
-            null, 
-            false, 
+            null,
+            false,
             2,
             ct);
         
@@ -147,10 +204,10 @@ public class OsuApiService
         var queryString = $"limit=100&legacy_only={legacyOnly}";
         if (mode != null) queryString += $"&mode={mode.ToString()!.ToLower()}";
         
-        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var scoresResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps/{beatmapId}/scores?{queryString}", 
-            null, 
-            false, 
+            null,
+            false,
             2,
             ct);
 
@@ -167,10 +224,10 @@ public class OsuApiService
     /// <returns>The JSON string</returns>
     public async Task<string> GetScoresAsync(string? cursor, CancellationToken ct = default)
     {
-        using var scoresResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var scoresResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/scores?cursor_string={cursor}", 
             null, 
-            false, 
+            false,
             1,
             ct);
         
@@ -214,10 +271,10 @@ public class OsuApiService
         var queryString = string.Join("&", ids.Select(b => $"ids[]={b}"));
 
         // parse beatmaps
-        using var beatmapsResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var beatmapsResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/beatmaps?{queryString}", 
             null, 
-            false, 
+            false,
             2,
             ct);
         
@@ -239,7 +296,7 @@ public class OsuApiService
 
         var queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
         
-        using var usersResponse = await SendRequestAsync(HttpMethod.Get, 
+        using var usersResponse = await SendClientRequestAsync(HttpMethod.Get, 
             $"{BaseApiUrl}/users?{queryString}", 
             null, 
             false,
@@ -259,15 +316,26 @@ public class OsuApiService
         await TokenSemaphore.WaitAsync(ct);
         try
         {
-            var seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var time = DateTimeOffset.UtcNow;
 
-            if (_token == null || seconds > _token.ExpiresIn - 60)
-                await SetTokenAsync(ct);
+            if (_token == null || time > _tokenExpiryTime)
+                await GetClientTokenAsync(ct);
             return _token!;
         }
         finally
         {
             TokenSemaphore.Release();
         }
+    }
+
+    public async Task<string> GetUserInfoAsync(string token, CancellationToken ct)
+    {
+        using var userResponse = await SendUserRequestAsync(HttpMethod.Get, 
+            $"{BaseApiUrl}/me", 
+            null, 
+            token,
+            ct);
+        
+        return await userResponse.Content.ReadAsStringAsync(ct);
     }
 }

@@ -26,4 +26,9 @@ public class DirectApiLimiter : ICentralizedRateLimiter
     {
         using var lease = await _rateLimiter.AcquireAsync(1, ct);
     }
+    
+    public async Task EnqueueAndShiftTheRestAsync(CancellationToken ct)
+    {
+        using var lease = await _rateLimiter.AcquireAsync(1, ct);
+    }
 }

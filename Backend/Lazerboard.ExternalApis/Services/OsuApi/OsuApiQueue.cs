@@ -8,12 +8,13 @@ namespace Lazerboard.ExternalApis.Services.OsuApi;
 public class OsuApiQueue : IDisposable
 {
     private readonly Lock _stateLock = new();
-    private readonly PriorityQueue<Request, decimal> _pendingRequests = new();
+    private PriorityQueue<Request, decimal> _pendingRequests = new();
     
     private decimal _virtualTime;
     private const decimal MaxWeight = 3;
 
     private readonly Dictionary<decimal, decimal> _finishTimes = new();
+    private decimal _lastAheadFinishTime;
 
     private int _availableTokens;
     private const int MaxTokens = 1;
@@ -31,6 +32,34 @@ public class OsuApiQueue : IDisposable
         _refillTimer.AutoReset = true;
         _refillTimer.Enabled = true;
         for (var i = 1; i <= MaxWeight; i++) _finishTimes[i] = 0;
+    }
+
+    /// <summary>
+    /// Enqueue ahead of the queue and wait for available token
+    /// </summary>
+    /// <param name="token">The <see cref="CancellationToken"/></param>
+    /// <returns>The request <see cref="Task"/> to await</returns>
+    public Task EnqueueAndShiftTheRestAsync(CancellationToken token)
+    {
+        var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (_stateLock)
+        {
+            var requestTime = 1 / MaxWeight;
+            var shiftedItems = _pendingRequests.UnorderedItems.Select(i => (i.Element, i.Priority + requestTime + 1)).ToList();
+            foreach (var priority in _finishTimes.Keys)
+            {
+                _finishTimes[priority] += requestTime + 1;
+            }
+            _pendingRequests = new PriorityQueue<Request, decimal>(shiftedItems);
+            
+            var lastAhead = _lastAheadFinishTime;
+            var finishTime = lastAhead + requestTime;
+            _lastAheadFinishTime = finishTime;
+            _pendingRequests.Enqueue(new Request(completionSource, finishTime, token), finishTime);
+            GrantAvailableTokens();
+        }
+        
+        return completionSource.Task;
     }
 
     /// <summary>

@@ -103,4 +103,42 @@ public class OsuApiController(OsuApiService osuApiService) : ControllerBase
         var stream = await osuApiService.DownloadBeatmapAsync(id, ct);
         return File(stream, "text/plain", $"{id}.osu");
     }
+
+    /// <summary>
+    /// Get a user token
+    /// </summary>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="TokenInfo"/></returns>
+    [HttpPost("usertoken")]
+    public async Task<IActionResult> GetUserTokenAsync(CancellationToken ct = default)
+    {
+        var form = await Request.ReadFormAsync(ct);
+        var tokenCommand = new TokenCommand
+        {
+            Code = form["code"],
+            RedirectUri = form["redirect_uri"],
+            RefreshToken = form["refresh_token"]
+        };
+        var token = await osuApiService.GetUserTokenAsync(tokenCommand, ct);
+        return Ok(new Dictionary<string, object?>
+            {
+                ["access_token"] = token.AccessToken,
+                ["token_type"] = token.TokenType,
+                ["refresh_token"] = token.RefreshToken,
+                ["expires_in"] = token.ExpiresIn
+            });
+    }
+
+    /// <summary>
+    /// Get own user info
+    /// </summary>
+    /// <param name="token">The user <see cref="TokenInfo.AccessToken"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>The <see cref="APIUser"/></returns>
+    [HttpGet("userinfo")]
+    public async Task<IActionResult> GetUserInfoAsync(string token, CancellationToken ct = default)
+    {
+        var user = await osuApiService.GetUserInfoAsync(token, ct);
+        return Ok(user);
+    }
 }

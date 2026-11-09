@@ -3,7 +3,7 @@ using Lazerboard.Data.Database.Entities.Enums;
 
 namespace Lazerboard.Data.Database.Repositories.Interfaces;
 
-public interface IUserScanLogRepository
+public interface IUserScanLogRepository : IRepository<UserScanLog, int>
 {
     Task<UserScanLog?> GetLatestStartedScanAsync(CancellationToken cancellationToken = default);
     Task<UserScanLog?> GetLatestFinishedScanAsync(CancellationToken cancellationToken = default);

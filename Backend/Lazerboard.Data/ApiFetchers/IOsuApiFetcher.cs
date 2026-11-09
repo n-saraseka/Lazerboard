@@ -12,4 +12,5 @@ public interface IOsuApiFetcher
     Task<List<APIBeatmap>> GetBeatmapsAsync(IList<int> beatmapIds, CancellationToken ct = default);
     Task<APIBeatmapset> GetBeatmapsetAsync(int beatmapsetId, CancellationToken ct = default);
     Task<Stream> DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default);
+    Task<APIUser> GetUserInfoAsync(string token, CancellationToken ct = default);
 }

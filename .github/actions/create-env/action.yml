@@ -76,6 +76,7 @@ runs:
         echo "ExternalApis__Port=8080" >> .env
         echo "ExternalApis__OsuApi__ClientId=${{ inputs.osuapi_clientid }}" >> .env
         echo "ExternalApis__OsuApi__ClientSecret=${{ inputs.osuapi_clientsecret }}" >> .env
+        echo "ExternalApis__OsuApi__CallbackUrl=/oauth/callback" >> .env
         echo "FetcherServices__MainSeeding=false" >> .env
         echo "FetcherServices__SecondarySeeding=false" >> .env
         echo "FetcherServices__Firehose=true" >> .env

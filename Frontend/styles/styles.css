@@ -1333,6 +1333,14 @@ input:focus, select:focus {
     background-color: rgb(45, 45, 45);
 }
 
+.restricted-indicator {
+    text-transform: uppercase;
+    background-color: hsl(0, 50%, 55%);
+    padding: 0.5em;
+    border-radius: 0.15em;
+    color: white;
+}
+
 /* Light theme */
 body:has(.theme-preference.light) {
     background-color: hsl(45, 35%, 98%);

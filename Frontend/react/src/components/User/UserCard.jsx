@@ -2,6 +2,7 @@ import { getEncodedCountry } from "../../utils/user-things.js";
 import { useContext } from "react";
 import {UserContext} from "../Misc/UserContext.jsx";
 import ReportButton from "../Inputs/ReportButton.jsx";
+import RestrictedIndicator from "./RestrictedIndicator.jsx";
 
 function UserCard({user, scoreCount, filteredCount}) {
     const { currentUser, setCurrentUser } = useContext(UserContext);
@@ -23,6 +24,7 @@ function UserCard({user, scoreCount, filteredCount}) {
                             {currentUser !== null && (
                                 (currentUser.id !== user.id && !user.isRestricted) && (<ReportButton user={user}/>)
                             )}
+                            {user.isRestricted && (<RestrictedIndicator/>)}
                         </div>
                     </div>
                 </div>

@@ -1,10 +1,12 @@
 import Header from '../Header/Header.jsx';
 import Footer from '../Misc/Footer.jsx';
+import { UserContext } from '../Misc/UserContext.jsx';
 import { useState, useEffect } from "react";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 
 function Page({currentPage, scoresCount, pageComponent}) {
     const localPreferences = localStorage.getItem("preferences");
+    const [currentUser, setCurrentUser] = useState(null);
     const [preferences, setPreferences] = useState(() => {
         try {
             return JSON.parse(localPreferences)
@@ -49,13 +51,15 @@ function Page({currentPage, scoresCount, pageComponent}) {
     }, [preferences]);
     
     return <>
-        <PreferencesContext.Provider value={{ preferences, setPreferences }}>
-            <Header currentPage={currentPage}/>
-            <div className="container">
-                {pageComponent}
-            </div>
-            <Footer scoresCount={scoresCount}/>
-        </PreferencesContext.Provider>
+        <UserContext.Provider value={{currentUser, setCurrentUser}}>
+            <PreferencesContext.Provider value={{ preferences, setPreferences }}>
+                <Header currentPage={currentPage}/>
+                <div className="container">
+                    {pageComponent}
+                </div>
+                <Footer scoresCount={scoresCount}/>
+            </PreferencesContext.Provider>
+        </UserContext.Provider>
     </>
 }
 

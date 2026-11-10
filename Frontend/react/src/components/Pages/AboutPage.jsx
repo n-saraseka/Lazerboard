@@ -76,7 +76,7 @@ function AboutPage() {
             <div className="about-explanation">
                 <p>There are considerations for removing scores from users who got restricted for foul play. All scores
                     set in the last 24 hours are checked every 2 hours to ensure as many cheated scores are caught as
-                    possible. We may add additional reporting functionality in the future.</p>
+                    possible. You may also <strong>report</strong> users who did not get caught automatically on their profile.</p>
             </div>
         </div>
         <div className="about-section">

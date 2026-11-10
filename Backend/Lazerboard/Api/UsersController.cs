@@ -288,6 +288,6 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <returns>A List of <see cref="User"/>s</returns>
     [HttpGet("search")]
     [AllowAnonymous]
-    public async Task<List<User>> SearchUsers([FromQuery] string query, CancellationToken ct = default) =>
-        await userRepository.SearchAsync(query, ct);
+    public async Task<IActionResult> SearchUsers([FromQuery] string query, CancellationToken ct = default) =>
+        Ok(await userRepository.SearchAsync(query, ct));
 }

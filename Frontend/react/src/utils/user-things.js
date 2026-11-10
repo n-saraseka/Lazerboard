@@ -10,3 +10,7 @@ export function getEncodedCountry(countryCode) {
 
     return `${hex1}-${hex2}`;
 }
+
+export function createReportQueryCommand(user) {
+    return {userId: user.id};
+}

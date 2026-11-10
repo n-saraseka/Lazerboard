@@ -13,7 +13,6 @@ public class UserUtils(IUserRepository userRepository,
     IScoreRepository scoreRepository,
     IUnlistedScoreRepository unlistedScoreRepository,
     IBeatmapUtils beatmapUtils,
-    IScoreProcessor scoreProcessor,
     ILogger<IUserUtils> logger) : IUserUtils
 {
     private const int BeatmapBatchSize = 20;
@@ -26,7 +25,8 @@ public class UserUtils(IUserRepository userRepository,
     /// <param name="users">A list of <see cref="User"/>s</param>
     /// <param name="isUserScan">Whether the method was called from a <see cref="UserScanService"/> or not</param>
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    public async Task ProcessExistingUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
+    /// <returns>The updated list of <see cref="User"/>s</returns>
+    public async Task<IList<User>> ProcessExistingUsersAsync(IList<User> users, bool isUserScan, CancellationToken stoppingToken)
     {
         var userIds = users.Select(u => u.Id).Distinct().ToList();
         
@@ -66,6 +66,7 @@ public class UserUtils(IUserRepository userRepository,
         userRepository.UpdateBulk(users);
         await userRepository.SaveChangesAsync(stoppingToken);
         logger.Log(LogLevel.Information, "Marked {userCount} users as restricted", restrictedUsers.Count);
+        return users;
     }
 
     /// <summary>

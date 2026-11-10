@@ -48,6 +48,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<BeatmapStatus>("beatmap_status")
                     .MapEnum<ScoreSource>("score_source")
                     .MapEnum<ScanEventType>("scan_event_type")
+                    .MapEnum<ReportStatus>("report_status")
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 
@@ -61,6 +62,7 @@ builder.Services.AddScoped<IUnlistedScoreRepository, UnlistedScoreRepository>();
 builder.Services.AddScoped<IBeatmapsetScanLogRepository, BeatmapsetScanLogRepository>();
 builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetRepository>();
 builder.Services.AddScoped<IUserScanLogRepository, UserScanLogRepository>();
+builder.Services.AddScoped<IUserReportsRepository, UserReportsRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 
 // Score fetching related
@@ -156,6 +158,7 @@ if (servicesConfig.GetValue<bool>("FirehoseLeaderboardScans"))
 builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 builder.Services.AddHostedService<UnrestrictedUserUpdatesService>();
 builder.Services.AddHostedService<RestrictedUserUpdatesService>();
+builder.Services.AddHostedService<ReportedUserUpdatesService>();
 builder.Services.AddHostedService<ScoresCountService>();
 
 // Rate limiting

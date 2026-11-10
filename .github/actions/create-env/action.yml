@@ -72,6 +72,11 @@ runs:
         echo "Redis__Host=redis" >> .env
         echo "Redis__Username=${{ inputs.redis_user }}" >> .env
         echo "Redis__Password=${{ inputs.redis_user_password }}" >> .env
+        echo "Reports__ReportsWindow=60" >> .env
+        echo "Reports__SpamReportCooldown=20" >> .env
+        echo "Reports__FalseReportCooldown=60" >> .env
+        echo "Reports__SpamReportsMax=15" >> .env
+        echo "Reports__FalseReportsMax=10" >> .env
         echo "ExternalApis__Host=externalapis" >> .env
         echo "ExternalApis__Port=8080" >> .env
         echo "ExternalApis__OsuApi__ClientId=${{ inputs.osuapi_clientid }}" >> .env
@@ -96,6 +101,7 @@ runs:
         echo "UserUpdatesIntervalHours=2" >> .env
         echo "UserUpdatesLookbackHours=24" >> .env
         echo "RestrictedUsersUpdateIntervalHours=12" >> .env
+        echo "ReportedUsersUpdateIntervalMinutes=15" >> .env
         echo "DiscordHooks__BeatmapScores__HookURL=${{ inputs.hooks_latestmapurl }}" >> .env
         echo "DiscordHooks__BeatmapScores__Enabled=false" >> .env
         echo "DiscordHooks__BeatmapScores__UpdateIntervalMinutes=30" >> .env

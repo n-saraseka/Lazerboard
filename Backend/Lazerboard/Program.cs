@@ -47,6 +47,8 @@ builder.Services.AddDbContext<ScoreDataContext>(
                 .MapEnum<Grade>("grade")
                 .MapEnum<BeatmapStatus>("beatmap_status")
                 .MapEnum<ScoreSource>("score_source")
+                .MapEnum<ReportStatus>("report_status")
+                .MapEnum<CooldownReason>("cooldown_reason")
                 .CommandTimeout(300))
                 .UseSnakeCaseNamingConvention());
 
@@ -55,6 +57,8 @@ builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserReportsRepository, UserReportsRepository>();
+builder.Services.AddScoped<IUserCooldownRepository, UserCooldownRepository>();
 
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>

@@ -89,35 +89,37 @@ public static class FilterUtils
 
         if (command.SortBy != null && command.IsDescending != null)
         {
-            var castedDesc = (bool)command.IsDescending;
+            var isDescending = command.IsDescending.Value;
             switch (command.SortBy)
             {
                 // Smaller rank = better, so we use OrderBy instead of OrderByDescending if the sort order chosen by user is descending
                 case "rank":
-                    query = castedDesc ? query.OrderBy(s => s.Rank) : query.OrderByDescending(s => s.Rank);
+                    query = isDescending ? query.OrderBy(s => s.Rank) : query.OrderByDescending(s => s.Rank);
                     break;
                 case "accuracy":
-                    query = castedDesc ? query.OrderByDescending(s => s.Accuracy) : query.OrderBy(s => s.Accuracy);
+                    query = isDescending ? query.OrderByDescending(s => s.Accuracy) : query.OrderBy(s => s.Accuracy);
                     break;
                 case "totalScore":
-                    query = castedDesc ? query.OrderByDescending(s => s.TotalScore) : query.OrderBy(s => s.TotalScore);
+                    query = isDescending ? query.OrderByDescending(s => s.TotalScore) : query.OrderBy(s => s.TotalScore);
                     break;
                 case "classicTotalScore":
-                    query = castedDesc ? query.OrderByDescending(s => s.ClassicTotalScore) : query.OrderBy(s => s.ClassicTotalScore);
+                    query = isDescending ? query.OrderByDescending(s => s.ClassicTotalScore) : query.OrderBy(s => s.ClassicTotalScore);
                     break;
                 case "date":
-                    query = castedDesc ? query.OrderByDescending(s => s.Date) : query.OrderBy(s => s.Date);
+                    query = isDescending ? query.OrderByDescending(s => s.Date) : query.OrderBy(s => s.Date);
                     break;
                 case "combo":
-                    query = castedDesc ? query.OrderByDescending(s => s.Combo) : query.OrderBy(s => s.Combo);
+                    query = isDescending ? query.OrderByDescending(s => s.Combo) : query.OrderBy(s => s.Combo);
                     break;
                 case "stars":
-                    query = castedDesc ? query.OrderByDescending(s => s.Beatmap.Difficulty) : query.OrderBy(s => s.Beatmap.Difficulty);
+                    query = isDescending ? query.OrderByDescending(s => s.Beatmap.Difficulty) : query.OrderBy(s => s.Beatmap.Difficulty);
                     break;
                 default:
-                    query = castedDesc ? query.OrderByDescending(s => s.PP) : query.OrderBy(s => s.PP);
+                    query = isDescending ? query.OrderByDescending(s => s.PP) : query.OrderBy(s => s.PP);
                     break;
             }
+
+            query = isDescending ? query.OrderByDescending(s => s.Id) : query.OrderBy(s => s.Id);
         }
 
         return query;

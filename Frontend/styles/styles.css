@@ -1272,6 +1272,8 @@ input:focus, select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 2em;
+    box-sizing: border-box;
     width: 100%;
     height: 100%;
     z-index: 100;
@@ -1296,6 +1298,10 @@ input:focus, select:focus {
 .window-header {
     font-weight: bolder;
     font-size: 1.5em;
+}
+
+.window-description {
+    text-align: center;
 }
 
 .window-controls {
@@ -1499,6 +1505,31 @@ body:has(.theme-preference.light) .header-user-dropdown a {
 
 body:has(.theme-preference.light) .header-user-dropdown a:hover {
     background-color: hsl(45, 35%, 65%);
+}
+
+body:has(.theme-preference.light) .report-button {
+    background-color: hsl(45, 35%, 70%);
+}
+
+body:has(.theme-preference.light) .report-button:hover {
+    background-color: hsl(45, 35%, 55%);
+}
+
+body:has(.theme-preference.light) .window {
+    background-color: hsl(45, 35%, 80%);
+    color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .window button {
+    color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .cancel-button {
+    background-color: hsl(45, 35%, 70%);
+}
+
+body:has(.theme-preference.light) .cancel-button:hover {
+    background-color: hsl(45, 35%, 55%);
 }
 
 /* Media rules */

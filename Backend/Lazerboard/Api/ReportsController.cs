@@ -47,7 +47,7 @@ public class ReportsController(IUserRepository userRepository,
                 Message = "User is already restricted or deleted"
             });
         }
-        var inProgressUserReport = await userReportsRepository.GetInProgressUserReport(reportCommand.UserId, ct);
+        var inProgressUserReport = await userReportsRepository.GetInProgressUserReportAsync(reportCommand.UserId, ct);
         if (inProgressUserReport != null)
         {
             return Conflict(new ReportError
@@ -57,7 +57,7 @@ public class ReportsController(IUserRepository userRepository,
             });
         }
 
-        var recentReportsMadeByUser = await userReportsRepository.GetRecentReportsDoneByUser(UserId, _reportsWindow, ct);
+        var recentReportsMadeByUser = await userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, _reportsWindow, ct);
         var falseRecentReports = recentReportsMadeByUser.Count(r => r.Status == ReportStatus.IsNotRestricted);
         var recentReports = recentReportsMadeByUser.Count;
         

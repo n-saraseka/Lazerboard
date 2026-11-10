@@ -14,7 +14,7 @@ public class UserReportsRepository(ScoreDataContext db) : BaseRepository<UserRep
     /// <param name="interval">A <see cref="TimeSpan"/> representing the recent reports window</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A list of <see cref="UserReport"/>s</returns>
-    public Task<List<UserReport>> GetRecentReportsDoneByUser(int userId, TimeSpan interval,
+    public Task<List<UserReport>> GetRecentReportsDoneByUserAsync(int userId, TimeSpan interval,
         CancellationToken ct = default)
     {
         var dateTimeMin = DateTimeOffset.UtcNow - interval;
@@ -29,10 +29,11 @@ public class UserReportsRepository(ScoreDataContext db) : BaseRepository<UserRep
     /// </summary>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A list of <see cref="UserReport"/>s</returns>
-    public Task<List<UserReport>> GetInProgressReports(CancellationToken ct = default) => Set
+    public Task<List<UserReport>> GetInProgressReportsAsync(CancellationToken ct = default) => Set
         .AsNoTracking()
-    .Where(r => r.Status == ReportStatus.InProgress)
-    .ToListAsync(ct);
+        .Where(r => r.Status == ReportStatus.InProgress)
+        .Include(r => r.ReportedUser)
+        .ToListAsync(ct);
     
     /// <summary>
     /// Get latest report for this <see cref="UserReport.ReportedUser"/>
@@ -40,7 +41,7 @@ public class UserReportsRepository(ScoreDataContext db) : BaseRepository<UserRep
     /// <param name="userId">The <see cref="UserReport.ReportedUserId"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>The <see cref="UserReport"/> or null</returns>
-    public Task<UserReport?> GetInProgressUserReport(int userId, CancellationToken ct = default) =>
+    public Task<UserReport?> GetInProgressUserReportAsync(int userId, CancellationToken ct = default) =>
         Set
             .AsNoTracking()
             .Where(r => r.ReportedUserId == userId && r.Status == ReportStatus.InProgress)

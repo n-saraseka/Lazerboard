@@ -17,5 +17,7 @@ public enum ScanEventType
     ScanStarted, // These and rescan variables are backwards. ScanStarted is used for the rescans service.
     ScanFinished,
     BeatmapScanStarted,
-    BeatmapScanFinished
+    BeatmapScanFinished,
+    ReportedUserCheckStarted,
+    ReportedUserCheckFinished
 }

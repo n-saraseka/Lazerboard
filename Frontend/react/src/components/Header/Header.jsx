@@ -4,6 +4,7 @@ import UserPreferences from "../Preferences/UserPreferences.jsx";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 import UserButton from "./UserButton.jsx";
 import LoginButton from "./LoginButton.jsx";
+import {UserContext} from "../Misc/UserContext.jsx";
 
 function Header({currentPage}) {
     const [burgerActive, setBurgerActive] = useState(true);
@@ -12,19 +13,19 @@ function Header({currentPage}) {
         [preferences.theme]);
     const [checkedIfLoggedIn, setCheckedIfLoggedIn] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState(null);
+    const { currentUser, setCurrentUser } = useContext(UserContext);
 
     const getUser = useCallback(async () => {
         const response = await fetch("/api/users/me");
 
         if (response.ok) {
             const json = await response.json();
-            setUser(json);
+            setCurrentUser(json);
             setIsLoggedIn(true);
         }
 
         setCheckedIfLoggedIn(true);
-    }, [currentPage])
+    }, [currentPage]);
 
     useEffect(() => {
         getUser();
@@ -56,7 +57,7 @@ function Header({currentPage}) {
             <div className="navigation-right">
                 {checkedIfLoggedIn && (
                     isLoggedIn
-                        ? (<UserButton user={user}/>)
+                        ? (<UserButton user={currentUser}/>)
                         : (<LoginButton/>)
                 )}
                 <UserPreferences/>

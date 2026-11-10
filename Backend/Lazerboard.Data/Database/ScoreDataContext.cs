@@ -15,6 +15,7 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
     public DbSet<BeatmapsetScanLog> BeatmapsetScanLogs { get; set; }
     public DbSet<RemovedBeatmapset> RemovedBeatmapsets { get; set; }
     public DbSet<UserScanLog> UserScanLogs { get; set; }
+    public DbSet<UserReport> UserReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +24,7 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new BeatmapConfiguration());
         modelBuilder.ApplyConfiguration(new BeatmapsetConfiguration());
         modelBuilder.ApplyConfiguration(new UnlistedScoreConfiguration());
+        modelBuilder.ApplyConfiguration(new UserReportConfiguration());
     }
 }
     

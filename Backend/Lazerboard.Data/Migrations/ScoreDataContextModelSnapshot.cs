@@ -26,6 +26,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "report_status", new[] { "in_progress", "is_not_restricted", "is_restricted" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "beatmap_scan_finished", "beatmap_scan_started", "main_seeding_finished", "main_seeding_started", "rescan_finished", "rescan_started", "restricted_check_finished", "restricted_check_started", "scan_finished", "scan_started", "secondary_seeding_finished", "secondary_seeding_started", "user_check_finished", "user_check_started", "user_scan_finished", "user_scan_started" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "score_source", new[] { "leaderboard_scan", "score_fetcher" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -612,6 +613,48 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("ReportedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reported_on");
+
+                    b.Property<int>("ReportedUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("reported_user_id");
+
+                    b.Property<int>("ReportingUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("reporting_user_id");
+
+                    b.Property<ReportStatus>("Status")
+                        .HasColumnType("report_status")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_reports");
+
+                    b.HasIndex("ReportedOn")
+                        .HasDatabaseName("ix_user_reports_reported_on");
+
+                    b.HasIndex("ReportedUserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_reports_reported_user_id")
+                        .HasFilter("status = 'in_progress'");
+
+                    b.HasIndex("ReportingUserId")
+                        .HasDatabaseName("ix_user_reports_reporting_user_id");
+
+                    b.ToTable("user_reports", (string)null);
+                });
+
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserScanLog", b =>
                 {
                     b.Property<int>("Id")
@@ -717,6 +760,27 @@ namespace OsuScoreStats.Migrations
                         .HasConstraintName("fk_users_countries_country_code");
 
                     b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserReport", b =>
+                {
+                    b.HasOne("Lazerboard.Data.Database.Entities.User", "ReportedUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_reports_users_reported_user_id");
+
+                    b.HasOne("Lazerboard.Data.Database.Entities.User", "ReportingUser")
+                        .WithMany()
+                        .HasForeignKey("ReportingUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_reports_users_reporting_user_id");
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("ReportingUser");
                 });
 
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.Beatmap", b =>

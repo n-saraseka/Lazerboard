@@ -92,13 +92,9 @@ public class ReportsController: ControllerBase
                 Message = "User has already been reported recently."
             });
         }
-
-        var recentReportsMadeByUser = await _userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, _reportsWindow, ct);
-        var lastReportsMadeByUser = await _userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, 50, ct);
         
+        var lastReportsMadeByUser = await _userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, 50, ct);
         var falseRecentReports = lastReportsMadeByUser.Count(r => r.Status == ReportStatus.IsNotRestricted);
-        var recentReports = recentReportsMadeByUser.Count;
-
         if (falseRecentReports >= _falseReportsMax)
         {
             currentTime = DateTimeOffset.UtcNow;
@@ -106,7 +102,7 @@ public class ReportsController: ControllerBase
             {
                 UserId = UserId,
                 StartedOn = currentTime,
-                ExpiresOn = currentTime.Add(_spamReportCooldown),
+                ExpiresOn = currentTime.Add(_falseReportCooldown),
                 CooldownReason = CooldownReason.TooManyReports
             };
             _userCooldownRepository.Create(cooldown);
@@ -119,6 +115,8 @@ public class ReportsController: ControllerBase
             });
         }
         
+        var recentReportsMadeByUser = await _userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, _reportsWindow, ct);
+        var recentReports = recentReportsMadeByUser.Count;
         if (recentReports >= _spamReportsMax)
         {
             currentTime = DateTimeOffset.UtcNow;
@@ -126,7 +124,7 @@ public class ReportsController: ControllerBase
             {
                 UserId = UserId,
                 StartedOn = currentTime,
-                ExpiresOn = currentTime.Add(_falseReportCooldown),
+                ExpiresOn = currentTime.Add(_spamReportCooldown),
                 CooldownReason = CooldownReason.TooManyReports
             };
             _userCooldownRepository.Create(cooldown);

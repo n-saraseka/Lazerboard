@@ -6,5 +6,6 @@ public enum ErrorState
     UserIsRestricted,
     UserIsAlreadyReported,
     TooManyFalseReports,
-    TooManyReports
+    TooManyReports,
+    OnCooldown
 }

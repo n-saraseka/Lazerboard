@@ -30,6 +30,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<ScoreSource>("score_source")
                     .MapEnum<ScanEventType>("scan_event_type")
                     .MapEnum<ReportStatus>("report_status")
+                    .MapEnum<CooldownReason>("cooldown_reason")
                     .CommandTimeout(900))
             .UseSnakeCaseNamingConvention());
 

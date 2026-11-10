@@ -16,6 +16,7 @@ public class ScoreDataContext(DbContextOptions<ScoreDataContext> options) : DbCo
     public DbSet<RemovedBeatmapset> RemovedBeatmapsets { get; set; }
     public DbSet<UserScanLog> UserScanLogs { get; set; }
     public DbSet<UserReport> UserReports { get; set; }
+    public DbSet<UserCooldown> UserCooldowns { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

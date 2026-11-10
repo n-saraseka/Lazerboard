@@ -72,6 +72,11 @@ runs:
         echo "Redis__Host=redis" >> .env
         echo "Redis__Username=${{ inputs.redis_user }}" >> .env
         echo "Redis__Password=${{ inputs.redis_user_password }}" >> .env
+        echo "Reports__ReportsWindow=60" >> .env
+        echo "Reports__SpamReportCooldown=20" >> .env
+        echo "Reports__FalseReportCooldown=60" >> .env
+        echo "Reports__SpamReportsMax=15" >> .env
+        echo "Reports__FalseReportsMax=10" >> .env
         echo "ExternalApis__Host=externalapis" >> .env
         echo "ExternalApis__Port=8080" >> .env
         echo "ExternalApis__OsuApi__ClientId=${{ inputs.osuapi_clientid }}" >> .env

@@ -10,13 +10,37 @@ namespace Lazerboard.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ReportsController(IUserRepository userRepository,
-    IUserReportsRepository userReportsRepository,
-    ILogger<ReportsController> logger): ControllerBase
+public class ReportsController: ControllerBase
 {
-    private readonly TimeSpan _reportsWindow = TimeSpan.FromHours(1);
-    private const int SpamReportsMax = 25;
-    private const int FalseReportsMax = 10;
+    private readonly IUserRepository _userRepository;
+    private readonly IUserReportsRepository _userReportsRepository;
+    private readonly ILogger _logger;
+    private readonly IUserCooldownRepository _userCooldownRepository;
+    
+    private readonly TimeSpan _reportsWindow;
+    private readonly TimeSpan _spamReportCooldown;
+    private readonly TimeSpan _falseReportCooldown;
+    private readonly int _spamReportsMax;
+    private readonly int _falseReportsMax;
+    
+    public ReportsController(IUserRepository userRepository,
+        IUserReportsRepository userReportsRepository,
+        ILogger<ReportsController> logger,
+        IUserCooldownRepository userCooldownRepository,
+        IConfiguration config)
+    {
+        _userRepository = userRepository;
+        _userReportsRepository = userReportsRepository;
+        _logger = logger;
+        _userCooldownRepository = userCooldownRepository;
+
+        var reportsConfig = config.GetSection("Reports");
+        _reportsWindow = TimeSpan.FromMinutes(reportsConfig.GetValue<double>("ReportsWindow"));
+        _spamReportCooldown = TimeSpan.FromMinutes(reportsConfig.GetValue<double>("SpamReportCooldown"));
+        _falseReportCooldown = TimeSpan.FromMinutes(reportsConfig.GetValue<double>("FalseReportCooldown"));
+        _spamReportsMax = reportsConfig.GetValue<int>("SpamReportsMax");
+        _falseReportsMax = reportsConfig.GetValue<int>("FalseReportsMax");
+    }
 
     private int UserId => int.Parse(HttpContext.User.Identity!.Name!);
     
@@ -24,19 +48,31 @@ public class ReportsController(IUserRepository userRepository,
     [HttpPost("")]
     public async Task<IActionResult> ReportUser([FromBody] ReportCommand reportCommand, CancellationToken ct = default)
     {
+        var currentTime = DateTimeOffset.UtcNow;
+        var currentCooldown = await _userCooldownRepository.GetByUserIdAsync(UserId, ct);
+
+        if (currentCooldown != null && currentTime < currentCooldown.ExpiresOn)
+        {
+            return BadRequest(new ReportError
+            {
+                Code = ErrorState.OnCooldown,
+                Message = "Your report ability is on a cooldown, please wait."
+            });
+        }
+        
         if (reportCommand.UserId == UserId)
         {
             return BadRequest(new ReportError
             {
                 Code = ErrorState.SelfReport,
-                Message = "You can't report yourself"
+                Message = "You can't report yourself."
             });
         }
         
-        var user = await userRepository.GetByIdAsync(reportCommand.UserId, ct);
+        var user = await _userRepository.GetByIdAsync(reportCommand.UserId, ct);
         if (user is null)
         {
-            return NotFound("User does not exist");
+            return NotFound("User does not exist.");
         }
 
         if (user.IsRestricted)
@@ -44,36 +80,62 @@ public class ReportsController(IUserRepository userRepository,
             return BadRequest(new ReportError
             {
                 Code = ErrorState.UserIsRestricted,
-                Message = "User is already restricted or deleted"
+                Message = "User is already restricted or deleted."
             });
         }
-        var inProgressUserReport = await userReportsRepository.GetInProgressUserReportAsync(reportCommand.UserId, ct);
+        var inProgressUserReport = await _userReportsRepository.GetInProgressUserReportAsync(reportCommand.UserId, ct);
         if (inProgressUserReport != null)
         {
             return Conflict(new ReportError
             {
                 Code = ErrorState.UserIsAlreadyReported,
-                Message = "User has already been reported recently"
+                Message = "User has already been reported recently."
             });
         }
 
-        var recentReportsMadeByUser = await userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, _reportsWindow, ct);
-        var falseRecentReports = recentReportsMadeByUser.Count(r => r.Status == ReportStatus.IsNotRestricted);
+        var recentReportsMadeByUser = await _userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, _reportsWindow, ct);
+        var lastReportsMadeByUser = await _userReportsRepository.GetRecentReportsDoneByUserAsync(UserId, 50, ct);
+        
+        var falseRecentReports = lastReportsMadeByUser.Count(r => r.Status == ReportStatus.IsNotRestricted);
         var recentReports = recentReportsMadeByUser.Count;
-        
-        if (falseRecentReports >= FalseReportsMax)
-            return BadRequest(new ReportError
-            {
-                Code = ErrorState.TooManyFalseReports,
-                Message = "You've made too many false reports recently"
-            });
-        
-        if (recentReports >= SpamReportsMax)
+
+        if (falseRecentReports >= _falseReportsMax)
         {
+            currentTime = DateTimeOffset.UtcNow;
+            var cooldown = new UserCooldown
+            {
+                UserId = UserId,
+                StartedOn = currentTime,
+                ExpiresOn = currentTime.Add(_spamReportCooldown),
+                CooldownReason = CooldownReason.TooManyReports
+            };
+            _userCooldownRepository.Create(cooldown);
+            await _userCooldownRepository.SaveChangesAsync(ct);
+            
             return BadRequest(new ReportError
             {
                 Code = ErrorState.TooManyFalseReports,
-                Message = "You've made too many reports recently, please wait"
+                Message = "You've made too many false reports recently, please wait."
+            });
+        }
+        
+        if (recentReports >= _spamReportsMax)
+        {
+            currentTime = DateTimeOffset.UtcNow;
+            var cooldown = new UserCooldown
+            {
+                UserId = UserId,
+                StartedOn = currentTime,
+                ExpiresOn = currentTime.Add(_falseReportCooldown),
+                CooldownReason = CooldownReason.TooManyReports
+            };
+            _userCooldownRepository.Create(cooldown);
+            await _userCooldownRepository.SaveChangesAsync(ct);
+            
+            return BadRequest(new ReportError
+            {
+                Code = ErrorState.TooManyReports,
+                Message = "You've made too many reports recently, please wait."
             });
         }
 
@@ -86,16 +148,16 @@ public class ReportsController(IUserRepository userRepository,
 
         try
         {
-            userReportsRepository.Create(report);
-            await userReportsRepository.SaveChangesAsync(ct);
+            _userReportsRepository.Create(report);
+            await _userReportsRepository.SaveChangesAsync(ct);
         }
         catch (DbUpdateException ex)
         {
-            logger.Log(LogLevel.Warning, "Multiple people tried to report user {userId} at the same time!", reportCommand.UserId);
+            _logger.Log(LogLevel.Warning, "Multiple people tried to report user {userId} at the same time!", reportCommand.UserId);
             return Conflict(new ReportError
             {
                 Code = ErrorState.UserIsAlreadyReported,
-                Message = "User has already been reported recently"
+                Message = "User has already been reported recently."
             });
         }
 

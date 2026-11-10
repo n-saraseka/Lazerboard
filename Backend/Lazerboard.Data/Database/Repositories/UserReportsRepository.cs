@@ -25,6 +25,21 @@ public class UserReportsRepository(ScoreDataContext db) : BaseRepository<UserRep
     }
 
     /// <summary>
+    /// Get recent reports done by this <see cref="UserReport.ReportingUser"/>
+    /// </summary>
+    /// <param name="userId">The <see cref="UserReport.ReportingUserId"/></param>
+    /// <param name="amount">Amount of reports to check</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>A list of <see cref="UserReport"/>s</returns>
+    public Task<List<UserReport>> GetRecentReportsDoneByUserAsync(int userId, int amount,
+        CancellationToken ct = default) => Set
+        .AsNoTracking()
+        .Where(r => r.ReportingUserId == userId)
+        .OrderByDescending(r => r.Id)
+        .Take(amount)
+        .ToListAsync(ct);
+
+    /// <summary>
     /// Get recent reports
     /// </summary>
     /// <param name="ct">A <see cref="CancellationToken"/></param>

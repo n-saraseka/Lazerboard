@@ -24,6 +24,7 @@ namespace OsuScoreStats.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "beatmap_status", new[] { "approved", "graveyard", "loved", "pending", "qualified", "ranked", "wip" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "cooldown_reason", new[] { "too_many_false_reports", "too_many_reports" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "report_status", new[] { "in_progress", "is_not_restricted", "is_restricted" });
@@ -613,6 +614,40 @@ namespace OsuScoreStats.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserCooldown", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<CooldownReason>("CooldownReason")
+                        .HasColumnType("cooldown_reason")
+                        .HasColumnName("cooldown_reason");
+
+                    b.Property<DateTimeOffset>("ExpiresOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_on");
+
+                    b.Property<DateTimeOffset>("StartedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_on");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_cooldowns");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_cooldowns_user_id");
+
+                    b.ToTable("user_cooldowns", (string)null);
+                });
+
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserReport", b =>
                 {
                     b.Property<int>("Id")
@@ -760,6 +795,18 @@ namespace OsuScoreStats.Migrations
                         .HasConstraintName("fk_users_countries_country_code");
 
                     b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserCooldown", b =>
+                {
+                    b.HasOne("Lazerboard.Data.Database.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_cooldowns_users_user_id");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Lazerboard.Data.Database.Entities.UserReport", b =>

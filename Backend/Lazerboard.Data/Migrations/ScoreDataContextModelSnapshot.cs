@@ -27,7 +27,7 @@ namespace OsuScoreStats.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "grade", new[] { "a", "b", "c", "d", "f", "s", "sh", "x", "xh" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mode", new[] { "fruits", "mania", "osu", "taiko" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "report_status", new[] { "in_progress", "is_not_restricted", "is_restricted" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "beatmap_scan_finished", "beatmap_scan_started", "main_seeding_finished", "main_seeding_started", "rescan_finished", "rescan_started", "restricted_check_finished", "restricted_check_started", "scan_finished", "scan_started", "secondary_seeding_finished", "secondary_seeding_started", "user_check_finished", "user_check_started", "user_scan_finished", "user_scan_started" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "scan_event_type", new[] { "beatmap_scan_finished", "beatmap_scan_started", "main_seeding_finished", "main_seeding_started", "reported_user_check_finished", "reported_user_check_started", "rescan_finished", "rescan_started", "restricted_check_finished", "restricted_check_started", "scan_finished", "scan_started", "secondary_seeding_finished", "secondary_seeding_started", "user_check_finished", "user_check_started", "user_scan_finished", "user_scan_started" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "score_source", new[] { "leaderboard_scan", "score_fetcher" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 

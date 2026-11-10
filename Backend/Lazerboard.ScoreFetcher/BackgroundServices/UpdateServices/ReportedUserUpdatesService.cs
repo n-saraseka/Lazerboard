@@ -36,14 +36,18 @@ public class ReportedUserUpdatesService : BackgroundService
             await StartUserCheckAsync(stoppingToken);
             try
             {
-                var users = await GetReportedUsersAsync(stoppingToken);
+                var reports = await GetReportsAsync(stoppingToken);
+                var users = reports.DistinctBy(r => r.ReportedUserId).Select(r => r.ReportedUser).ToList();
                 for (var i = 0; i < users.Count; i += BatchSize)
                 {
                     var batch = users.Skip(i).Take(BatchSize).ToList();
                     _logger.Log(LogLevel.Information,
                         "Processing a batch of reported users between IDs {minId} and {maxId}",
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
-                    await ProcessUsersAsync(batch, stoppingToken);
+                    var processedUsers = await ProcessUsersAsync(batch, stoppingToken);
+                    var processedUserIds = processedUsers.Select(u => u.Id).ToList();
+                    var relevantReports = reports.Where(r => processedUserIds.Contains(r.ReportedUserId)).ToList();
+                    await UpdateReportsAsync(relevantReports, processedUsers, stoppingToken);
                 }
                 await FinishUserCheckAsync(stoppingToken);
                 await Task.Delay(_checkInterval, stoppingToken);
@@ -59,15 +63,13 @@ public class ReportedUserUpdatesService : BackgroundService
         }
     }
 
-    private async Task<List<User>> GetReportedUsersAsync(CancellationToken stoppingToken)
+    private async Task<List<UserReport>> GetReportsAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var reportsRepository = scope.ServiceProvider.GetRequiredService<IUserReportsRepository>();
         var inProgressReports = await reportsRepository.GetInProgressReportsAsync(stoppingToken);
         return inProgressReports
-            .DistinctBy(r => r.ReportedUserId)
-            .Select(r => r.ReportedUser)
-            .OrderBy(u => u.Id)
+            .OrderBy(u => u.ReportedUserId)
             .ToList();
     }
     
@@ -76,11 +78,40 @@ public class ReportedUserUpdatesService : BackgroundService
     /// </summary>
     /// <param name="users">A list of <see cref="User"/>s</param>
     /// <param name="stoppingToken">A <see cref="stoppingToken"/></param>
-    private async Task ProcessUsersAsync(IList<User> users, CancellationToken stoppingToken)
+    private async Task<IList<User>> ProcessUsersAsync(IList<User> users, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var userUtils = scope.ServiceProvider.GetRequiredService<IUserUtils>();
-        await userUtils.ProcessExistingUsersAsync(users, false, stoppingToken);
+        return await userUtils.ProcessExistingUsersAsync(users, false, stoppingToken);
+    }
+
+    /// <summary>
+    /// Update <see cref="UserReport"/>s
+    /// </summary>
+    /// <param name="reports">A list of <see cref="UserReport"/>s</param>
+    /// <param name="users">A list of <see cref="User"/>s</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
+    private async Task UpdateReportsAsync(IList<UserReport> reports, IList<User> users, CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var reportsRepository = scope.ServiceProvider.GetRequiredService<IUserReportsRepository>();
+        var usersHash = users.ToHashSet();
+        reports = reports.Select(r =>
+        {
+            r.Status = usersHash.First(u => u.Id == r.ReportedUserId).IsRestricted
+                ? ReportStatus.IsRestricted
+                : ReportStatus.IsNotRestricted;
+            return r;
+        }).ToList();
+        
+        reportsRepository.UpdateBulk(reports);
+        await reportsRepository.SaveChangesAsync(stoppingToken);
+
+        var reportsCount = reports.Count;
+        var restrictedReportsCount = reports.Count(r => r.Status == ReportStatus.IsRestricted);
+        _logger.Log(LogLevel.Information, 
+            "Processed {reportsCount} reports, {restrictedCount} of them reporting restricted users", 
+            reportsCount, restrictedReportsCount);
     }
     
     private async Task StartUserCheckAsync(CancellationToken stoppingToken)

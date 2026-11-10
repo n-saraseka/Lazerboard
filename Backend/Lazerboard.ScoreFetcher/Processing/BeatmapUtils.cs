@@ -17,7 +17,7 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     IBeatmapRepository beatmapRepository) : IBeatmapUtils
 {
     /// <summary>
-    /// Get significant <see cref="APIBeatmap"/> leaderboard scores
+    /// Get <see cref="APIBeatmap"/> leaderboard scores
     /// </summary>
     /// <param name="beatmapId">The <see cref="APIBeatmap"/> ID</param>
     /// <param name="mode">The <see cref="Mode"/></param>
@@ -26,9 +26,8 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     {
         logger.Log(LogLevel.Information, "Processing beatmap {beatmapId}, mode: {mode}", beatmapId, mode);
         var beatmapScores = await osuApiFetcher.GetBeatmapScoresAsync(beatmapId, mode, 0, stoppingToken);
-                        
-        var significantScores = await utils.GetSignificantScoresAsync(beatmapScores.Scores, stoppingToken);
-        return significantScores.DistinctBy(s => s.Id).ToList();
+        
+        return beatmapScores.Scores.DistinctBy(s => s.Id).ToList();
     }
     
     /// <summary>

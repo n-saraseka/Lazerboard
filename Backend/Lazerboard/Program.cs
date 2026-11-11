@@ -81,8 +81,8 @@ builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         RateLimitPartition.GetTokenBucketLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() 
-                          ?? httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() 
+            partitionKey: httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+                          ?? httpContext.Connection.RemoteIpAddress?.ToString()
                           ?? "default",
             factory: partition => new TokenBucketRateLimiterOptions
             {

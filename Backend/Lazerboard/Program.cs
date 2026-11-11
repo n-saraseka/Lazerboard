@@ -1,5 +1,4 @@
 using System.Net;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Lazerboard.Api.OpenApiFilters;
@@ -239,10 +238,26 @@ builder.Host.UseSerilog((context, services, configuration) =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    var markdownPath = Path.Combine(AppContext.BaseDirectory, "api-intro.md");
+    var descriptionText = File.ReadAllText(markdownPath);
+    
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
-        Title = "Lazerboard API"
+        Title = "Lazerboard API",
+        Summary = "osu!lazer leaderboard statistics and more",
+        Description = descriptionText,
+        License = new OpenApiLicense
+        {
+            Name = "AGPL-3.0 license",
+            Url = new Uri("https://github.com/n-saraseka/Lazerboard/blob/master/LICENSE.md")
+        },
+        Contact = new OpenApiContact
+        {
+            Name = "SomeMelGuy",
+            Email = "nicksaraseka43@gmail.com",
+            Url = new Uri("https://osu.ppy.sh/users/8706541")
+        }
     });
     
     var xmlFiles = Directory.GetFiles(AppContext.BaseDirectory, "*.xml", SearchOption.AllDirectories);
@@ -292,6 +307,7 @@ app.UseReDoc(options =>
         },
         ["schemaDefinitionsTagName"] = "Models"
     };
+    options.DocumentTitle = "Lazerboard API documentation";
 });
 
 if (app.Environment.IsDevelopment())

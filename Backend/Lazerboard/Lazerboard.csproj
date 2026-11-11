@@ -41,4 +41,10 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="api-intro.md">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

@@ -23,7 +23,7 @@ public static class FilterUtils
 
         if (command.BeatmapStatus != null)
         {
-            query = query.Where(s => s.Beatmap.Status == command.BeatmapStatus);
+            query = query.Where(s => s.Beatmap!.Status == command.BeatmapStatus);
         }
 
         if (command.ExcludeConverts != null)
@@ -65,8 +65,8 @@ public static class FilterUtils
         if (command.SpeedRange[0] != null) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
         if (command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
 
-        if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap.Difficulty >= command.StarRange[0]);
-        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap.Difficulty <= command.StarRange[1]);
+        if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]);
+        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap!.Difficulty <= command.StarRange[1]);
 
         if (command.LenientMode != null)
         {
@@ -85,7 +85,7 @@ public static class FilterUtils
 
         if (command.ExcludeMods.Length > 0) query = query.Where(s => s.ModAcronyms.All(a => !command.ExcludeMods.Contains(a)));
         
-        if (command.CountryCode != null) query = query.Where(s => s.User.CountryCode == command.CountryCode);
+        if (command.CountryCode != null) query = query.Where(s => s.User!.CountryCode == command.CountryCode);
 
         if (command.SortBy != null && command.IsDescending != null)
         {
@@ -95,43 +95,43 @@ public static class FilterUtils
                 // Smaller rank = better, so we use OrderBy instead of OrderByDescending if the sort order chosen by user is descending
                 case "rank":
                     query = isDescending 
-                        ? query.OrderBy(s => s.Rank).ThenByDescending(s => s.Id)
-                        : query.OrderByDescending(s => s.Rank).ThenBy(s => s.Id);
+                        ? query.OrderBy(s => s.Rank).ThenByDescending(s => s.PP)
+                        : query.OrderByDescending(s => s.Rank).ThenByDescending(s => s.PP);
                     break;
                 case "accuracy":
                     query = isDescending 
-                        ? query.OrderByDescending(s => s.Accuracy).ThenByDescending(s => s.Id)
-                        : query.OrderBy(s => s.Accuracy).ThenBy(s => s.Id);
+                        ? query.OrderByDescending(s => s.Accuracy).ThenByDescending(s => s.PP)
+                        : query.OrderBy(s => s.Accuracy).ThenByDescending(s => s.PP);
                     break;
                 case "totalScore":
                     query = isDescending 
-                        ? query.OrderByDescending(s => s.TotalScore).ThenByDescending(s => s.Id)
-                        : query.OrderBy(s => s.TotalScore).ThenBy(s => s.Id);
+                        ? query.OrderByDescending(s => s.TotalScore).ThenByDescending(s => s.PP)
+                        : query.OrderBy(s => s.TotalScore).ThenByDescending(s => s.PP);
                     break;
                 case "classicTotalScore":
                     query = isDescending 
                         ? query.OrderByDescending(s => s.ClassicTotalScore).ThenByDescending(s => s.Id)
-                        : query.OrderBy(s => s.ClassicTotalScore).ThenBy(s => s.Id);
+                        : query.OrderBy(s => s.ClassicTotalScore).ThenByDescending(s => s.PP);
                     break;
                 case "date":
                     query = isDescending 
-                        ? query.OrderByDescending(s => s.Date).ThenByDescending(s => s.Id)
-                        : query.OrderBy(s => s.Date).ThenBy(s => s.Id);
+                        ? query.OrderByDescending(s => s.Date).ThenByDescending(s => s.PP)
+                        : query.OrderBy(s => s.Date).ThenByDescending(s => s.PP);
                     break;
                 case "combo":
                     query = isDescending
-                        ? query.OrderByDescending(s => s.Combo).ThenByDescending(s => s.Id)  
-                        : query.OrderBy(s => s.Combo).ThenBy(s => s.Id);
+                        ? query.OrderByDescending(s => s.Combo).ThenByDescending(s => s.PP)
+                        : query.OrderBy(s => s.Combo).ThenByDescending(s => s.PP);
                     break;
                 case "stars":
                     query = isDescending
-                        ? query.OrderByDescending(s => s.Beatmap.Difficulty).ThenByDescending(s => s.Id)
-                        : query.OrderBy(s => s.Beatmap.Difficulty).ThenBy(s => s.Id);
+                        ? query.OrderByDescending(s => s.Beatmap!.Difficulty).ThenByDescending(s => s.PP)
+                        : query.OrderBy(s => s.Beatmap!.Difficulty).ThenByDescending(s => s.PP);
                     break;
                 default:
                     query = isDescending 
-                        ? query.OrderByDescending(s => s.PP).ThenByDescending(s => s.Id) 
-                        : query.OrderBy(s => s.PP).ThenBy(s => s.Id);
+                        ? query.OrderByDescending(s => s.PP).ThenByDescending(s => s.Rank) 
+                        : query.OrderBy(s => s.PP).ThenByDescending(s => s.Rank);
                     break;
             }
         }

@@ -110,7 +110,7 @@ public static class FilterUtils
                     break;
                 case "classicTotalScore":
                     query = isDescending 
-                        ? query.OrderByDescending(s => s.ClassicTotalScore).ThenByDescending(s => s.Id)
+                        ? query.OrderByDescending(s => s.ClassicTotalScore).ThenByDescending(s => s.PP)
                         : query.OrderBy(s => s.ClassicTotalScore).ThenByDescending(s => s.PP);
                     break;
                 case "date":
@@ -119,8 +119,8 @@ public static class FilterUtils
                         : query.OrderBy(s => s.Date).ThenByDescending(s => s.PP);
                     break;
                 case "combo":
-                    query = isDescending
-                        ? query.OrderByDescending(s => s.Combo).ThenByDescending(s => s.PP)
+                    query = isDescending 
+                        ? query.OrderByDescending(s => s.Combo).ThenByDescending(s => s.PP)  
                         : query.OrderBy(s => s.Combo).ThenByDescending(s => s.PP);
                     break;
                 case "stars":

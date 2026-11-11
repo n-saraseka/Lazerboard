@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Threading.RateLimiting;
+using Lazerboard.Api.OpenApiFilters;
 using Lazerboard.Data.ApiFetchers;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -16,7 +17,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Http.Resilience;
+using Microsoft.OpenApi;
 using Polly;
+using Scalar.AspNetCore;
 using Serilog;
 using StackExchange.Redis;
 
@@ -60,6 +63,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserReportsRepository, UserReportsRepository>();
 builder.Services.AddScoped<IUserCooldownRepository, UserCooldownRepository>();
 
+#endregion
+
+#region Web
+
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
@@ -68,9 +75,6 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddRazorComponents();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-#endregion
-
-#region Web
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
@@ -231,6 +235,46 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .ReadFrom.Services(services)
     );
 
+// API docs
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    var markdownPath = Path.Combine(AppContext.BaseDirectory, "api-intro.md");
+    var descriptionText = File.ReadAllText(markdownPath);
+    
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "Lazerboard API",
+        Summary = "osu!lazer leaderboard statistics and more",
+        Description = descriptionText,
+        License = new OpenApiLicense
+        {
+            Name = "AGPL-3.0 license",
+            Url = new Uri("https://github.com/n-saraseka/Lazerboard/blob/master/LICENSE.md")
+        },
+        Contact = new OpenApiContact
+        {
+            Name = "SomeMelGuy",
+            Email = "nicksaraseka43@gmail.com",
+            Url = new Uri("https://osu.ppy.sh/users/8706541")
+        }
+    });
+    
+    var xmlFiles = Directory.GetFiles(AppContext.BaseDirectory, "*.xml", SearchOption.AllDirectories);
+    foreach (var xmlFile in xmlFiles)
+    {
+        options.IncludeXmlComments(xmlFile);
+    }
+    
+    options.CustomSchemaIds(type => type.Name);
+    
+    options.SchemaFilter<DescriptionSchemaFilter>();
+    options.SchemaFilter<EnumSchemaFilter>();
+    options.ParameterFilter<DescriptionParameterFilter>();
+    options.OperationFilter<SummaryDescriptionOperationFilter>();
+});
+    
 var app = builder.Build();
 
 if (app.Environment.IsProduction())
@@ -252,10 +296,17 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
+app.MapSwagger("/openapi/{documentName}.json");
+app.MapScalarApiReference("/docs", options =>
+{
+    options.WithTitle("Lazerboard API documentation");
+    options.HideTestRequestButton = true;
+    options.HideClientButton = true;
+    options.Favicon = "/static/favicon/favicon.svg";
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
     app.UseSwaggerUI();
 }
 

@@ -1,57 +1,54 @@
-using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.OsuEntities.Enums;
 
-namespace Lazerboard.Api;
+namespace Lazerboard.Api.Utils;
 
 /// <summary>
-/// A helper class for building score queries.
+/// A helper class for building score queries. The range parameters take the minimum first and the maximum second.
 /// </summary>
-/// <remarks>The {x}Range parameters refer to <see cref="List{T}"/>s of two values where the first one is the minimum value and the second one is the maximum value.
-/// When provided, it filters the query to look up scores between the two values.</remarks>
 public class ScoreQueryCommand
 {
     /// <summary>
-    /// An array with allowed <see cref="Mode"/>s
+    /// An array with allowed modes
     /// </summary>
     public Mode[] Modes { get; set; } = [];
 
     /// <summary>
-    /// A <see cref="List{DateOnly}"/> with two <see cref="Score.Date"/> values
+    /// A list with two date values
     /// </summary>
     public List<DateOnly?> DateRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{int}"/> with two <see cref="Score.Rank"/> values
+    /// A list with two rank values
     /// </summary>
     public List<int?> RankRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{int}"/> with two <see cref="Score.PP"/> values
+    /// A list with two PP values
     /// </summary>
     public List<float?> PpRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{float}"/> with two <see cref="Score.Accuracy"/> values
+    /// A list with two accuracy values
     /// </summary>
     public List<float?> AccuracyRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{float}"/> with two <see cref="Score.SpeedChange"/> values
+    /// A list with two speed values
     /// </summary>
     public List<double?> SpeedRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{double}"/> with two <see cref="Beatmap.Difficulty"/> values
+    /// A list with two star rating values
     /// </summary>
     public List<float?> StarRange { get; set; } = [null, null];
     
     /// <summary>
-    /// An array of mod acronyms to include in <see cref="Score"/>s
+    /// An array of mod acronyms to include in scores
     /// </summary>
     public string[] IncludeMods { get; set; } = [];
     
     /// <summary>
-    /// An array of mod acronyms to exclude from <see cref="Score"/>s
+    /// An array of mod acronyms to exclude from scores
     /// </summary>
     public string[] ExcludeMods { get; set; } = [];
     
@@ -61,12 +58,12 @@ public class ScoreQueryCommand
     public bool? LenientMode { get; set; }
     
     /// <summary>
-    /// The <see cref="Country"/> code to filter <see cref="Score"/>s by
+    /// The country code to filter scores by
     /// </summary>
     public string? CountryCode { get; set; }
 
     /// <summary>
-    /// Name of the field to sort <see cref="Score"/>s by
+    /// Name of the field to sort scores by
     /// </summary>
     public string? SortBy { get; set; } = "PP";
     
@@ -76,12 +73,12 @@ public class ScoreQueryCommand
     public bool? IsDescending { get; set; }
     
     /// <summary>
-    /// Whether to exclude scores that have the <see cref="Score.IsConvert"/> flag set to true or not
+    /// Whether to exclude scores that have the convert flag set to true or not
     /// </summary>
     public bool? ExcludeConverts { get; set; }
     
     /// <summary>
-    /// The <see cref="BeatmapStatus"/> to filter for. Set to null if you don't want to filter by beatmap status.
+    /// The beatmap status to filter for. Set to null if you don't want to filter by beatmap status.
     /// </summary>
     public BeatmapStatus? BeatmapStatus { get; set; }
 }

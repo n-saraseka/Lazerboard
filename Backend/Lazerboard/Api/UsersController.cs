@@ -1,4 +1,5 @@
 using Lazerboard.Api.Dtos;
+using Lazerboard.Api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <returns><see cref="User"/> or null</returns>
     [Authorize]
     [HttpGet("me")]
-    public async Task<User?> GetSelf(CancellationToken ct)
+    public async Task<ActionResult<ApiUser>> GetSelf(CancellationToken ct)
     {
         var user = await userRepository.GetByIdAsync(UserId, ct);
 
@@ -40,12 +41,11 @@ public class UsersController(IScoreRepository scoreRepository,
         {
             logger.Log(LogLevel.Information, $"User {UserId} not found, logging out...");
             await HttpContext.SignOutAsync("InternalCookies");
-            
-            await HttpContext.ForbidAsync();
-            return null;
+
+            return Forbid();
         }
 
-        return user;
+        return Ok(DbToApiObjectUtils.DbUserToApiUser(user));
     }
     
     /// <summary>
@@ -59,7 +59,7 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpPost("{userId:int}/scores")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserScoresAsync(
+    public async Task<ActionResult<UserScoresResponse>> GetUserScoresAsync(
         int userId,
         [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
@@ -132,9 +132,11 @@ public class UsersController(IScoreRepository scoreRepository,
                 return s;
             }).ToList();
             
+            var apiScores = scores.Select(DbToApiObjectUtils.DbScoreToApiScore).ToList();
+            
             var scoresResponse = new UserScoresResponse
             {
-                Scores = scores,
+                Scores = apiScores,
                 Count = count,
                 FilteredCount = filteredCount
             };
@@ -157,7 +159,7 @@ public class UsersController(IScoreRepository scoreRepository,
     }
 
     /// <summary>
-    /// Get <see cref="User"/>'s top 100 scores count history
+    /// Get user's statistics
     /// </summary>
     /// <param name="userId">The <see cref="User"/> ID</param>
     /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
@@ -165,7 +167,7 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <returns>The statistics.</returns>
     [HttpPost("{userId:int}/stats")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserStats(int userId, [FromBody] ScoreQueryCommand command,
+    public async Task<ActionResult<UserStatsResponse>> GetUserStats(int userId, [FromBody] ScoreQueryCommand command,
         CancellationToken ct = default)
     {
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
@@ -281,13 +283,17 @@ public class UsersController(IScoreRepository scoreRepository,
     }
 
     /// <summary>
-    /// Search <see cref="User"/>s
+    /// Search users
     /// </summary>
     /// <param name="query">The search query</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A List of <see cref="User"/>s</returns>
     [HttpGet("search")]
     [AllowAnonymous]
-    public async Task<IActionResult> SearchUsers([FromQuery] string query, CancellationToken ct = default) =>
-        Ok(await userRepository.SearchAsync(query, ct));
+    public async Task<ActionResult<List<ApiUser>>> SearchUsers([FromQuery] string query, CancellationToken ct = default)
+    {
+        var users = await userRepository.SearchAsync(query, ct);
+        var apiUsers = users.Select(DbToApiObjectUtils.DbUserToApiUser).ToList();
+        return Ok(apiUsers);
+    }
 }

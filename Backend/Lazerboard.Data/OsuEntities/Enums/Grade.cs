@@ -2,6 +2,9 @@
 
 namespace Lazerboard.Data.OsuEntities.Enums;
 
+/// <summary>
+/// Represent the score's grade
+/// </summary>
 public enum Grade
 {
     [Description(@"F")]

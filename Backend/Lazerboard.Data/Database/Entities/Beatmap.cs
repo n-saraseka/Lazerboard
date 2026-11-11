@@ -6,7 +6,7 @@ public class Beatmap : IEntity<int>
 {
     public int Id { get; set; }
     public int BeatmapsetId { get; set; }
-    public Beatmapset Beatmapset { get; set; }
+    public Beatmapset? Beatmapset { get; set; }
     public Mode Mode { get; set; }
     public string DifficultyName { get; set; }
     public float Difficulty { get; set; }

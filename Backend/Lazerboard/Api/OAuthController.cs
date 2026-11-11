@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Lazerboard.Api;
 
 [ApiController]
+[ApiExplorerSettings(IgnoreApi = true)]
 [Route("[controller]")]
 public class OAuthController(ILogger<OAuthController> logger, 
     IOsuApiFetcher osuApiFetcher,
@@ -21,7 +22,7 @@ public class OAuthController(ILogger<OAuthController> logger,
     /// </summary>
     [HttpGet("login")]
     [ProducesResponseType(StatusCodes.Status302Found)]
-    public IActionResult Authenticate()
+    public ActionResult<IActionResult> Authenticate()
     {
         var authenticationProperties = new AuthenticationProperties
         {
@@ -36,7 +37,6 @@ public class OAuthController(ILogger<OAuthController> logger,
     /// </summary>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     [HttpGet("complete")]
-    [ApiExplorerSettings(IgnoreApi = true)]
     [ProducesResponseType(StatusCodes.Status302Found)]
     public async Task<IActionResult> CompleteAuthentication(CancellationToken ct = default)
     {

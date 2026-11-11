@@ -57,7 +57,7 @@ function ScoreRankingPage({countries}) {
         params.append("page", pageNumber.toString());
 
         try {
-            const response = await fetch(`/api/scores/millions?` + params.toString(), {
+            const response = await fetch(`/api/ranking/millions?` + params.toString(), {
                 method: "POST",
                 body: JSON.stringify(command),
                 headers: {

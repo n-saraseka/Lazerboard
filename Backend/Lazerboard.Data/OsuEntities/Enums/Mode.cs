@@ -1,5 +1,8 @@
 ﻿namespace Lazerboard.Data.OsuEntities.Enums;
 
+/// <summary>
+/// Represent's the gameplay mode
+/// </summary>
 public enum Mode
 {
     Osu = 0,

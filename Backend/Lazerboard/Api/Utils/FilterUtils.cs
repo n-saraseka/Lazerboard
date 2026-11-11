@@ -2,7 +2,7 @@ using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
 using Npgsql;
 
-namespace Lazerboard.Api;
+namespace Lazerboard.Api.Utils;
 
 public static class FilterUtils
 {
@@ -23,7 +23,7 @@ public static class FilterUtils
 
         if (command.BeatmapStatus != null)
         {
-            query = query.Where(s => s.Beatmap.Status == command.BeatmapStatus);
+            query = query.Where(s => s.Beatmap!.Status == command.BeatmapStatus);
         }
 
         if (command.ExcludeConverts != null)
@@ -65,8 +65,8 @@ public static class FilterUtils
         if (command.SpeedRange[0] != null) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
         if (command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
 
-        if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap.Difficulty >= command.StarRange[0]);
-        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap.Difficulty <= command.StarRange[1]);
+        if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]);
+        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap!.Difficulty <= command.StarRange[1]);
 
         if (command.LenientMode != null)
         {
@@ -85,7 +85,7 @@ public static class FilterUtils
 
         if (command.ExcludeMods.Length > 0) query = query.Where(s => s.ModAcronyms.All(a => !command.ExcludeMods.Contains(a)));
         
-        if (command.CountryCode != null) query = query.Where(s => s.User.CountryCode == command.CountryCode);
+        if (command.CountryCode != null) query = query.Where(s => s.User!.CountryCode == command.CountryCode);
 
         if (command.SortBy != null && command.IsDescending != null)
         {
@@ -119,14 +119,14 @@ public static class FilterUtils
                         : query.OrderBy(s => s.Date).ThenByDescending(s => s.PP);
                     break;
                 case "combo":
-                    query = isDescending
+                    query = isDescending 
                         ? query.OrderByDescending(s => s.Combo).ThenByDescending(s => s.PP)  
                         : query.OrderBy(s => s.Combo).ThenByDescending(s => s.PP);
                     break;
                 case "stars":
                     query = isDescending
-                        ? query.OrderByDescending(s => s.Beatmap.Difficulty).ThenByDescending(s => s.PP)
-                        : query.OrderBy(s => s.Beatmap.Difficulty).ThenByDescending(s => s.PP);
+                        ? query.OrderByDescending(s => s.Beatmap!.Difficulty).ThenByDescending(s => s.PP)
+                        : query.OrderBy(s => s.Beatmap!.Difficulty).ThenByDescending(s => s.PP);
                     break;
                 default:
                     query = isDescending 

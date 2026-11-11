@@ -299,7 +299,7 @@ app.UseAuthorization();
 app.MapSwagger("/openapi/{documentName}.json");
 app.MapScalarApiReference("/docs", options =>
 {
-    options.WithTitle("Lazerboard API");
+    options.WithTitle("Lazerboard API documentation");
     options.HideTestRequestButton = true;
     options.HideClientButton = true;
     options.Favicon = "/static/favicon/favicon.svg";

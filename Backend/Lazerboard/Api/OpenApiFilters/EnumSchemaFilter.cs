@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Reflection;
-using System.Text;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -13,17 +10,17 @@ public class EnumSchemaFilter : ISchemaFilter
         if (!context.Type.IsEnum)
             return;
 
-        var str = "<p>Values:</p><table>";
+        var descriptions = new Dictionary<int, string>();
 
         foreach (var val in Enum.GetValues(context.Type))
         {
-            var description = val.ToString();
-            
-            str += $"<tr><td>{(int)val}</td><td>{description}</td></tr>";
+            descriptions[(int)val] = val.ToString()!;
         }
 
-        str += "</table>";
-        
-        schema.Description = str;
+        if (schema.Extensions is null && schema is OpenApiSchema actualSchema)
+        {
+            actualSchema.Extensions = new Dictionary<string, IOpenApiExtension>();
+            actualSchema.Extensions["x-enumDescriptions"] = new EnumDescriptionExtension(descriptions);
+        }
     }
 }

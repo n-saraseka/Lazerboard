@@ -80,8 +80,6 @@ public class UsersController(IScoreRepository scoreRepository,
         var user = await userRepository.GetByIdWithCountryAsync(userId, ct);
         if (user == null) return NotFound("User not found");
         
-        var query = scoreRepository.GetByUserId(userId);
-        
         var filteredCommand = new ScoreQueryCommand
         {
             Modes = command.Modes,
@@ -99,7 +97,8 @@ public class UsersController(IScoreRepository scoreRepository,
             BeatmapStatus = command.BeatmapStatus
         };
 
-        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
+        var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
         var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
         var scoresResponseString = $"userscores-{userId}-{scoresQueryString}";
         
@@ -107,9 +106,10 @@ public class UsersController(IScoreRepository scoreRepository,
 
         if (scoresResponseCache is null)
         {
+            var query = scoreRepository.GetByUserId(userId);
             var count = await query.CountAsync(ct);
             
-            query = FilterUtils.FilterScoreQuery(query, filteredCommand);
+            query = FilterUtils.FilterScoreQuery(query, clampedCommand);
             var filteredCount = await query.CountAsync(ct);
             
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
@@ -195,17 +195,18 @@ public class UsersController(IScoreRepository scoreRepository,
             BeatmapStatus = command.BeatmapStatus
         };
         
-        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
+        var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
         var cacheKey = ResponseCachingUtils.GetUserStatsKeyForCache(commandHash, userId);
 
         var userStatsCache = await scoreCacheRepository.GetSerializedResponseAsync(cacheKey);
 
         if (userStatsCache is null)
         {
-            var filterData = FilterUtils.GetFilterText(filteredCommand);
+            var filterData = FilterUtils.GetFilterText(clampedCommand);
             var filterText = filterData.FilterText.Length == 0 ? "" : $" AND {filterData.FilterText}";
             var parameters = filterData.Parameters;
-            var tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+            var tableString = FilterUtils.GetTableStringWithJoins(clampedCommand, false);
             
             var context = scoreRepository.GetDbContext();
             
@@ -241,7 +242,7 @@ public class UsersController(IScoreRepository scoreRepository,
             var rankStats = await ranksQuery.ToListAsync(ct);
             
             // The star distribution
-            tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, true);
+            tableString = FilterUtils.GetTableStringWithJoins(clampedCommand, true);
             var starSql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
                         FROM {tableString}
                         WHERE user_id = {userId}{filterText}
@@ -251,7 +252,7 @@ public class UsersController(IScoreRepository scoreRepository,
             var starStats = await starsQuery.ToListAsync(ct);
             
             // The speed distribution
-            tableString = FilterUtils.GetTableStringWithJoins(filteredCommand, false);
+            tableString = FilterUtils.GetTableStringWithJoins(clampedCommand, false);
             var speedSql = $@"SELECT CASE WHEN speed_change < 1
                         THEN FLOOR(speed_change * 20) / 20
                         ELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count

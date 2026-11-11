@@ -37,24 +37,24 @@ public static class FilterUtils
                 .SpecifyKind(command.DateRange[0]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc);
             query = query.Where(s => s.Date >= minDate);
         }
-        if (command.DateRange[1] != null)
+        if (command.DateRange[1] != null && command.DateRange[1] < DateOnly.FromDateTime(DateTime.UtcNow))
         {
             var maxDate = DateTime
                 .SpecifyKind(command.DateRange[1]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc).AddDays(1);
             query = query.Where(s => s.Date < maxDate);
         }
         
-        if (command.RankRange[0] != null) query = query.Where(s => s.Rank >= command.RankRange[0]);
-        if (command.RankRange[1] != null) query = query.Where(s => s.Rank <= command.RankRange[1]);
+        if (command.RankRange[0] != null && command.RankRange[0] > 1) query = query.Where(s => s.Rank >= command.RankRange[0]);
+        if (command.RankRange[1] != null && command.RankRange[1] < 100) query = query.Where(s => s.Rank <= command.RankRange[1]);
 
-        if (command.PpRange[0] != null) query = query.Where(s => s.PP >= command.PpRange[0]);
+        if (command.PpRange[0] != null && command.PpRange[0] > 0) query = query.Where(s => s.PP >= command.PpRange[0]);
         if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]);
 
         if (command.AccuracyRange[0] != null) {
             var acc = command.AccuracyRange[0] / 100.0f;
             query = query.Where(s => s.Accuracy >= acc);
         }
-        if (command.AccuracyRange[1] != null) {
+        if (command.AccuracyRange[1] != null && command.AccuracyRange[1] < 100) {
             var acc = command.AccuracyRange[1] / 100.0f;
             query = query.Where(s => s.Accuracy <= acc);
         }
@@ -62,10 +62,10 @@ public static class FilterUtils
         // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
         // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
         if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange != null);
-        if (command.SpeedRange[0] != null) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
-        if (command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
+        if (command.SpeedRange[0] != null && command.SpeedRange[0] > 0.5) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
+        if (command.SpeedRange[1] != null && command.SpeedRange[1] < 2) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
 
-        if (command.StarRange[0] != null) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]);
+        if (command.StarRange[0] != null && command.SpeedRange[1] > 0) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]);
         if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap!.Difficulty <= command.StarRange[1]);
 
         if (command.LenientMode != null)
@@ -137,6 +137,33 @@ public static class FilterUtils
         }
 
         return query;
+    }
+
+    /// <summary>
+    /// Clamp range values in a <see cref="ScoreQueryCommand"/>
+    /// </summary>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
+    /// <returns>The updated <see cref="ScoreQueryCommand"/></returns>
+    public static ScoreQueryCommand GetCommandWithClampedRanges(ScoreQueryCommand command)
+    {
+        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (command.DateRange[0] != null) command.DateRange[0] = command.DateRange[0] > currentDate ? currentDate : command.DateRange[0];
+        if (command.DateRange[1] != null) command.DateRange[1] = command.DateRange[1] >= currentDate ? null : command.DateRange[1];
+
+        if (command.RankRange[0] != null) command.RankRange[0] = command.RankRange[0] <= 1 ? null : command.RankRange[0];
+        if (command.RankRange[1] != null) command.RankRange[1] = command.RankRange[0] >= 100 ? null : command.RankRange[1];
+        
+        if (command.PpRange[0] != null) command.PpRange[0] = command.PpRange[0] <= 0 ? null : command.PpRange[0];
+        if (command.PpRange[1] != null) command.PpRange[1] = Math.Max(command.PpRange[1]!.Value, 0);
+
+        if (command.SpeedRange[0] != null)
+            command.SpeedRange[0] = command.SpeedRange[0] <= 0.5 ? null : command.SpeedRange[0];
+        if (command.SpeedRange[1] != null) command.SpeedRange[1] = command.SpeedRange[1] >= 2 ? null : command.SpeedRange[1];
+
+        if (command.StarRange[0] != null) command.StarRange[0] = command.StarRange[0] <= 0 ? null : command.StarRange[0];
+        if (command.StarRange[1] != null) command.StarRange[1] = Math.Max(command.StarRange[1]!.Value, 0);
+        
+        return command;
     }
 
     /// <summary>

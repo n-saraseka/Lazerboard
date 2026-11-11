@@ -64,8 +64,10 @@ public class RankingController(IScoreRepository scoreRepository,
             BeatmapStatus = command.BeatmapStatus
         };
 
-        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
-        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
+        var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
+        query = FilterUtils.FilterScoreQuery(query, clampedCommand);
+        
         return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, commandHash, false, ct));
     }
     
@@ -105,8 +107,9 @@ public class RankingController(IScoreRepository scoreRepository,
             BeatmapStatus = command.BeatmapStatus
         };
         
-        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
-        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
+        var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
+        query = FilterUtils.FilterScoreQuery(query, clampedCommand);
         return Ok(await GetRankingsFromQueryAsync(query, rankingAmount, rankingPage, commandHash, true, cancellationToken));
     }
 

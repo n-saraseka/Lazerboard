@@ -47,8 +47,6 @@ public class ScoresController(IScoreRepository scoreRepository,
         {
             return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
         }
-
-        var query = scoreRepository.GetAll();
         
         var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.Today);
         var targetEndDate = command.DateRange[1] ?? DateOnly.FromDateTime(DateTime.Today);
@@ -70,10 +68,9 @@ public class ScoresController(IScoreRepository scoreRepository,
             ExcludeConverts = command.ExcludeConverts,
             BeatmapStatus = command.BeatmapStatus
         };
-        
-        query = FilterUtils.FilterScoreQuery(query, filteredCommand);
 
-        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(filteredCommand);
+        var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
         var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
         var scoresResponseString = $"globalscores-{scoresQueryString}";
         
@@ -81,6 +78,8 @@ public class ScoresController(IScoreRepository scoreRepository,
         
         if (scoresResponseCache is null)
         {
+            var query = scoreRepository.GetAll();
+            query = FilterUtils.FilterScoreQuery(query, clampedCommand);
             var count = await query.CountAsync(ct);
             var pages = (int)Math.Ceiling((double)count / scoresAmount);
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);

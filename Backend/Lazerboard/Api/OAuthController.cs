@@ -22,7 +22,7 @@ public class OAuthController(ILogger<OAuthController> logger,
     /// </summary>
     [HttpGet("login")]
     [ProducesResponseType(StatusCodes.Status302Found)]
-    public ActionResult<IActionResult> Authenticate()
+    public IActionResult Authenticate()
     {
         var authenticationProperties = new AuthenticationProperties
         {

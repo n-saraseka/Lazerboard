@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.OpenApi;
 using Polly;
+using Scalar.AspNetCore;
 using Serilog;
 using StackExchange.Redis;
 
@@ -295,19 +296,12 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSwagger();
-app.UseReDoc(options =>
+app.MapSwagger("/openapi/{documentName}.json");
+app.MapScalarApiReference("/docs", options =>
 {
-    options.RoutePrefix = "docs";
-    options.ConfigObject.AdditionalItems = new Dictionary<string, object>
-    {
-        ["aiAssistant"] = new Dictionary<string, object>
-        {
-            ["hide"] = true
-        },
-        ["schemaDefinitionsTagName"] = "Models"
-    };
-    options.DocumentTitle = "Lazerboard API documentation";
+    options.WithTitle("Lazerboard API");
+    options.HideTestRequestButton = true;
+    options.HideClientButton = true;
 });
 
 if (app.Environment.IsDevelopment())

@@ -1,5 +1,8 @@
 ﻿namespace Lazerboard.Data.OsuEntities.Enums;
 
+/// <summary>
+/// Represents a beatmap's status
+/// </summary>
 public enum BeatmapStatus
 {
     Graveyard = -2,

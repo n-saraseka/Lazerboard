@@ -45,7 +45,7 @@ public class ReportsController: ControllerBase
     private int UserId => int.Parse(HttpContext.User.Identity!.Name!);
     
     /// <summary>
-    /// Report a <see cref="User"/>
+    /// Report a user
     /// </summary>
     /// <param name="reportCommand">The <see cref="ReportCommand"/></param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>

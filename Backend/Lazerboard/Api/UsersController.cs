@@ -166,7 +166,7 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <returns>The statistics.</returns>
     [HttpPost("{userId:int}/stats")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserStats(int userId, [FromBody] ScoreQueryCommand command,
+    public async Task<ActionResult<UserStatsResponse>> GetUserStats(int userId, [FromBody] ScoreQueryCommand command,
         CancellationToken ct = default)
     {
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 

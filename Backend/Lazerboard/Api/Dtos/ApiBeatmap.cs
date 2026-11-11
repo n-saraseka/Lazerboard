@@ -12,15 +12,15 @@ public class ApiBeatmap
     /// </summary>
     public int Id { get; set; }
     /// <summary>
-    /// The <see cref="Beatmapset"/> ID
+    /// The beatmapset ID
     /// </summary>
     public int BeatmapsetId { get; set; }
     /// <summary>
-    /// The <see cref="Beatmapset"/>
+    /// The beatmapset
     /// </summary>
     public ApiBeatmapset? Beatmapset { get; set; }
     /// <summary>
-    /// The <see cref="Mode"/>
+    /// The base gameplay mode
     /// </summary>
     public Mode Mode { get; set; }
     /// <summary>

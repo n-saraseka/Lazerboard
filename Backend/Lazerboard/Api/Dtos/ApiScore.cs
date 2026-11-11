@@ -17,7 +17,7 @@ public class ApiScore
     /// </summary>
     public DateTime Date {  get; set; }
     /// <summary>
-    /// The <see cref="Mode"/>
+    /// The gameplay mode
     /// </summary>
     public Mode Mode { get; set; }
     /// <summary>

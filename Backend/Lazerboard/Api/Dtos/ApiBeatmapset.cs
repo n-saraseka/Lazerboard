@@ -18,15 +18,15 @@ public class ApiBeatmapset
     /// </summary>
     public string Title { get; set; }
     /// <summary>
-    /// The <see cref="User"/>'s name when they created the map
+    /// The user's name when they created the map
     /// </summary>
     public string Creator { get; set; }
     /// <summary>
-    /// The <see cref="User"/> ID
+    /// The user ID
     /// </summary>
     public int? UserId { get; set; }
     /// <summary>
-    /// The <see cref="User"/>
+    /// The user
     /// </summary>
     public ApiUser? User { get; set; }
     /// <summary>

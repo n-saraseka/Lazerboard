@@ -16,11 +16,11 @@ public class ApiUser
     /// </summary>
     public string Username { get; set; }
     /// <summary>
-    /// The <see cref="Country"/> code
+    /// The country code
     /// </summary>
     public string? CountryCode { get; set; }
     /// <summary>
-    /// The <see cref="Country"/>
+    /// The user's country
     /// </summary>
     public Country? Country { get; set; }
     /// <summary>

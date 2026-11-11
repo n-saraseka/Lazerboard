@@ -13,7 +13,7 @@ public class BeatmapsController(IBeatmapRepository beatmapRepository,
     IScoreRepository scoreRepository) : ControllerBase
 {
     /// <summary>
-    /// Get collected scores on the <see cref="Beatmap"/> from the API
+    /// Get beatmap scores
     /// </summary>
     /// <remarks>Returns up to 100 scores per page</remarks>
     /// <param name="id">The <see cref="Beatmap"/> ID</param>
@@ -23,7 +23,7 @@ public class BeatmapsController(IBeatmapRepository beatmapRepository,
     /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpGet("{id:int}/scores")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetBeatmapScoresAsync(int id, 
+    public async Task<ActionResult<ScoresResponse>> GetBeatmapScoresAsync(int id, 
         [FromQuery] Mode mode,
         [FromQuery] int? page,
         CancellationToken ct = default)
@@ -38,10 +38,11 @@ public class BeatmapsController(IBeatmapRepository beatmapRepository,
         if (page > pages) mapPage = Math.Max(1, pages);
 
         var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, mapPage, ct);
+        var apiScores = scores.Select(DbToApiObjectUtils.DbScoreToApiScore).ToList();
         
         return Ok(new ScoresResponse
         {
-            Scores = scores,
+            Scores = apiScores,
             Count = count
         });
     }

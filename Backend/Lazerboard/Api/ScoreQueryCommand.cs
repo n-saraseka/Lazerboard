@@ -16,32 +16,32 @@ public class ScoreQueryCommand
     public Mode[] Modes { get; set; } = [];
 
     /// <summary>
-    /// A <see cref="List{DateOnly}"/> with two <see cref="Score.Date"/> values
+    /// A List with two <see cref="Score.Date"/> values
     /// </summary>
     public List<DateOnly?> DateRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{int}"/> with two <see cref="Score.Rank"/> values
+    /// A List with two <see cref="Score.Rank"/> values
     /// </summary>
     public List<int?> RankRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{int}"/> with two <see cref="Score.PP"/> values
+    /// A List with two <see cref="Score.PP"/> values
     /// </summary>
     public List<float?> PpRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{float}"/> with two <see cref="Score.Accuracy"/> values
+    /// A List with two <see cref="Score.Accuracy"/> values
     /// </summary>
     public List<float?> AccuracyRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{float}"/> with two <see cref="Score.SpeedChange"/> values
+    /// A List with two <see cref="Score.SpeedChange"/> values
     /// </summary>
     public List<double?> SpeedRange { get; set; } = [null, null];
     
     /// <summary>
-    /// A <see cref="List{double}"/> with two <see cref="Beatmap.Difficulty"/> values
+    /// A List with two <see cref="Beatmap.Difficulty"/> values
     /// </summary>
     public List<float?> StarRange { get; set; } = [null, null];
     

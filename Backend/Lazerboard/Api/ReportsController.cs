@@ -44,8 +44,15 @@ public class ReportsController: ControllerBase
 
     private int UserId => int.Parse(HttpContext.User.Identity!.Name!);
     
+    /// <summary>
+    /// Report a <see cref="User"/>
+    /// </summary>
+    /// <param name="reportCommand">The <see cref="ReportCommand"/></param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns></returns>
     [Authorize]
     [HttpPost("")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> ReportUser([FromBody] ReportCommand reportCommand, CancellationToken ct = default)
     {
         var currentTime = DateTimeOffset.UtcNow;
@@ -149,7 +156,7 @@ public class ReportsController: ControllerBase
             _userReportsRepository.Create(report);
             await _userReportsRepository.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException ex)
+        catch (DbUpdateException)
         {
             _logger.Log(LogLevel.Warning, "Multiple people tried to report user {userId} at the same time!", reportCommand.UserId);
             return Conflict(new ReportError

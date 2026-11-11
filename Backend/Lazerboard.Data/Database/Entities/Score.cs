@@ -9,9 +9,9 @@ public class Score : IEntity<ulong>
     public ulong Id { get; set; }
     public DateTime Date {  get; set; }
     public Mode Mode { get; set; }
-    public Beatmap Beatmap { get; set; }
+    public Beatmap? Beatmap { get; set; }
     public int BeatmapId { get; set; }
-    public User User { get; set; }
+    public User? User { get; set; }
     public int UserId { get; set; }
     public Grade Grade { get; set; }
     public List<string> ModAcronyms { get; set; } = new();

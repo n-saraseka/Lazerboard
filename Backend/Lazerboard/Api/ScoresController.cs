@@ -31,7 +31,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpPost]
     [AllowAnonymous]
-    public async Task<IActionResult> GetScoresAsync(
+    public async Task<ActionResult<ScoresResponse>> GetScoresAsync(
         [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -102,10 +102,11 @@ public class ScoresController(IScoreRepository scoreRepository,
                 s.User = users.First(u => u.Id == s.UserId);
                 return s;
             }).ToList();
+            var apiScores = scores.Select(DbToApiObjectUtils.DbScoreToApiScore).ToList();
 
             var scoresResponse = new ScoresResponse
             {
-                Scores = scores,
+                Scores = apiScores,
                 Count = count
             };
 
@@ -136,7 +137,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     /// <returns>A <see cref="UserRankingResponse"/></returns>
     [HttpPost("ranking")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserRankingAsync(
+    public async Task<ActionResult<UserRankingResponse>> GetUserRankingAsync(
         [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -176,7 +177,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     }
     
     /// <summary>
-    /// Get a user ranking by count of 1 million scores in <see cref="Mode.Mania"/>
+    /// Get an osu!mania millions ranking
     /// </summary>
     /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
     /// <param name="page">Page (defaults to 1)</param>
@@ -185,7 +186,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     /// <returns>A <see cref="UserRankingResponse"/></returns>
     [HttpPost("millions")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetMillionsRankingAsync(
+    public async Task<ActionResult<UserRankingResponse>> GetMillionsRankingAsync(
         [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
         [FromQuery] int? amount,
@@ -260,7 +261,7 @@ public class ScoresController(IScoreRepository scoreRepository,
             {
                 Rank = (rankingPage - 1) * rankingAmount + group.IndexOf(g) + 1,
                 ScoresCount = g.ScoresCount,
-                User = users.First(u => u.Id == g.UserId)
+                User = DbToApiObjectUtils.DbUserToApiUser(users.First(u => u.Id == g.UserId))
             }).ToList();
             
             var response = new UserRankingResponse

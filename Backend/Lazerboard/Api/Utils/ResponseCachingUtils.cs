@@ -3,7 +3,7 @@ using System.Text;
 using Lazerboard.Api.Dtos;
 using Newtonsoft.Json;
 
-namespace Lazerboard.Api;
+namespace Lazerboard.Api.Utils;
 
 public static class ResponseCachingUtils
 {

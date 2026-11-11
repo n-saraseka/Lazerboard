@@ -2,7 +2,7 @@ using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
 using Npgsql;
 
-namespace Lazerboard.Api;
+namespace Lazerboard.Api.Utils;
 
 public static class FilterUtils
 {

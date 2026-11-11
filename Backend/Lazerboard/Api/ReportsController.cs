@@ -51,7 +51,7 @@ public class ReportsController: ControllerBase
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns></returns>
     [Authorize]
-    [HttpPost("")]
+    [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> ReportUser([FromBody] ReportCommand reportCommand, CancellationToken ct = default)
     {

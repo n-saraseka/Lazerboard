@@ -1,7 +1,7 @@
 using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
 
-namespace Lazerboard.Api;
+namespace Lazerboard.Api.Utils;
 
 public static class DbToApiObjectUtils
 {

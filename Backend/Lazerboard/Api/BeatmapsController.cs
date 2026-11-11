@@ -1,4 +1,5 @@
 using Lazerboard.Api.Dtos;
+using Lazerboard.Api.Utils;
 using Lazerboard.Data.Database.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

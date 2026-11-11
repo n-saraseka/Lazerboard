@@ -302,6 +302,7 @@ app.MapScalarApiReference("/docs", options =>
     options.WithTitle("Lazerboard API");
     options.HideTestRequestButton = true;
     options.HideClientButton = true;
+    options.Favicon = "/static/favicon/favicon.svg";
 });
 
 if (app.Environment.IsDevelopment())

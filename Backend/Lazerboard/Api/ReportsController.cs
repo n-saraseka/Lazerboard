@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Lazerboard.Api;
 
 [ApiController]
+[ApiExplorerSettings(IgnoreApi = true)]
 [Route("api/[controller]")]
 public class ReportsController: ControllerBase
 {

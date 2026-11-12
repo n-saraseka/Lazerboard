@@ -1,5 +1,5 @@
 import {useState, useMemo, useContext, useEffect} from "react";
-import ScoreRankingFilters from "../Filters/ScoreRankingFilters.jsx";
+import Filters from "../Filters/Filters.jsx";
 import ScoreRankingTable from "../Rankings/ScoreRankingTable.jsx";
 import Pagination from "../Misc/Pagination.jsx";
 import Error from "../Misc/Error.jsx";
@@ -108,7 +108,7 @@ function ScoreRankingPage({countries}) {
     return (<>
         <h1 className="section-header">Filter rankings:</h1>
         <div className="component-container">
-            <ScoreRankingFilters isMania={false} filters={filters} setFilters={setFilters} countries={countries}/>
+            <Filters filters={filters} setFilters={setFilters} isRanking={true} countries={countries}/>
         </div>
         <button className="calc-button" disabled={isLoading}
                 onClick={() => debouncedGetRankings(filters, currentPage)}>

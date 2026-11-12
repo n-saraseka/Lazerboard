@@ -1,6 +1,6 @@
 using Lazerboard.Data.OsuEntities.Enums;
 
-namespace Lazerboard.Api.Utils;
+namespace Lazerboard.Api.Dtos;
 
 /// <summary>
 /// A helper class for building score queries. The range parameters take the minimum first and the maximum second.
@@ -10,7 +10,7 @@ public class ScoreQueryCommand
     /// <summary>
     /// An array with allowed modes
     /// </summary>
-    public Mode[] Modes { get; set; } = [];
+    public Mode[]? Modes { get; set; }
 
     /// <summary>
     /// A list with two date values

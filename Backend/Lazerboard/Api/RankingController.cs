@@ -96,14 +96,13 @@ public class RankingController(IScoreRepository scoreRepository,
             return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
         }
         
-        var query = scoreRepository.GetAll().Where(s => s.TotalScore == 1000000);
+        var query = scoreRepository.GetAll().Where(s => s.TotalScore == 1000000 && s.Mode == Mode.Mania);
 
         var filteredCommand = new ScoreQueryCommand
         {
             ExcludeConverts = command.ExcludeConverts,
             StarRange = command.StarRange,
             CountryCode = command.CountryCode,
-            Modes = [Mode.Mania],
             BeatmapStatus = command.BeatmapStatus
         };
         

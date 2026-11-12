@@ -134,7 +134,7 @@ public class ScoresController(IScoreRepository scoreRepository,
     /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A <see cref="ScoresResponse"/></returns>
-    [HttpPost]
+    [HttpPost("millions")]
     [AllowAnonymous]
     public async Task<ActionResult<ScoresResponse>> GetManiaMillionsScoresAsync(
         [FromBody] ScoreQueryCommand command,
@@ -159,10 +159,8 @@ public class ScoresController(IScoreRepository scoreRepository,
         var filteredCommand = new ScoreQueryCommand
         {
             DateRange = [targetStartDate, targetEndDate],
-            RankRange = command.RankRange,
             PpRange = command.PpRange,
             StarRange = command.StarRange,
-            AccuracyRange = command.AccuracyRange,
             SpeedRange = command.SpeedRange,
             IncludeMods = command.IncludeMods,
             ExcludeMods = command.ExcludeMods,
@@ -190,7 +188,7 @@ public class ScoresController(IScoreRepository scoreRepository,
             if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
             
             scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
-            scoresResponseString = $"globalscores-{scoresQueryString}";
+            scoresResponseString = $"millionscores-{scoresQueryString}";
             
             query = query
                 .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);

@@ -1,7 +1,7 @@
-@model Lazerboard.ViewModels.IndexViewModel
+@model Lazerboard.ViewModels.ScoresViewModel
 
 @{
-    ViewBag.Title = "Home";
+    ViewBag.Title = "Scores";
 }
 
 <div class="react-app" data-page="scores" data-count='@ViewData["ScoresCount"]' data-props='@Json.Serialize(Model)'></div>

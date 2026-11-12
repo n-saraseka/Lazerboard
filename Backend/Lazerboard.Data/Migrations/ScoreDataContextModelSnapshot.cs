@@ -588,6 +588,10 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("text")
                         .HasColumnName("country_code");
 
+                    b.Property<bool>("IsRegistered")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_registered");
+
                     b.Property<bool>("IsRestricted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_restricted");

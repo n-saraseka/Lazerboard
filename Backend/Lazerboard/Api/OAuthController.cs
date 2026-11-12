@@ -69,13 +69,19 @@ public class OAuthController(ILogger<OAuthController> logger,
         if (existingUser is null)
         {
             var dbUser = osuEntityToDtoService.UserEntityToDto(user);
-            logger.Log(LogLevel.Information, "osu! user {userID} logged in for the first time", dbUser.Id);
+            dbUser.IsRegistered = true;
+            logger.Log(LogLevel.Information, "osu! user {userID} has registered", dbUser.Id);
             userRepository.Create(dbUser);
         }
         else
         {
             existingUser.Username = user.Username;
             existingUser.CountryCode = user.CountryCode;
+            if (!existingUser.IsRegistered)
+            {
+                existingUser.IsRegistered = true;
+                logger.Log(LogLevel.Information, "User {UserId} has registered", existingUser.Id);
+            }
             userRepository.Update(existingUser);
         }
         await userRepository.SaveChangesAsync(ct);

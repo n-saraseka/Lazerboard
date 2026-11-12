@@ -46,9 +46,10 @@ public class UsersController(IScoreRepository scoreRepository,
             return Forbid();
         }
 
-        if (!user.IsRegistered)
+        if (!user.IsRegistered || !user.RegisteredAt.HasValue)
         {
             user.IsRegistered = true;
+            user.RegisteredAt = DateTimeOffset.UtcNow;
             userRepository.Update(user);
             await userRepository.SaveChangesAsync(ct);
             logger.Log(LogLevel.Information, "User {UserId} has registered", UserId);

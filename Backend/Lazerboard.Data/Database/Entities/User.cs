@@ -11,6 +11,7 @@ public class User : IEntity<int>
     /// Reflects whether user logged in with osu! on the website or not
     /// </summary>
     public bool IsRegistered { get; set; }
+    public DateTimeOffset? RegisteredAt { get; set; }
     public DateTime? LastCheckedAt { get; set; }
     public DateTime? LastScannedAt { get; set; }
 }

@@ -15,7 +15,7 @@ public static class FilterUtils
     public static IQueryable<Score> FilterScoreQuery(IQueryable<Score> query,
         ScoreQueryCommand command)
     {
-        if (!(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
+        if (command.Modes != null && !(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
         {
             var modes = command.Modes.Distinct().ToList();
             query = query.Where(s => modes.Contains(s.Mode));
@@ -176,7 +176,7 @@ public static class FilterUtils
         var filters = new List<string>();
         var parameters = new List<object>();
         
-        if (!(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
+        if (command.Modes != null && !(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
         {
             var modes = command.Modes.Distinct().ToList();
             parameters.Add(new NpgsqlParameter("@modes", modes));

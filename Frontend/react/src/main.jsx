@@ -9,9 +9,11 @@ import ManiaRankingPage from "./components/Pages/ManiaRankingPage.jsx";
 import AboutPage from "./components/Pages/AboutPage.jsx";
 import ErrorPage from "./components/Pages/ErrorPage.jsx";
 import NotFoundPage from "./components/Pages/NotFoundPage.jsx";
+import MillionScoresPage from "./components/Pages/MillionScoresPage.jsx";
 
 const allComponents = {
     "scores": ScoresPage,
+    "millionscores": MillionScoresPage,
     "user": UserPage,
     "beatmap": BeatmapsetPage,
     "userranking": ScoreRankingPage,

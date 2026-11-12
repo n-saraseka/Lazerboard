@@ -29,7 +29,10 @@ public static class ResponseCachingUtils
     /// <returns>The hash string</returns>
     public static string GetScoreCommandHashForCache(ScoreQueryCommand command)
     {
-        command.Modes = command.Modes.OrderBy(m => m).ToArray();
+        if (command.Modes != null)
+        {
+            command.Modes = command.Modes.OrderBy(m => m).ToArray();
+        }
         command.IncludeMods = command.IncludeMods.OrderBy(m => m).ToArray();
         command.ExcludeMods = command.ExcludeMods.OrderBy(m => m).ToArray();
 

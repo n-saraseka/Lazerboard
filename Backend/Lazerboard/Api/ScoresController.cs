@@ -40,7 +40,7 @@ public class ScoresController(IScoreRepository scoreRepository,
         var scoresPage = page ?? 1;
         var scoresAmount = amount ?? 25;
 
-        if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
+        if (scoresAmount > 100 || scoresAmount < 1) return BadRequest($"{nameof(scoresAmount)} must be between 1 and 100");
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
@@ -86,6 +86,109 @@ public class ScoresController(IScoreRepository scoreRepository,
             
             scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
             scoresResponseString = $"globalscores-{scoresQueryString}";
+            
+            query = query
+                .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+            var scores = await query.ToListAsync(ct);
+            
+            var beatmaps = await beatmapRepository
+                .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
+            var users = await userRepository.GetBulkWithCountriesAsync(scores.Select(s => s.UserId).Distinct().ToList(), ct);
+
+            scores = scores.Select(s =>
+            {
+                s.Beatmap = beatmaps.First(b => b.Id == s.BeatmapId);
+                s.User = users.First(u => u.Id == s.UserId);
+                return s;
+            }).ToList();
+            var apiScores = scores.Select(DbToApiObjectUtils.DbScoreToApiScore).ToList();
+
+            var scoresResponse = new ScoresResponse
+            {
+                Scores = apiScores,
+                Count = count
+            };
+
+            var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
+            
+            // Only cache the first 5 or the last 5 pages.
+            if (page <= 5 || pages - scoresPage <= 5)
+            {
+                await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _scoresTtl);
+            }
+            
+            return Ok(scoresResponse);
+        }
+        else
+        {
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache, false);
+            return Ok(scoresResponse);
+        }
+    }
+
+    /// <summary>
+    /// Get 1 million scores in the mania mode
+    /// </summary>
+    /// <param name="command">The <see cref="ScoreQueryCommand"/></param>
+    /// <param name="page">Page (defaults to 1)</param>
+    /// <param name="amount">Amount of <see cref="Score"/>s to return</param>
+    /// <param name="ct">A <see cref="CancellationToken"/></param>
+    /// <returns>A <see cref="ScoresResponse"/></returns>
+    [HttpPost("millions")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ScoresResponse>> GetManiaMillionsScoresAsync(
+        [FromBody] ScoreQueryCommand command,
+        [FromQuery] int? page,
+        [FromQuery] int? amount,
+        CancellationToken ct = default)
+    {
+        var scoresPage = page ?? 1;
+        var scoresAmount = amount ?? 25;
+
+        if (scoresAmount > 100 || scoresAmount < 1) return BadRequest($"{nameof(scoresAmount)} must be between 1 and 100");
+        if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
+            return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
+        if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
+        {
+            return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");
+        }
+        
+        var targetStartDate = command.DateRange[0] ?? DateOnly.FromDateTime(DateTime.Today);
+        var targetEndDate = command.DateRange[1] ?? DateOnly.FromDateTime(DateTime.Today);
+
+        var filteredCommand = new ScoreQueryCommand
+        {
+            DateRange = [targetStartDate, targetEndDate],
+            PpRange = command.PpRange,
+            StarRange = command.StarRange,
+            SpeedRange = command.SpeedRange,
+            IncludeMods = command.IncludeMods,
+            ExcludeMods = command.ExcludeMods,
+            LenientMode = command.LenientMode,
+            CountryCode = command.CountryCode,
+            SortBy = command.SortBy,
+            IsDescending = command.IsDescending,
+            ExcludeConverts = command.ExcludeConverts,
+            BeatmapStatus = command.BeatmapStatus
+        };
+
+        var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
+        var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
+        var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
+        var scoresResponseString = $"millionscores-{scoresQueryString}";
+        
+        var scoresResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
+        
+        if (scoresResponseCache is null)
+        {
+            var query = scoreRepository.GetAll().Where(s => s.Mode == Mode.Mania && s.TotalScore == 1000000);
+            query = FilterUtils.FilterScoreQuery(query, clampedCommand);
+            var count = await query.CountAsync(ct);
+            var pages = (int)Math.Ceiling((double)count / scoresAmount);
+            if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
+            
+            scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
+            scoresResponseString = $"millionscores-{scoresQueryString}";
             
             query = query
                 .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);

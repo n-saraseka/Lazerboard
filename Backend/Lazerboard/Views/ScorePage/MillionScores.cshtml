@@ -1,0 +1,7 @@
+@model Lazerboard.ViewModels.ScoresViewModel
+
+@{
+    ViewBag.Title = "Mania millions";
+}
+
+<div class="react-app" data-page="millionscores" data-count='@ViewData["ScoresCount"]' data-props='@Json.Serialize(Model)'></div>

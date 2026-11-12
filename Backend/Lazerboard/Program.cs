@@ -317,19 +317,24 @@ app.UseDefaultFiles();
 app.UseHttpsRedirection();
 
 app.MapControllerRoute(
+    name: "about",
+    pattern: "/about",
+    defaults: new { controller = "General", action = "About" });
+
+app.MapControllerRoute(
     name: "user",
     pattern: "users/{id}",
     defaults: new { controller = "User", action = "UserPage" });
 
 app.MapControllerRoute(
-    name: "index",
+    name: "globalscores",
     pattern: "/",
-    defaults: new { controller = "General", action = "Index" });
+    defaults: new { controller = "ScorePage", action = "GlobalScores" });
 
 app.MapControllerRoute(
-    name: "about",
-    pattern: "/about",
-    defaults: new { controller = "General", action = "About" });
+    name: "millionscores",
+    pattern: "/millions",
+    defaults: new { controller = "ScorePage", action = "millionscores" });
 
 app.MapControllerRoute(
     name: "beatmapset",

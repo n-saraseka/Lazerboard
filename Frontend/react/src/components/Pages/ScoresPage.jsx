@@ -1,6 +1,6 @@
 import ScoresGrid from '../Scores/ScoresGrid';
 import ScoresTable from '../Scores/ScoresTable';
-import ScoreFilters from '../Filters/ScoreFilters';
+import Filters from '../Filters/Filters';
 import {useState, useMemo, useEffect, useCallback, useContext} from "react";
 import Pagination from "../Misc/Pagination.jsx";
 import {dateStringFromDatetime} from "../../utils/datetime-things.js";
@@ -138,7 +138,7 @@ function ScoresPage({countries}) {
     return (<>
         <h1 className="section-header">Filter scores:</h1>
         <div className="component-container">
-            <ScoreFilters isUser={false} filters={filters} setFilters={setFilters} countries={countries}/>
+            <Filters filters={filters} setFilters={setFilters} isRanking={false} countries={countries}/>
         </div>
         <button className="calc-button" disabled={isLoading}
                 onClick={() => debouncedGetScores(filters, currentPage)}>

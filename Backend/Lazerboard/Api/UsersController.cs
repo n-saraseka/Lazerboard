@@ -79,7 +79,7 @@ public class UsersController(IScoreRepository scoreRepository,
         var scoresPage = page ?? 1;
         var scoresAmount = amount ?? 25;
 
-        if (scoresAmount > 100) return BadRequest($"{nameof(scoresAmount)} must be less or equal to 100");
+        if (scoresAmount > 100 || scoresAmount < 1) return BadRequest($"{nameof(scoresAmount)} must be between 1 and 100");
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))

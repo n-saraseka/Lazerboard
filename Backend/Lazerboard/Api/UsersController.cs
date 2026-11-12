@@ -46,7 +46,7 @@ public class UsersController(IScoreRepository scoreRepository,
             return Forbid();
         }
 
-        if (!user.IsRegistered || user.RegisteredAt.HasValue)
+        if (!user.IsRegistered || !user.RegisteredAt.HasValue)
         {
             user.IsRegistered = true;
             user.RegisteredAt = DateTimeOffset.UtcNow;

@@ -39,7 +39,7 @@ public class RankingController(IScoreRepository scoreRepository,
         var rankingPage = page ?? 1;
         var rankingAmount = amount ?? 10;
         
-        if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
+        if (rankingAmount > 50 || rankingAmount < 1) return BadRequest($"{nameof(rankingAmount)} must be between 1 and 50");
         if (command.IncludeMods.Intersect(command.ExcludeMods).Any()) 
             return BadRequest($"{nameof(command.IncludeMods)} must not contain any mods from {nameof(command.ExcludeMods)}");
         if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
@@ -90,7 +90,7 @@ public class RankingController(IScoreRepository scoreRepository,
         var rankingPage = page ?? 1;
         var rankingAmount = amount ?? 10;
         
-        if (rankingAmount > 50) return BadRequest($"{nameof(rankingAmount)} must be less or equal to 50");
+        if (rankingAmount > 50 || rankingAmount < 1) return BadRequest($"{nameof(rankingAmount)} must be between 1 and 50");
         if (command.BeatmapStatus != null && !_eligibleStatuses.Contains(command.BeatmapStatus.Value))
         {
             return BadRequest($"{nameof(command.BeatmapStatus)} must be ranked, approved or loved");

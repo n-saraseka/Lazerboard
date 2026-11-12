@@ -13,15 +13,13 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .AsNoTracking()
             .Where(s => s.BeatmapId == beatmapId).ToListAsync(cancellationToken);
     
-    public Task<List<Score>> GetByBeatmapIdWithUserDataAsync(int beatmapId, Mode mode, int page, CancellationToken cancellationToken) =>
+    public Task<List<Score>> GetByBeatmapIdWithUserDataAsync(int beatmapId, Mode mode, CancellationToken cancellationToken) =>
         Set
             .AsNoTracking()
             .Where(s => s.BeatmapId == beatmapId && s.Mode == mode)
             .OrderBy(s => s.Rank)
-            .Skip(100 * (page - 1))
-            .Take(100)
             .Include(s => s.User)
-            .ThenInclude(u => u.Country)
+            .ThenInclude(u => u!.Country)
             .ToListAsync(cancellationToken);
     
     public Task<int> GetBeatmapScoreCount(int beatmapId, Mode mode, CancellationToken cancellationToken) => Set

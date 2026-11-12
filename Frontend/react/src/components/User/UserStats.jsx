@@ -125,7 +125,7 @@ function UserStats({data}) {
                     plugins: {
                         title: {
                             display: true,
-                            text: "Top 100 leaderboard count history"
+                            text: "Accumulated scores count history"
                         },
                         tooltip: {
                             mode: 'index',

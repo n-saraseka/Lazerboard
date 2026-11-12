@@ -5,6 +5,7 @@ import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 import UserButton from "./UserButton.jsx";
 import LoginButton from "./LoginButton.jsx";
 import {UserContext} from "../Misc/UserContext.jsx";
+import HeaderItemWithSubsection from "./HeaderItemWithSubsection.jsx";
 
 function Header({currentPage}) {
     const [burgerActive, setBurgerActive] = useState(true);
@@ -42,16 +43,41 @@ function Header({currentPage}) {
         <div className="navigation-main">
             <ul className="navigation">
                 <li>
-                    <a href="/" className={currentPage === "scores" ? 'active' : 'inactive'}>Home page</a>
+                    <HeaderItemWithSubsection 
+                        currentPage={currentPage}
+                        sectionTitle="Scores" 
+                        subItems={[
+                            {
+                                techTitle: "scores", 
+                                url: "/", 
+                                title: "Global"
+                            },
+                            {
+                                techTitle: "millionscores",
+                                url: "/millions",
+                                title: "Mania millions"
+                            },
+                        ]}/>
+                </li>
+                <li>
+                    <HeaderItemWithSubsection
+                        currentPage={currentPage}
+                        sectionTitle="User ranking"
+                        subItems={[
+                            {
+                                techTitle: "userranking",
+                                url: "/scoreranking",
+                                title: "Global"
+                            },
+                            {
+                                techTitle: "millionsranking",
+                                url: "/millionsranking",
+                                title: "Mania millions"
+                            },
+                        ]}/>
                 </li>
                 <li>
                     <a href="/about" className={currentPage === "about" ? 'active' : 'inactive'}>About</a>
-                </li>
-                <li>
-                    <a href="/scoreranking" className={currentPage === "userranking" ? 'active' : 'inactive'}>User ranking</a>
-                </li>
-                <li>
-                    <a href="/millionsranking" className={currentPage === "millionsranking" ? 'active' : 'inactive'}>Mania millions</a>
                 </li>
             </ul>
             <div className="navigation-right">

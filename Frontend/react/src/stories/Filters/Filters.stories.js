@@ -1,10 +1,10 @@
-import ScoreFilters from '../../components/Filters/ScoreFilters';
+import Filters from '../../components/Filters/Filters';
 
 import './styles/ScoreFilters.css';
 
 export default {
-    title: 'ScoreFilters',
-    component: ScoreFilters,
+    title: 'Filters',
+    component: Filters,
     parameters: {
         layout: 'centered',
     },
@@ -24,7 +24,6 @@ const mockProps = {
         modes: [0, 1, 2, 3]
     },
     setFilters: (filters) => {},
-    refetchScores: () => {}
 };
 
 export const Default = {

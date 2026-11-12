@@ -26,6 +26,7 @@ function ScoreRankingPage({countries}) {
     const [filters, setFilters] = useState({
         excludeConverts: globalPreferences.excludeConverts,
         starRange: {min: null, max: null},
+        ppRange: {min: null, max: null},
         country: null,
         amount: rankingPreferences.amount,
         beatmapStatus: globalPreferences.beatmapStatus,

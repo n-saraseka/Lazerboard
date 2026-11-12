@@ -102,6 +102,7 @@ public class RankingController(IScoreRepository scoreRepository,
         {
             ExcludeConverts = command.ExcludeConverts,
             StarRange = command.StarRange,
+            PpRange = command.PpRange,
             CountryCode = command.CountryCode,
             BeatmapStatus = command.BeatmapStatus
         };

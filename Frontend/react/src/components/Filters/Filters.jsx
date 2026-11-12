@@ -8,14 +8,14 @@ import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 function Filters({filters, setFilters, isRanking, countries}) {
     const [collapsed, setCollapsed] = useState(true);
     const possibleFilters = Object.keys(filters);
+    let allModData = [];
+    for (const key of Object.keys(allMods)) {
+        allModData = allModData.concat(allMods[key]);
+    }
     
     let possibleIncludeMods, possibleExcludeMods, currentDate;
     
     if (possibleFilters.includes('includeMods')) {
-        let allModData = [];
-        for (const key of Object.keys(allMods)) {
-            allModData = allModData.concat(allMods[key]);
-        }
         possibleIncludeMods = useMemo(() => {
             let arr = [];
             const matchingMods = possibleFilters.includes('modes') 

@@ -175,7 +175,7 @@ public class ScoresController(IScoreRepository scoreRepository,
         var clampedCommand = FilterUtils.GetCommandWithClampedRanges(filteredCommand);
         var commandHash = ResponseCachingUtils.GetScoreCommandHashForCache(clampedCommand);
         var scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, page);
-        var scoresResponseString = $"millionsscores-{scoresQueryString}";
+        var scoresResponseString = $"millionscores-{scoresQueryString}";
         
         var scoresResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
         

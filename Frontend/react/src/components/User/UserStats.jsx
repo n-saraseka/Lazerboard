@@ -149,6 +149,11 @@ function UserStats({data}) {
                         title: {
                             display: true,
                             text: "Rank distribution",
+                        },
+                        tooltip: {
+                            axis: 'y',
+                            mode: 'index',
+                            intersect: false,
                         }
                     },
                     scales: gridOptions,

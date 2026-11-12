@@ -604,6 +604,10 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_scanned_at");
 
+                    b.Property<DateTimeOffset?>("RegisteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registered_at");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text")

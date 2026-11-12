@@ -70,6 +70,7 @@ public class OAuthController(ILogger<OAuthController> logger,
         {
             var dbUser = osuEntityToDtoService.UserEntityToDto(user);
             dbUser.IsRegistered = true;
+            dbUser.RegisteredAt = DateTimeOffset.UtcNow;
             logger.Log(LogLevel.Information, "osu! user {userID} has registered", dbUser.Id);
             userRepository.Create(dbUser);
         }
@@ -77,9 +78,10 @@ public class OAuthController(ILogger<OAuthController> logger,
         {
             existingUser.Username = user.Username;
             existingUser.CountryCode = user.CountryCode;
-            if (!existingUser.IsRegistered)
+            if (!existingUser.IsRegistered || !existingUser.RegisteredAt.HasValue)
             {
                 existingUser.IsRegistered = true;
+                existingUser.RegisteredAt = DateTimeOffset.UtcNow;
                 logger.Log(LogLevel.Information, "User {UserId} has registered", existingUser.Id);
             }
             userRepository.Update(existingUser);

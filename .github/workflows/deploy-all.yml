@@ -32,6 +32,7 @@ jobs:
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&
           docker compose pull && UID=$(id -u) GID=$(id -g) docker compose up -d"
       - name: Logout
+        if: always()
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker logout ghcr.io"
       - name: Cleanup

@@ -32,6 +32,7 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns><see cref="User"/> or null</returns>
     [Authorize]
+    [ApiExplorerSettings(IgnoreApi = true)]
     [HttpGet("me")]
     public async Task<ActionResult<ApiUser>> GetSelf(CancellationToken ct)
     {
@@ -43,6 +44,14 @@ public class UsersController(IScoreRepository scoreRepository,
             await HttpContext.SignOutAsync("InternalCookies");
 
             return Forbid();
+        }
+
+        if (!user.IsRegistered)
+        {
+            user.IsRegistered = true;
+            userRepository.Update(user);
+            await userRepository.SaveChangesAsync(ct);
+            logger.Log(LogLevel.Information, "User {UserId} has registered", UserId);
         }
 
         return Ok(DbToApiObjectUtils.DbUserToApiUser(user));

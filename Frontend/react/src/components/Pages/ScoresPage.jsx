@@ -14,7 +14,6 @@ function ScoresPage({countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const globalPreferences = useMemo(() => preferences.globalPreferences ?? {
-        view: 'cards',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
@@ -24,7 +23,6 @@ function ScoresPage({countries}) {
     }, [preferences.globalPreferences]);
 
     const [filters, setFilters] = useState({
-        view: globalPreferences.view,
         modes: globalPreferences.modes,
         excludeConverts: globalPreferences.excludeConverts,
         dateRange: {min: null, max: null},
@@ -44,7 +42,6 @@ function ScoresPage({countries}) {
     
     useEffect(() => setPreferences({...preferences, 
             globalPreferences: {...globalPreferences,
-                view: filters.view,
                 modes: filters.modes, 
                 excludeConverts: filters.excludeConverts, 
                 amount: filters.amount, 
@@ -131,8 +128,8 @@ function ScoresPage({countries}) {
     }, []);
 
     const debouncedGetScores = useMemo(
-        () => debounce(getScores, 250),
-        [currentPage]
+        () => debounce(getScores, 300),
+        []
     );
     
     return (<>
@@ -150,9 +147,9 @@ function ScoresPage({countries}) {
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : scoresCount > 0 && (filters.view === 'cards'
-                            ? <ScoresGrid scores={allScores} usingStandardized={true}/>
-                            : <ScoresTable scores={allScores} usingStandardized={true}/>))}
+                    : scoresCount > 0 && ((preferences.view ?? globalPreferences.view) === 'cards'
+                        ? <ScoresGrid scores={allScores}/>
+                        : <ScoresTable scores={allScores}/>))}
         </div>
         <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>
     </>)

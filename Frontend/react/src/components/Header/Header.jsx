@@ -81,12 +81,12 @@ function Header({currentPage}) {
                 </li>
             </ul>
             <div className="navigation-right">
+                <UserPreferences/>
                 {checkedIfLoggedIn && (
                     isLoggedIn
                         ? (<UserButton user={currentUser}/>)
                         : (<LoginButton/>)
                 )}
-                <UserPreferences/>
                 <UserSearchBar/>
             </div>
         </div>

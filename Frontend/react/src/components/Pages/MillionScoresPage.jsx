@@ -14,7 +14,6 @@ function MillionScoresPage({countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const globalPreferences = useMemo(() => preferences.globalPreferences ?? {
-        view: 'cards',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),
@@ -24,7 +23,6 @@ function MillionScoresPage({countries}) {
     }, [preferences.globalPreferences]);
 
     const [filters, setFilters] = useState({
-        view: globalPreferences.view,
         excludeConverts: globalPreferences.excludeConverts,
         dateRange: {min: null, max: null},
         starRange: {min: null, max: null},
@@ -42,7 +40,6 @@ function MillionScoresPage({countries}) {
 
     useEffect(() => setPreferences({...preferences,
         globalPreferences: {...globalPreferences,
-            view: filters.view,
             excludeConverts: filters.excludeConverts,
             amount: filters.amount,
             beatmapStatus: filters.beatmapStatus}
@@ -121,15 +118,15 @@ function MillionScoresPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [currentPage])
+    }, [])
 
     useEffect( () => {
         getScores(filters);
     }, []);
 
     const debouncedGetScores = useMemo(
-        () => debounce(getScores, 250),
-        [currentPage]
+        () => debounce(getScores, 300),
+        []
     );
 
     return (<>
@@ -147,9 +144,9 @@ function MillionScoresPage({countries}) {
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : scoresCount > 0 && (filters.view === 'cards'
-                    ? <ScoresGrid scores={allScores} usingStandardized={true}/>
-                    : <ScoresTable scores={allScores} usingStandardized={true}/>))}
+                    : scoresCount > 0 && ((preferences.view ?? globalPreferences.view) === 'cards' 
+                        ? <ScoresGrid scores={allScores}/> 
+                        : <ScoresTable scores={allScores}/>))}
         </div>
         <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>
     </>)

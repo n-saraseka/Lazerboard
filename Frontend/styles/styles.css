@@ -17,7 +17,7 @@ header {
     position: sticky;
     margin-bottom: 1em;
     top: 0;
-    z-index: 100;
+    z-index: 3;
     background-color: rgb(25, 25, 25);
     border-radius: 0 0 1em 1em;
     transition: background-color 0.3s ease-in-out;
@@ -102,8 +102,9 @@ header {
     box-sizing: border-box;
     width: 100%;
     display: flex;
+    gap: 0.2em;
     font-size: 1em;
-    padding: 0.5em;
+    padding: 0.8em 0.5em;
     border-radius: 0.25em;
     border: 0.15em solid black;
     align-items: center;
@@ -202,7 +203,7 @@ footer {
     gap: 1em;
     padding: 1em;
     margin-top: 1em;
-    z-index: 100;
+    z-index: 3;
     background-color: rgb(25, 25, 25);
     border-radius: 1em 1em 0 0;
     transition: background-color 0.3s ease-in-out;
@@ -359,24 +360,31 @@ input:focus, select:focus {
     flex-wrap: wrap;
 }
 
-.view-filter {
-    padding: 0.5em;
-    border: 0.15em solid black;
-    border-radius: 0.25em;
+.view-preference {
     display: flex;
-    gap: 0.5em;
-    align-items: center;
-    background-color: white;
-    color: black;
-    transition: box-shadow 0.3s ease-in-out;
 }
 
-.view-filter:hover {
+.view-preference .view-toggle:first-child {
+    border-radius: 0.15em 0 0 0.15em;
+}
+
+.view-preference .view-toggle:last-child {
+    border-radius: 0 0.15em 0.15em 0;
+}
+
+.view-toggle {
+    padding: 1em;
+    background-color: rgb(45, 45, 45);
     cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
 }
 
-.view-active, .view-filter:hover {
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+.view-toggle.active, .view-toggle:hover {
+    background-color: rgb(40, 40, 40);
+}
+
+.view-toggle.inactive .view-icon {
+    background-color: rgba(255, 255, 255, 0.6);
 }
 
 .view-icon {
@@ -388,7 +396,12 @@ input:focus, select:focus {
     -webkit-mask-repeat: no-repeat;
     mask-position: center;
     -webkit-mask-position: center;
-    background-color: rgb(35, 35, 35);
+    background-color: white;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.view-toggle:hover .view-icon {
+    background-color: white;
 }
 
 .view-cards {
@@ -901,7 +914,12 @@ input:focus, select:focus {
     width: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    z-index: 100;
+    z-index: 2;
+}
+
+.selector-items {
+    min-width: 100%;
+    width: max-content;
 }
 
 .selector-item {
@@ -910,7 +928,7 @@ input:focus, select:focus {
 
 .selector-items .selector-item {
     box-sizing: border-box;
-    width: 100%;
+    min-width: 100%;
 }
 
 .selector-items > .selector-item:first-child {
@@ -1075,6 +1093,7 @@ input:focus, select:focus {
 
 .user-preferences {
     display: flex;
+    flex-wrap: wrap;
     gap: 1em;
     align-items: center;
 }
@@ -1227,7 +1246,8 @@ input:focus, select:focus {
     font-weight: bold;
     background-color: hsl(340, 100%, 65%);
     text-align: center;
-    padding: 0.5em;
+    padding: 0.8em;
+    border-radius: 0.15em;
     transition: color, background-color 0.3s ease-in-out;
 }
 
@@ -1277,7 +1297,7 @@ input:focus, select:focus {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    z-index: 100;
+    z-index: 4;
     top: 0;
     left: 0;
     right: 0;
@@ -1612,6 +1632,22 @@ body:has(.theme-preference.light) .subsection-item:hover {
 
 body:has(.theme-preference.light) .item-with-subsection:has(.subsection.uncollapsed) .subsection-header {
     color: rgb(35, 35, 35);
+}
+
+body:has(.theme-preference.light) .view-toggle {
+    background-color: hsl(45, 35%, 65%);
+}
+
+body:has(.theme-preference.light) .view-toggle.active, body:has(.theme-preference.light) .view-toggle:hover {
+    background-color: hsl(45, 35%, 55%);
+}
+
+body:has(.theme-preference.light) .view-toggle.inactive .view-icon {
+    background-color: rgb(120, 120, 120);
+}
+
+body:has(.theme-preference.light) .view-icon, body:has(.theme-preference.light) .view-toggle:hover .view-icon {
+    background-color: rgb(35, 35, 35);
 }
 
 /* Media rules */

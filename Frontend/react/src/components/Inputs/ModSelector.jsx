@@ -34,13 +34,13 @@ function ModSelector({availableMods, filters, setFilters, excludeMode}) {
                     </div>
                 </div>
             </div>
-            {!excludeMode && (<>
+            {!excludeMode && (<div className="lenient-mode-checkbox">
                     <input name="lenientMode" id="lenientMode" type="checkbox" checked={filters.lenientMode} onClick={() => {
                         const newFilters = {...filters, lenientMode: !filters.lenientMode}
                         setFilters(newFilters);
                     }}/>
                     <label htmlFor="lenientMode">Allow other mods</label>
-            </>)}
+            </div>)}
         </>
     )
 }

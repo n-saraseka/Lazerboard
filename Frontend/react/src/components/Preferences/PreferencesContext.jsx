@@ -1,10 +1,10 @@
 import { createContext } from 'react'
 
 export const PreferencesContext = createContext({
+    view: 'cards',
     theme: 'dark',
     preferStandardizedScoring: true,
     globalPreferences: {
-        view: 'cards',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),

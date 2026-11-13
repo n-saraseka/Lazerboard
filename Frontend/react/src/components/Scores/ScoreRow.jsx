@@ -72,7 +72,7 @@ function ScoreRow({score}) {
         </td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
-        <td className="score-misses">{score.misses > 0 && `${score.misses}x`}</td>
+        <td className="score-misses">{score.statistics.countMiss > 0 && `${score.statistics.countMiss}x`}</td>
     </tr>)
 }
 

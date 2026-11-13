@@ -917,13 +917,18 @@ input:focus, select:focus {
     z-index: 2;
 }
 
+.selector-items {
+    min-width: 100%;
+    width: max-content;
+}
+
 .selector-item {
     border-radius: 0.25em;
 }
 
 .selector-items .selector-item {
     box-sizing: border-box;
-    width: 100%;
+    min-width: 100%;
 }
 
 .selector-items > .selector-item:first-child {

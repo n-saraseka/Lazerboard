@@ -171,8 +171,8 @@ function UserPage({user}) {
     }, [currentPage]);
 
     const debouncedGetScores = useMemo(
-        () => debounce(getScores, 250),
-        [currentPage]
+        () => debounce(getScores, 300),
+        []
     );
 
     const getData = useCallback(async (filterOptions, affectsCount) => {
@@ -182,15 +182,15 @@ function UserPage({user}) {
         else {
             await getScores(filterOptions, currentPage);
         }
-    }, [filters]);
+    }, []);
 
     useEffect( () => {
         getData(filters, true);
     }, []);
 
     const debouncedGetData = useMemo(
-        () => debounce(getData, 250),
-        [currentPage]
+        () => debounce(getData, 300),
+        []
     );
     
     return (<>

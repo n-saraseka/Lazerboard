@@ -121,15 +121,15 @@ function MillionScoresPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [currentPage])
+    }, [])
 
     useEffect( () => {
         getScores(filters);
     }, []);
 
     const debouncedGetScores = useMemo(
-        () => debounce(getScores, 250),
-        [currentPage]
+        () => debounce(getScores, 300),
+        []
     );
 
     return (<>

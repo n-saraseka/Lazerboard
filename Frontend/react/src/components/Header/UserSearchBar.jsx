@@ -1,4 +1,4 @@
-import {useState, useMemo, useEffect} from "react";
+import {useState, useMemo} from "react";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import UserSearchResult from "./UserSearchResult.jsx";
@@ -50,7 +50,7 @@ function UserSearchBar() {
         setSearchFinished(true);
     }
     
-    const debouncedGetUsers = useMemo(() => debounce(getUsers, 250), [ ]);
+    const debouncedGetUsers = useMemo(() => debounce(getUsers, 300), []);
     
     return (
         <div className="search-bar">

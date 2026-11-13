@@ -18,11 +18,6 @@ public class Score : IEntity<ulong>
     public double? SpeedChange { get; set; }
     public float Accuracy { get; set; }
     public int Combo { get; set; }
-    /// <summary>
-    /// This column duplicates the data in <see cref="Statistics.CountMiss"/> column. It will get removed
-    /// after every score has non-null <see cref="Score.Statistics"/>.
-    /// </summary>
-    public int? Misses { get; set; }
     public int TotalScore { get; set; }
     public long ClassicTotalScore { get; set; }
     public int? LegacyTotalScore { get; set; }

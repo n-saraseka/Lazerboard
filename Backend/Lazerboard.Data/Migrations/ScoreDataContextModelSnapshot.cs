@@ -335,10 +335,6 @@ namespace OsuScoreStats.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("legacy_total_score");
 
-                    b.Property<int?>("Misses")
-                        .HasColumnType("integer")
-                        .HasColumnName("misses");
-
                     b.PrimitiveCollection<List<string>>("ModAcronyms")
                         .IsRequired()
                         .HasColumnType("text[]")
@@ -491,10 +487,6 @@ namespace OsuScoreStats.Migrations
                     b.Property<int?>("LegacyTotalScore")
                         .HasColumnType("integer")
                         .HasColumnName("legacy_total_score");
-
-                    b.Property<int?>("Misses")
-                        .HasColumnType("integer")
-                        .HasColumnName("misses");
 
                     b.PrimitiveCollection<List<string>>("ModAcronyms")
                         .IsRequired()

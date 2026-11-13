@@ -17,7 +17,6 @@ public class OsuEntityToDtoService : IOsuEntityToDtoService
             TotalScore = score.TotalScore,
             LegacyTotalScore = score.LegacyTotalScore,
             ClassicTotalScore = score.ClassicTotalScore,
-            Misses = score.Statistics.CountMiss,
             BeatmapId = score.BeatmapId,
             Accuracy = score.Accuracy,
             PP = score.PP,

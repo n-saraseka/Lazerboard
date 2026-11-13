@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState, useMemo, useEffect} from "react";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import UserSearchResult from "./UserSearchResult.jsx";
@@ -7,6 +7,7 @@ import {debounce} from "../../utils/server-things.js";
 function UserSearchBar() {
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [searchInputValue, setSearchInputValue] = useState("");
     const [searchFinished, setSearchFinished] = useState(false);
     const [users, setUsers] = useState([])
 
@@ -49,12 +50,16 @@ function UserSearchBar() {
         setSearchFinished(true);
     }
     
-    const debouncedGetUsers = debounce(getUsers, 250);
-
+    const debouncedGetUsers = useMemo(() => debounce(getUsers, 250), [ ]);
+    
     return (
         <div className="search-bar">
             <div className="search-icon">
-                <input type="text" className="search" placeholder="Search users..." onChange={(event) => debouncedGetUsers(event.target.value)}/>
+                <input type="text" className="search" placeholder="Search users..." value={searchInputValue} onChange={(event) => {
+                    setSearchInputValue(event.target.value);
+                    debouncedGetUsers(event.target.value);
+                }
+                }/>
             </div>
             <div className="search-results">
                 {isError
@@ -62,8 +67,8 @@ function UserSearchBar() {
                     : isLoading
                         ? (<div className="search-result"><Loader/></div>)
                         : users.length > 0
-                            ? users.map(user => (<UserSearchResult user={user}/>))
-                            : searchFinished && <div className="search-result">No users found!</div>
+                            ? users.map(user => (<UserSearchResult key={user.id} user={user}/>))
+                            : (searchFinished && searchInputValue !== "") && <div className="search-result">No users found!</div>
                 }
             </div>
         </div>

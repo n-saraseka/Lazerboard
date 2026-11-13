@@ -47,10 +47,10 @@ function AboutPage() {
                     <li>Country</li>
                     <li>Whether to include or exclude converted scores.</li>
                 </ul>
-                <p>Along with that, you can view <a href="/scoreranking">global rankings</a> based 
+                <p>Along with that, you can view <a href="/scoreranking">user rankings</a> based 
                     on the amount of scores set with selected filters.</p>
                 <p>For the <a href="https://osu.ppy.sh/wiki/en/Game_mode/osu%21mania">osu!mania</a> enthusiasts,
-                    there also are global rankings based on how many <a href="/millionsranking">1 million (perfect) scores</a> a user has.</p>
+                    there also are <a href="/millions">score pages</a> and <a href="/millionsranking">user rankings</a> based on how many  1 million (perfect) scores a user has.</p>
                 <p>Alongside these, there are <a href="/b/75">beatmap rankings</a> and <a href="/users/7562902">user pages.</a></p>
                 <p>The beatmap pages allow you to sort the leaderboards by different columns and view the leaderboards
                     of all available modes of the beatmap.</p>
@@ -58,9 +58,9 @@ function AboutPage() {
                     also provide charts with the following information:</p>
                 <ul>
                     <li>Score count history</li>
-                    <li>Beatmap rank distribution for all user scores</li>
-                    <li>Star rating distribution for all user scores</li>
-                    <li>Gameplay speed distribution for all user scores</li>
+                    <li>Beatmap rank distribution</li>
+                    <li>Star rating distribution</li>
+                    <li>Gameplay speed distribution</li>
                 </ul>
             </div>
         </div>

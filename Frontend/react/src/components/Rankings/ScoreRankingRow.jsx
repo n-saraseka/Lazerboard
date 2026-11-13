@@ -10,7 +10,7 @@ function ScoreRankingRow({ranking}) {
                          alt={ranking.user.countryCode}
                          title={ranking.user.countryCode}
                          className="country-img"/>
-                    <img src={`https://a.ppy.sh/${ranking.user.id}`} alt={ranking.user.username} className="player-img"/>
+                    <img src={`https://a.ppy.sh/${ranking.user.id}`} alt={ranking.user.username} className="user-avatar"/>
                     <a href={`/users/${ranking.user.id}`}>{ranking.user.username}</a>
                 </div>
             </td>

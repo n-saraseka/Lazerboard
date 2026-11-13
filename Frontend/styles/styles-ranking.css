@@ -6,7 +6,8 @@
     height: 2em;
 }
 
-.user-ranking .player-img {
+.user-ranking .user-avatar {
+    width: 2.5em;
     height: 2.5em;
 }
 

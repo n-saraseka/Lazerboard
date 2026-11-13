@@ -4,7 +4,7 @@ import {PreferencesContext} from "./PreferencesContext.jsx";
 function ViewPreference() {
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const preference = useMemo(() => preferences.view ?? preferences.globalPreferences.view ?? 'cards',
-        [preferences.view, preferences.globalPreferences.view]);
+        [preferences.view]);
 
     const setViewPreference = (newPreference) => {
         if (newPreference !== preference) {

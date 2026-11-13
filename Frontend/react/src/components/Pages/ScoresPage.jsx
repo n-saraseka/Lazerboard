@@ -21,6 +21,7 @@ function ScoresPage({countries}) {
         beatmapStatus: 'all',
         amount: 25
     }, [preferences.globalPreferences]);
+    const viewPreference = useMemo(() => preferences.view ?? globalPreferences.view ?? 'cards', [preferences.view]);
 
     const [filters, setFilters] = useState({
         modes: globalPreferences.modes,
@@ -147,7 +148,7 @@ function ScoresPage({countries}) {
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : scoresCount > 0 && ((preferences.view ?? globalPreferences.view) === 'cards'
+                    : scoresCount > 0 && (viewPreference === 'cards'
                         ? <ScoresGrid scores={allScores}/>
                         : <ScoresTable scores={allScores}/>))}
         </div>

@@ -11,7 +11,6 @@ import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
 function ScoreRankingPage({countries}) {
     const { preferences, setPreferences } = useContext(PreferencesContext);
     const globalPreferences = useMemo(() => preferences.globalPreferences ?? {
-        view: 'cards',
         modes: Array(4).fill(0).map((m, i) => {
             return { value: i, enabled: true };
         }),

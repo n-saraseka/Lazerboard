@@ -1,8 +1,8 @@
 import ScoreCard from "./ScoreCard";
 
-function ScoresGrid({scores, usingStandardized}) {
+function ScoresGrid({scores}) {
     return (<div className="scores">
-        {scores.map((score, index) => <ScoreCard score={score} usingStandardized={usingStandardized} key={index}/>)}
+        {scores.map((score, index) => <ScoreCard score={score} key={index}/>)}
     </div>)
 }
 

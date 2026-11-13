@@ -52,25 +52,6 @@ function Filters({filters, setFilters, isRanking, countries}) {
         <div className={`options-wrapper ${collapsed? "collapsed" : ""}`}>
             <table className="options">
                 <tbody>
-                {possibleFilters.includes('view') && (
-                    <tr>
-                        <td>View:</td>
-                        <td>
-                            <div className="filter-container">
-                                <div className={`view-filter${filters.view === "cards" ? " view-active" : ""}`}
-                                     onClick={() => setFilters({...filters, view: "cards"})}>
-                                    <div className="view-icon view-cards"></div>
-                                    <span>Card</span>
-                                </div>
-                                <div className={`view-filter${filters.view === "table" ? " view-active" : ""}`}
-                                     onClick={() => setFilters({...filters, view: "table"})}>
-                                    <div className="view-icon view-table"></div>
-                                    <span>Table</span>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                )}
                 {possibleFilters.includes('modes') ? (
                     <tr>
                         <td>Modes:</td>

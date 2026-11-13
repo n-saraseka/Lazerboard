@@ -1,6 +1,6 @@
 import ScoreRow from "./ScoreRow";
 
-function ScoresTable({scores, usingStandardized}) {
+function ScoresTable({scores}) {
     return (
         <div className="table-wrapper">
             <table className="scores-table">
@@ -21,7 +21,7 @@ function ScoresTable({scores, usingStandardized}) {
                 </tr>
                 </thead>
                 <tbody>
-                {scores.map((score, index) => <ScoreRow key={index} score={score} usingStandardized={usingStandardized}/>)}
+                {scores.map((score, index) => <ScoreRow key={index} score={score}/>)}
                 </tbody>
             </table>
         </div>)

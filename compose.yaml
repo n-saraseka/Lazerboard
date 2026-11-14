@@ -74,7 +74,8 @@ services:
       .env
     volumes:
       - ./logs/backend:/app/Logs
-      - ./keys:/root/.aspnet/DataProtection-Keys
+      - ./keys:/home/ubuntu/.aspnet/DataProtection-Keys
+      - ./static:/app/wwwroot:ro
     restart: unless-stopped
     networks:
       - main

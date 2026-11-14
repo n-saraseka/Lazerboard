@@ -69,16 +69,19 @@ services:
   frontend:
     build:
       context: ./Frontend
-    depends_on:
-      "backend":
-        condition: service_started
+    volumes:
+      - ./static:/output
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - ./Caddy/data:/data
       - ./Caddy/config:/config
       - ./Caddy/dev.Caddyfile:/etc/caddy/Caddyfile
-    ports:
-      - "80:80"
-      - "443:443"
+      - ./static:/srv/www/static:ro
     restart: unless-stopped
     networks:
       - main

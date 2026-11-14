@@ -93,7 +93,7 @@ services:
     volumes:
       - ./Caddy/data:/data
       - ./Caddy/config:/config
-      - ./Caddy/dev.Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./static:/srv/www/static:ro
     restart: unless-stopped
     networks:

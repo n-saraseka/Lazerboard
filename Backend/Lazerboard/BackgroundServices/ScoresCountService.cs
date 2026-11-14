@@ -1,12 +1,8 @@
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
-namespace Lazerboard.ScoreFetcher.BackgroundServices.UpdateServices;
+namespace Lazerboard.BackgroundServices;
 
 public class ScoresCountService : BackgroundService
 {
@@ -22,7 +18,7 @@ public class ScoresCountService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        _updateInterval = int.Parse(config["ScoreCountUpdateIntervalMinutes"]);
+        _updateInterval = int.Parse(config["ScoreCountUpdateIntervalMinutes"]!);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

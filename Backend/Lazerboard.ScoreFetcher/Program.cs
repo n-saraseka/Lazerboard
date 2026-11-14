@@ -159,7 +159,6 @@ builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 builder.Services.AddHostedService<UnrestrictedUserUpdatesService>();
 builder.Services.AddHostedService<RestrictedUserUpdatesService>();
 builder.Services.AddHostedService<ReportedUserUpdatesService>();
-builder.Services.AddHostedService<ScoresCountService>();
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>

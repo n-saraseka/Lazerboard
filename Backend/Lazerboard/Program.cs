@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Lazerboard.Api.OpenApiFilters;
+using Lazerboard.BackgroundServices;
 using Lazerboard.Data.ApiFetchers;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -227,6 +228,9 @@ builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 
 // osu! API
 builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
+
+// Background services
+builder.Services.AddHostedService<ScoresCountService>();
 
 // Logs
 builder.Host.UseSerilog((context, services, configuration) =>

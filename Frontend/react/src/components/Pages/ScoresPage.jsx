@@ -122,7 +122,7 @@ function ScoresPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [])
+    }, [currentPage])
 
     useEffect( () => {
         getScores(filters);

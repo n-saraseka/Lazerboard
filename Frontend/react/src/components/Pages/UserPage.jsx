@@ -166,7 +166,7 @@ function UserPage({user}) {
         }
 
         setIsLoading(false);
-    }, []);
+    }, [currentPage]);
 
     const debouncedGetScores = useMemo(
         () => debounce(getScores, 300),

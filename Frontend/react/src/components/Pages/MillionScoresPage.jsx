@@ -119,7 +119,7 @@ function MillionScoresPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [])
+    }, [currentPage])
 
     useEffect( () => {
         getScores(filters);

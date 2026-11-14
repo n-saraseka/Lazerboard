@@ -1,8 +1,8 @@
-using Lazerboard.Data.Database.Entities;
+using Lazerboard.Api.Dtos;
 
 namespace Lazerboard.ViewModels;
 
 public class UserViewModel
 {
-    public User User { get; set; }
+    public ApiUser User { get; set; }
 }

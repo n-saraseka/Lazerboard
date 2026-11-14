@@ -6,13 +6,7 @@ lazer.board {
         reverse_proxy scorefetcher:8080
     }
     
-    handle /static/* {
-        root * /srv/www
-        file_server
-        header Cache-Control "no-cache"
-    }
-    
-    handle {
+    handle /* {
         reverse_proxy backend:8080
     }
 

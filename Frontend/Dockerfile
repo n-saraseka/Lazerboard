@@ -6,9 +6,12 @@ RUN npm ci
 COPY ./react .
 RUN npm run build
 
-# Copy all artifacts to caddy
-FROM caddy:2-alpine AS caddy
-COPY --from=react app/build /srv/www/static/react
-COPY ./images /srv/www/static/images/
-COPY ./favicon /srv/www/static/favicon/
-COPY ./styles /srv/www/static/styles/
+# Copy all artifacts 
+FROM alpine:latest AS pack
+WORKDIR /app/dist
+COPY --from=react app/build ./react
+COPY ./images ./images/
+COPY ./favicon ./favicon/
+COPY ./styles ./styles/
+
+CMD ["cp", "-r", "/app/dist/.", "/output"]

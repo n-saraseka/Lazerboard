@@ -74,23 +74,27 @@ services:
       .env
     volumes:
       - ./logs/backend:/app/Logs
-      - ./keys:/root/.aspnet/DataProtection-Keys
+      - ./keys:/home/ubuntu/.aspnet/DataProtection-Keys
+      - ./static:/app/wwwroot:ro
     restart: unless-stopped
     networks:
       - main
   
   frontend:
     image: ghcr.io/n-saraseka/lazerboard-frontend:master
-    depends_on:
-      "backend":
-        condition: service_started
     volumes:
-      - ./Caddy/data:/data
-      - ./Caddy/config:/config
-      - ./Caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./static:/output
+  
+  caddy:
+    image: caddy:2-alpine
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - ./Caddy/data:/data
+      - ./Caddy/config:/config
+      - ./Caddy/dev.Caddyfile:/etc/caddy/Caddyfile
+      - ./static:/srv/www/static:ro
     restart: unless-stopped
     networks:
       - main

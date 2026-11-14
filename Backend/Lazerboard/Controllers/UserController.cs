@@ -1,3 +1,4 @@
+using Lazerboard.Api.Utils;
 using Lazerboard.ViewModels;
 using Microsoft.AspNetCore.Mvc; 
 using Lazerboard.Data.Database.Repositories.Interfaces;
@@ -15,7 +16,7 @@ public class UserController(IUserRepository userRepository) : Controller
 
         var viewModel = new UserViewModel
         {
-            User = user,
+            User = DbToApiObjectUtils.DbUserToApiUser(user)
         };
         
         return View(viewModel);

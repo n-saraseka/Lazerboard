@@ -292,6 +292,8 @@ app.Use((context, next) =>
     return next(context);
 });
 
+app.UseStaticFiles();
+
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

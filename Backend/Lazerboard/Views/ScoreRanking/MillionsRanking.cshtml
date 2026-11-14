@@ -5,7 +5,7 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="/static/styles/styles-ranking.css">
+    <link rel="stylesheet" href="~/styles/styles-ranking.css" asp-append-version="true">
 }
 
 <div class="react-app" data-page="millionsranking" data-count='@ViewData["ScoresCount"]' data-props='@Json.Serialize(Model)'></div>

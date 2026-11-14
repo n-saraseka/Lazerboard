@@ -35,7 +35,7 @@ function Header({currentPage}) {
     return <header>
         <div className="logo-navigation">
             <a href="/" className="logo">
-                <img src={`/static/images/icon-${preference}.png`} alt="Logo" className="logo-image"/>
+                <img src={`/images/icon-${preference}.png`} alt="Logo" className="logo-image"/>
                 <strong>Lazerboard</strong>
             </a>
             <div className={`burger-icon ${burgerActive ? 'active' : 'inactive'}`} onClick={() => setBurgerActive(!burgerActive)}></div>

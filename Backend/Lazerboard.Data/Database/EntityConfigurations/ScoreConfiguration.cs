@@ -21,17 +21,17 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => s.UserId);
         // User scores index
         builder
-            .HasIndex(s => new { s.UserId, s.IsConvert, s.Mode, s.Date });
+            .HasIndex(s => new { s.UserId, s.Mode, s.Date });
         // Global scores index
         builder
-            .HasIndex(s => new { s.IsConvert, s.Mode, s.Date });
+            .HasIndex(s => new { s.Mode, s.Date });
         // User graph indices
         builder
-            .HasIndex(s => new { s.UserId, s.BeatmapId });
+            .HasIndex(s => new { s.UserId, s.BeatmapId, s.Mode });
         builder
-            .HasIndex(s => new { s.UserId, s.SpeedChange });
+            .HasIndex(s => new { s.UserId, s.SpeedChange, s.Mode });
         builder
-            .HasIndex(s => new { s.UserId, s.Mode, s.Rank });
+            .HasIndex(s => new { s.UserId, s.Rank, s.Mode });
         // Incoming scores index
         builder
             .HasIndex(s => new { s.BeatmapId, s.Mode, s.TotalScore, s.Date });

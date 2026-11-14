@@ -122,7 +122,7 @@ function ScoresPage({countries}) {
         }
 
         setIsLoading(false);
-    }, [currentPage])
+    }, [])
 
     useEffect( () => {
         getScores(filters);
@@ -130,7 +130,7 @@ function ScoresPage({countries}) {
 
     const debouncedGetScores = useMemo(
         () => debounce(getScores, 300),
-        []
+        [currentPage]
     );
     
     return (<>

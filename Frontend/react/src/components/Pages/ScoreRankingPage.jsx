@@ -101,7 +101,7 @@ function ScoreRankingPage({countries}) {
 
     const debouncedGetRankings = useMemo(
         () => debounce(getRankings, 300),
-        []
+        [currentPage]
     );
     
     return (<>

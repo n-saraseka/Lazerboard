@@ -166,11 +166,11 @@ function UserPage({user}) {
         }
 
         setIsLoading(false);
-    }, [currentPage]);
+    }, []);
 
     const debouncedGetScores = useMemo(
         () => debounce(getScores, 300),
-        []
+        [currentPage]
     );
 
     const getData = useCallback(async (filterOptions, affectsCount) => {

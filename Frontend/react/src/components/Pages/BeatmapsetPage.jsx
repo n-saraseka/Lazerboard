@@ -37,7 +37,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
         debouncedGetBeatmapScores(id, newMode);
     }
     
-    const getBeatmapScores = useCallback(async (id, mode, page = 1) => {
+    const getBeatmapScores = useCallback(async (id, mode) => {
         setIsLoading(true);
         setIsError(false);
 

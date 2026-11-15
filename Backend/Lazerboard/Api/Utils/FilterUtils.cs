@@ -1,11 +1,13 @@
 using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.OsuEntities.Enums;
 using Npgsql;
 
 namespace Lazerboard.Api.Utils;
 
 public static class FilterUtils
 {
+    private static readonly BeatmapStatus[] RankedStatuses = [BeatmapStatus.Ranked, BeatmapStatus.Approved];
     /// <summary>
     /// Filter a <see cref="IQueryable{Score}"/> based on the given data
     /// </summary>
@@ -23,7 +25,9 @@ public static class FilterUtils
 
         if (command.BeatmapStatus != null)
         {
-            query = query.Where(s => s.Beatmap!.Status == command.BeatmapStatus);
+            query = command.BeatmapStatus == BeatmapStatus.Ranked
+                ? query.Where(s => RankedStatuses.Contains(s.Beatmap!.Status))
+                : query.Where(s => s.Beatmap!.Status == command.BeatmapStatus);
         }
 
         if (command.ExcludeConverts != null)
@@ -185,8 +189,16 @@ public static class FilterUtils
 
         if (command.BeatmapStatus != null)
         {
-            parameters.Add(new NpgsqlParameter("@status", command.BeatmapStatus.Value.ToString().ToLower()));
-            filters.Add("b.status = @status");
+            if (command.BeatmapStatus == BeatmapStatus.Ranked)
+            {
+                parameters.Add(new NpgsqlParameter("@statuses", RankedStatuses));
+                filters.Add("b.status = ANY(@statuses)");
+            }
+            else
+            {
+                parameters.Add(new NpgsqlParameter("@status", command.BeatmapStatus));
+                filters.Add("b.status = @status");
+            }
         }
 
         if (command.ExcludeConverts != null && command.ExcludeConverts.Value) filters.Add("is_convert = FALSE");

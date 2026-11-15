@@ -273,12 +273,12 @@ function Filters({filters, setFilters, isRanking, countries}) {
                         <td>Beatmap status:</td>
                         <td>
                             <div className="filter-container">
-                                <select name="scores-sort" id="scores-sort" value={filters.beatmapStatus} onChange={(e) => {
+                                <select name="scores-status" id="scores-status" value={filters.beatmapStatus} onChange={(e) => {
                                     const allFilters = {...filters, beatmapStatus: e.target.value};
                                     setFilters(allFilters);
                                 }}>
                                     <option value="all">All</option>
-                                    <option value="1">Ranked</option>
+                                    <option value="1">Ranked and approved</option>
                                     <option value="2">Approved</option>
                                     <option value="4">Loved</option>
                                 </select>

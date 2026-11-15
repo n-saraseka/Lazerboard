@@ -1,6 +1,5 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
-using osu.Game.Beatmaps;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 

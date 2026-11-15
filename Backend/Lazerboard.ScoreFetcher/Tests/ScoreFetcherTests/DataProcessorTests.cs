@@ -22,7 +22,6 @@ public class DataProcessorTests
     private Mock<IScoreRepository> _scoreRepository;
     private Mock<IUnlistedScoreRepository> _unlistedScoreRepository;
     private Mock<IOsuEntityToDtoService> _osuEntityToDtoService;
-    private Mock<IScoreProcessor> _scoreProcessor;
     private Mock<ILogger<IDataProcessor>> _logger;
 
     [SetUp]
@@ -35,7 +34,6 @@ public class DataProcessorTests
         _scoreRepository = new();
         _unlistedScoreRepository = new();
         _osuEntityToDtoService = new();
-        _scoreProcessor = new();
         _logger = new Mock<ILogger<IDataProcessor>>();
         _dataProcessor = new DataProcessor(_beatmapsetRepository.Object, 
             _beatmapRepository.Object, 
@@ -43,7 +41,6 @@ public class DataProcessorTests
             _userRepository.Object, 
             _scoreRepository.Object,
             _unlistedScoreRepository.Object,
-            _scoreProcessor.Object,
             _osuEntityToDtoService.Object,
             _logger.Object);
     }
@@ -246,9 +243,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -321,9 +315,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -374,9 +365,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -483,9 +471,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -573,9 +558,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
 
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -675,9 +657,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         
         // Act
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.ScoreFetcher, CancellationToken.None);
@@ -775,9 +754,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         _unlistedScoreRepository.Setup(s => s.GetBulkAsync(It.IsAny<IEnumerable<ulong>>(), CancellationToken.None))
             .ReturnsAsync([]);
 
@@ -883,9 +859,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         _unlistedScoreRepository.Setup(s => s.GetBulkAsync(It.IsAny<IEnumerable<ulong>>(), CancellationToken.None))
             .ReturnsAsync([]);
 
@@ -991,9 +964,6 @@ public class DataProcessorTests
                 ScoreSource = source,
                 IsConvert = api.Mode != mode
             });
-        _scoreProcessor.Setup(s =>
-                s.CheckIfSignificantBulkAsync(It.IsAny<IEnumerable<APIScore>>(), CancellationToken.None))
-            .ReturnsAsync(significantScores);
         _unlistedScoreRepository.Setup(s => s.GetBulkAsync(It.IsAny<IEnumerable<ulong>>(), CancellationToken.None))
             .ReturnsAsync([new UnlistedScore
             {

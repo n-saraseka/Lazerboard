@@ -17,10 +17,8 @@ using Lazerboard.Data.Redis.Repositories.Interfaces;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
-public class ScoreCalculator(ICacheStore cacheStore, 
-    ILogger<ScoreCalculator> logger,
-    IScoreCacheRepository scoreCacheRepository,
-    IBeatmapCacheRepository beatmapCacheRepository) : ICalculator
+public class ScoreCalculator(ILogger<ScoreCalculator> logger,
+    IScoreCacheRepository scoreCacheRepository) : ICalculator
 {
     private static readonly TimeSpan CalculationTimeout = TimeSpan.FromMinutes(1);
 

@@ -14,7 +14,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     IUserRepository userRepository,
     IScoreRepository scoreRepository,
     IUnlistedScoreRepository unlistedScoreRepository,
-    IScoreProcessor scoreProcessor,
     IOsuEntityToDtoService entityToDtoService,
     ILogger<IDataProcessor> logger): IDataProcessor
 {
@@ -209,7 +208,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="scores">The <see cref="APIScore"/>s</param>
     /// <param name="source">The <see cref="ScoreSource"/></param>
-    /// of top 100 for said mode should get removed or not</param>
+    /// of top 100 for said mode should get removed or not
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     public async Task<int> ProcessScoresAsync(IList<APIScore> scores, 
         ScoreSource source,

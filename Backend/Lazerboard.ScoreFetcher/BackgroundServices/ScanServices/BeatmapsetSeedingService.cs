@@ -20,7 +20,6 @@ public class BeatmapsetSeedingService : BackgroundService
 
     private long _latestMapsetDateMs;
     private int _latestMapsetId;
-    private readonly bool _onlyAddMissingMaps;
     private readonly bool _onlyUpdateMapsetData;
     private bool _shouldFinishAfterThisBatch;
     private string? _cursor;
@@ -37,9 +36,8 @@ public class BeatmapsetSeedingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var scanConfig = config.GetSection("ScanBehavior");
-        _onlyAddMissingMaps = scanConfig.GetValue<bool>("OnlyAddMissingMaps");
-        _onlyUpdateMapsetData = scanConfig.GetValue<bool>("OnlyUpdateMapsetData");
+        var seedConfig = config.GetSection("SeedingBehavior");
+        _onlyUpdateMapsetData = seedConfig.GetValue<bool>("OnlyUpdateMapsetData");
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -61,13 +59,6 @@ public class BeatmapsetSeedingService : BackgroundService
                     beatmapsets.Select(bs => bs.Id).Contains(_finishingBeatmapset.Id))
                 {
                     _shouldFinishAfterThisBatch = true;
-                }
-
-                if (_onlyAddMissingMaps)
-                {
-                    beatmapsets = await GetUnprocessedMapsetsAsync(beatmapsets, stoppingToken);
-                    _logger.Log(LogLevel.Information, "Found {beatmapsetCount} new beatmapsets", beatmapsets.Count);
-                    if (beatmapsets.Count == 0) continue;
                 }
                 
                 _logger.Log(LogLevel.Information, 
@@ -206,37 +197,7 @@ public class BeatmapsetSeedingService : BackgroundService
             return await beatmapsetRepository.GetLatestBeatmapsetWithNullRankAsync(stoppingToken);
         }
 
-        if (_onlyAddMissingMaps)
-        {
-            return await beatmapsetRepository.GetLatestMainProcessedMapsetAsync(stoppingToken);
-        }
-
         return null;
-    }
-
-    /// <summary>
-    /// Get mapsets that are either new or haven't finished processing yet from a batch
-    /// </summary>
-    /// <param name="beatmapsets">The <see cref="APIBeatmapset"/>s</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The filtered <see cref="APIBeatmapset"/>s</returns>
-    private async Task<List<APIBeatmapset>> GetUnprocessedMapsetsAsync(IList<APIBeatmapset> beatmapsets, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapsetRepository = scope.ServiceProvider.GetRequiredService<IBeatmapsetRepository>();
-        var beatmapsetIds = beatmapsets.Select(bs => bs.Id).ToList();
-        
-        var existingBeatmapsets = (await beatmapsetRepository.GetBulkAsync(beatmapsetIds, stoppingToken))
-            .Where(bs => bs.IsExplicit);
-        var processedMapsets = existingBeatmapsets.Where(
-                bs => bs.MainFinishedProcessingAt != null 
-                      || bs.SecondaryFinishedProcessingAt != null
-                      || bs.FinishedScanningAt != null)
-            .ToList();
-        var processedMapsetIds = processedMapsets.Select(bs => bs.Id).ToList();
-        
-        // At the moment we only have to care for missing explicit mapsets. That shouldn't change any time in the future, hopefully.
-        return beatmapsets.Where(bs => !processedMapsetIds.Contains(bs.Id) && bs.IsExplicit).ToList();
     }
 
     /// <summary>

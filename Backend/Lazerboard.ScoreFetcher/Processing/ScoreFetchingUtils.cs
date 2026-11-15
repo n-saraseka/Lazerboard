@@ -1,7 +1,6 @@
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
-using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Lazerboard.ScoreFetcher.Calculations;

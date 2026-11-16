@@ -166,10 +166,10 @@ public class UserUtils(IUserRepository userRepository,
         
         while (batch.Count > 0)
         {
-            scoreRepository.DeleteBulk(batch);
             var beatmapModes = batch
                 .GroupBy(s => s.BeatmapId)
                 .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+            // We handle removing user scores inside the DataProcessor.
             await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
             batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
         }
@@ -191,7 +191,6 @@ public class UserUtils(IUserRepository userRepository,
                 foreach (var mode in beatmapMode.Value)
                 {
                     logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapMode.Key, mode);
-                    // We handle removing user scores inside the DataProcessor.
                     await beatmapUtils.ProcessLeaderboardAsync(beatmapMode.Key, mode, stoppingToken);
                 }
             }
@@ -213,20 +212,8 @@ public class UserUtils(IUserRepository userRepository,
             .GroupBy(s => s.BeatmapId)
             .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
         
-        for (var i = 0; i < beatmapModes.Count; i += BeatmapBatchSize)
-        {
-            var batch = beatmapModes.Skip(i).Take(BeatmapBatchSize).ToList();
-            
-            foreach (var beatmapMode in batch)
-            {
-                foreach (var mode in beatmapMode.Value)
-                {
-                    logger.Log(LogLevel.Information, "Reprocessing beatmap ranks for beatmap {beatmapId}, mode {mode}", beatmapMode.Key, mode);
-                    // We handle reinstating user scores inside beatmap utils (relevant scores will be fetched through the API).
-                    await beatmapUtils.ProcessLeaderboardAsync(beatmapMode.Key, mode, stoppingToken);
-                }
-            }
-        }
+        // We handle reinstating user scores inside beatmap utils (relevant scores will be fetched through the API).
+        await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
         
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, stoppingToken);
         var existingScoreIds = existingScores.Select(s => s.Id).ToList();

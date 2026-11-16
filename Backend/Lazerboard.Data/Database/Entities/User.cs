@@ -1,3 +1,5 @@
+using Lazerboard.Data.Database.Entities.Enums;
+
 namespace Lazerboard.Data.Database.Entities;
 
 public class User : IEntity<int>
@@ -7,10 +9,7 @@ public class User : IEntity<int>
     public string? CountryCode { get; set; }
     public Country? Country { get; set; }
     public bool IsRestricted { get; set; }
-    /// <summary>
-    /// Reflects whether user logged in with osu! on the website or not
-    /// </summary>
-    public bool IsRegistered { get; set; }
+    public List<UserGroup> UserGroups { get; set; } = [UserGroup.User];
     public DateTimeOffset? RegisteredAt { get; set; }
     public DateTime? LastCheckedAt { get; set; }
     public DateTime? LastScannedAt { get; set; }

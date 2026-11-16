@@ -11,7 +11,7 @@ public class DirectApiLimiter : ICentralizedRateLimiter
         var externalApisConfig = config.GetSection("ExternalApis");
         var osuApiConfig = externalApisConfig.GetSection("OsuDotDirect");
         var maxRpm = osuApiConfig.GetValue<int>("MaxRpm");
-        var apiInterval = maxRpm / 60.0;
+        var apiInterval = 60.0 / maxRpm;
         _rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
         {
             AutoReplenishment = true,

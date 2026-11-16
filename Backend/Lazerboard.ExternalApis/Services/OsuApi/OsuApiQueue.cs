@@ -26,7 +26,7 @@ public class OsuApiQueue : IDisposable
         var externalApisConfig = config.GetSection("ExternalApis");
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         var maxRpm = osuApiConfig.GetValue<int>("MaxRpm");
-        var apiInterval = maxRpm / 60.0;
+        var apiInterval = 60.0 / maxRpm;
         
         _refillTimer = new System.Timers.Timer(TimeSpan.FromSeconds(apiInterval).TotalMilliseconds);
         _refillTimer.Elapsed += OnRefillTimerActivated;

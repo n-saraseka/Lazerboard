@@ -152,9 +152,12 @@ if (servicesConfig.GetValue<bool>("UnlistedUserScans"))
 {
     builder.Services.AddHostedService<UnlistedUserScanService>();
 }
+if (servicesConfig.GetValue<bool>("UserUpdates"))
+{
+    builder.Services.AddHostedService<UnrestrictedUserUpdatesService>();
+    builder.Services.AddHostedService<RestrictedUserUpdatesService>();
+}
 builder.Services.AddHostedService<BeatmapsetUpdatesService>();
-builder.Services.AddHostedService<UnrestrictedUserUpdatesService>();
-builder.Services.AddHostedService<RestrictedUserUpdatesService>();
 builder.Services.AddHostedService<ReportedUserUpdatesService>();
 
 // Rate limiting

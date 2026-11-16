@@ -72,6 +72,7 @@ runs:
         echo "Redis__Host=redis" >> .env
         echo "Redis__Username=${{ inputs.redis_user }}" >> .env
         echo "Redis__Password=${{ inputs.redis_user_password }}" >> .env
+        echo "AdminUserId=8706541" >> .env
         echo "Reports__ReportsWindow=60" >> .env
         echo "Reports__SpamReportCooldown=20" >> .env
         echo "Reports__FalseReportCooldown=60" >> .env

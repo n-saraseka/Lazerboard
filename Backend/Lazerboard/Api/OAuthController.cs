@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Lazerboard.Data.ApiFetchers;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Lazerboard.Data.OsuEntities.OsuEntityToDtoService;
@@ -69,7 +70,7 @@ public class OAuthController(ILogger<OAuthController> logger,
         if (existingUser is null)
         {
             var dbUser = osuEntityToDtoService.UserEntityToDto(user);
-            dbUser.IsRegistered = true;
+            dbUser.UserGroups.Add(UserGroup.RegisteredUser);
             dbUser.RegisteredAt = DateTimeOffset.UtcNow;
             logger.Log(LogLevel.Information, "osu! user {userID} has registered", dbUser.Id);
             userRepository.Create(dbUser);
@@ -78,9 +79,10 @@ public class OAuthController(ILogger<OAuthController> logger,
         {
             existingUser.Username = user.Username;
             existingUser.CountryCode = user.CountryCode;
-            if (!existingUser.IsRegistered || !existingUser.RegisteredAt.HasValue)
+            if (!existingUser.UserGroups.Contains(UserGroup.RegisteredUser) || !existingUser.RegisteredAt.HasValue)
             {
-                existingUser.IsRegistered = true;
+                existingUser.UserGroups.Remove(UserGroup.User);
+                existingUser.UserGroups.Add(UserGroup.RegisteredUser);
                 existingUser.RegisteredAt = DateTimeOffset.UtcNow;
                 logger.Log(LogLevel.Information, "User {UserId} has registered", existingUser.Id);
             }

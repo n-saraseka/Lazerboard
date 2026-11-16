@@ -1,4 +1,5 @@
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 
 namespace Lazerboard.Api.Dtos;
 
@@ -23,6 +24,10 @@ public class ApiUser
     /// The user's country
     /// </summary>
     public Country? Country { get; set; }
+    /// <summary>
+    /// The user's UserGroups
+    /// </summary>
+    public UserGroup[] UserGroups { get; set; } = [];
     /// <summary>
     /// Whether the user is banned/deleted on osu! or not
     /// </summary>

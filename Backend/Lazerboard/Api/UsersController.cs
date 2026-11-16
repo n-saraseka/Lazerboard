@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Lazerboard.Data.Database.Entities;
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
@@ -46,9 +47,10 @@ public class UsersController(IScoreRepository scoreRepository,
             return Forbid();
         }
 
-        if (!user.IsRegistered || !user.RegisteredAt.HasValue)
+        if (!user.UserGroups.Contains(UserGroup.RegisteredUser) || !user.RegisteredAt.HasValue)
         {
-            user.IsRegistered = true;
+            user.UserGroups.Remove(UserGroup.User);
+            user.UserGroups.Add(UserGroup.RegisteredUser);
             user.RegisteredAt = DateTimeOffset.UtcNow;
             userRepository.Update(user);
             await userRepository.SaveChangesAsync(ct);

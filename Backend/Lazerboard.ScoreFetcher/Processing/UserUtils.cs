@@ -65,7 +65,7 @@ public class UserUtils(IUserRepository userRepository,
         }).ToList();
         userRepository.UpdateBulk(users);
         await userRepository.SaveChangesAsync(stoppingToken);
-        logger.Log(LogLevel.Information, "Marked {userCount} users as restricted", restrictedUsers.Count);
+        logger.Log(LogLevel.Information, "Restricted user IDs: {userIds}", restrictedUserIds);
         return users;
     }
 
@@ -128,7 +128,7 @@ public class UserUtils(IUserRepository userRepository,
         }).ToList();
         userRepository.UpdateBulk(users);
         await userRepository.SaveChangesAsync(stoppingToken);
-        logger.Log(LogLevel.Information, "{userCount} users got unrestricted", unrestrictedUserIds.Count);
+        logger.Log(LogLevel.Information, "Unrestricted user IDs: {userIds}", unrestrictedUserIds);
     }
 
     private async Task ReinstateUserScoresAsync(IList<int> userIds, CancellationToken stoppingToken)

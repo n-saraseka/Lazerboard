@@ -124,12 +124,18 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         var latestFinishTimeStamp = await scanLogsRepository.GetLatestFinishedCheckAsync(stoppingToken);
         
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
-        var newestScore = await scoreRepository.GetNewestScoreAsync(stoppingToken);
-        _newestScoreDate = newestScore?.Date;
+        try
+        {
+            _newestScoreDate = await scoreRepository.GetLatestScoreDateAsync(stoppingToken);
+        }
+        catch (Exception)
+        {
+            _newestScoreDate = DateTime.UtcNow;
+        }
 
         if (latestStartTimestamp is null)
         {
-            _existingCheckFinish = newestScore?.Date ?? DateTime.UtcNow;
+            _existingCheckFinish = _newestScoreDate.Value;
             _shouldStartCheck = true;
         }
         else

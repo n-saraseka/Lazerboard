@@ -69,11 +69,10 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .Distinct()
             .OrderBy(id => id);
     
-    public Task<Score?> GetNewestScoreAsync(CancellationToken cancellationToken = default) =>
+    public Task<DateTime> GetLatestScoreDateAsync(CancellationToken cancellationToken = default) =>
         Set
             .AsNoTracking()
-            .OrderByDescending(s => s.Date)
-            .FirstOrDefaultAsync(cancellationToken);
+            .MaxAsync(s => s.Date, cancellationToken);
     
     public Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default) =>
         Set

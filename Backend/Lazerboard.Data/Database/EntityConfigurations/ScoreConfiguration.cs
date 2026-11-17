@@ -19,6 +19,8 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasForeignKey(s => s.UserId);
         builder
             .HasIndex(s => s.UserId);
+        builder
+            .HasIndex(s => s.BeatmapId);
         // User scores index
         builder
             .HasIndex(s => new { s.UserId, s.IsConvert, s.Mode, s.Date });

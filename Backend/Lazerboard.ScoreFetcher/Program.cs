@@ -51,7 +51,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<ScanEventType>("scan_event_type")
                     .MapEnum<ReportStatus>("report_status")
                     .MapEnum<UserGroup>("user_group")
-                    .CommandTimeout(600))
+                    .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 
 builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();

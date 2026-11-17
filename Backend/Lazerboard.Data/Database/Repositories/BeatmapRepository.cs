@@ -3,7 +3,6 @@ using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.OsuEntities.Enums;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace Lazerboard.Data.Database.Repositories;
 
@@ -38,13 +37,14 @@ public class BeatmapRepository(ScoreDataContext db) : BaseRepository<Beatmap, in
     /// <param name="ids">A list of <see cref="Beatmap.Id"/>s</param>
     /// <param name="ct">A <see cref="CancellationToken"/></param>
     /// <returns>A list of matching <see cref="Beatmap"/>s</returns>
-    public Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default)
-    {
-        object[] parameters = [new NpgsqlParameter("@ids", ids)];
-        var sql = "SELECT UNNEST(ARRAY[@ids]) INTERSECT (SELECT DISTINCT beatmap_id FROM scores)";
-        var query = GetDbContext().Database.SqlQueryRaw<int>(sql, parameters);
-        return query.ToListAsync(ct);
-    }
+    public Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default) =>
+        Set
+            .Where(b => ids.Contains(b.Id))
+            .Where(b => b.Scores.Any())
+            .Select(b => b.Id)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToListAsync(ct);
     
     /// <summary>
     /// Get <see cref="Beatmap.Id"/>s that are from processed <see cref="Beatmapset"/>s

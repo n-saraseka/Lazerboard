@@ -12,6 +12,7 @@ namespace Lazerboard.ScoreFetcher.Processing;
 public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     IOsuApiFetcher osuApiFetcher,
     IDirectApiFetcher directApiFetcher,
+    INekohaApiFetcher nekohaApiFetcher,
     IScoreFetchingUtils utils,
     IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
@@ -229,6 +230,14 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
             
             try
             {
+                return await DownloadFromNekohaAsync(beatmapId, filename, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Error, ex, "Download from Nekoha failed for Beatmap ID {id}", beatmapId);
+            }
+            try
+            {
                 return await DownloadFromDotDirectAsync(beatmapId, filename, stoppingToken);
             }
             catch (Exception ex)
@@ -249,6 +258,17 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
         
         throw new TimeoutException(
             $"Failed to get beatmap {beatmapId} after {MaxDownloadAttempts} attempts");
+    }
+
+    private async Task<string> DownloadFromNekohaAsync(int beatmapId, string filename, CancellationToken stoppingToken)
+    {
+        await using var stream = await nekohaApiFetcher.DownloadBeatmapAsync(beatmapId, stoppingToken);
+        var bytes = await stream.ReadAllRemainingBytesToArrayAsync(stoppingToken);
+        await File.WriteAllBytesAsync(filename, bytes, stoppingToken);
+        
+        var isInvalidFile = CheckIfFileIsInvalid(filename);
+        if (!isInvalidFile) return filename;
+        throw new IOException($"File {filename} is invalid");
     }
 
     /// <summary>

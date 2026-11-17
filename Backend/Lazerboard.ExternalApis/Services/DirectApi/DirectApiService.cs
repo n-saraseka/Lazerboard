@@ -1,20 +1,9 @@
 namespace Lazerboard.ExternalApis.Services.DirectApi;
 
-public class DirectApiService
+public class DirectApiService(HttpClient httpClient, ILogger<DirectApiService> logger, DirectApiLimiter centralizedRateLimiter)
 {
-    public readonly DirectApiLimiter CentralizedRateLimiter;
-    private readonly ILogger<DirectApiService> _logger;
-    private readonly HttpClient _httpClient;
     private const string BaseApiV2Url = "https://osu.direct/api/v2";
     private const string BaseApiV1Url = "https://osu.direct/api";
-
-    public DirectApiService(HttpClient httpClient, ILogger<DirectApiService> logger,
-        DirectApiLimiter centralizedRateLimiter)
-    {
-        CentralizedRateLimiter = centralizedRateLimiter;
-        _logger = logger;
-        _httpClient = httpClient;
-    }
 
     /// <summary>
     /// Sends a request to the API within the rate limit
@@ -34,9 +23,9 @@ public class DirectApiService
         var requestMessage = new HttpRequestMessage(method, requestString);
         requestMessage.Content = content;
 
-        await CentralizedRateLimiter.WaitForAvailableTokenAsync(priority, ct);
-        _logger.Log(LogLevel.Information, "Request to osu.direct API: {requestString}", requestString);
-        var response = await _httpClient.SendAsync(requestMessage, ct);
+        await centralizedRateLimiter.WaitForAvailableTokenAsync(priority, ct);
+        logger.Log(LogLevel.Information, "Request to osu.direct API: {requestString}", requestString);
+        var response = await httpClient.SendAsync(requestMessage, ct);
         
         return response;
     }
@@ -74,14 +63,14 @@ public class DirectApiService
     {
         try
         {
-            await CentralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
+            await centralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
             var requestString = $"{BaseApiV1Url}/osu/{beatmapId}";
-            _logger.Log(LogLevel.Information, "Request to osu.direct API: {requestString}", requestString);
-            return await _httpClient.GetStreamAsync(requestString, ct);
+            logger.Log(LogLevel.Information, "Request to osu.direct API: {requestString}", requestString);
+            return await httpClient.GetStreamAsync(requestString, ct);
         }
         catch (Exception ex)
         {
-            _logger.Log(LogLevel.Error, ex, "Failed to download the beatmap");
+            logger.Log(LogLevel.Error, ex, "Failed to download the beatmap");
             throw;
         }
     }

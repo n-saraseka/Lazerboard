@@ -44,7 +44,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         await GetStartingDateTime(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
-            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - _existingCheckFinish  > _checkInterval;
+            _shouldCatchUp = DateTime.UtcNow - _existingCheckFinish  > _checkInterval;
             if (_shouldStartCheck)
             {
                 await StartUserCheckAsync(stoppingToken);

@@ -146,9 +146,10 @@ public class FirehoseService(IServiceProvider serviceProvider, ILogger<FirehoseS
     private async Task<List<int>> GetValidBeatmapIdsAsync(IList<int> ids, CancellationToken stoppingToken)
     {
         using var scope = serviceProvider.CreateScope();
+        var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
         var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
         
-        var beatmapsWithScores = await beatmapRepository.GetBeatmapsIdsWithScoresAsync(ids, stoppingToken);
+        var beatmapsWithScores = await scoreRepository.GetBeatmapsIdsWithScoresAsync(ids, stoppingToken);
         var beatmapsFromProcessedMapsets =
             await beatmapRepository.GetBeatmapsIdsFromProcessedMapsetsAync(ids, stoppingToken);
 

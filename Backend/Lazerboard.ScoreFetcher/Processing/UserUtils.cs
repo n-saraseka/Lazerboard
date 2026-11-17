@@ -168,7 +168,7 @@ public class UserUtils(IUserRepository userRepository,
         {
             var beatmapModes = batch
                 .GroupBy(s => s.BeatmapId)
-                .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+                .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).Distinct().ToList());
             // We handle removing user scores inside the DataProcessor.
             await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
             batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
@@ -210,7 +210,7 @@ public class UserUtils(IUserRepository userRepository,
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         var beatmapModes = scores
             .GroupBy(s => s.BeatmapId)
-            .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).Distinct().ToList());
         
         // We handle reinstating user scores inside beatmap utils (relevant scores will be fetched through the API).
         await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);

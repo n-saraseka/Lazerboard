@@ -20,6 +20,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
     private readonly TimeSpan _lookbackInterval;
     private DateTime _existingCheckStart;
     private DateTime _existingCheckFinish;
+    private readonly int _delayAfter;
+    private readonly TimeSpan _delay;
+    private int _batchNumber;
     
     private DateTime? _newestScoreDate;
     private bool _shouldCatchUp;
@@ -37,14 +40,18 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         var existingLookbackHours = config.GetValue<double>("UserUpdatesLookbackHours");
         _checkInterval = TimeSpan.FromHours(existingUsersUpdateHours);
         _lookbackInterval = TimeSpan.FromHours(existingLookbackHours);
+        
+        var userUpdatesConfig = config.GetSection("UserUpdates");
+        _delayAfter = userUpdatesConfig.GetValue<int>("DelayAfter");
+        _delay = TimeSpan.FromSeconds(userUpdatesConfig.GetValue<double>("DelaySeconds"));
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await GetStartingDateTime(stoppingToken);
+        await DoStartupLogicAsync(stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
-            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - _existingCheckFinish  > _checkInterval;
+            _shouldCatchUp = _newestScoreDate != null && _newestScoreDate - _existingCheckFinish  >= _checkInterval;
             if (_shouldStartCheck)
             {
                 await StartUserCheckAsync(stoppingToken);
@@ -60,6 +67,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                         "Processing a batch of existing users between IDs {minId} and {maxId}",
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessUsersAsync(batch, stoppingToken);
+                    if (++_batchNumber < _delayAfter) continue;
+                    _batchNumber = 0;
+                    await Task.Delay(_delay, stoppingToken);
                 }
                 _existingCheckStart = _existingCheckStart.Add(_checkInterval);
                 _existingCheckFinish = _existingCheckFinish.Add(_checkInterval);
@@ -69,8 +79,13 @@ public class UnrestrictedUserUpdatesService : BackgroundService
                     _shouldStartCheck = true;
                     // This is kind of a bandaid fix for lengthy user checks, but it's good enough. Ensures that the checks
                     // occur on a sort-of 2 hour basis, without an actual timer.
-                    var waitInterval = _existingCheckFinish - DateTime.UtcNow;
-                    await Task.Delay(waitInterval, stoppingToken);
+                    var currentDateTime = DateTime.UtcNow;
+                    if (currentDateTime < _existingCheckFinish)
+                    {
+                        var waitInterval = _existingCheckFinish - DateTime.UtcNow;
+                        await Task.Delay(waitInterval, stoppingToken);
+                    }
+                    else await Task.Delay(_checkInterval, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -80,7 +95,7 @@ public class UnrestrictedUserUpdatesService : BackgroundService
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Unrestricted user updates service failed!");
-                await GetStartingDateTime(stoppingToken);
+                await DoStartupLogicAsync(stoppingToken);
             }
         }
     }
@@ -116,8 +131,9 @@ public class UnrestrictedUserUpdatesService : BackgroundService
         await userUtils.ProcessExistingUsersAsync(users, false, stoppingToken);
     }
 
-    private async Task GetStartingDateTime(CancellationToken stoppingToken)
+    private async Task DoStartupLogicAsync(CancellationToken stoppingToken)
     {
+        _batchNumber = 0;
         using var scope = _serviceProvider.CreateScope();
         var scanLogsRepository = scope.ServiceProvider.GetRequiredService<IUserScanLogRepository>();
         var latestStartTimestamp = await scanLogsRepository.GetLatestStartedCheckAsync(stoppingToken);

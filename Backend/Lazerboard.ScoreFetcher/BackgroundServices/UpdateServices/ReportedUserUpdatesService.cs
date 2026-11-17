@@ -16,6 +16,9 @@ public class ReportedUserUpdatesService : BackgroundService
     
     private const int BatchSize = 50;
     private readonly TimeSpan _checkInterval;
+    private readonly int _delayAfter;
+    private readonly TimeSpan _delay;
+    private int _batchNumber;
     
     public ReportedUserUpdatesService(IServiceProvider serviceProvider, ILogger<ReportedUserUpdatesService> logger)
     {
@@ -27,6 +30,10 @@ public class ReportedUserUpdatesService : BackgroundService
         
         var reportedUsersUpdateMinutes = config.GetValue<double>("ReportedUsersUpdateIntervalMinutes");
         _checkInterval = TimeSpan.FromMinutes(reportedUsersUpdateMinutes);
+        
+        var userUpdatesConfig = config.GetSection("UserUpdates");
+        _delayAfter = userUpdatesConfig.GetValue<int>("DelayAfter");
+        _delay = TimeSpan.FromSeconds(userUpdatesConfig.GetValue<double>("DelaySeconds"));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,6 +55,9 @@ public class ReportedUserUpdatesService : BackgroundService
                     var processedUserIds = processedUsers.Select(u => u.Id).ToList();
                     var relevantReports = reports.Where(r => processedUserIds.Contains(r.ReportedUserId)).ToList();
                     await UpdateReportsAsync(relevantReports, processedUsers, stoppingToken);
+                    if (++_batchNumber < _delayAfter) continue;
+                    _batchNumber = 0;
+                    await Task.Delay(_delay, stoppingToken);
                 }
                 await FinishUserCheckAsync(stoppingToken);
                 await Task.Delay(_checkInterval, stoppingToken);
@@ -59,6 +69,7 @@ public class ReportedUserUpdatesService : BackgroundService
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Critical, ex, "Reported user updates service failed!");
+                _batchNumber = 0;
             }
         }
     }

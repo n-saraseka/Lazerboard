@@ -96,6 +96,8 @@ runs:
         echo "SeedingBehavior__OnlyUpdateMapsetData=false" >> .env
         echo "Caching__FileTTL=120" >> .env
         echo "ScoreCountUpdateIntervalMinutes=15" >> .env
+        echo "UserUpdates__DelayAfter=10" >> .env
+        echo "UserUpdates__DelaySeconds=5" >> .env
         echo "UserUpdatesIntervalHours=2" >> .env
         echo "UserUpdatesLookbackHours=24" >> .env
         echo "RestrictedUsersUpdateIntervalHours=12" >> .env

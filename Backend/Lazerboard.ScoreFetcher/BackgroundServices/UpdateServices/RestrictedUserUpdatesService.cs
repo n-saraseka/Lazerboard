@@ -18,6 +18,9 @@ public class RestrictedUserUpdatesService : BackgroundService
     private const int BatchSize = 50;
     private readonly TimeSpan _lookbackInterval;
     private DateTime _restrictedCheckFinish;
+    private readonly int _delayAfter;
+    private readonly TimeSpan _delay;
+    private int _batchNumber;
     
     public RestrictedUserUpdatesService(IServiceProvider serviceProvider, ILogger<RestrictedUserUpdatesService> logger)
     {
@@ -29,6 +32,10 @@ public class RestrictedUserUpdatesService : BackgroundService
         
         var restrictedUsersUpdatehours = config.GetValue<double>("RestrictedUsersUpdateIntervalHours");
         _lookbackInterval = TimeSpan.FromHours(restrictedUsersUpdatehours);
+        
+        var userUpdatesConfig = config.GetSection("UserUpdates");
+        _delayAfter = userUpdatesConfig.GetValue<int>("DelayAfter");
+        _delay = TimeSpan.FromSeconds(userUpdatesConfig.GetValue<double>("DelaySeconds"));
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,6 +54,9 @@ public class RestrictedUserUpdatesService : BackgroundService
                         "Processing a batch of restricted users between IDs {minId} and {maxId}",
                         batch.Min(u => u.Id), batch.Max(u => u.Id));
                     await ProcessRestrictedUsersAsync(batch, stoppingToken);
+                    if (++_batchNumber < _delayAfter) continue;
+                    _batchNumber = 0;
+                    await Task.Delay(_delay, stoppingToken);
                 }
                 _restrictedCheckFinish = _restrictedCheckFinish.Add(_lookbackInterval);
                 await FinishUserCheckAsync(stoppingToken);
@@ -69,6 +79,7 @@ public class RestrictedUserUpdatesService : BackgroundService
     /// </summary>
     private void DoStartupLogic()
     {
+        _batchNumber = 0;
         _restrictedCheckFinish = DateTime.UtcNow - _lookbackInterval;
     }
 

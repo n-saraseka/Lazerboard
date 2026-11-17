@@ -297,7 +297,7 @@ public class OsuApiService
         var queryString = string.Join("&", ids.Select(u => $"ids[]={u}"));
         
         using var usersResponse = await SendClientRequestAsync(HttpMethod.Get, 
-            $"{BaseApiUrl}/users?{queryString}", 
+            $"{BaseApiUrl}/users/lookup?{queryString}", 
             null, 
             false,
             3,

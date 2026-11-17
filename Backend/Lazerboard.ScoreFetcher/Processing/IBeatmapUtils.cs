@@ -14,5 +14,4 @@ public interface IBeatmapUtils
     Task SaveFinishingTimestampAsync(IList<int> beatmapsetIds, ScanEventType eventType,
         CancellationToken stoppingToken);
     Task SaveBeatmapScansTimestampsAsync(IList<int> beatmapIds, CancellationToken stoppingToken);
-    Task<string> TryDownloadBeatmapAsync(int beatmapId, string filename, CancellationToken stoppingToken);
 }

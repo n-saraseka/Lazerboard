@@ -11,16 +11,19 @@ public class CacheStore : ICacheStore
 {
     private readonly IServiceProvider _serviceProvider;
     private ILogger<CacheStore> _logger;
+    private readonly IBeatmapDownloadUtils _beatmapDownloadUtils;
     private string _cachePath;
     private int _osuFileTtl;
     private const int DefaultTtl = 10;
     private System.Timers.Timer _cleanupTimer;
     private readonly SemaphoreSlim _cleanupSemaphore = new(1, 1);
 
-    public CacheStore(IConfiguration config, ILogger<CacheStore> logger, IServiceProvider serviceProvider)
+    public CacheStore(IConfiguration config, ILogger<CacheStore> logger, IServiceProvider serviceProvider, 
+        IBeatmapDownloadUtils beatmapDownloadUtils)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _beatmapDownloadUtils = beatmapDownloadUtils;
         
         var cacheConfig = config.GetSection("Caching");
         
@@ -109,8 +112,6 @@ public class CacheStore : ICacheStore
         {
             await beatmapCacheRepository.ResetCachedBeatmapFileNameTtlAsync(beatmapId, TimeSpan.FromMinutes(_osuFileTtl));
         }
-        using var scope = _serviceProvider.CreateScope();
-        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-        return await beatmapUtils.TryDownloadBeatmapAsync(beatmapId, mapPath, ct);
+        return await _beatmapDownloadUtils.TryDownloadBeatmapAsync(beatmapId, mapPath, ct);
     }
 }

@@ -69,10 +69,11 @@ builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
 
 #region Score fetching and caching
 // Score fetching related
+builder.Services.AddSingleton<IOsuApiFetcher, OsuApiFetcher>();
+builder.Services.AddSingleton<IDirectApiFetcher, DirectApiFetcher>();
+builder.Services.AddSingleton<INekohaApiFetcher, NekohaApiFetcher>();
+builder.Services.AddSingleton<IBeatmapDownloadUtils, BeatmapDownloadUtils>();
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
-builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
-builder.Services.AddScoped<IDirectApiFetcher, DirectApiFetcher>();
-builder.Services.AddScoped<INekohaApiFetcher, NekohaApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();

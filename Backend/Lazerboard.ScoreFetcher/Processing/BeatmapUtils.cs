@@ -19,8 +19,6 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     IBeatmapsetRepository beatmapsetRepository,
     IBeatmapRepository beatmapRepository) : IBeatmapUtils
 {
-    private const int MaxDownloadAttempts = 5;
-    
     /// <summary>
     /// Get <see cref="APIBeatmap"/> leaderboard scores
     /// </summary>
@@ -208,117 +206,5 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
         
         beatmapRepository.UpdateBulk(dbBeatmaps);
         await beatmapRepository.SaveChangesAsync(stoppingToken);
-    }
-
-    /// <summary>
-    /// Try downloading the .osu file from either osu.direct or osu! API
-    /// </summary>
-    /// <param name="beatmapId">The beatmap ID</param>
-    /// <param name="filename">The .osu filename</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The filename, if download was a success</returns>
-    /// <exception cref="TimeoutException">If the method couldn't download the beatmap from both providers after some amount of attempts</exception>
-    public async Task<string> TryDownloadBeatmapAsync(int beatmapId, string filename, CancellationToken stoppingToken)
-    {
-        var attempts = 0; 
-        // We assume the beatmap file is invalid as it has to be retrieved and verified first
-        
-        while (attempts < MaxDownloadAttempts)
-        {
-            var isInvalidFile = CheckIfFileIsInvalid(filename); // Download in case the file is empty or doesn't exist
-            if (!isInvalidFile) return filename;
-            
-            try
-            {
-                return await DownloadFromNekohaAsync(beatmapId, filename, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Download from Nekoha failed for Beatmap ID {id}", beatmapId);
-            }
-            try
-            {
-                return await DownloadFromDotDirectAsync(beatmapId, filename, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Download from osu.direct failed for Beatmap ID {id}", beatmapId);
-            }
-            try
-            {
-                return await DownloadFromOsuApiAsync(beatmapId, filename, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                logger.Log(LogLevel.Error, ex, "Download from osu! API failed for Beatmap ID {id}", beatmapId);
-            }
-            logger.Log(LogLevel.Error, "Download from both providers failed for Beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
-            attempts++;
-        }
-        
-        throw new TimeoutException(
-            $"Failed to get beatmap {beatmapId} after {MaxDownloadAttempts} attempts");
-    }
-
-    private async Task<string> DownloadFromNekohaAsync(int beatmapId, string filename, CancellationToken stoppingToken)
-    {
-        await using var stream = await nekohaApiFetcher.DownloadBeatmapAsync(beatmapId, stoppingToken);
-        var bytes = await stream.ReadAllRemainingBytesToArrayAsync(stoppingToken);
-        await File.WriteAllBytesAsync(filename, bytes, stoppingToken);
-        
-        var isInvalidFile = CheckIfFileIsInvalid(filename);
-        if (!isInvalidFile) return filename;
-        throw new IOException($"File {filename} is invalid");
-    }
-
-    /// <summary>
-    /// Download .osu file from osu.direct
-    /// </summary>
-    /// <param name="beatmapId">The beatmap ID</param>
-    /// <param name="filename">The filename</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The filename, if download was a success</returns>
-    /// <exception cref="IOException">If the downloaded file is invalid (empty or something else failed</exception>
-    private async Task<string> DownloadFromDotDirectAsync(int beatmapId, string filename,
-        CancellationToken stoppingToken)
-    {
-        await using var stream = await directApiFetcher.DownloadBeatmapAsync(beatmapId, stoppingToken);
-        var bytes = await stream.ReadAllRemainingBytesToArrayAsync(stoppingToken);
-        await File.WriteAllBytesAsync(filename, bytes, stoppingToken);
-        
-        var isInvalidFile = CheckIfFileIsInvalid(filename);
-        if (!isInvalidFile) return filename;
-        throw new IOException($"File {filename} is invalid");
-    }
-
-    /// <summary>
-    /// Download .osu file from osu! API
-    /// </summary>
-    /// <param name="beatmapId">The beatmap ID</param>
-    /// <param name="filename">The filename</param>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    /// <returns>The filename, if download was a success</returns>
-    /// <exception cref="IOException">If the downloaded file is invalid (empty or something else failed</exception>
-    private async Task<string> DownloadFromOsuApiAsync(int beatmapId, string filename, CancellationToken stoppingToken)
-    {
-        await using var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, stoppingToken);
-        var bytes = await stream.ReadAllRemainingBytesToArrayAsync(stoppingToken);
-        await File.WriteAllBytesAsync(filename, bytes, stoppingToken);
-        
-        var isInvalidFile = CheckIfFileIsInvalid(filename);
-        if (!isInvalidFile) return filename;
-        throw new IOException($"File {filename} is invalid");
-    }
-
-    /// <summary>
-    /// Check if file is invalid.
-    /// </summary>
-    /// <param name="filename">The filename</param>
-    /// <returns>True if file length is 0, false otherwise</returns>
-    private bool CheckIfFileIsInvalid(string filename)
-    {
-        if (!File.Exists(filename)) return true;
-        var fileInfo = new FileInfo(filename);
-        return fileInfo.Length == 0;
     }
 }

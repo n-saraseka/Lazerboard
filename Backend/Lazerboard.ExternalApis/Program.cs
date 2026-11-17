@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<OsuApiQueue>();
 builder.Services.AddSingleton<OsuRateLimiter>();
 builder.Services.AddScoped<OsuApiService>();
+builder.Services.AddSingleton<DirectApiQueue>();
 builder.Services.AddSingleton<DirectApiLimiter>();
 builder.Services.AddScoped<DirectApiService>();
 
@@ -109,7 +110,7 @@ builder.Services.AddHttpClient<DirectApiService>()
                 return PredicateResult.False();
             },
             
-            MaxRetryAttempts = 7,
+            MaxRetryAttempts = 2,
             Delay = TimeSpan.FromSeconds(5),
             
             OnRetry = args =>

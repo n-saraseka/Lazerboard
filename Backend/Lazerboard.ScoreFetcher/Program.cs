@@ -94,7 +94,7 @@ builder.Services.AddScoped<IBeatmapCacheRepository, BeatmapCacheRepository>();
 builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
 
-// HTTP Client
+// HTTP Clients
 builder.Services.AddHttpClient<OsuApiFetcher>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5))
     .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
@@ -113,6 +113,33 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
             OnRetry = args =>
             {
                 var logger = context.ServiceProvider.GetRequiredService<ILogger<OsuApiFetcher>>();
+                
+                logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
+                    args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);
+                
+                return default;
+            }
+        });
+    });
+
+builder.Services.AddHttpClient<DirectApiFetcher>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
+    {
+        resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
+        {
+            ShouldHandle = static args => args.Outcome switch
+            {
+                { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
+                _ => PredicateResult.False()
+            },
+            
+            MaxRetryAttempts = 2,
+            Delay = TimeSpan.FromSeconds(5),
+            
+            OnRetry = args =>
+            {
+                var logger = context.ServiceProvider.GetRequiredService<ILogger<DirectApiFetcher>>();
                 
                 logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
                     args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);

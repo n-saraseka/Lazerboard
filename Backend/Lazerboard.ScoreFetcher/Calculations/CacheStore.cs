@@ -1,10 +1,9 @@
 using System.Timers;
-using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using osu.Framework.Extensions;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
@@ -15,8 +14,6 @@ public class CacheStore : ICacheStore
     private string _cachePath;
     private int _osuFileTtl;
     private const int DefaultTtl = 10;
-    private const int MaxDownloadAttempts = 5;
-    private double _apiInterval;
     private System.Timers.Timer _cleanupTimer;
     private readonly SemaphoreSlim _cleanupSemaphore = new(1, 1);
 
@@ -40,9 +37,6 @@ public class CacheStore : ICacheStore
         _cleanupTimer.Elapsed += OnCleanupTimerActivated;
         _cleanupTimer.AutoReset = true;
         _cleanupTimer.Enabled = true;
-        
-        var apiConfig = config.GetSection("OsuApi");
-        _apiInterval = apiConfig.GetValue<double>("ApiInterval");
     }
 
     private void OnCleanupTimerActivated(object? source, ElapsedEventArgs e)
@@ -98,15 +92,11 @@ public class CacheStore : ICacheStore
         _logger.Log(LogLevel.Information, "Removed {count} files from beatmap cache", deletedCount);
     }
     
-    public async Task<string> GetBeatmapFileStringAsync(int beatmapId, 
-        IOsuApiFetcher osuApiFetcher, 
+    public async Task<string> GetBeatmapFileStringAsync(int beatmapId,
         IBeatmapCacheRepository beatmapCacheRepository,
         CancellationToken ct)
     {
         var mapPath = $"{_cachePath}/{beatmapId}.osu";
-        var attempts = 0;
-        var isInvalidFile = true; // We assume the beatmap file is invalid as it has to be retrieved and verified first
-        
         // Set / reset .osu file TTL in Redis
         var cachedFileName = await beatmapCacheRepository.GetCachedBeatmapFileNameAsync(beatmapId);
         if (cachedFileName is null)
@@ -119,34 +109,8 @@ public class CacheStore : ICacheStore
         {
             await beatmapCacheRepository.ResetCachedBeatmapFileNameTtlAsync(beatmapId, TimeSpan.FromMinutes(_osuFileTtl));
         }
-
-        while (attempts < MaxDownloadAttempts)
-        {
-            if (File.Exists(mapPath))
-            {
-                var fileInfo = new FileInfo(mapPath);
-                isInvalidFile = fileInfo.Length == 0; // Redownload in case the file is empty
-            }
-
-            if (!isInvalidFile) return mapPath;
-            
-            try
-            {
-                await using var stream = await osuApiFetcher.DownloadBeatmapAsync(beatmapId, ct);
-
-                var bytes = await stream.ReadAllRemainingBytesToArrayAsync(ct);
-                await File.WriteAllBytesAsync(mapPath, bytes, ct);
-                    
-                await Task.Delay(TimeSpan.FromSeconds(_apiInterval), ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.Log(LogLevel.Error, ex, "Download failed for Beatmap ID {id}, attempt no. {attempt}", beatmapId, attempts);
-                attempts++;
-            }
-        }
-        
-        throw new InvalidOperationException(
-            $"Failed to get beatmap {beatmapId} after {MaxDownloadAttempts} attempts");
+        using var scope = _serviceProvider.CreateScope();
+        var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
+        return await beatmapUtils.TryDownloadBeatmapAsync(beatmapId, mapPath, ct);
     }
 }

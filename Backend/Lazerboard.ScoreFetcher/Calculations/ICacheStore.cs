@@ -1,12 +1,11 @@
-using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
+using Lazerboard.ScoreFetcher.Processing;
 
 namespace Lazerboard.ScoreFetcher.Calculations;
 
 public interface ICacheStore
 {
     Task<string> GetBeatmapFileStringAsync(int beatmapId, 
-        IOsuApiFetcher osuApiFetcher, 
         IBeatmapCacheRepository beatmapCacheRepository, 
         CancellationToken ct);
     Task CleanupCacheAsync();

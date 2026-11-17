@@ -33,7 +33,8 @@ public class BeatmapsetUpdatesService : BackgroundService
 
         var externalApisConfig = config.GetSection("ExternalApis");
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
-        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
+        var maxRpm = osuApiConfig.GetValue<int>("MaxRpm");
+        _apiInterval = 60.0 / maxRpm;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

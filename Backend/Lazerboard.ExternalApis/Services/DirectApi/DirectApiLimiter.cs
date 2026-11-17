@@ -1,35 +1,14 @@
-using System.Threading.RateLimiting;
-
 namespace Lazerboard.ExternalApis.Services.DirectApi;
 
-public class DirectApiLimiter : ICentralizedRateLimiter
+public class DirectApiLimiter(DirectApiQueue queue) : ICentralizedRateLimiter
 {
-    private readonly RateLimiter _rateLimiter;
-    
-    public DirectApiLimiter(IConfiguration config)
-    {
-        var externalApisConfig = config.GetSection("ExternalApis");
-        var osuApiConfig = externalApisConfig.GetSection("OsuDotDirect");
-        var maxRpm = osuApiConfig.GetValue<int>("MaxRpm");
-        var apiInterval = 60.0 / maxRpm;
-        _rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            AutoReplenishment = true,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(apiInterval),
-            TokenLimit = 1,
-            TokensPerPeriod = 1,
-            QueueLimit = 10,
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-        });
-    }
-    
     public async Task WaitForAvailableTokenAsync(decimal priority, CancellationToken ct)
     {
-        using var lease = await _rateLimiter.AcquireAsync(1, ct);
+        await queue.WaitForAvailableTokensAsync(priority, ct);
     }
-    
+
     public async Task EnqueueAndShiftTheRestAsync(CancellationToken ct)
     {
-        using var lease = await _rateLimiter.AcquireAsync(1, ct);
+        await queue.EnqueueAndShiftTheRestAsync(ct);
     }
 }

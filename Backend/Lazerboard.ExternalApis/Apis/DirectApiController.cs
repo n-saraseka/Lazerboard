@@ -20,4 +20,16 @@ public class DirectApiController(DirectApiService directApiService) : Controller
         var beatmapsetsResponse = await directApiService.GetUnlistedBeatmapsetsAsync(offset, ct);
         return Ok(beatmapsetsResponse);
     }
+    
+    /// <summary>
+    /// Download a map from the API
+    /// </summary>
+    /// <param name="id">The beatmap ID</param>
+    /// <param name="ct">Cancellation token</param>
+    [HttpGet("beatmaps/{id:int}/download")]
+    public async Task<IActionResult> DownloadBeatmapAsync(int id, CancellationToken ct = default)
+    {
+        var stream = await directApiService.DownloadBeatmapAsync(id, ct);
+        return File(stream, "application/octet-stream", $"{id}.osu");
+    }
 }

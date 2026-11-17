@@ -10,7 +10,7 @@ public class OsuApiService
 {
     private readonly HttpClient _httpClient;
     private ILogger<OsuApiService> _logger;
-    private readonly OsuRateLimiter _centralizedRateLimiter;
+    public readonly OsuRateLimiter CentralizedRateLimiter;
     private static TokenInfo? _token;
     private static DateTimeOffset _tokenExpiryTime;
     private static readonly SemaphoreSlim TokenSemaphore = new(1, 1);
@@ -32,15 +32,15 @@ public class OsuApiService
         var osuApiConfig = externalApisConfig.GetSection("OsuApi");
         _apiClientId = osuApiConfig["ClientId"]!;
         _apiClientSecret = osuApiConfig["ClientSecret"]!;
-        _centralizedRateLimiter = centralizedRateLimiter;
+        CentralizedRateLimiter = centralizedRateLimiter;
     }
     
     /// <summary>
-    /// Sends a request to the API within the osu! API rate limit
+    /// Sends a request to the API within the rate limit
     /// </summary>
     /// <param name="method">HTTP method (either HttpMethod.Get or HttpMethod.Post)</param>
     /// <param name="requestString">Request URL</param>
-    /// <param name="content">Request content (for Post requests)</param>
+    /// <param name="content">Request content (for POST requests)</param>
     /// <param name="isTokenRequest">Whether the request is a token request or not</param>
     /// <param name="priority">Request priority</param>
     /// <param name="ct">Cancellation token</param>
@@ -61,7 +61,7 @@ public class OsuApiService
             requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
         }
 
-        await _centralizedRateLimiter.WaitForAvailableTokenAsync(priority, ct);
+        await CentralizedRateLimiter.WaitForAvailableTokenAsync(priority, ct);
         _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         
@@ -82,7 +82,7 @@ public class OsuApiService
             requestMessage.Headers.Add("x-api-version", ApiVersion.ToString());
         }
 
-        await _centralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
+        await CentralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
         _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
         var response = await _httpClient.SendAsync(requestMessage, ct);
         
@@ -140,7 +140,7 @@ public class OsuApiService
         else throw new InvalidOperationException($"{nameof(tokenCommand)} doesn't have code or refresh token filled out!");
         var dataString = string.Join("&", data.Select(x => $"{x.Key}={x.Value}"));
 
-        await _centralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
+        await CentralizedRateLimiter.EnqueueAndShiftTheRestAsync(ct);
         
         using var tokenResponse = await SendUserRequestAsync(HttpMethod.Post, 
             ApiTokenUrl, 
@@ -244,7 +244,7 @@ public class OsuApiService
     {
         try
         {
-            await _centralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
+            await CentralizedRateLimiter.WaitForAvailableTokenAsync(1, ct);
             var requestString = $"https://osu.ppy.sh/osu/{beatmapId}";
             _logger.Log(LogLevel.Information, "Request to osu! API: {requestString}", requestString);
             return await _httpClient.GetStreamAsync(requestString, ct);

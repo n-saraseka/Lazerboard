@@ -9,7 +9,7 @@ namespace Lazerboard.ExternalApis.Services.OsuApi;
 public class OsuApiService
 {
     private readonly HttpClient _httpClient;
-    private ILogger<OsuApiService> _logger;
+    private readonly ILogger<OsuApiService> _logger;
     private readonly OsuRateLimiter _centralizedRateLimiter;
     private static TokenInfo? _token;
     private static DateTimeOffset _tokenExpiryTime;
@@ -36,11 +36,11 @@ public class OsuApiService
     }
     
     /// <summary>
-    /// Sends a request to the API within the osu! API rate limit
+    /// Sends a request to the API within the rate limit
     /// </summary>
     /// <param name="method">HTTP method (either HttpMethod.Get or HttpMethod.Post)</param>
     /// <param name="requestString">Request URL</param>
-    /// <param name="content">Request content (for Post requests)</param>
+    /// <param name="content">Request content (for POST requests)</param>
     /// <param name="isTokenRequest">Whether the request is a token request or not</param>
     /// <param name="priority">Request priority</param>
     /// <param name="ct">Cancellation token</param>

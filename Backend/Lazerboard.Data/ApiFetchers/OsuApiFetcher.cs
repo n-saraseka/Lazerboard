@@ -1,7 +1,6 @@
 using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Lazerboard.Data.ApiFetchers;
@@ -11,7 +10,7 @@ public class OsuApiFetcher : IOsuApiFetcher
     private readonly HttpClient _httpClient;
     private readonly string _apiUrl;
     
-    public OsuApiFetcher(HttpClient httpClient, IConfiguration config, ILogger<IOsuApiFetcher> logger)
+    public OsuApiFetcher(HttpClient httpClient, IConfiguration config)
     {
         _httpClient = httpClient;
         

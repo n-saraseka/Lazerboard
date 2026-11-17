@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using Lazerboard.Data.ApiFetchers;
 using Lazerboard.ExternalApis.Services.DirectApi;
+using Lazerboard.ExternalApis.Services.NekohaApi;
 using Lazerboard.ExternalApis.Services.OsuApi;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
@@ -14,8 +15,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<OsuApiQueue>();
 builder.Services.AddSingleton<OsuRateLimiter>();
 builder.Services.AddScoped<OsuApiService>();
+builder.Services.AddSingleton<DirectApiQueue>();
 builder.Services.AddSingleton<DirectApiLimiter>();
 builder.Services.AddScoped<DirectApiService>();
+builder.Services.AddSingleton<NekohaApiQueue>();
+builder.Services.AddSingleton<NekohaApiLimiter>();
+builder.Services.AddScoped<NekohaApiService>();
 
 // Logging
 builder.Host.UseSerilog((context, services, configuration) =>
@@ -109,7 +114,7 @@ builder.Services.AddHttpClient<DirectApiService>()
                 return PredicateResult.False();
             },
             
-            MaxRetryAttempts = 7,
+            MaxRetryAttempts = 2,
             Delay = TimeSpan.FromSeconds(5),
             
             OnRetry = args =>

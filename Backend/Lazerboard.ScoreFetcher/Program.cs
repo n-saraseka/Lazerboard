@@ -27,12 +27,13 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder();
 
+#region Database
 var dbConfig = builder.Configuration.GetSection("Database");
 
 var connectionString = new NpgsqlConnectionStringBuilder
 {
     Host = dbConfig["Host"],
-    Port = int.Parse(dbConfig["Port"]),
+    Port = int.Parse(dbConfig["Port"]!),
     Database = dbConfig["Database"],
     Username = dbConfig["Username"],
     Password = dbConfig["Password"],
@@ -53,7 +54,6 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 
-// Database related
 builder.Services.AddScoped<IBeatmapRepository, BeatmapRepository>();
 builder.Services.AddScoped<IBeatmapsetRepository, BeatmapsetRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
@@ -65,11 +65,14 @@ builder.Services.AddScoped<IRemovedBeatmapsetRepository, RemovedBeatmapsetReposi
 builder.Services.AddScoped<IUserScanLogRepository, UserScanLogRepository>();
 builder.Services.AddScoped<IUserReportsRepository, UserReportsRepository>();
 builder.Services.AddScoped<IOsuEntityToDtoService, OsuEntityToDtoService>();
+#endregion
 
+#region Score fetching and caching
 // Score fetching related
 builder.Services.AddScoped<ICalculator, ScoreCalculator>();
 builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
 builder.Services.AddScoped<IDirectApiFetcher, DirectApiFetcher>();
+builder.Services.AddScoped<INekohaApiFetcher, NekohaApiFetcher>();
 builder.Services.AddScoped<IScoreProcessor, ScoreProcessor>();
 builder.Services.AddScoped<IDataProcessor, DataProcessor>();
 builder.Services.AddScoped<IScoreFetchingUtils, ScoreFetchingUtils>();
@@ -80,7 +83,7 @@ builder.Services.AddSingleton<ISeedingState, SeedingState>();
 
 // Caching
 var redisConfig = builder.Configuration.GetSection("Redis");
-var host = redisConfig["Host"];
+var host = redisConfig["Host"]!;
 var username = redisConfig["Username"];
 var password = redisConfig["Password"];
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ => 
@@ -93,8 +96,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 builder.Services.AddScoped<IBeatmapCacheRepository, BeatmapCacheRepository>();
 builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 builder.Services.AddSingleton<ICacheStore, CacheStore>();
+#endregion
 
-// HTTP Client
+#region HTTP clients
 builder.Services.AddHttpClient<OsuApiFetcher>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5))
     .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
@@ -122,7 +126,62 @@ builder.Services.AddHttpClient<OsuApiFetcher>()
         });
     });
 
-// Background services
+builder.Services.AddHttpClient<DirectApiFetcher>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
+    {
+        resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
+        {
+            ShouldHandle = static args => args.Outcome switch
+            {
+                { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
+                _ => PredicateResult.False()
+            },
+            
+            MaxRetryAttempts = 2,
+            Delay = TimeSpan.FromSeconds(5),
+            
+            OnRetry = args =>
+            {
+                var logger = context.ServiceProvider.GetRequiredService<ILogger<DirectApiFetcher>>();
+                
+                logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
+                    args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);
+                
+                return default;
+            }
+        });
+    });
+
+builder.Services.AddHttpClient<NekohaApiFetcher>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+    .AddResilienceHandler("Retry", (resilienceBuilder, context) =>
+    {
+        resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
+        {
+            ShouldHandle = static args => args.Outcome switch
+            {
+                { Result: { IsSuccessStatusCode: false, StatusCode: not HttpStatusCode.UnprocessableEntity } } => PredicateResult.True(),
+                _ => PredicateResult.False()
+            },
+            
+            MaxRetryAttempts = 2,
+            Delay = TimeSpan.FromSeconds(5),
+            
+            OnRetry = args =>
+            {
+                var logger = context.ServiceProvider.GetRequiredService<ILogger<NekohaApiFetcher>>();
+                
+                logger.Log(LogLevel.Warning, args.Outcome.Exception ,"HTTP request error for URL: {@requestURL} (status code: {statusCode}). Retry no. {attempt}. Next retry in {timespan}", 
+                    args.Outcome.Result?.RequestMessage?.RequestUri, args.Outcome.Result?.StatusCode, args.AttemptNumber, args.RetryDelay);
+                
+                return default;
+            }
+        });
+    });
+#endregion
+
+#region Background services
 var servicesConfig = builder.Configuration.GetSection("FetcherServices");
 if (servicesConfig.GetValue<bool>("MainSeeding"))
 {
@@ -159,6 +218,7 @@ if (servicesConfig.GetValue<bool>("UserUpdates"))
 }
 builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 builder.Services.AddHostedService<ReportedUserUpdatesService>();
+#endregion
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>

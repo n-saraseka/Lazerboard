@@ -12,7 +12,6 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     IOsuApiFetcher apiFetcher, 
     IScoreProcessor scoreProcessor,
     ICacheStore cacheStore,
-    IOsuApiFetcher osuApiFetcher,
     IBeatmapCacheRepository beatmapCacheRepository) : IScoreFetchingUtils
 {
     /// <summary>
@@ -122,7 +121,7 @@ public class ScoreFetchingUtils(IDataProcessor dataProcessor,
     /// <returns>The <see cref="FlatWorkingBeatmap"/></returns>
     public async Task<FlatWorkingBeatmap> GetFlatWorkingBeatmapAsync(int beatmapId, CancellationToken stoppingToken)
     {
-        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, osuApiFetcher, beatmapCacheRepository, stoppingToken);
+        var filename = await cacheStore.GetBeatmapFileStringAsync(beatmapId, beatmapCacheRepository, stoppingToken);
         return new FlatWorkingBeatmap(filename);
     }
 }

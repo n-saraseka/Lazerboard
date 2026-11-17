@@ -1,18 +1,15 @@
 using Lazerboard.Data.OsuEntities.OsuApiEntities;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Lazerboard.Data.ApiFetchers;
 
 public class DirectApiFetcher : IDirectApiFetcher
 {
-    private readonly double _apiInterval;
     private readonly HttpClient _httpClient;
     private readonly string _apiUrl;
-    private readonly ILogger<IDirectApiFetcher> _logger;
     
-    public DirectApiFetcher(HttpClient httpClient, IConfiguration config, ILogger<IDirectApiFetcher> logger)
+    public DirectApiFetcher(HttpClient httpClient, IConfiguration config)
     {
         _httpClient = httpClient;
         
@@ -21,7 +18,6 @@ public class DirectApiFetcher : IDirectApiFetcher
         var port = externalApisConfig.GetValue<int>("Port");
         
         var osuApiConfig = externalApisConfig.GetSection("OsuDotDirect");
-        _apiInterval = osuApiConfig.GetValue<double>("ApiInterval");
         var baseUrl = osuApiConfig.GetValue<string>("BaseAddress");
 
         var builder = new UriBuilder
@@ -33,8 +29,6 @@ public class DirectApiFetcher : IDirectApiFetcher
         };
         
         _apiUrl = builder.Uri.ToString();
-
-        _logger = logger;
     }
     
     /// <summary>
@@ -76,4 +70,13 @@ public class DirectApiFetcher : IDirectApiFetcher
 
         return beatmapsets;
     }
+    
+    /// <summary>
+    /// Download a map from the API
+    /// </summary>
+    /// <param name="beatmapId">The beatmap ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The beatmap file <see cref="Stream"/></returns>
+    public async Task<Stream> DownloadBeatmapAsync(int beatmapId, CancellationToken ct = default) =>
+        await _httpClient.GetStreamAsync($"{_apiUrl}/beatmaps/{beatmapId}/download", ct);
 }

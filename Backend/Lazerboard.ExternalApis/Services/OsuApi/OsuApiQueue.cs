@@ -2,10 +2,7 @@ using System.Timers;
 
 namespace Lazerboard.ExternalApis.Services.OsuApi;
 
-/// <summary>
-/// A simplistic implementation of WFQ that distributes the request throughput based on a request weighting system
-/// </summary>
-public class OsuApiQueue : IDisposable
+public class OsuApiQueue : IWeightedQueue
 {
     private readonly Lock _stateLock = new();
     private PriorityQueue<Request, decimal> _pendingRequests = new();
@@ -56,7 +53,13 @@ public class OsuApiQueue : IDisposable
             var lastAhead = _lastAheadFinishTime;
             var finishTime = lastAhead + requestTime;
             _lastAheadFinishTime = finishTime;
-            _pendingRequests.Enqueue(new Request(completionSource, finishTime, token), finishTime);
+            var request = new Request
+            {
+                CompletionSource = completionSource,
+                FinishTime = finishTime,
+                CancellationToken = token
+            };
+            _pendingRequests.Enqueue(request, finishTime);
             GrantAvailableTokens();
         }
         
@@ -84,7 +87,13 @@ public class OsuApiQueue : IDisposable
             
             var finishTime = startTime + requestTime;
             _finishTimes[priority] = finishTime;
-            _pendingRequests.Enqueue(new Request(completionSource, finishTime, token), finishTime);
+            var request = new Request
+            {
+                CompletionSource = completionSource,
+                FinishTime = finishTime,
+                CancellationToken = token
+            };
+            _pendingRequests.Enqueue(request, finishTime);
             GrantAvailableTokens();
         }
         
@@ -117,19 +126,6 @@ public class OsuApiQueue : IDisposable
             _availableTokens = Math.Min(MaxTokens, _availableTokens + 1);
             GrantAvailableTokens();
         }
-    }
-
-    /// <summary>
-    /// A queue request
-    /// </summary>
-    /// <param name="completionSource">The <see cref="TaskCompletionSource"/> to track request completion</param>
-    /// <param name="finishTime">The virtual finish time</param>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    private class Request(TaskCompletionSource completionSource, decimal finishTime, CancellationToken cancellationToken)
-    {
-        public readonly TaskCompletionSource CompletionSource = completionSource;
-        public readonly decimal FinishTime = finishTime;
-        public readonly CancellationToken CancellationToken = cancellationToken;
     }
 
     public void Dispose()

@@ -28,7 +28,7 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
 
     public Task<List<Score>> GetByBeatmapIdsAsync(IList<int> beatmapIds, CancellationToken cancellationToken) =>
         Set
-            .FromSql($"SELECT s.* FROM scores s JOIN unnest({beatmapIds}::int[]) AS b(id) ON s.beatmap_id = b.id")
+            .Where(s => beatmapIds.Any(id => id == s.BeatmapId))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 

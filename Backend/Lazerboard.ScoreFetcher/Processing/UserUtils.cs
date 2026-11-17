@@ -16,7 +16,7 @@ public class UserUtils(IUserRepository userRepository,
     ILogger<IUserUtils> logger) : IUserUtils
 {
     private const int BeatmapBatchSize = 20;
-    private const int ScoreBatchSize = 2500;
+    private const int LeaderboardBatchSize = 50;
     private const int UserBatchSize = 50;
 
     /// <summary>
@@ -138,14 +138,11 @@ public class UserUtils(IUserRepository userRepository,
         {
             var usersBatch = userIds.Skip(i).Take(UserBatchSize).ToList();
             var scoresQuery = unlistedScoreRepository.GetByUserIds(usersBatch);
-            var scoresBatch = await scoresQuery
-                .Take(ScoreBatchSize)
-                .ToListAsync(stoppingToken);
+            var scores = await scoresQuery.ToListAsync(stoppingToken);
             
-            while (scoresBatch.Count > 0)
+            if (scores.Count > 0)
             {
-                reinstatedCount += await ReprocessReaddedBeatmapRanksAsync(scoresBatch, stoppingToken);
-                scoresBatch = await scoresQuery.Take(ScoreBatchSize).ToListAsync(stoppingToken);
+                reinstatedCount += await ReprocessReaddedBeatmapRanksAsync(scores, stoppingToken);
             }
         }
         
@@ -161,17 +158,20 @@ public class UserUtils(IUserRepository userRepository,
     private async Task RemoveUserScoresAsync(IList<int> userIds, CancellationToken stoppingToken)
     {
         var query = scoreRepository.GetByUserIds(userIds);
-        var batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
-        if (batch.Count == 0) return;
+        var scores = await query.ToListAsync(stoppingToken);
+        var beatmapModes = scores
+            .GroupBy(s => s.BeatmapId)
+            .OrderBy(s => s.Key)
+            .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).Distinct().ToList());
+        var leaderboardsCount = beatmapModes.Count;
+        var keys = beatmapModes.Keys.ToList();
         
-        while (batch.Count > 0)
+        for (int i = 0; i < leaderboardsCount; i += LeaderboardBatchSize)
         {
-            var beatmapModes = batch
-                .GroupBy(s => s.BeatmapId)
-                .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).Distinct().ToList());
+            var keysBatch = keys.Skip(i).Take(LeaderboardBatchSize).ToList();
+            var leaderboardsBatch = beatmapModes.Where(s => keysBatch.Contains(s.Key)).ToDictionary();
             // We handle removing user scores inside the DataProcessor.
-            await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
-            batch = await query.Take(ScoreBatchSize).ToListAsync(stoppingToken);
+            await ReprocessBeatmapRanksAsync(leaderboardsBatch, stoppingToken);
         }
     }
     
@@ -206,14 +206,22 @@ public class UserUtils(IUserRepository userRepository,
     private async Task<int> ReprocessReaddedBeatmapRanksAsync(List<UnlistedScore> scores, CancellationToken stoppingToken)
     {
         if (scores.Count == 0) return 0;
-
+        
         var beatmapIds = scores.Select(s => s.BeatmapId).Distinct().ToList();
         var beatmapModes = scores
             .GroupBy(s => s.BeatmapId)
+            .OrderBy(s => s.Key)
             .ToDictionary(g => g.Key, g => g.Select(s => s.Mode).Distinct().ToList());
+        var leaderboardsCount = beatmapModes.Count;
+        var keys = beatmapModes.Keys.ToList();
         
-        // We handle reinstating user scores inside beatmap utils (relevant scores will be fetched through the API).
-        await ReprocessBeatmapRanksAsync(beatmapModes, stoppingToken);
+        for (int i = 0; i < leaderboardsCount; i += LeaderboardBatchSize)
+        {
+            var keysBatch = keys.Skip(i).Take(LeaderboardBatchSize).ToList();
+            var leaderboardsBatch = beatmapModes.Where(s => keysBatch.Contains(s.Key)).ToDictionary();
+            // We handle reinstating user scores inside the DataProcessor.
+            await ReprocessBeatmapRanksAsync(leaderboardsBatch, stoppingToken);
+        }
         
         var existingScores = await scoreRepository.GetByBeatmapIdsAsync(beatmapIds, stoppingToken);
         var existingScoreIds = existingScores.Select(s => s.Id).ToList();

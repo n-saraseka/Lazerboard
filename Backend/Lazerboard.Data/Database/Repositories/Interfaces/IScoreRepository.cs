@@ -16,4 +16,5 @@ public interface IScoreRepository : IRepository<Score, ulong>
     IQueryable<Score> GetByUserIds(IList<int> userIds);
     IQueryable<int> GetUserIdsFromScoresAfterDate(DateTime startTime, DateTime endTime);
     Task<Score?> GetNewestScoreAsync(CancellationToken cancellationToken = default);
+    Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default);
 }

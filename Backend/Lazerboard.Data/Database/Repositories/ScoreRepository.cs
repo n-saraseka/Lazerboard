@@ -74,4 +74,12 @@ public class ScoreRepository(ScoreDataContext db) : BaseRepository<Score, ulong>
             .AsNoTracking()
             .OrderByDescending(s => s.Date)
             .FirstOrDefaultAsync(cancellationToken);
+    
+    public Task<List<int>> GetBeatmapsIdsWithScoresAsync(IList<int> ids, CancellationToken ct = default) =>
+        Set
+            .Where(b => ids.Any(id => id == b.BeatmapId))
+            .Select(b => b.BeatmapId)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToListAsync(ct);
 }

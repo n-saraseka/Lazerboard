@@ -293,6 +293,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 deletedCount += personalBestsForRemoval.Count;
                 
                 var groupIds = groupScores.Select(s => s.Id).Distinct().ToList();
+                var groupScoresDict = groupScores.ToDictionary(s => s.Id, s => s);
                 
                 var newScores = groupScores
                     .Where(b => !beatmapScores
@@ -304,6 +305,17 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .Where(b => !newScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
+                    .Select(s =>
+                    {
+                        // Update PP and TotalScore values if there are incoming scores matching old scores.
+                        if (groupIds.Contains(s.Id))
+                        {
+                            s.TotalScore = groupScoresDict[s.Id].TotalScore;
+                            s.ClassicTotalScore = groupScoresDict[s.Id].ClassicTotalScore;
+                            s.PP = groupScoresDict[s.Id].PP;
+                        }
+                        return s;
+                    })
                     .ToList();
                 
                 var merged = newScores

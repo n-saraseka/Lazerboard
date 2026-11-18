@@ -948,7 +948,6 @@ public class DataProcessorTests
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
-        var significantScores = data.DistinctBy(s => s.Id).ToDictionary(s => s.Id, s => true);
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(dbData);
@@ -981,5 +980,88 @@ public class DataProcessorTests
             dtos.Count() == 1 &&
             dtos.All(d => removedScoreIds.Contains(d.Id)))), Times.Once);
         _unlistedScoreRepository.Verify(r => r.CreateBulk(It.IsAny<IEnumerable<UnlistedScore>>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ProcessScoresAsync_ScoreTotalScoreHasChanged_GetsUpdated()
+    {
+        // Arrange
+        var data = new List<APIScore>
+        {
+            new APIScore
+            {
+                Id = 2,
+                BeatmapId = 1,
+                UserId = 4,
+                TotalScore = 80,
+                Date = new DateTime(2020, 4, 1),
+                Mode = Mode.Osu
+            },
+            new APIScore
+            {
+                Id = 3,
+                BeatmapId = 1,
+                UserId = 5,
+                TotalScore = 50,
+                Date = new DateTime(2020, 5, 1),
+                Mode = Mode.Osu
+            }
+        };
+        
+        var dbData = new List<Score>
+        {
+            new Score
+            {
+                Id = 2,
+                BeatmapId = 1,
+                UserId = 4,
+                TotalScore = 100,
+                Date = new DateTime(2020, 3, 1),
+                Rank = 1,
+                Mode = Mode.Osu,
+                IsConvert = false,
+                IsLazerScore = true,
+                IsPerfectCombo = true,
+                Statistics = new()
+            },
+            new Score
+            {
+                Id = 3,
+                BeatmapId = 1,
+                UserId = 5,
+                TotalScore = 60,
+                Date = new DateTime(2020, 4, 1),
+                Rank = 2,
+                Mode = Mode.Osu
+            },
+        };
+        
+        var modeData = new Dictionary<int, Mode>();
+        modeData[1] = Mode.Osu;
+        
+        _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(dbData);
+        _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
+            .ReturnsAsync(modeData);
+        _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
+            .Returns((APIScore api, ScoreSource source, Mode mode) => new Score
+            {
+                Id = api.Id,
+                BeatmapId = api.BeatmapId,
+                TotalScore = api.TotalScore,
+                Date = api.Date,
+                ScoreSource = source,
+                IsConvert = api.Mode != mode
+            });
+        
+        // Act
+        await _dataProcessor.ProcessScoresAsync(data, ScoreSource.LeaderboardScan, CancellationToken.None);
+        
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(dbData[0].TotalScore, Is.EqualTo(data[0].TotalScore));
+            Assert.That(dbData[1].TotalScore, Is.EqualTo(data[1].TotalScore));
+        });
     }
 }

@@ -11,8 +11,6 @@ namespace Lazerboard.ScoreFetcher.Processing;
 
 public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     IOsuApiFetcher osuApiFetcher,
-    IDirectApiFetcher directApiFetcher,
-    INekohaApiFetcher nekohaApiFetcher,
     IScoreFetchingUtils utils,
     IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,
@@ -73,26 +71,27 @@ public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
         
         await SaveFinishingTimestampAsync([beatmapset.Id], eventType, stoppingToken);
     }
-    
+
     /// <summary>
     /// Process existing mapset and save the data
     /// </summary>
-    /// <param name="beatmapset">The <see cref="APIBeatmapset"/></param>
+    /// <param name="beatmapset">The <see cref="Beatmapset"/></param>
     /// <param name="eventType">The <see cref="ScanEventType"/></param>
+    /// <param name="modesToProcess">A list of <see cref="Mode"/>s used to specify modes to process</param>
     /// <param name="stoppingToken">A <see cref="CancellationToken"/></param>
-    public async Task ProcessExistingMapsetAsync(Beatmapset beatmapset, ScanEventType eventType, CancellationToken stoppingToken)
+    public async Task ProcessExistingMapsetAsync(Beatmapset beatmapset, ScanEventType eventType,
+        List<Mode> modesToProcess, CancellationToken stoppingToken)
     {
-        logger.Log(LogLevel.Information, "Processing beatmapset ID: {beatmapsetID}", beatmapset.Id);
+        modesToProcess = modesToProcess.Distinct().ToList();
         
         foreach (var beatmap in beatmapset.Beatmaps)
         {
-            foreach (var val in Enum.GetValues<Mode>())
+            foreach (var val in modesToProcess)
             {
                 if (beatmap.Mode != Mode.Osu && val != beatmap.Mode) continue;
                 await ProcessLeaderboardAsync(beatmap.Id, val, stoppingToken);
             }
         }
-        
         await SaveFinishingTimestampAsync([beatmapset.Id], eventType, stoppingToken);
     }
 

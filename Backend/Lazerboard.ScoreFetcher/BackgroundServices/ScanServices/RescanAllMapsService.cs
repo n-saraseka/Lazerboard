@@ -2,8 +2,10 @@ using Lazerboard.Data.ApiFetchers;
 using Lazerboard.Data.Database.Entities;
 using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
+using Lazerboard.Data.OsuEntities.Enums;
 using Lazerboard.ScoreFetcher.Processing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,7 +16,8 @@ public class RescanAllMapsService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RescanAllMapsService> _logger;
-    private ISeedingState _seedingState;
+    private readonly List<Mode> _modesToReprocess;
+    private readonly ISeedingState _seedingState;
 
     private const int BatchSize = 50;
     private bool _shouldFinishAfterThisBatch;
@@ -23,12 +26,21 @@ public class RescanAllMapsService : BackgroundService
     
     private Beatmapset? _finishingBeatmapset;
     
-    public RescanAllMapsService(IServiceProvider serviceProvider, ILogger<RescanAllMapsService> logger, ISeedingState seedingState)
+    public RescanAllMapsService(IServiceProvider serviceProvider, 
+        ILogger<RescanAllMapsService> logger, 
+        ISeedingState seedingState,
+        IConfiguration config)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
         _seedingState = seedingState;
         _seedingState.IsSeeding = true;
+
+        var rescansConfig = config.GetSection("Rescans");
+        var modesString = rescansConfig["Modes"]!;
+        _modesToReprocess = modesString.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(m => (Mode)int.Parse(m))
+            .ToList();
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,10 +65,11 @@ public class RescanAllMapsService : BackgroundService
                 }
                 
                 _logger.Log(LogLevel.Information, 
-                    "Processing a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}", 
+                    "Rescanning a batch of {beatmapsetCount} beatmapsets ranked between {minDate} and {maxDate}, modes: {modes}", 
                     beatmapsets.Count,
                     DateOnly.FromDateTime(beatmapsets.Min(bs => bs.RankedDate!.Value).Date),
-                    DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate!.Value).Date));
+                    DateOnly.FromDateTime(beatmapsets.Max(bs => bs.RankedDate!.Value).Date),
+                    _modesToReprocess);
 
                 var beatmapsetIds = beatmapsets.Select(bs => bs.Id).ToList();
 
@@ -70,7 +83,7 @@ public class RescanAllMapsService : BackgroundService
                 {
                     using var scope = _serviceProvider.CreateScope();
                     var beatmapUtils = scope.ServiceProvider.GetRequiredService<IBeatmapUtils>();
-                    await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, ScanEventType.ScanStarted, stoppingToken);
+                    await beatmapUtils.ProcessExistingMapsetAsync(beatmapset, ScanEventType.ScanStarted, _modesToReprocess, stoppingToken);
                 }
                 
                 var latestMapset = beatmapsets.MaxBy(bs => bs.RankedDate);

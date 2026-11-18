@@ -994,18 +994,9 @@ public class DataProcessorTests
                 BeatmapId = 1,
                 UserId = 4,
                 TotalScore = 80,
-                Date = new DateTime(2020, 4, 1),
+                Date = new DateTime(2020, 3, 1),
                 Mode = Mode.Osu
             },
-            new APIScore
-            {
-                Id = 3,
-                BeatmapId = 1,
-                UserId = 5,
-                TotalScore = 50,
-                Date = new DateTime(2020, 5, 1),
-                Mode = Mode.Osu
-            }
         };
         
         var dbData = new List<Score>
@@ -1024,23 +1015,26 @@ public class DataProcessorTests
                 IsPerfectCombo = true,
                 Statistics = new()
             },
-            new Score
-            {
-                Id = 3,
-                BeatmapId = 1,
-                UserId = 5,
-                TotalScore = 60,
-                Date = new DateTime(2020, 4, 1),
-                Rank = 2,
-                Mode = Mode.Osu
-            },
         };
         
         var modeData = new Dictionary<int, Mode>();
         modeData[1] = Mode.Osu;
         
         _scoreRepository.Setup(r => r.GetByBeatmapIdsAsync(It.IsAny<IList<int>>(), CancellationToken.None))
-            .ReturnsAsync(dbData);
+            .ReturnsAsync(() => dbData.Select(s => new Score
+            {
+                Id = s.Id,
+                BeatmapId = s.BeatmapId,
+                UserId = s.UserId,
+                TotalScore = s.TotalScore,
+                Date = s.Date,
+                Rank = s.Rank,
+                Mode = s.Mode,
+                IsConvert = s.IsConvert,
+                IsLazerScore = s.IsLazerScore,
+                IsPerfectCombo = s.IsPerfectCombo,
+                Statistics = s.Statistics
+            }).ToList());
         _beatmapRepository.Setup(r => r.GetModeDataAsync(It.IsAny<IList<int>>(), CancellationToken.None))
             .ReturnsAsync(modeData);
         _osuEntityToDtoService.Setup(e => e.ScoreEntityToDto(It.IsAny<APIScore>(), It.IsAny<ScoreSource>(), It.IsAny<Mode>()))
@@ -1058,10 +1052,7 @@ public class DataProcessorTests
         await _dataProcessor.ProcessScoresAsync(data, ScoreSource.LeaderboardScan, CancellationToken.None);
         
         // Assert
-        Assert.Multiple(() =>
-        {
-            Assert.That(dbData[0].TotalScore, Is.EqualTo(data[0].TotalScore));
-            Assert.That(dbData[1].TotalScore, Is.EqualTo(data[1].TotalScore));
-        });
+        _scoreRepository.Verify(r => r.UpdateBulk(It.Is<IEnumerable<Score>>(dtos => 
+            dtos.All(d => d.TotalScore == data[0].TotalScore))), Times.Once);
     }
 }

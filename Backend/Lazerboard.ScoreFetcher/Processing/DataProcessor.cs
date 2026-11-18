@@ -258,7 +258,55 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
             }
             else
             {
-                var beatmapScores = matchingGroup.ToList();
+                var groupIds = groupScores.Select(s => s.Id).Distinct().ToList();
+                var groupScoresDict = groupScores.ToDictionary(s => s.Id, s => s);
+                
+                var beatmapScores = matchingGroup
+                    .Select(s =>
+                    {
+                        // Update PP and TotalScore values if there are incoming scores matching old scores.
+                        if (groupIds.Contains(s.Id))
+                        {
+                            s.TotalScore = groupScoresDict[s.Id].TotalScore;
+                            s.ClassicTotalScore = groupScoresDict[s.Id].ClassicTotalScore;
+                            s.PP = groupScoresDict[s.Id].PP;
+                        }
+                        return s;
+                    })
+                    .ToList();
+                
+                // This branch of logic is only relevant for leaderboard rescans.
+                // An old score may have been removed from the top 100 leaderboard between scans
+                // due to the user getting restricted or for other reasons. If that happens, we should remove it.
+                if (source == ScoreSource.LeaderboardScan)
+                {
+                    var removedScores = beatmapScores.Where(s => !groupIds.Contains(s.Id)).ToList();
+                    if (removedScores.Count > 0)
+                    {
+                        var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
+                        
+                        scoreRepository.DeleteBulk(removedScores);
+                        deletedCount += removedScores.Count;
+                        
+                        // If a score has all the necessary data, it doesn't get removed completely,
+                        // but rather becomes unlisted. It may get restored if the user is unrestricted
+                        var scoresWithNullData = GetScoreIdsWithNullData(removedScores);
+                        var scoresToUnlist = removedScores
+                            .Where(s => !scoresWithNullData.Contains(s.Id))
+                            .Select(GetUnlsitedScoreFromScore)
+                            .ToList();
+                        var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(scoresToUnlist.Select(s => s.Id), ct);
+                        var existingScoreIds = existingUnlistedScores.Select(s => s.Id).ToList();
+                        var newScoresToUnlist = scoresToUnlist.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
+                        if (newScoresToUnlist.Count > 0)
+                        {
+                            unlistedScoreRepository.CreateBulk(scoresToUnlist);
+                            logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", scoresToUnlist.Count);
+                        }
+                        
+                        beatmapScores = beatmapScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
+                    }
+                }
 
                 var personalBestsForRemoval = new List<Score>();
 
@@ -292,9 +340,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                 beatmapScores = beatmapScores.Where(s => !personalBestsForRemoval.Select(pb => pb.Id).Contains(s.Id)).ToList();
                 deletedCount += personalBestsForRemoval.Count;
                 
-                var groupIds = groupScores.Select(s => s.Id).Distinct().ToList();
-                var groupScoresDict = groupScores.ToDictionary(s => s.Id, s => s);
-                
                 var newScores = groupScores
                     .Where(b => !beatmapScores
                         .Select(s => s.Id)
@@ -305,17 +350,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                     .Where(b => !newScores
                         .Select(s => s.Id)
                         .Contains(b.Id))
-                    .Select(s =>
-                    {
-                        // Update PP and TotalScore values if there are incoming scores matching old scores.
-                        if (groupIds.Contains(s.Id))
-                        {
-                            s.TotalScore = groupScoresDict[s.Id].TotalScore;
-                            s.ClassicTotalScore = groupScoresDict[s.Id].ClassicTotalScore;
-                            s.PP = groupScoresDict[s.Id].PP;
-                        }
-                        return s;
-                    })
                     .ToList();
                 
                 var merged = newScores
@@ -328,50 +362,6 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         return s;
                     })
                     .ToList();
-                
-                // This branch of logic is only relevant for leaderboard rescans.
-                // An old score may have been removed from the top 100 leaderboard between scans
-                // due to the user getting restricted or for other reasons. If that happens, we should remove it.
-                if (source == ScoreSource.LeaderboardScan)
-                {
-                    var removedScores = oldScores.Where(s => s.Rank <= 100 && !groupIds.Contains(s.Id)).ToList();
-                    if (removedScores.Count > 0)
-                    {
-                        var removedScoreIds = removedScores.Select(s => s.Id).Distinct().ToList();
-                        
-                        scoreRepository.DeleteBulk(removedScores);
-                        deletedCount += removedScores.Count;
-                        
-                        // If a score has all the necessary data, it doesn't get removed completely,
-                        // but rather becomes unlisted. It may get restored if the user is unrestricted
-                        var scoresWithNullData = GetScoreIdsWithNullData(removedScores);
-                        var scoresToUnlist = removedScores
-                            .Where(s => !scoresWithNullData.Contains(s.Id))
-                            .Select(GetUnlsitedScoreFromScore)
-                            .ToList();
-                        var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(scoresToUnlist.Select(s => s.Id), ct);
-                        var existingScoreIds = existingUnlistedScores.Select(s => s.Id).ToList();
-                        var newScoresToUnlist = scoresToUnlist.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
-                        if (newScoresToUnlist.Count > 0)
-                        {
-                            unlistedScoreRepository.CreateBulk(scoresToUnlist);
-                            logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", scoresToUnlist.Count);
-                        }
-                        
-                        merged = merged
-                            .Where(s => !removedScoreIds.Contains(s.Id))
-                            .OrderByDescending(b => b.TotalScore)
-                            .ThenBy(b => b.Date)
-                            .Select((s, i) =>
-                            {
-                                s.Rank = i + 1;
-                                return s;
-                            })
-                            .ToList();
-                        
-                        oldScores = oldScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();
-                    }
-                }
 
                 // We remove any scores that land outside the top 100.
                 // That's done to save up on storage. It's going to get really bad on new maps in the long run

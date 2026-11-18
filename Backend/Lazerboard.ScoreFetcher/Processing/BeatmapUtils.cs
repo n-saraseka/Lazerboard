@@ -11,8 +11,6 @@ namespace Lazerboard.ScoreFetcher.Processing;
 
 public class BeatmapUtils(ILogger<IBeatmapUtils> logger,
     IOsuApiFetcher osuApiFetcher,
-    IDirectApiFetcher directApiFetcher,
-    INekohaApiFetcher nekohaApiFetcher,
     IScoreFetchingUtils utils,
     IDataProcessor dataProcessor,
     IScoreProcessor scoreProcessor,

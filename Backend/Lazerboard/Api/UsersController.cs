@@ -55,7 +55,6 @@ public class UsersController(IScoreRepository scoreRepository,
         
         if (!user.RegisteredAt.HasValue)
         {
-            
             user.RegisteredAt = DateTimeOffset.UtcNow;
             userRepository.Update(user);
             await userRepository.SaveChangesAsync(ct);

@@ -363,6 +363,11 @@ app.MapControllerRoute(
     pattern: "millionsranking",
     defaults: new { controller = "ScoreRanking", action = "MillionsRanking"});
 
+app.MapControllerRoute(
+    name: "changelog",
+    pattern: "changelog",
+    defaults: new { controller = "General", action = "Changelog" });
+
 app.MapControllers();
 
 try

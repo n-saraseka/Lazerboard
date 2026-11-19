@@ -1,0 +1,80 @@
+.component-container {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.component-container ul {
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.component-container h2 {
+    font-size: 2em;
+    margin: 1em 0;
+}
+
+.component-container h3 {
+    font-size: 1.5em;
+    align-self: flex-start;
+    padding-left: 40px;
+    margin: 0 0;
+}
+
+.component-container a {
+    color: #ff4d88;
+}
+
+.changelog-item {
+    display: flex;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.changelog-item div {
+    flex : 10;
+}
+
+.changelog-item::before {
+    content: "";
+    width: 1em;
+    height: 1em;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    background-color: white;
+}
+
+.changelog-item.fixed::before {
+    mask-image: url("../images/approved.svg");
+    -webkit-mask-image: url("../images/approved.svg");
+}
+
+.changelog-item.added::before {
+    mask-image: url("../images/added.svg");
+    -webkit-mask-image: url("../images/added.svg");
+}
+
+.changelog-item.removed::before {
+    mask-image: url("../images/removed.svg");
+    -webkit-mask-image: url("../images/removed.svg");
+}
+
+.changelog-item.changed::before {
+    mask-image: url("../images/updated.svg");
+    -webkit-mask-image: url("../images/updated.svg");
+}
+
+/* Light theme */
+body:has(.theme-preference.light) .component-container a {
+    color: #d10046;
+}
+
+body:has(.theme-preference.light) .changelog-item::before {
+    background-color: rgb(35, 35, 35);
+}

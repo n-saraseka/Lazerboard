@@ -10,6 +10,7 @@ import AboutPage from "./components/Pages/AboutPage.jsx";
 import ErrorPage from "./components/Pages/ErrorPage.jsx";
 import NotFoundPage from "./components/Pages/NotFoundPage.jsx";
 import MillionScoresPage from "./components/Pages/MillionScoresPage.jsx";
+import ChangelogPage from "./components/Pages/Changelog/ChangelogPage.jsx";
 
 const allComponents = {
     "scores": ScoresPage,
@@ -19,6 +20,7 @@ const allComponents = {
     "userranking": ScoreRankingPage,
     "millionsranking": ManiaRankingPage,
     "about": AboutPage,
+    "changelog": ChangelogPage,
     "error": ErrorPage,
     "notfound": NotFoundPage,
 }

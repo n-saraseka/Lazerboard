@@ -8,4 +8,9 @@ public class GeneralController : Controller
     {
         return View();
     }
+    
+    public IActionResult Changelog()
+    {
+        return View();
+    }
 }

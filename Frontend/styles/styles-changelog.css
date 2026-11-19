@@ -75,6 +75,6 @@ body:has(.theme-preference.light) .component-container a {
     color: #d10046;
 }
 
-body:has(.theme-preference.light) .changelog-item.before {
+body:has(.theme-preference.light) .changelog-item::before {
     background-color: rgb(35, 35, 35);
 }

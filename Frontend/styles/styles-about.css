@@ -1,4 +1,4 @@
-.about a, .about-strong {
+.about a {
     color: #ff4d88;
 }
 
@@ -25,6 +25,6 @@ body:has(.theme-preference.light) .about-explanation {
     background-color: hsl(45, 35%, 85%);
 }
 
-body:has(.theme-preference.light) .about strong, body:has(.theme-preference.light) .about a {
+body:has(.theme-preference.light) .about a {
     color: #d10046;
 }

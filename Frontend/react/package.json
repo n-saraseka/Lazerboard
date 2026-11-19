@@ -17,7 +17,8 @@
     "moment": "^2.31.0",
     "react": "^19.2.7",
     "react-chartjs-2": "^5.3.1",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.3.0",

@@ -79,6 +79,9 @@ function Header({currentPage}) {
                 <li>
                     <a href="/about" className={currentPage === "about" ? 'active' : 'inactive'}>About</a>
                 </li>
+                <li>
+                    <a href="/changelog" className={currentPage === "changelog" ? 'active' : 'inactive'}>Changelog</a>
+                </li>
             </ul>
             <div className="navigation-right">
                 <UserPreferences/>

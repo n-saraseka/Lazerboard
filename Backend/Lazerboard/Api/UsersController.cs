@@ -47,10 +47,15 @@ public class UsersController(IScoreRepository scoreRepository,
             return Forbid();
         }
 
-        if (!user.UserGroups.Contains(UserGroup.RegisteredUser) || !user.RegisteredAt.HasValue)
+        if (!user.UserGroups.Contains(UserGroup.RegisteredUser))
         {
             user.UserGroups.Remove(UserGroup.User);
             user.UserGroups.Add(UserGroup.RegisteredUser);
+        }
+        
+        if (!user.RegisteredAt.HasValue)
+        {
+            
             user.RegisteredAt = DateTimeOffset.UtcNow;
             userRepository.Update(user);
             await userRepository.SaveChangesAsync(ct);

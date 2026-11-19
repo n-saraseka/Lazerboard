@@ -7,6 +7,12 @@
 - Added the changelog page. All entries prior to this are mainly from the **#changelog** [Discord](https://discord.com/invite/Z3rWRrznfd) channel and were kept to keep things consistent.
 - Implemented custom scrollbar style.
 
+### Backend
+
+#### Fixed
+
+- Fixed an issue where a user's registered user UserGroup could duplicate if they didn't have a recorded registration date before.
+
 ## Nov 18, 2026
 
 ### Score fetcher

@@ -79,10 +79,13 @@ public class OAuthController(ILogger<OAuthController> logger,
         {
             existingUser.Username = user.Username;
             existingUser.CountryCode = user.CountryCode;
-            if (!existingUser.UserGroups.Contains(UserGroup.RegisteredUser) || !existingUser.RegisteredAt.HasValue)
+            if (!existingUser.UserGroups.Contains(UserGroup.RegisteredUser))
             {
                 existingUser.UserGroups.Remove(UserGroup.User);
                 existingUser.UserGroups.Add(UserGroup.RegisteredUser);
+            }
+            if (!existingUser.RegisteredAt.HasValue)
+            {
                 existingUser.RegisteredAt = DateTimeOffset.UtcNow;
                 logger.Log(LogLevel.Information, "User {UserId} has registered", existingUser.Id);
             }

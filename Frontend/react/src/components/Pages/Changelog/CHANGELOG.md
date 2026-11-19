@@ -5,6 +5,7 @@
 #### Added
 
 - Added the changelog page. All entries prior to this are mainly from the **#changelog** [Discord](https://discord.com/invite/Z3rWRrznfd) channel and were kept to keep things consistent.
+- Implemented custom scrollbar style.
 
 ## Nov 18, 2026
 

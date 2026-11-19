@@ -293,7 +293,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         var scoresWithNullData = GetScoreIdsWithNullData(removedScores);
                         var scoresToUnlist = removedScores
                             .Where(s => !scoresWithNullData.Contains(s.Id))
-                            .Select(GetUnlsitedScoreFromScore)
+                            .Select(GetUnlistedScoreFromScore)
                             .ToList();
                         var existingUnlistedScores = await unlistedScoreRepository.GetBulkAsync(scoresToUnlist.Select(s => s.Id), ct);
                         var existingScoreIds = existingUnlistedScores.Select(s => s.Id).ToList();
@@ -428,7 +428,7 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
     /// </summary>
     /// <param name="score">The <see cref="Score"/></param>
     /// <returns>The corresponding <see cref="UnlistedScore"/></returns>
-    private UnlistedScore GetUnlsitedScoreFromScore(Score score) => new UnlistedScore
+    private UnlistedScore GetUnlistedScoreFromScore(Score score) => new UnlistedScore
     {
         Id = score.Id,
         Date = score.Date,

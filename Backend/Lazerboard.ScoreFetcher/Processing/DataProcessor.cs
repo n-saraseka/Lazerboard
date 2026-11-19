@@ -300,8 +300,8 @@ public class DataProcessor(IBeatmapsetRepository beatmapsetRepository,
                         var newScoresToUnlist = scoresToUnlist.Where(s => !existingScoreIds.Contains(s.Id)).ToList();
                         if (newScoresToUnlist.Count > 0)
                         {
-                            unlistedScoreRepository.CreateBulk(scoresToUnlist);
-                            logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", scoresToUnlist.Count);
+                            unlistedScoreRepository.CreateBulk(newScoresToUnlist);
+                            logger.Log(LogLevel.Information, "Unlisted {unlistedCount} scores", newScoresToUnlist.Count);
                         }
                         
                         beatmapScores = beatmapScores.Where(s => !removedScoreIds.Contains(s.Id)).ToList();

@@ -1,3 +1,4 @@
+using Lazerboard.Api.Utils;
 using Lazerboard.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Lazerboard.Data.Database.Repositories.Interfaces;
@@ -18,14 +19,14 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
             .ToList();
         
         var firstBeatmap = beatmaps.First();
-        var beatmapset = firstBeatmap.Beatmapset;
+        var beatmapset = firstBeatmap.Beatmapset!;
         
         var selectedMode = mode ?? firstBeatmap.Mode;
 
         var viewModel = new BeatmapsetViewModel
         {
-            Beatmapset = beatmapset,
-            Beatmaps = beatmaps,
+            Beatmapset = DbToApiObjectUtils.DbBeatmapsetToApiBeatmapset(beatmapset),
+            Beatmaps = beatmaps.Select(DbToApiObjectUtils.DbBeatmapToApiBeatmap).ToList(),
             SelectedBeatmapId = firstBeatmap.Id,
             SelectedMode = selectedMode,
         };
@@ -48,7 +49,7 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
         
         var respectiveBeatmap = beatmaps.First(b => b.Id == id);
         
-        var beatmapset = respectiveBeatmap.Beatmapset;
+        var beatmapset = respectiveBeatmap.Beatmapset!;
 
         var selectedMode = respectiveBeatmap.Mode != Mode.Osu
             ? respectiveBeatmap.Mode
@@ -56,8 +57,8 @@ public class BeatmapsetController(IBeatmapRepository beatmapRepository) : Contro
 
         var viewModel = new BeatmapsetViewModel
         {
-            Beatmapset = beatmapset,
-            Beatmaps = beatmaps,
+            Beatmapset = DbToApiObjectUtils.DbBeatmapsetToApiBeatmapset(beatmapset),
+            Beatmaps = beatmaps.Select(DbToApiObjectUtils.DbBeatmapToApiBeatmap).ToList(),
             SelectedBeatmapId = id,
             SelectedMode = selectedMode,
         };

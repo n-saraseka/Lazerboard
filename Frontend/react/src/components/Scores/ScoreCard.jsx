@@ -1,7 +1,7 @@
 import ModeWedge from "./ModeWedge.jsx";
 import {useContext, useState, useMemo} from "react";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
-import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
+import {getAcc, getPpColor, getRankTierColor} from "../../utils/score-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
 import StatusWedge from "./StatusWedge.jsx";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
@@ -61,7 +61,7 @@ function ScoreCard({score}) {
                     </strong>
                 </div>
                 <div className="scorecard-column">
-                    <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(score.accuracy * 100).toFixed(2)}%`}</strong>
+                    <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${getAcc(score.accuracy)}%`}</strong>
                 </div>
             </div>
             <div className="scorecard-row score-data">

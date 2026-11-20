@@ -1,5 +1,11 @@
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
-import {gradeEnumToGradeLetter, gradeEnumToGradeClass, getRankTierColor, getPpColor} from "../../utils/score-things.js";
+import {
+    gradeEnumToGradeLetter,
+    gradeEnumToGradeClass,
+    getRankTierColor,
+    getPpColor,
+    getAcc
+} from "../../utils/score-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useContext, useState, useMemo} from "react";
 import ScoreMods from "../Misc/ScoreMods.jsx";
@@ -37,7 +43,7 @@ function BeatmapScoreRow({score}) {
                 </span>
             </div>
         </td>
-        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
+        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${getAcc(score.accuracy)}%`}</td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
         <td className="score-misses">{score.statistics.countMiss > 0 && `${score.statistics.countMiss}x`}</td>
         <td className="score-row-pp" style={{color: getPpColor(themePreference, score.pp)}} title={`${score.pp == null? 'PP has not been calculated for this score' : score.pp.toFixed(3)}`}>

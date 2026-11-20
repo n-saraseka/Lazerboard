@@ -1,6 +1,7 @@
 import "chart.js/auto";
-import { Line, Bar } from 'react-chartjs-2'
-import { defaults, Chart } from 'chart.js'
+import { Line, Bar } from 'react-chartjs-2';
+import { defaults, Chart } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
 import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
@@ -64,8 +65,9 @@ function UserStats({data}) {
     };
     
     Chart.register(responsiveFontPlugin);
+    Chart.register(zoomPlugin);
     
-    let history, rankStats, starStats, speedStats;
+    let history, rankStats, starStats, speedStats, maxCount;
     
     if (data.history !== null) {
         let historyLabels = data.history.map((item) => YearMonthFromDateTime(item.month));
@@ -76,6 +78,7 @@ function UserStats({data}) {
             historyLabels.push(historyLabels[0]);
             historyData.push(historyData[0]);
         }
+        maxCount = historyData[historyData.length - 1];
         history = {
             labels: historyLabels,
             datasets: [{
@@ -138,6 +141,21 @@ function UserStats({data}) {
                         tooltip: {
                             mode: 'index',
                             intersect: false,
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                            },
                         }
                     },
                     elements: {

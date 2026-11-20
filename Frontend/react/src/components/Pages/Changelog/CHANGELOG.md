@@ -7,6 +7,12 @@
 - Fixed an issue with the accumulated scores count graph where 
 it wouldn't display the line graph if there was only one data point.
 
+### Backend
+
+#### Fixed
+- Fixed an issue with the stats endpoint where it would exclude the final day when
+filtering by date.
+
 ## Nov 19, 2026
 
 ### Web
@@ -72,28 +78,28 @@ it wouldn't display the line graph if there was only one data point.
 ### Web
 
 #### Fixed
-- Fixed incorrect pagination behavior due to debounce fixes from before
+- Fixed incorrect pagination behavior due to debounce fixes from before.
 
 ### Backend
 
 #### Changed
-- Include approved maps in ranked beatmaps filter
+- Include approved maps in ranked beatmaps filter.
 
 ## Nov 14, 2026
 
 ### Backend
 
 #### Added
-- Implement proper cache busting for static files on backend
+- Implement proper cache busting for static files on backend.
 - Moved scores count background service from score fetcher service to backend service.
 
 #### Fixed
-- The API now returns its own ApiUser DTO for all responses instead of raw DB data
+- The API now returns its own ApiUser DTO for all responses instead of raw DB data.
 
 ### Score fetcher
 
 #### Removed
-- Removed scores count background service
+- Removed scores count background service.
 
 ## Nov 13, 2026
 

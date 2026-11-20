@@ -205,14 +205,18 @@ public static class FilterUtils
 
         if (command.DateRange[0] != null)
         {
-            parameters.Add(new NpgsqlParameter("@dateMin", command.DateRange[0]));
+            var minDate = DateTime
+                .SpecifyKind(command.DateRange[0]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc);
+            parameters.Add(new NpgsqlParameter("@dateMin", minDate));
             filters.Add("date >= @dateMin");
         }
 
         if (command.DateRange[1] != null)
         {
-            parameters.Add(new NpgsqlParameter("@dateMax", command.DateRange[1]));
-            filters.Add("date <= @dateMax");
+            var maxDate = DateTime
+                .SpecifyKind(command.DateRange[1]!.Value.ToDateTime(new TimeOnly(0, 0)), DateTimeKind.Utc).AddDays(1);
+            parameters.Add(new NpgsqlParameter("@dateMax", maxDate));
+            filters.Add("date < @dateMax");
         }
 
 

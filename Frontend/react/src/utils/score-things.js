@@ -211,7 +211,7 @@ export function getPpColor(theme, pp) {
 
 export function getAcc(accuracy) {
     // Reference: https://github.com/ppy/osu-web/blob/7076b37b3d946a11fde212fae87a304212121069/resources/js/utils/score-helper.ts#L18-L20
-    return ((Math.floor(accuracy * 10000) / 10000) * 100).toFixed(2);
+    return Math.floor(accuracy * 10000) / 10000;
 } 
 
 export function createScoreQueryCommand(filters) {

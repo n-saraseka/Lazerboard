@@ -71,7 +71,7 @@ function ScoreRow({score}) {
             </div>
         </td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
-        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${getAcc(score.accuracy)}%`}</td>
+        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(getAcc(score.accuracy) * 100).toFixed(2)}%`}</td>
         <td className="score-misses">{score.statistics.countMiss > 0 && `${score.statistics.countMiss}x`}</td>
     </tr>)
 }

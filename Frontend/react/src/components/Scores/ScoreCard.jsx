@@ -61,7 +61,7 @@ function ScoreCard({score}) {
                     </strong>
                 </div>
                 <div className="scorecard-column">
-                    <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${getAcc(score.accuracy)}%`}</strong>
+                    <strong className={score.accuracy === 1 ? "score-perfect" : ""}>{`${(getAcc(score.accuracy) * 100).toFixed(2)}%`}</strong>
                 </div>
             </div>
             <div className="scorecard-row score-data">

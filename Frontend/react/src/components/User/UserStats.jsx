@@ -84,9 +84,9 @@ function UserStats({data}) {
         paceLastMonth = historyData.length === 0
             ? 0
             : historyData.length === 1 
-                ? historyData[historyData.length - 1] / Math.min(daysElapsedSinceDateTime(data.history[1].month), 30) 
+                ? historyData[historyData.length - 1] / Math.min(daysElapsedSinceDateTime(data.history[historyData.length - 1].month), 30) 
                 : (historyData[historyData.length - 1] - historyData[historyData.length - 2]) 
-                / Math.min(daysElapsedSinceDateTime(data.history[1].month), 30);
+                / Math.min(daysElapsedSinceDateTime(data.history[historyData.length - 1].month), 30);
         pace = pace.toFixed(2);
         paceLastMonth = paceLastMonth.toFixed(2);
         history = {

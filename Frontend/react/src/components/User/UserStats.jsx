@@ -68,11 +68,19 @@ function UserStats({data}) {
     let history, rankStats, starStats, speedStats;
     
     if (data.history !== null) {
+        let historyLabels = data.history.map((item) => YearMonthFromDateTime(item.month));
+        let historyData =  data.history.map((item) => item.monthlyCount);
+        // There won't be no line if there is only one data point. It's bad UI.
+        // So we do this duplication hack on the frontend side. The backend still returns only one data point as it should.
+        if (historyData.length === 1) {
+            historyLabels.push(historyLabels[0]);
+            historyData.push(historyData[0]);
+        }
         history = {
-            labels: data.history.map((item) => YearMonthFromDateTime(item.month)),
+            labels: historyLabels,
             datasets: [{
                 label: 'Count',
-                data: data.history.map((item) => item.monthlyCount),
+                data: historyData,
                 backgroundColor: themePreference === 'light' ? 'rgb(90, 90, 90)' : 'rgb(180, 180, 180)',
                 borderColor: themePreference === 'light' ? 'rgb(90, 90, 90)'  : 'rgb(180, 180, 180)',
                 pointRadius: 0

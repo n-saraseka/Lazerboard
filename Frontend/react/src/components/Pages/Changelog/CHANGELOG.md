@@ -1,3 +1,12 @@
+## Nov 20, 2026
+
+### Web
+
+#### Fixed
+
+- Fixed an issue with the accumulated scores count graph where 
+it wouldn't display the line graph if there was only one data point.
+
 ## Nov 19, 2026
 
 ### Web

@@ -41,6 +41,10 @@ export function timeElapsedFromDateTime(datetime) {
     return moment(datetime).fromNow();
 }
 
+export function daysElapsedSinceDateTime(datetime) {
+    return moment().diff(moment(datetime), 'days');
+}
+
 export function dateFromDateTime(datetime) {
     const date = new Date(datetime);
     const lang = navigator.languages[0] || navigator.language || navigator.browserLanguage;

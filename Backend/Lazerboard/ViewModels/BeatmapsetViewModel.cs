@@ -1,12 +1,12 @@
-using Lazerboard.Data.Database.Entities;
+using Lazerboard.Api.Dtos;
 using Lazerboard.Data.OsuEntities.Enums;
 
 namespace Lazerboard.ViewModels;
 
 public class BeatmapsetViewModel
 {
-    public Beatmapset Beatmapset { get; set; }
-    public List<Beatmap> Beatmaps { get; set; }
+    public ApiBeatmapset Beatmapset { get; set; }
+    public List<ApiBeatmap> Beatmaps { get; set; }
     public int SelectedBeatmapId { get; set; }
     public Mode SelectedMode { get; set; }
 }

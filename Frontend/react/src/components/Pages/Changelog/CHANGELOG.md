@@ -14,6 +14,7 @@ it wouldn't display the line graph if there was only one data point.
 #### Fixed
 - Fixed an issue with the stats endpoint where it would exclude the final day when
 filtering by date.
+- Fixed beatmap pages returning raw DB data instead of API data.
 
 ## Nov 19, 2026
 

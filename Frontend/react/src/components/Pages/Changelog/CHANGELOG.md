@@ -6,6 +6,7 @@
 
 - Fixed an issue with the accumulated scores count graph where 
 it wouldn't display the line graph if there was only one data point.
+- Fixed accuracy display not matching the osu! website and osu!lazer client.
 
 ### Backend
 

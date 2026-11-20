@@ -1,7 +1,7 @@
 import {beatmapStatusEnumToText, modeEnumToString, modeEnumToDisplayString} from "../../utils/beatmap-things.js";
 import {getEncodedCountry} from "../../utils/user-things.js";
 import {useContext, useState, useMemo} from "react";
-import {getPpColor, getRankTierColor} from "../../utils/score-things.js";
+import {getAcc, getPpColor, getRankTierColor} from "../../utils/score-things.js";
 import {dateFromDateTime, timeElapsedFromDateTime} from "../../utils/datetime-things.js";
 import ScoreMods from "../Misc/ScoreMods.jsx";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
@@ -71,7 +71,7 @@ function ScoreRow({score}) {
             </div>
         </td>
         <td className={`score-combo${score.isPerfectCombo ? " score-perfect" : ""}`}>{`${score.combo.toLocaleString('en-US')}x`}</td>
-        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(score.accuracy * 100).toFixed(2)}%`}</td>
+        <td className={`score-row-accuracy${score.accuracy === 1 ? " score-perfect" : ""}`}>{`${(getAcc(score.accuracy) * 100).toFixed(2)}%`}</td>
         <td className="score-misses">{score.statistics.countMiss > 0 && `${score.statistics.countMiss}x`}</td>
     </tr>)
 }

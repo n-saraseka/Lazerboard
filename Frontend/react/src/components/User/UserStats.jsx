@@ -88,6 +88,7 @@ function UserStats({data}) {
                 : (historyData[historyData.length - 1] - historyData[historyData.length - 2]) 
                 / Math.min(daysElapsedSinceDateTime(data.history[1].month), 30);
         pace = pace.toFixed(2);
+        paceLastMonth = paceLastMonth.toFixed(2);
         history = {
             labels: historyLabels,
             datasets: [{

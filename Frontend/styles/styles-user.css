@@ -93,14 +93,20 @@
 .chart-wrapper {
     position: relative;
     min-width: 0;
-    height: 300px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 1em;
     padding: 1em;
     border-radius: 1em;
     background-color: rgb(30, 30, 30);
     transition: background-color 0.3s ease-in-out;
+    min-height: 300px;
+    text-align: center;
+}
+
+.chart-wrapper canvas {
+    max-height: 300px;
 }
 
 .card-stats:has(.card-stats-column.collapsed) .card-stats-column:first-child {
@@ -145,6 +151,16 @@ body:has(.theme-preference.light) .chart-wrapper {
         grid-template-columns: 1fr;
     }
     .chart-wrapper {
-        height: 450px;
+        min-height: 450px;
     }
+    .chart-wrapper canvas {
+        max-height: 450px;
+    }
+    .gain-data {
+        font-size: 1.2em;
+    }
+}
+
+@media (max-width: 650px) {
+    font-size: 1.1em;
 }

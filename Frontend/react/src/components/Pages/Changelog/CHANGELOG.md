@@ -2,6 +2,10 @@
 
 ### Web
 
+#### Added
+- Added ability to zoom in, zoom out, and pan horizontally for the history graph
+- Added additional pace information to history graph (all time and last month's average scores gained per day)
+
 #### Fixed
 
 - Fixed an issue with the accumulated scores count graph where 

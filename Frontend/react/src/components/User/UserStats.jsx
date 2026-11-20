@@ -1,7 +1,8 @@
 import "chart.js/auto";
-import { Line, Bar } from 'react-chartjs-2'
-import { defaults, Chart } from 'chart.js'
-import {YearMonthFromDateTime} from "../../utils/datetime-things.js";
+import { Line, Bar } from 'react-chartjs-2';
+import { defaults, Chart } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
+import {daysElapsedSinceDateTime, YearMonthFromDateTime} from "../../utils/datetime-things.js";
 import {getDifficultyColor} from "../../utils/beatmap-things.js";
 import {getRankTierColor, getSpeedColor} from "../../utils/score-things.js";
 import {useContext, useMemo} from "react";
@@ -64,8 +65,9 @@ function UserStats({data}) {
     };
     
     Chart.register(responsiveFontPlugin);
+    Chart.register(zoomPlugin);
     
-    let history, rankStats, starStats, speedStats;
+    let history, rankStats, starStats, speedStats, pace, paceLastMonth;
     
     if (data.history !== null) {
         let historyLabels = data.history.map((item) => YearMonthFromDateTime(item.month));
@@ -76,6 +78,16 @@ function UserStats({data}) {
             historyLabels.push(historyLabels[0]);
             historyData.push(historyData[0]);
         }
+        pace = historyData.length === 0
+            ? 0
+            : historyData[historyData.length - 1] / daysElapsedSinceDateTime(data.history[0].month)
+        paceLastMonth = historyData.length === 0
+            ? 0
+            : historyData.length === 1 
+                ? historyData[historyData.length - 1] / Math.min(daysElapsedSinceDateTime(data.history[1].month), 30) 
+                : (historyData[historyData.length - 1] - historyData[historyData.length - 2]) 
+                / Math.min(daysElapsedSinceDateTime(data.history[1].month), 30);
+        pace = pace.toFixed(2);
         history = {
             labels: historyLabels,
             datasets: [{
@@ -138,6 +150,21 @@ function UserStats({data}) {
                         tooltip: {
                             mode: 'index',
                             intersect: false,
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                            },
                         }
                     },
                     elements: {
@@ -149,6 +176,7 @@ function UserStats({data}) {
                     responsive: true,
                     maintainAspectRatio: false,
                 }}/>
+                <span className="gain-data">Average gain: <strong>{pace} scores/day</strong> (last month: <strong>{paceLastMonth} scores/day)</strong></span>
             </div>
             <div className="chart-wrapper">
                 <Bar data={rankStats} options={{

@@ -22,11 +22,11 @@
 @supports not selector(::-webkit-scrollbar) {
     * {
         scrollbar-width: auto;
-        scrollbar-color: hsl(0, 0%, 40%) rgb(40, 40, 40);
+        scrollbar-color: hsl(0, 0%, 50%) rgba(0, 0, 0, 0);
     }
     
     html:has(.theme-preference-light) {
-        scrollbar-color: hsl(0, 0%, 45%) hsl(0, 0%, 60%);
+        scrollbar-color: hsl(0, 0%, 40%) rgba(0, 0, 0, 0);
     }
 }
 

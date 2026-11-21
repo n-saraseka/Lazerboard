@@ -1,3 +1,12 @@
+## Nov 21, 2026
+
+### Web
+
+#### Fixed
+
+- Fixed an issue where a user's profile would not render if they only had scores from one month.
+- Improved visibility of custom scrollbar.
+
 ## Nov 20, 2026
 
 ### Web

@@ -78,15 +78,18 @@ function UserStats({data}) {
             historyLabels.push(historyLabels[0]);
             historyData.push(historyData[0]);
         }
+        const firstMonth = historyData.length === 0 ? {} : data.history[0].month;
+        const lastMonth = historyData.length === 0 ? {} : data.history[historyData.length - 1].month;
         pace = historyData.length === 0
             ? 0
-            : historyData[historyData.length - 1] / daysElapsedSinceDateTime(data.history[0].month)
+            : historyData[historyData.length - 1] / Math.max(daysElapsedSinceDateTime(firstMonth), 1)
         paceLastMonth = historyData.length === 0
             ? 0
             : historyData.length === 1 
-                ? historyData[historyData.length - 1] / Math.min(daysElapsedSinceDateTime(data.history[historyData.length - 1].month), 30) 
+                ? historyData[historyData.length - 1]
+                / Math.min(Math.max(daysElapsedSinceDateTime(lastMonth), 1), 30) 
                 : (historyData[historyData.length - 1] - historyData[historyData.length - 2]) 
-                / Math.min(daysElapsedSinceDateTime(data.history[historyData.length - 1].month), 30);
+                / Math.min(Math.max(daysElapsedSinceDateTime(lastMonth), 1), 30);
         pace = pace.toFixed(2);
         paceLastMonth = paceLastMonth.toFixed(2);
         history = {

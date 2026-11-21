@@ -79,13 +79,13 @@ function UserStats({data}) {
             historyData.push(historyData[0]);
         }
         const firstMonth = historyData.length === 0 ? {} : data.history[0].month;
-        const lastMonth = historyData.length === 0 ? {} : data.history[historyData.length - 1].month;
-        pace = historyData.length === 0
+        const lastMonth = historyData.length === 0 ? {} : data.history[data.history.length - 1].month;
+        pace = data.history.length === 0
             ? 0
-            : historyData[historyData.length - 1] / Math.max(daysElapsedSinceDateTime(firstMonth), 1)
+            : historyData[data.history.length - 1] / Math.max(daysElapsedSinceDateTime(firstMonth), 1)
         paceLastMonth = historyData.length === 0
             ? 0
-            : historyData.length === 1 
+            : data.history.length === 1 
                 ? historyData[historyData.length - 1]
                 / Math.min(Math.max(daysElapsedSinceDateTime(lastMonth), 1), 30) 
                 : (historyData[historyData.length - 1] - historyData[historyData.length - 2]) 

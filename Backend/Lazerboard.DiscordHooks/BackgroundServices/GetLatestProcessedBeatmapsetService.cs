@@ -17,6 +17,7 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
     private ILogger<GetLatestProcessedBeatmapsetService> _logger;
     private readonly string _webhookUrl;
     private readonly TimeSpan _updateInterval;
+    private int? _latestBeatmapsetId;
     private System.Timers.Timer _updateTimer;
 
     public GetLatestProcessedBeatmapsetService(IServiceProvider serviceProvider, 
@@ -30,7 +31,7 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
         
         var webhooksConfig = config.GetSection("DiscordHooks");
         var beatmapScoresConfig = webhooksConfig.GetSection("BeatmapScores");
-        _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
+        _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl")!;
         _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
         
         _updateTimer = new System.Timers.Timer(_updateInterval.TotalMilliseconds);
@@ -43,11 +44,11 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
         _updateTimer.Enabled = true;
         try
         {
-            await GetLatestScannedBeatmapsetAsync(cancellationToken);
+            await GetLatestProcessedBeatmapsetAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.Log(LogLevel.Error, ex, "Latest processed map service failed!");
+            _logger.Log(LogLevel.Error, ex, "Latest processed mapset service failed!");
         }
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -61,7 +62,7 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
         {
             try
             {
-                await GetLatestScannedBeatmapsetAsync();
+                await GetLatestProcessedBeatmapsetAsync();
             }
             catch (Exception exception)
             {
@@ -71,22 +72,26 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
     }
 
     /// <summary>
-    /// Get the latest scanned beatmapset and post it via the Discord webhook
+    /// Get the latest processed beatmapset and post it via the Discord webhook
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
-    private async Task GetLatestScannedBeatmapsetAsync(CancellationToken cancellationToken = default)
+    private async Task GetLatestProcessedBeatmapsetAsync(CancellationToken cancellationToken = default)
     {
         var beatmaps = await GetBeatmapsDataAsync(cancellationToken);
         if (beatmaps.Count > 0)
         {
-            var embed = BuildBeatmapsetEmbed(beatmaps);
-                    
-            using var client = new DiscordWebhookClient(_webhookUrl);
-                    
             var beatmapsetId = beatmaps.First().BeatmapsetId;
-            _logger.Log(LogLevel.Information, "Latest processed beatmapset ID: {beatmapId}", beatmapsetId);
+            if (_latestBeatmapsetId == null || beatmapsetId != _latestBeatmapsetId)
+            {
+                _latestBeatmapsetId = beatmapsetId;
+                var embed = BuildBeatmapsetEmbed(beatmaps);
+                    
+                using var client = new DiscordWebhookClient(_webhookUrl);
             
-            await client.SendMessageAsync("Latest processed beatmapset:", false, [embed]);
+                _logger.Log(LogLevel.Information, "Latest processed beatmapset ID: {beatmapId}", beatmapsetId);
+            
+                await client.SendMessageAsync("Latest processed beatmapset:", false, [embed]);
+            }
         }
     }
     
@@ -97,8 +102,6 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
     /// <returns>List of <see cref="Beatmap"/>s</returns>
     private async Task<List<Beatmap>> GetBeatmapsDataAsync(CancellationToken cancellationToken)
     {
-        _logger.Log(LogLevel.Information, "Getting latest processed beatmapset...");
-        
         using var scope = _serviceProvider.CreateScope();
         
         var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
@@ -115,7 +118,7 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
     private Embed BuildBeatmapsetEmbed(IList<Beatmap> beatmaps)
     {
         var firstBeatmap = beatmaps.First();
-        var beatmapset = firstBeatmap.Beatmapset;
+        var beatmapset = firstBeatmap.Beatmapset!;
         var title = $"{beatmapset.Artist} - {beatmapset.Title}";
         
         var mainMode = EmbedUtils.GetMainMode(beatmaps);
@@ -146,7 +149,7 @@ public class GetLatestProcessedBeatmapsetService : BackgroundService
             Timestamp = timestamp,
             Footer = new EmbedFooterBuilder
             {
-                Text = "Lazerboard: new beatmaps"
+                Text = "Lazerboard: new beatmapsets"
             }
         };
         return builder.Build();

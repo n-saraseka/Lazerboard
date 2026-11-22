@@ -3,6 +3,7 @@ import { useContext } from "react";
 import {UserContext} from "../Misc/UserContext.jsx";
 import ReportButton from "../Inputs/ReportButton.jsx";
 import RestrictedIndicator from "./RestrictedIndicator.jsx";
+import UserGroupLabel from "./UserGroupLabel.jsx";
 
 function UserCard({user, scoreCount, filteredCount}) {
     const { currentUser, setCurrentUser } = useContext(UserContext);
@@ -24,6 +25,7 @@ function UserCard({user, scoreCount, filteredCount}) {
                             {currentUser !== null && (
                                 (currentUser.id !== user.id && !user.isRestricted) && (<ReportButton user={user}/>)
                             )}
+                            {user.userGroups[0] !== 0 && (<UserGroupLabel group={user.userGroups[user.userGroups.length - 1]}/>)}
                             {user.isRestricted && (<RestrictedIndicator/>)}
                         </div>
                     </div>

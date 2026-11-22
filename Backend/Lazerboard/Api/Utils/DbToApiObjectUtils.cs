@@ -11,7 +11,8 @@ public static class DbToApiObjectUtils
         Username = user.Username,
         CountryCode = user.CountryCode,
         Country = user.Country,
-        IsRestricted = user.IsRestricted
+        IsRestricted = user.IsRestricted,
+        UserGroups = user.UserGroups,
     };
 
     public static ApiBeatmapset DbBeatmapsetToApiBeatmapset(Beatmapset beatmapset) => new()

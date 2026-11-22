@@ -1,4 +1,4 @@
-import UserSearchResult from '../../components/User/UserSearchResult';
+import UserSearchResult from '../../components/Header/UserSearchResult.jsx';
 
 import './styles/UserSearchResult.css';
 

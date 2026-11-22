@@ -27,7 +27,7 @@ public class ApiUser
     /// <summary>
     /// The user's UserGroups
     /// </summary>
-    public UserGroup[] UserGroups { get; set; } = [];
+    public List<UserGroup> UserGroups { get; set; } = [];
     /// <summary>
     /// Whether the user is banned/deleted on osu! or not
     /// </summary>

@@ -22,11 +22,11 @@ function UserCard({user, scoreCount, filteredCount}) {
                                 title={user.countryCode === null ? 'Unknown' : user.country.name}
                                 className="country-img"/>
                             <a href={`https://osu.ppy.sh/users/${user.id}`} className="user-name">{user.username}</a>
+                            {user.userGroups[0] !== 0 && (<UserGroupLabel group={user.userGroups[user.userGroups.length - 1]}/>)}
+                            {user.isRestricted && (<RestrictedIndicator/>)}
                             {currentUser !== null && (
                                 (currentUser.id !== user.id && !user.isRestricted) && (<ReportButton user={user}/>)
                             )}
-                            {user.userGroups[0] !== 0 && (<UserGroupLabel group={user.userGroups[user.userGroups.length - 1]}/>)}
-                            {user.isRestricted && (<RestrictedIndicator/>)}
                         </div>
                     </div>
                 </div>

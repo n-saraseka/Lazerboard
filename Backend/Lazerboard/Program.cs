@@ -232,7 +232,7 @@ builder.Services.AddScoped<IScoreCacheRepository, ScoreCacheRepository>();
 builder.Services.AddScoped<IOsuApiFetcher, OsuApiFetcher>();
 
 // Background services
-builder.Services.AddHostedService<ScoresCountService>();
+builder.Services.AddHostedService<CountService>();
 
 // Logs
 builder.Host.UseSerilog((context, services, configuration) =>

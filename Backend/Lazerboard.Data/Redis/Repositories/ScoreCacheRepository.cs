@@ -25,22 +25,6 @@ public class ScoreCacheRepository (IConnectionMultiplexer connectionMultiplexer)
         return (bool)value;
     }
 
-    public async Task<int?> GetAllScoresCountAsync()
-    {
-        var key = "scores-count";
-        var db = connectionMultiplexer.GetDatabase();
-        var value = await db.StringGetAsync(key);
-        return (int?)value;
-    }
-
-    public async Task<int> SetAllScoresCountAsync(int scoreCount, TimeSpan ttl)
-    {
-        var key = "scores-count";
-        var db = connectionMultiplexer.GetDatabase();
-        var value = await db.StringSetAndGetAsync(key, scoreCount, ttl);
-        return (int)value;
-    }
-
     public async Task<string?> GetSerializedResponseAsync(string key)
     {
         var db = connectionMultiplexer.GetDatabase();

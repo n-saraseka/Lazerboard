@@ -57,7 +57,7 @@ function Page({currentPage, scoresCount, pageComponent}) {
                 <div className="container">
                     {pageComponent}
                 </div>
-                <Footer scoresCount={scoresCount}/>
+                <Footer countsData={scoresCount}/>
             </PreferencesContext.Provider>
         </UserContext.Provider>
     </>

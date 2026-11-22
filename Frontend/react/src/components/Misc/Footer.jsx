@@ -1,6 +1,7 @@
 import DatabaseState from "./DatabaseState.jsx";
 
-function Footer({scoresCount}) {
+function Footer({countsData}) {
+    const data = countsData === "" ? "" : JSON.parse(countsData);
     return <footer>
         <div className="score-fetcher-stuff">
             <div>
@@ -8,7 +9,11 @@ function Footer({scoresCount}) {
             </div>
             <ul className="footer-links">
                 <li>
-                    Scores count: <strong>{scoresCount}</strong>
+                    {data === ""
+                        ? "Counts data not available" 
+                        : (<>
+                            <span>Storing <strong>{data.scoresCount}</strong> scores set by <strong>{data.usersCount}</strong> users (<strong>{data.registeredUsersCount}</strong> registered)</span>
+                        </>) }
                 </li>
                 <li className="db-state">
                     <DatabaseState/>

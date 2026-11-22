@@ -180,7 +180,7 @@ function UserStats({data}) {
                     responsive: true,
                     maintainAspectRatio: false,
                 }}/>
-                <span className="gain-data">Average gain: <strong>{pace} scores/day</strong> (last month: <strong>{paceLastMonth} scores/day)</strong></span>
+                <span className="gain-data">Average pace: <strong>{pace} scores/day</strong> (last month: <strong>{paceLastMonth} scores/day)</strong></span>
             </div>
             <div className="chart-wrapper">
                 <Bar data={rankStats} options={{

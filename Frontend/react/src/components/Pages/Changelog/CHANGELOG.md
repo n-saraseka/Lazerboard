@@ -2,9 +2,13 @@
 
 ### Web
 
+#### Added
+
+- Implemented user group display on user profiles.
+
 #### Changed
 
-- Replace footer links for source code, Discord server etc. with appropriate icons
+- Replaced footer links for source code, Discord server etc. with appropriate icons.
 
 ## Nov 21, 2026
 

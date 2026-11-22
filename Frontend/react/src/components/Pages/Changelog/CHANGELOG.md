@@ -5,6 +5,7 @@
 #### Added
 
 - Implemented user group display on user profiles.
+- Added users count to footer.
 
 #### Changed
 

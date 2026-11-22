@@ -1,16 +1,18 @@
+using Lazerboard.Data.Database.Entities.Enums;
 using Lazerboard.Data.Database.Repositories.Interfaces;
 using Lazerboard.Data.Redis.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Lazerboard.BackgroundServices;
 
-public class ScoresCountService : BackgroundService
+public class CountService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ScoresCountService> _logger;
+    private readonly ILogger<CountService> _logger;
     private readonly int _updateInterval;
 
-    public ScoresCountService(IServiceProvider serviceProvider, ILogger<ScoresCountService> logger)
+    public CountService(IServiceProvider serviceProvider, ILogger<CountService> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -28,12 +30,27 @@ public class ScoresCountService : BackgroundService
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var scoresRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
+                var scoreRepository = scope.ServiceProvider.GetRequiredService<IScoreRepository>();
+                var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
                 var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
 
-                var scoresCount = await scoresRepository.GetAll().CountAsync(stoppingToken);
+                var scoresCount = await scoreRepository.GetAll().CountAsync(stoppingToken);
                 _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
-                await scoreCacheRepository.SetAllScoresCountAsync(scoresCount, TimeSpan.FromMinutes(_updateInterval + 10));
+                
+                var usersCount = await userRepository.GetAll().CountAsync(stoppingToken);
+                var registeredUsersCount = await userRepository.GetAll()
+                    .Where(u => u.UserGroups.Any(u => u == UserGroup.RegisteredUser))
+                    .CountAsync(stoppingToken);
+
+                var countsData = new CountsData
+                {
+                    ScoresCount = scoresCount,
+                    UsersCount = usersCount,
+                    RegisteredUsersCount = registeredUsersCount
+                };
+                var serializedData = JsonConvert.SerializeObject(countsData);
+                await scoreCacheRepository.SetSerializedResponseAsync("counts-data", serializedData, 
+                    TimeSpan.FromMinutes(_updateInterval + 30));
 
                 await Task.Delay(TimeSpan.FromMinutes(_updateInterval), stoppingToken);
             }

@@ -17,10 +17,10 @@ function Footer({scoresCount}) {
         </div>
         <div className="meta-stuff">
             <ul className="footer-links">
-                <li><a href="https://github.com/n-saraseka/Lazerboard/"><strong>Source code</strong></a></li>
-                <li><a href="https://discord.com/invite/Z3rWRrznfd">Discord</a></li>
-                <li><a href="https://www.donationalerts.com/r/somemelguy">Support project</a></li>
-                <li><a href="/docs">API documentation</a></li>
+                <li><a href="https://discord.com/invite/Z3rWRrznfd"><div className="footer-icon discord" title="Discord server"></div></a></li>
+                <li><a href="https://www.donationalerts.com/r/somemelguy"><div className="footer-icon support" title="Support project"></div></a></li>
+                <li><a href="https://github.com/n-saraseka/Lazerboard/"><div className="footer-icon github" title="Source code"></div></a></li>
+                <li><a href="/docs"><div className="footer-icon docs" title="API documentation"></div></a></li>
             </ul>
         </div>
     </footer>

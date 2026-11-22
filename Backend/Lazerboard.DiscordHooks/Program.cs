@@ -33,6 +33,9 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<Grade>("grade")
                     .MapEnum<BeatmapStatus>("beatmap_status")
                     .MapEnum<ScoreSource>("score_source")
+                    .MapEnum<ScanEventType>("scan_event_type")
+                    .MapEnum<ReportStatus>("report_status")
+                    .MapEnum<UserGroup>("user_group")
                     .CommandTimeout(300))
             .UseSnakeCaseNamingConvention());
 

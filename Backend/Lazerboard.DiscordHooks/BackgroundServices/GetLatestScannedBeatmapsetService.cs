@@ -17,6 +17,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
     private ILogger<GetLatestScannedBeatmapsetService> _logger;
     private readonly string _webhookUrl;
     private readonly TimeSpan _updateInterval;
+    private int? _latestBeatmapsetId;
     private System.Timers.Timer _updateTimer;
 
     public GetLatestScannedBeatmapsetService(IServiceProvider serviceProvider, 
@@ -30,7 +31,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         
         var webhooksConfig = config.GetSection("DiscordHooks");
         var beatmapScoresConfig = webhooksConfig.GetSection("Scans");
-        _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl");
+        _webhookUrl = beatmapScoresConfig.GetValue<string>("HookUrl")!;
         _updateInterval = TimeSpan.FromMinutes(beatmapScoresConfig.GetValue<int>("UpdateIntervalMinutes"));
         
         _updateTimer = new System.Timers.Timer(_updateInterval.TotalMilliseconds);
@@ -79,14 +80,18 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
         var beatmaps = await GetBeatmapsDataAsync(cancellationToken);
         if (beatmaps.Count > 0)
         {
-            var embed = BuildBeatmapsetEmbed(beatmaps);
-                    
-            using var client = new DiscordWebhookClient(_webhookUrl);
-                    
             var beatmapsetId = beatmaps.First().BeatmapsetId;
-            _logger.Log(LogLevel.Information, "Latest scanned beatmapset ID: {beatmapId}", beatmapsetId);
+            if (_latestBeatmapsetId == null || beatmapsetId != _latestBeatmapsetId)
+            {
+                _latestBeatmapsetId = beatmapsetId;
+                var embed = BuildBeatmapsetEmbed(beatmaps);
+                    
+                using var client = new DiscordWebhookClient(_webhookUrl);
             
-            await client.SendMessageAsync("Latest scanned beatmapset:", false, [embed]);
+                _logger.Log(LogLevel.Information, "Latest scanned beatmapset ID: {beatmapId}", beatmapsetId);
+            
+                await client.SendMessageAsync("Latest scanned beatmapset:", false, [embed]);
+            }
         }
     }
     
@@ -97,8 +102,6 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
     /// <returns>List of <see cref="Beatmap"/>s</returns>
     private async Task<List<Beatmap>> GetBeatmapsDataAsync(CancellationToken cancellationToken)
     {
-        _logger.Log(LogLevel.Information, "Getting latest scanned beatmapset...");
-        
         using var scope = _serviceProvider.CreateScope();
         
         var beatmapRepository = scope.ServiceProvider.GetRequiredService<IBeatmapRepository>();
@@ -132,7 +135,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
     private Embed BuildBeatmapsetEmbed(IList<Beatmap> beatmaps)
     {
         var firstBeatmap = beatmaps.First();
-        var beatmapset = firstBeatmap.Beatmapset;
+        var beatmapset = firstBeatmap.Beatmapset!;
         var title = $"{beatmapset.Artist} - {beatmapset.Title}";
         
         var mainMode = EmbedUtils.GetMainMode(beatmaps);
@@ -163,7 +166,7 @@ public class GetLatestScannedBeatmapsetService : BackgroundService
             Timestamp = timestamp,
             Footer = new EmbedFooterBuilder
             {
-                Text = "Lazerboard: Beatmap scans"
+                Text = "Lazerboard: Beatmapset scans"
             }
         };
         return builder.Build();

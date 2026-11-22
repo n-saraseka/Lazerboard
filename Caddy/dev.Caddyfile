@@ -2,10 +2,6 @@ lazer.board {
     tls internal
     encode gzip
     
-    handle /api/fetcher/* {
-        reverse_proxy scorefetcher:8080
-    }
-    
     handle /* {
         reverse_proxy backend:8080
     }

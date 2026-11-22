@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Threading.RateLimiting;
+using Lazerboard.Api;
 using Lazerboard.Api.OpenApiFilters;
 using Lazerboard.BackgroundServices;
 using Lazerboard.Data.ApiFetchers;
@@ -279,6 +280,9 @@ builder.Services.AddSwaggerGen(options =>
     options.ParameterFilter<DescriptionParameterFilter>();
     options.OperationFilter<SummaryDescriptionOperationFilter>();
 });
+
+builder.Services.AddHttpClient<FetcherController>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
     
 var app = builder.Build();
 

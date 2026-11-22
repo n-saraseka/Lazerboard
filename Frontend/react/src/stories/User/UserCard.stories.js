@@ -13,13 +13,15 @@ export default {
 
 const mockProps = {
     user: {
-        id: 8706541,
-        username: 'SomeMelGuy',
-        countryCode: 'UA',
+        id: 34446270,
+        username: "Drop",
+        countryCode: "US", 
         country: {
-            id: 'UA',
-            name: 'Ukraine'
-        }
+            id: "US",
+            name: "United States"
+        },
+        userGroups: [],
+        isRestricted: false
     },
     scoreCount: 125
 };

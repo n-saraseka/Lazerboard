@@ -1,0 +1,73 @@
+.user-label {
+    padding: 0.25em;
+    border-radius: 0.15em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-label-img {
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    background-color: white;
+    width: 1em;
+    height: 1em;
+}
+
+.user-label.registered {
+    background-color: hsl(130, 40%, 50%);
+}
+
+.user-label.supporter {
+    background-color: hsl(335, 40%, 60%);
+}
+
+.user-label.moderator {
+    background-color: hsl(45, 60%, 40%);
+}
+
+.user-label.administrator {
+    background-color: hsl(216, 40%, 55%);
+}
+
+.user-label.restricted {
+    background-color: hsl(0, 40%, 55%);
+}
+
+.user-label.unknown {
+    background-color: rgb(128, 128, 128);
+}
+
+.user-label.registered .user-label-img {
+    mask-image: url("../../images/user.svg");
+    -webkit-mask-image: url("../../images/user.svg");
+}
+
+.user-label.supporter .user-label-img {
+    mask-image: url("../../images/loved.svg");
+    -webkit-mask-image: url("../../images/loved.svg");
+}
+
+.user-label.moderator .user-label-img {
+    mask-image: url("../../images/gavel.svg");
+    -webkit-mask-image: url("../../images/gavel.svg");
+}
+
+.user-label.administrator .user-label-img {
+    mask-image: url("../../images/star.svg");
+    -webkit-mask-image: url("../../images/star.svg");
+}
+
+.user-label.restricted .user-label-img {
+    mask-image: url("../../images/ban.svg");
+    -webkit-mask-image: url("../../images/ban.svg");
+}
+
+.user-label.unknown .user-label-img {
+    mask-image: url("../../images/question.svg");
+    -webkit-mask-image: url("../../images/question.svg");
+}

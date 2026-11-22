@@ -1,3 +1,11 @@
+## Nov 22, 2026
+
+### Web
+
+#### Changed
+
+- Replace footer links for source code, Discord server etc. with appropriate icons
+
 ## Nov 21, 2026
 
 ### Web

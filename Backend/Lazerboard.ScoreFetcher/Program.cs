@@ -221,34 +221,6 @@ builder.Services.AddHostedService<BeatmapsetUpdatesService>();
 builder.Services.AddHostedService<ReportedUserUpdatesService>();
 #endregion
 
-// Rate limiting
-builder.Services.AddRateLimiter(options =>
-{
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        RateLimitPartition.GetTokenBucketLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "default",
-            factory: partition => new TokenBucketRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-                TokenLimit = 15,
-                TokensPerPeriod = 1,
-                QueueLimit = 3,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            }
-        ));
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-        {
-            context.HttpContext.Response.Headers["Retry-After"] = $"{(int)retryAfter.TotalSeconds}";
-        }
-
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken);
-    };
-});
-
 // Logs
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(new LoggerConfiguration()
@@ -258,8 +230,6 @@ builder.Logging.AddSerilog(new LoggerConfiguration()
 builder.Services.AddControllers();
 
 var app = builder.Build();
-
-app.UseRateLimiter();
 
 app.MapControllers();
 

@@ -69,11 +69,11 @@ public class OAuthController(ILogger<OAuthController> logger,
         var existingUser = await userRepository.GetByIdAsync(user.Id, ct);
         if (existingUser is null)
         {
-            var dbUser = osuEntityToDtoService.UserEntityToDto(user);
-            dbUser.UserGroups.Add(UserGroup.RegisteredUser);
-            dbUser.RegisteredAt = DateTimeOffset.UtcNow;
-            logger.Log(LogLevel.Information, "osu! user {userID} has registered", dbUser.Id);
-            userRepository.Create(dbUser);
+            existingUser = osuEntityToDtoService.UserEntityToDto(user);
+            existingUser.UserGroups.Add(UserGroup.RegisteredUser);
+            existingUser.RegisteredAt = DateTimeOffset.UtcNow;
+            logger.Log(LogLevel.Information, "osu! user {userID} has registered", existingUser.Id);
+            userRepository.Create(existingUser);
         }
         else
         {
@@ -100,7 +100,8 @@ public class OAuthController(ILogger<OAuthController> logger,
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, user.Id.ToString()),
+            new(ClaimTypes.Name, existingUser.Id.ToString()),
+            new(ClaimTypes.Role, existingUser.UserGroups.Max().ToString())
         };
 
         var id = new ClaimsIdentity(claims, "InternalCookies");

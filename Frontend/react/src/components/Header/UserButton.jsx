@@ -10,6 +10,7 @@ function UserButton({user}) {
         {showDropdown && (
             <div className="header-user-dropdown">
                 <a href={`/users/${user.id}`}>Profile</a>
+                {user.userGroups.includes(4) && (<a href="/adminpanel">Admin panel</a>)}
                 <a href="/oauth/signout">Log out</a>
             </div>
         )}

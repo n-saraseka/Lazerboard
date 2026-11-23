@@ -303,6 +303,9 @@ app.Use((context, next) =>
 
 app.UseStaticFiles();
 
+app.UseStatusCodePagesWithReExecute("/{0}");
+app.UseExceptionHandler("/500");
+
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -320,9 +323,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerUI();
 }
-
-app.UseStatusCodePagesWithReExecute("/{0}");
-app.UseExceptionHandler("/500");
 
 app.UseDefaultFiles();
 app.UseHttpsRedirection();
@@ -371,6 +371,11 @@ app.MapControllerRoute(
     name: "changelog",
     pattern: "changelog",
     defaults: new { controller = "General", action = "Changelog" });
+
+app.MapControllerRoute(
+    name: "adminpanel",
+    pattern: "adminpanel",
+    defaults: new { controller = "Admin", action = "AdminPage" });
 
 app.MapControllers();
 

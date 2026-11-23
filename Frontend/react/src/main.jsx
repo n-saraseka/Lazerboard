@@ -9,6 +9,8 @@ import ScoreRankingPage from './components/Pages/ScoreRankingPage.jsx';
 import ManiaRankingPage from './components/Pages/ManiaRankingPage.jsx';
 import AboutPage from './components/Pages/AboutPage.jsx';
 import ChangelogPage from './components/Pages/Changelog/ChangelogPage.jsx';
+import AdminPage from './components/Pages/AdminPage.jsx';
+import UnauthorizedPage from './components/Pages/UnauthorizedPage.jsx';
 import ErrorPage from './components/Pages/ErrorPage.jsx';
 import NotFoundPage from './components/Pages/NotFoundPage.jsx';
 
@@ -23,6 +25,8 @@ const allComponents = {
     "changelog": ChangelogPage,
     "error": ErrorPage,
     "notfound": NotFoundPage,
+    "adminpanel": AdminPage,
+    "unauthorized": UnauthorizedPage,
 };
 
 function getPage(url) {
@@ -38,7 +42,9 @@ document.querySelectorAll(".react-app").forEach((el) => {
     const dataPage = el.getAttribute("data-page");
     const count = el.getAttribute("data-count");
 
-    const Component = allComponents[page] ?? allComponents[dataPage] ?? NotFoundPage;
+    const Component = dataPage !== null 
+        ? allComponents[dataPage] ?? NotFoundPage
+        : allComponents[page] ?? NotFoundPage;
 
     if (Component) {
         const rawProps = el.getAttribute("data-props");

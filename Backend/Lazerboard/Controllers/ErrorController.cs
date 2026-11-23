@@ -24,4 +24,14 @@ public class ErrorController : Controller
     {
         return View();
     }
+    
+    /// <summary>
+    /// The placeholder page to return if received HTTP response status code 401
+    /// </summary>
+    /// <returns>The appropriate view</returns>
+    [Route("401")]
+    public IActionResult UnauthorizedError()
+    {
+        return View();
+    }
 }

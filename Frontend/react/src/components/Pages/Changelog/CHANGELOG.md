@@ -1,3 +1,11 @@
+## Nov 23, 2026
+
+### Web
+
+#### Fixed
+
+- Fixed some pages not rendering after latest counts update.
+
 ## Nov 22, 2026
 
 ### Web

@@ -18,36 +18,35 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .WithMany()
             .HasForeignKey(s => s.UserId);
         builder
-            .HasIndex(s => s.UserId);
-        builder
             .HasIndex(s => s.BeatmapId);
         // User scores index
         builder
-            .HasIndex(s => new { s.UserId, s.IsConvert, s.Mode, s.Date });
+            .HasIndex(s => new { s.UserId, s.Date });
         // Global scores index
         builder
-            .HasIndex(s => new { s.IsConvert, s.Mode, s.Date });
+            .HasIndex(s => new { s.Date });
         // User graph indexes
         builder
-            .HasIndex(s => new { s.UserId, s.BeatmapId, s.Mode });
+            .HasIndex(s => new { s.UserId, s.BeatmapId});
         builder
-            .HasIndex(s => new { s.UserId, s.SpeedChange, s.Mode });
+            .HasIndex(s => new { s.UserId, s.SpeedChange});
         builder
-            .HasIndex(s => new { s.UserId, s.Rank, s.Mode });
-        // Incoming scores index
+            .HasIndex(s => new { s.UserId, s.Rank});
         builder
-            .HasIndex(s => new { s.BeatmapId, s.Mode, s.TotalScore, s.Date });
+            .HasIndex(s => new { s.UserId, s.Mode});
         // Filter specific indexes
         builder
-            .HasIndex(s => new { s.Mode, s.SpeedChange, s.UserId });
+            .HasIndex(s => new { s.SpeedChange, s.UserId });
         builder
-            .HasIndex(s => new { s.Mode, s.Accuracy, s.UserId });
+            .HasIndex(s => new { s.Accuracy, s.UserId });
         builder
-            .HasIndex(s => new { s.Mode, s.PP, s.UserId });
+            .HasIndex(s => new { s.PP, s.UserId });
         builder
             .HasIndex(s => new { s.BeatmapId, s.UserId });
         builder
-            .HasIndex(s => s.ScoreSource);
+            .HasIndex(s => new { s.Rank, s.UserId });
+        builder
+            .HasIndex(s => new { s.Mode, s.UserId });
         builder.ComplexProperty(s => s.Statistics, stats => stats.ToJson());
     }
 }

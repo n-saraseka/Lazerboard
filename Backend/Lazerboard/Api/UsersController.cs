@@ -41,7 +41,7 @@ public class UsersController(IScoreRepository scoreRepository,
 
         if (user is null)
         {
-            logger.Log(LogLevel.Information, $"User {UserId} not found, logging out...");
+            logger.Log(LogLevel.Information, "User {UserId} not found, logging out...", UserId);
             await HttpContext.SignOutAsync("InternalCookies");
 
             return Forbid();

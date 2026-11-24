@@ -391,41 +391,41 @@ namespace OsuScoreStats.Migrations
                     b.HasIndex("BeatmapId")
                         .HasDatabaseName("ix_scores_beatmap_id");
 
-                    b.HasIndex("ScoreSource")
-                        .HasDatabaseName("ix_scores_score_source");
+                    b.HasIndex("Date")
+                        .HasDatabaseName("ix_scores_date");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_scores_user_id");
+                    b.HasIndex("Accuracy", "UserId")
+                        .HasDatabaseName("ix_scores_accuracy_user_id");
 
                     b.HasIndex("BeatmapId", "UserId")
                         .HasDatabaseName("ix_scores_beatmap_id_user_id");
 
-                    b.HasIndex("IsConvert", "Mode", "Date")
-                        .HasDatabaseName("ix_scores_is_convert_mode_date");
+                    b.HasIndex("Mode", "UserId")
+                        .HasDatabaseName("ix_scores_mode_user_id");
 
-                    b.HasIndex("Mode", "Accuracy", "UserId")
-                        .HasDatabaseName("ix_scores_mode_accuracy_user_id");
+                    b.HasIndex("PP", "UserId")
+                        .HasDatabaseName("ix_scores_pp_user_id");
 
-                    b.HasIndex("Mode", "PP", "UserId")
-                        .HasDatabaseName("ix_scores_mode_pp_user_id");
+                    b.HasIndex("Rank", "UserId")
+                        .HasDatabaseName("ix_scores_rank_user_id");
 
-                    b.HasIndex("Mode", "SpeedChange", "UserId")
-                        .HasDatabaseName("ix_scores_mode_speed_change_user_id");
+                    b.HasIndex("SpeedChange", "UserId")
+                        .HasDatabaseName("ix_scores_speed_change_user_id");
 
-                    b.HasIndex("UserId", "BeatmapId", "Mode")
-                        .HasDatabaseName("ix_scores_user_id_beatmap_id_mode");
+                    b.HasIndex("UserId", "BeatmapId")
+                        .HasDatabaseName("ix_scores_user_id_beatmap_id");
 
-                    b.HasIndex("UserId", "Rank", "Mode")
-                        .HasDatabaseName("ix_scores_user_id_rank_mode");
+                    b.HasIndex("UserId", "Date")
+                        .HasDatabaseName("ix_scores_user_id_date");
 
-                    b.HasIndex("UserId", "SpeedChange", "Mode")
-                        .HasDatabaseName("ix_scores_user_id_speed_change_mode");
+                    b.HasIndex("UserId", "Mode")
+                        .HasDatabaseName("ix_scores_user_id_mode");
 
-                    b.HasIndex("BeatmapId", "Mode", "TotalScore", "Date")
-                        .HasDatabaseName("ix_scores_beatmap_id_mode_total_score_date");
+                    b.HasIndex("UserId", "Rank")
+                        .HasDatabaseName("ix_scores_user_id_rank");
 
-                    b.HasIndex("UserId", "IsConvert", "Mode", "Date")
-                        .HasDatabaseName("ix_scores_user_id_is_convert_mode_date");
+                    b.HasIndex("UserId", "SpeedChange")
+                        .HasDatabaseName("ix_scores_user_id_speed_change");
 
                     b.ToTable("scores", (string)null);
                 });

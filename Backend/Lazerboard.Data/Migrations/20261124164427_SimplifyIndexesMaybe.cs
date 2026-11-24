@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Lazerboard.Data.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,101 +11,101 @@ namespace OsuScoreStats.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_beatmap_id_mode_total_score_date",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_is_convert_mode_date",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_mode_accuracy_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_mode_pp_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_mode_speed_change_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_score_source",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_beatmap_id_mode",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_is_convert_mode_date",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_rank_mode",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_speed_change_mode",
                 table: "scores");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_accuracy_user_id",
                 table: "scores",
                 columns: new[] { "accuracy", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_date",
                 table: "scores",
                 column: "date");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_mode_user_id",
                 table: "scores",
                 columns: new[] { "mode", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_pp_user_id",
                 table: "scores",
                 columns: new[] { "pp", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_rank_user_id",
                 table: "scores",
                 columns: new[] { "rank", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_speed_change_user_id",
                 table: "scores",
                 columns: new[] { "speed_change", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_beatmap_id",
                 table: "scores",
                 columns: new[] { "user_id", "beatmap_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_date",
                 table: "scores",
                 columns: new[] { "user_id", "date" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_mode",
                 table: "scores",
                 columns: new[] { "user_id", "mode" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_rank",
                 table: "scores",
                 columns: new[] { "user_id", "rank" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_speed_change",
                 table: "scores",
                 columns: new[] { "user_id", "speed_change" });
@@ -113,101 +114,101 @@ namespace OsuScoreStats.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_accuracy_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_date",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_mode_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_pp_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_rank_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_speed_change_user_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_beatmap_id",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_date",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_mode",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_rank",
                 table: "scores");
 
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_user_id_speed_change",
                 table: "scores");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_beatmap_id_mode_total_score_date",
                 table: "scores",
                 columns: new[] { "beatmap_id", "mode", "total_score", "date" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_is_convert_mode_date",
                 table: "scores",
                 columns: new[] { "is_convert", "mode", "date" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_mode_accuracy_user_id",
                 table: "scores",
                 columns: new[] { "mode", "accuracy", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_mode_pp_user_id",
                 table: "scores",
                 columns: new[] { "mode", "pp", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_mode_speed_change_user_id",
                 table: "scores",
                 columns: new[] { "mode", "speed_change", "user_id" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_score_source",
                 table: "scores",
                 column: "score_source");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id",
                 table: "scores",
                 column: "user_id");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_beatmap_id_mode",
                 table: "scores",
                 columns: new[] { "user_id", "beatmap_id", "mode" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_is_convert_mode_date",
                 table: "scores",
                 columns: new[] { "user_id", "is_convert", "mode", "date" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_rank_mode",
                 table: "scores",
                 columns: new[] { "user_id", "rank", "mode" });
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_user_id_speed_change_mode",
                 table: "scores",
                 columns: new[] { "user_id", "speed_change", "mode" });

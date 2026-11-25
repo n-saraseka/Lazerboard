@@ -75,7 +75,7 @@ public class UsersController(IScoreRepository scoreRepository,
     /// <returns>A <see cref="ScoresResponse"/></returns>
     [HttpPost("{userId:int}/scores")]
     [AllowAnonymous]
-    public async Task<ActionResult<UserScoresResponse>> GetUserScoresAsync(
+    public async Task<ActionResult<ScoresResponse>> GetUserScoresAsync(
         int userId,
         [FromBody] ScoreQueryCommand command,
         [FromQuery] int? page,
@@ -122,21 +122,16 @@ public class UsersController(IScoreRepository scoreRepository,
 
         if (scoresResponseCache is null)
         {
-            var query = scoreRepository.GetByUserId(userId);
-            var count = await query.CountAsync(ct);
-            
-            query = FilterUtils.FilterScoreQuery(query, clampedCommand);
-            var filteredCount = await query.CountAsync(ct);
-            
-            var pages = (int)Math.Ceiling((double)count / scoresAmount);
-            if (scoresPage > pages) scoresPage = Math.Max(pages, 1);
+            var query = FilterUtils.FilterScoreQuery(scoreRepository.GetByUserId(userId), clampedCommand);
             
             scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, amount, scoresPage);
             scoresResponseString = $"userscores-{userId}-{scoresQueryString}";
             
-            query = query
-                .Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount);
+            query = query.Skip(scoresAmount * (scoresPage - 1)).Take(scoresAmount + 1);
             var scores = await query.ToListAsync(ct);
+
+            var moreAvailable = scores.Count > scoresAmount;
+            scores = scores.Take(scoresAmount).ToList();
             
             var beatmaps = await beatmapRepository
                 .GetBulkWithBeatmapsetsAsync(scores.Select(s => s.BeatmapId).Distinct().ToList(), ct);
@@ -150,26 +145,20 @@ public class UsersController(IScoreRepository scoreRepository,
             
             var apiScores = scores.Select(DbToApiObjectUtils.DbScoreToApiScore).ToList();
             
-            var scoresResponse = new UserScoresResponse
+            var scoresResponse = new ScoresResponse
             {
                 Scores = apiScores,
-                Count = count,
-                FilteredCount = filteredCount
+                MoreAvailable = moreAvailable
             };
 
             var serializedString = ResponseCachingUtils.GetSerializedScoresResponse(scoresResponse);
-            
-            // Only cache the first 5 or the last 5 pages.
-            if (page <= 5 || pages - scoresPage <= 5)
-            {
-                await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _scoresTtl);
-            }
+            await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _scoresTtl);
             
             return Ok(scoresResponse);
         }
         else
         {
-            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache, true);
+            var scoresResponse = ResponseCachingUtils.GetDeserializedScoresResponse(scoresResponseCache);
             return Ok(scoresResponse);
         }
     }

@@ -47,8 +47,7 @@ function MillionScoresPage({countries}) {
     }), [filters]);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [scoresCount, setScoresCount] = useState(0);
-    const [pageCount, setPageCount] = useState(1);
+    const [morePagesAvailable, setMorePagesAvailable] = useState(false);
     const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
@@ -93,28 +92,22 @@ function MillionScoresPage({countries}) {
             if (response.ok) {
                 const json = await response.json();
                 setAllScores(json.scores);
-                setScoresCount(json.count);
 
-                const pages = Math.ceil(json.count / filterOptions.amount);
                 if (pageNumber !== currentPage) {
                     setCurrentPage(pageNumber);
                 }
-                if (pageNumber > pages) {
-                    setCurrentPage(Math.max(1, pages));
-                }
-                setPageCount(pages);
+
+                setMorePagesAvailable(json.moreAvailable);
             }
             else {
                 setCurrentPage(1);
-                setScoresCount(0);
-                setPageCount(0);
+                setMorePagesAvailable(false);
                 setIsError(true);
             }
         }
         catch (error) {
             setCurrentPage(1);
-            setScoresCount(0);
-            setPageCount(0);
+            setMorePagesAvailable(false);
             setIsError(true);
         }
 
@@ -136,20 +129,24 @@ function MillionScoresPage({countries}) {
             <Filters filters={filters} setFilters={setFilters} countries={countries}/>
         </div>
         <button className="calc-button" disabled={isLoading}
-                onClick={() => debouncedGetScores(filters, currentPage)}>
+                onClick={() => debouncedGetScores(filters, 1)}>
             Get scores
         </button>
-        <h1 className="section-header">{ scoresCount === 0 ? 'No scores to show...' : `All scores${dateRangeString}:` }</h1>
+        <h1 className="section-header">{ allScores.length === 0 ? 'No scores to show...' : `All scores${dateRangeString}:` }</h1>
         <div className="component-container">
             {isError
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : scoresCount > 0 && (viewPreference === 'cards' 
+                    : allScores.length > 0 && (viewPreference === 'cards' 
                         ? <ScoresGrid scores={allScores}/> 
                         : <ScoresTable scores={allScores}/>))}
         </div>
-        <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>
+        {allScores.length > 0 &&
+            (<Pagination page={currentPage}
+                         moreAvailable={morePagesAvailable}
+                         onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>)
+        }
     </>)
 }
 

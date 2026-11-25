@@ -1,7 +1,7 @@
-function Pagination({pages, page, onPageChange}) {
-    const windowSize = 2;
+function Pagination({page, moreAvailable, onPageChange}) {
+    const windowSize = 1;
     const minPage = Math.max(1, page - windowSize);
-    const maxPage = Math.min(pages, page + windowSize);
+    const maxPage = moreAvailable ? page + 1 : page;
     
     function changePage(newPage) {
         if (newPage !== page) {
@@ -10,7 +10,6 @@ function Pagination({pages, page, onPageChange}) {
     }
     
     return (
-        pages > 1 &&
         <ul className="pages">
             {page !== 1 && <li className="page page-navigation" onClick={() => changePage(page - 1)}>&lt;</li>}
             {minPage !== 1 && <>
@@ -25,11 +24,7 @@ function Pagination({pages, page, onPageChange}) {
                         onClick={() => changePage(minPage + i)}>
                         {minPage + i}
                     </li>)}
-            {maxPage !== pages && <>
-                <li className="page">...</li>
-                <li className="page page-navigation" onClick={() => changePage(pages)}>{pages}</li>
-            </>}
-            {page !== pages && <li className="page page-navigation" onClick={() => changePage(page + 1)}>&gt;</li>}
+            {moreAvailable && <li className="page page-navigation" onClick={() => changePage(page + 1)}>&gt;</li>}
         </ul>
     )
 }

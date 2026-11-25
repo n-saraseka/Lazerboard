@@ -11,7 +11,7 @@ public class UserRankingResponse
     /// </summary>
     public List<UserRanking> UserRankings { get; set; } = new();
     /// <summary>
-    /// Overall count of users within the ranking
+    /// Whether there are more pages available or not
     /// </summary>
-    public int Count { get; set; }
+    public bool MoreAvailable { get; set; }
 }

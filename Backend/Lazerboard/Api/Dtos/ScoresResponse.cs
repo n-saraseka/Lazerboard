@@ -10,7 +10,7 @@ public class ScoresResponse
     /// </summary>
     public List<ApiScore> Scores { get; set; } = new();
     /// <summary>
-    /// The overall count of scores
+    /// Whether there are more pages available or not
     /// </summary>
-    public int Count { get; set; }
+    public bool MoreAvailable { get; set; }
 }

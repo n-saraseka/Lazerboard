@@ -126,60 +126,51 @@ public class RankingController(IScoreRepository scoreRepository,
             : $"userranking-{scoresQueryString}";
         var rankingResponseCache = await scoreCacheRepository.GetSerializedResponseAsync(scoresResponseString);
 
-        if (rankingResponseCache == null)
+        if (rankingResponseCache != null)
         {
-            var count = await query.Select(s => s.UserId).Distinct().CountAsync(cancellationToken);
-
-            var pages = (int)Math.Ceiling((double)count / rankingAmount);
-            if (rankingPage > pages) rankingPage = Math.Max(pages, 1);
-            
-            scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, rankingAmount, rankingPage);
-            scoresResponseString = isManiaMillions
-                ? $"maniamillionsranking-{scoresQueryString}" 
-                : $"userranking-{scoresQueryString}";
-
-            var group = await query
-                .GroupBy(s => s.UserId)
-                .Select(g => new
-                {
-                    g.First().UserId,
-                    ScoresCount = g.Count()
-                })
-                .OrderByDescending(r => r.ScoresCount)
-                .Skip((rankingPage - 1) * rankingAmount)
-                .Take(rankingAmount)
-                .ToListAsync(cancellationToken);
-
-            var users = await userRepository.GetBulkWithCountriesAsync(group.Select(g => g.UserId).ToList(),
-                cancellationToken);
-
-            var rankings = group.Select(g => new UserRanking
-            {
-                Rank = (rankingPage - 1) * rankingAmount + group.IndexOf(g) + 1,
-                ScoresCount = g.ScoresCount,
-                User = DbToApiObjectUtils.DbUserToApiUser(users.First(u => u.Id == g.UserId))
-            }).ToList();
-            
-            var response = new UserRankingResponse
-            {
-                UserRankings = rankings,
-                Count = count
-            };
-            
-            var serializedString = ResponseCachingUtils.GetSerializedUserRankingResponse(response);
-            
-            // Only cache the first 5 or the last 5 pages.
-            if (rankingPage <= 5 || pages - rankingPage <= 5)
-            {
-                await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _rankingTtl);
-            }
-
-            return response;
+            var cachedResponse = ResponseCachingUtils.GetDeserializedUserRankingResponse(rankingResponseCache);
+            return cachedResponse;
         }
-        else
+        
+        scoresQueryString = ResponseCachingUtils.GetScoreQueryKeyForCache(commandHash, rankingAmount, rankingPage);
+        scoresResponseString = isManiaMillions
+            ? $"maniamillionsranking-{scoresQueryString}" 
+            : $"userranking-{scoresQueryString}";
+
+        var group = await query
+            .GroupBy(s => s.UserId)
+            .Select(g => new
+            {
+                g.First().UserId,
+                ScoresCount = g.Count()
+            })
+            .OrderByDescending(r => r.ScoresCount)
+            .Skip((rankingPage - 1) * rankingAmount)
+            .Take(rankingAmount + 1)
+            .ToListAsync(cancellationToken);
+
+        var moreAvailable = group.Count > rankingAmount;
+        group = group.Take(rankingAmount).ToList();
+
+        var users = await userRepository.GetBulkWithCountriesAsync(group.Select(g => g.UserId).ToList(),
+            cancellationToken);
+
+        var rankings = group.Select(g => new UserRanking
         {
-            var response = ResponseCachingUtils.GetDeserializedUserRankingResponse(rankingResponseCache);
-            return response;
-        }
+            Rank = (rankingPage - 1) * rankingAmount + group.IndexOf(g) + 1,
+            ScoresCount = g.ScoresCount,
+            User = DbToApiObjectUtils.DbUserToApiUser(users.First(u => u.Id == g.UserId))
+        }).ToList();
+        
+        var response = new UserRankingResponse
+        {
+            UserRankings = rankings,
+            MoreAvailable = moreAvailable
+        };
+        
+        var serializedString = ResponseCachingUtils.GetSerializedUserRankingResponse(response);
+        await scoreCacheRepository.SetSerializedResponseAsync(scoresResponseString, serializedString, _rankingTtl);
+
+        return response;
     }
 }

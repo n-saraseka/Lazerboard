@@ -20,17 +20,11 @@
     justify-content: space-between;
 }
 
-.user-card-name {
+.user-card-row {
     display: flex;
     gap: 0.5em;
     align-items: center;
     flex-wrap: wrap;
-}
-
-.user-data-name {
-    display: flex;
-    gap: 0.5em;
-    align-items: flex-start;
 }
 
 .country-img {

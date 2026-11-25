@@ -30,15 +30,12 @@ public class BeatmapsController(IBeatmapRepository beatmapRepository,
         var beatmap = await beatmapRepository.GetByIdAsync(id, ct);
         if (beatmap == null) return NotFound("Beatmap not found");
 
-        var count = await scoreRepository.GetBeatmapScoreCount(id, mode, ct);
-
         var scores = await scoreRepository.GetByBeatmapIdWithUserDataAsync(id, mode, ct);
         var apiScores = scores.Select(DbToApiObjectUtils.DbScoreToApiScore).ToList();
         
         return Ok(new ScoresResponse
         {
-            Scores = apiScores,
-            Count = count
+            Scores = apiScores
         });
     }
         

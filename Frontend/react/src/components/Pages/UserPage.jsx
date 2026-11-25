@@ -52,9 +52,7 @@ function UserPage({user}) {
     }), [filters]);
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [scoresCount, setScoresCount] = useState(null);
-    const [filteredCount, setFilteredCount] = useState(null);
-    const [pageCount, setPageCount] = useState(1);
+    const [morePagesAvailable, setMorePagesAvailable] = useState(false);
     const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
@@ -137,31 +135,22 @@ function UserPage({user}) {
             if (response.ok) {
                 const json = await response.json();
                 setAllScores(json.scores);
-                setScoresCount(json.count);
-                setFilteredCount(json.filteredCount);
 
-                const pages = Math.ceil(json.filteredCount / filterOptions.amount);
                 if (pageNumber !== currentPage) {
                     setCurrentPage(pageNumber);
                 }
-                if (pageNumber > pages) {
-                    setCurrentPage(Math.max(1, pages));
-                }
-                setPageCount(pages);
+
+                setMorePagesAvailable(json.moreAvailable);
             }
             else {
-                setScoresCount(0);
-                setFilteredCount(0);
                 setCurrentPage(1);
-                setPageCount(0);
+                setMorePagesAvailable(false);
                 setIsError(true);
             }
         }
         catch (error) {
-            setScoresCount(0);
-            setFilteredCount(0);
             setCurrentPage(1);
-            setPageCount(0);
+            setMorePagesAvailable(false);
             setIsError(true);
         }
 
@@ -194,7 +183,7 @@ function UserPage({user}) {
     return (<>
         <div className="card-stats">
             <div className="card-stats-column">
-                <UserCard user={user} scoreCount={scoresCount} filteredCount={filteredCount}/>
+                <UserCard user={user}/>
                 <div className="component-container">
                     <CollapseUncollapseButton onCollapseUncollapse={() => setShowUserData(!showUserData)} isCollapsed={!showUserData} entityName="statistics"/>
                 </div>
@@ -212,20 +201,24 @@ function UserPage({user}) {
             <Filters filters={filters} setFilters={setFilters} isRanking={false}/>
         </div>
         <button className="calc-button" disabled={isLoading && statsLoading}
-                onClick={() => debouncedGetData(filters, currentPage)}>
+                onClick={() => debouncedGetData(filters, 1)}>
             Get user scores
         </button>
-        <h1 className="section-header">{ scoresCount === 0 ? 'No scores to show...' : `All scores${dateRangeString}:` }</h1>
+        <h1 className="section-header">{ allScores.length === 0 ? 'No scores to show...' : `All scores${dateRangeString}:` }</h1>
         <div className="component-container">
             {isError
                 ? (<Error/>)
                 : (isLoading
                     ? (<Loader/>)
-                    : filteredCount > 0 && (viewPreference === 'cards'
+                    : allScores.length > 0 && (viewPreference === 'cards'
                         ? <ScoresGrid scores={allScores}/>
                         : <ScoresTable scores={allScores}/>))}
         </div>
-        <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>
+        {allScores.length > 0 && 
+            (<Pagination page={currentPage} 
+                         moreAvailable={morePagesAvailable} 
+                         onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>)
+        }
     </>)
 }
 

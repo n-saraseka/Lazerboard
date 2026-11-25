@@ -50,7 +50,7 @@ function ScoreRankingPage({countries}) {
     const [isError, setIsError] = useState(false);
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageCount, setPageCount] = useState(1);
+    const [morePagesAvailable, setMorePagesAvailable] = useState(false);
     const [userRankings, setUserRankings] = useState([]);
 
     async function getRankings(filterOptions, pageNumber = 1) {
@@ -77,22 +77,21 @@ function ScoreRankingPage({countries}) {
                 const json = await response.json();
                 setUserRankings(json.userRankings);
 
-                const pages = Math.ceil(json.count / filterOptions.amount);
                 if (pageNumber !== currentPage) {
                     setCurrentPage(pageNumber);
                 }
-                if (pageNumber > pages) {
-                    setCurrentPage(Math.max(1, pages));
-                }
-                setPageCount(pages);
+
+                setMorePagesAvailable(json.moreAvailable);
             }
             else {
-                setPageCount(0);
+                setCurrentPage(1);
+                setMorePagesAvailable(false);
                 setIsError(true);
             }
         }
         catch (error) {
-            setPageCount(0);
+            setCurrentPage(1);
+            setMorePagesAvailable(false);
             setIsError(true);
         }
 
@@ -110,7 +109,7 @@ function ScoreRankingPage({countries}) {
             <Filters filters={filters} setFilters={setFilters} isRanking={true} countries={countries}/>
         </div>
         <button className="calc-button" disabled={isLoading}
-                onClick={() => debouncedGetRankings(filters, currentPage)}>
+                onClick={() => debouncedGetRankings(filters, 1)}>
             Get ranking
         </button>
         <h1 className="section-header">User ranking:</h1>
@@ -125,7 +124,11 @@ function ScoreRankingPage({countries}) {
                     </>
                 ))}
         </div>
-        <Pagination page={currentPage} pages={pageCount} onPageChange={(newPage) => debouncedGetRankings(filters, newPage)}/>
+        {userRankings.length > 0 && 
+            (<Pagination page={currentPage} 
+                         moreAvailable={morePagesAvailable}
+                         onPageChange={(newPage) => debouncedGetRankings(filters, newPage)}/>)
+        }
     </>)
 }
 

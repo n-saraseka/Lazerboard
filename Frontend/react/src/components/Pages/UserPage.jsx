@@ -162,17 +162,12 @@ function UserPage({user}) {
         [currentPage]
     );
 
-    const getData = useCallback(async (filterOptions, affectsCount) => {
-        if (affectsCount) {
-            await Promise.all([getScores(filterOptions, currentPage), getUserStats(filterOptions)]);
-        }
-        else {
-            await getScores(filterOptions, currentPage);
-        }
+    const getData = useCallback(async (filterOptions, page) => {
+        await Promise.all([getScores(filterOptions, page), getUserStats(filterOptions)]);
     }, []);
 
     useEffect( () => {
-        getData(filters, true);
+        getData(filters, 1);
     }, []);
 
     const debouncedGetData = useMemo(

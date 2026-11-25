@@ -1,3 +1,19 @@
+## Nov 25, 2026
+
+### Web
+
+#### Changed
+
+- Changing filters now resets the page to the first one.
+- Removed scores counts from user profile.
+
+### Backend
+
+#### Changed
+
+- Replaced score / ranking counts from API responses
+with a flag that shows if there are more pages to fetch.
+
 ## Nov 23, 2026
 
 ### Web

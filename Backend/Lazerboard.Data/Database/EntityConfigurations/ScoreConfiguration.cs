@@ -23,7 +23,7 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => s.BeatmapId);
         // User scores index
         builder
-            .HasIndex(s => new { s.UserId, s.IsConvert, s.Mode, s.Date });
+            .HasIndex(s => new { s.UserId, s.Date });
         // Global scores index
         builder
             .HasIndex(s => new { s.Date });

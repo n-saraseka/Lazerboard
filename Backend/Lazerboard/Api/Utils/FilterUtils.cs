@@ -16,24 +16,6 @@ public static class FilterUtils
     public static IQueryable<Score> FilterScoreQuery(IQueryable<Score> query,
         ScoreQueryCommand command)
     {
-        if (command.Modes != null && !(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
-        {
-            var modes = command.Modes.Distinct().ToList();
-            query = query.Where(s => modes.Contains(s.Mode));
-        }
-
-        if (command.BeatmapStatus != null)
-        {
-            query = command.BeatmapStatus == BeatmapStatus.Ranked
-                ? query.Where(s => RankedStatuses.Contains(s.Beatmap!.Status))
-                : query.Where(s => s.Beatmap!.Status == command.BeatmapStatus);
-        }
-
-        if (command.ExcludeConverts != null)
-        {
-            query = command.ExcludeConverts.Value ? query.Where(s => s.IsConvert == false) : query;
-        }
-        
         if (command.DateRange[0] != null)
         {
             var minDate = DateTime
@@ -47,12 +29,18 @@ public static class FilterUtils
             query = query.Where(s => s.Date < maxDate);
         }
         
-        if (command.RankRange[0] != null && command.RankRange[0] > 1) query = query.Where(s => s.Rank >= command.RankRange[0]);
-        if (command.RankRange[1] != null && command.RankRange[1] < 100) query = query.Where(s => s.Rank <= command.RankRange[1]);
-
+        // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
+        // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
+        if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange != null);
+        if (command.SpeedRange[0] != null && command.SpeedRange[0] > 0.5) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
+        if (command.SpeedRange[1] != null && command.SpeedRange[1] < 2) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
+        
         if (command.PpRange[0] != null && command.PpRange[0] > 0) query = query.Where(s => s.PP >= command.PpRange[0]);
         if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]);
-
+        
+        if (command.RankRange[0] != null && command.RankRange[0] > 1) query = query.Where(s => s.Rank >= command.RankRange[0]);
+        if (command.RankRange[1] != null && command.RankRange[1] < 100) query = query.Where(s => s.Rank <= command.RankRange[1]);
+        
         if (command.AccuracyRange[0] != null) {
             var acc = command.AccuracyRange[0] / 100.0f;
             query = query.Where(s => s.Accuracy >= acc);
@@ -61,15 +49,27 @@ public static class FilterUtils
             var acc = command.AccuracyRange[1] / 100.0f;
             query = query.Where(s => s.Accuracy <= acc);
         }
-
-        // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
-        // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
-        if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange != null);
-        if (command.SpeedRange[0] != null && command.SpeedRange[0] > 0.5) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
-        if (command.SpeedRange[1] != null && command.SpeedRange[1] < 2) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
-
+        
         if (command.StarRange[0] != null && command.SpeedRange[1] > 0) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]);
         if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap!.Difficulty <= command.StarRange[1]);
+        
+        if (command.BeatmapStatus != null)
+        {
+            query = command.BeatmapStatus == BeatmapStatus.Ranked
+                ? query.Where(s => RankedStatuses.Contains(s.Beatmap!.Status))
+                : query.Where(s => s.Beatmap!.Status == command.BeatmapStatus);
+        }
+        
+        if (command.Modes != null && !(command.Modes.Length == 4 && command.Modes.Distinct().Count() == command.Modes.Length))
+        {
+            var modes = command.Modes.Distinct().ToList();
+            query = query.Where(s => modes.Contains(s.Mode));
+        }
+        
+        if (command.ExcludeConverts != null)
+        {
+            query = command.ExcludeConverts.Value ? query.Where(s => s.IsConvert == false) : query;
+        }
 
         if (command.LenientMode != null)
         {

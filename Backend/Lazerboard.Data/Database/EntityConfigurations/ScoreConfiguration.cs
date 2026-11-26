@@ -23,26 +23,23 @@ public class ScoreConfiguration : IEntityTypeConfiguration<Score>
             .HasIndex(s => s.BeatmapId);
         // User scores index
         builder
-            .HasIndex(s => new { s.UserId, s.Date });
+            .HasIndex(s => new { s.UserId, s.Date, s.Mode });
         // Global scores index
         builder
-            .HasIndex(s => new { s.Date });
-        // User graph indexes
-        builder
-            .HasIndex(s => new { s.UserId, s.BeatmapId, s.Mode });
-        builder
-            .HasIndex(s => new { s.UserId, s.SpeedChange, s.Mode });
-        builder
-            .HasIndex(s => new { s.UserId, s.Rank, s.Mode });
+            .HasIndex(s => new { s.Date, s.Mode });
         // Filter specific indexes
         builder
-            .HasIndex(s => new { s.Mode, s.SpeedChange, s.UserId });
+            .HasIndex(s => new { s.SpeedChange, s.UserId, s.Mode });
         builder
-            .HasIndex(s => new { s.Mode, s.Accuracy, s.UserId });
+            .HasIndex(s => new { s.PP, s.UserId, s.Mode });
         builder
-            .HasIndex(s => new { s.Mode, s.PP, s.UserId });
+            .HasIndex(s => new { s.BeatmapId, s.UserId, s.Mode });
         builder
-            .HasIndex(s => new { s.BeatmapId, s.UserId });
+            .HasIndex(s => new { s.Accuracy, s.UserId, s.Mode });
+        builder
+            .HasIndex(s => new { s.Rank, s.UserId });
+        builder
+            .HasIndex(s => new { s.Mode, s.UserId });
         builder.ComplexProperty(s => s.Statistics, stats => stats.ToJson());
     }
 }

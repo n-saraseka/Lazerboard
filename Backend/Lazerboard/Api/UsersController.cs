@@ -209,13 +209,14 @@ public class UsersController(IScoreRepository scoreRepository,
         if (userStatsCache is null)
         {
             var query = FilterUtils.FilterScoreQuery(scoreRepository.GetByUserId(userId), clampedCommand);
+            var relevantData = await query
+                .AsNoTracking()
+                .Select(s => new { s.Date, s.Rank, s.SpeedChange, s.Beatmap!.Difficulty })
+                .ToListAsync(ct);
             
             // The score counts history
-            var dates = await query
-                .Select(s => s.Date)
+            var countsByMonth = relevantData.Select(d => d.Date)
                 .OrderBy(d => d)
-                .ToListAsync(ct);
-            var countsByMonth = dates
                 .GroupBy(d => new DateTime(d.Year, d.Month, 1))
                 .Select(g => new UserHistory
                 {
@@ -233,9 +234,7 @@ public class UsersController(IScoreRepository scoreRepository,
             .ToList();
             
             // The rank distribution
-            var ranks = await query
-                .Select(s => s.Rank)
-                .ToListAsync(ct);
+            var ranks = relevantData.Select(d => d.Rank).ToList();
             var ranksDict = new Dictionary<int, int>
             {
                 {1, ranks.Count(r => r <= 1)},
@@ -253,12 +252,10 @@ public class UsersController(IScoreRepository scoreRepository,
             .ToList();
             
             // The speed distribution
-            var speeds = await query
-                .Where(s => s.SpeedChange != null)
-                .Select(s => s.SpeedChange)
+            var speedStats = relevantData
+                .Select(d => d.SpeedChange)
+                .Where(s => s != null)
                 .OrderBy(s => s)
-                .ToListAsync(ct);
-            var speedStats = speeds
                 .GroupBy(s => s < 1 
                     ? Math.Floor((double)s * 20) / 20
                     : Math.Floor((double)s! * 10) / 10)
@@ -270,10 +267,9 @@ public class UsersController(IScoreRepository scoreRepository,
                 .ToList();
             
             // The star distribution
-            var stars = await query
-                .Select(s => s.Beatmap!.Difficulty)
-                .ToListAsync(ct);
-            var starStats = stars
+            var starStats = relevantData
+                .Select(d => d.Difficulty)
+                .OrderBy(s => s)
                 .GroupBy(s => s > 10 ? 10 : Math.Floor(s))
                 .Select(g => new UserStars
                 {

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Lazerboard.Data.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,11 +11,11 @@ namespace OsuScoreStats.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_rank_user_id",
                 table: "scores");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_rank_user_id_mode",
                 table: "scores",
                 columns: new[] { "rank", "user_id", "mode" });
@@ -23,11 +24,11 @@ namespace OsuScoreStats.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
+            migrationBuilder.DropIndexIfExists(
                 name: "ix_scores_rank_user_id_mode",
                 table: "scores");
 
-            migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndexIfNotExists(
                 name: "ix_scores_rank_user_id",
                 table: "scores",
                 columns: new[] { "rank", "user_id" });

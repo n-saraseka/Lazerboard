@@ -388,12 +388,6 @@ namespace OsuScoreStats.Migrations
                     b.HasKey("Id")
                         .HasName("pk_scores");
 
-                    b.HasIndex("BeatmapId")
-                        .HasDatabaseName("ix_scores_beatmap_id");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_scores_user_id");
-
                     b.HasIndex("Date", "Mode")
                         .HasDatabaseName("ix_scores_date_mode");
 

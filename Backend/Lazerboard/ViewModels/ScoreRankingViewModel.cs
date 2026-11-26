@@ -1,4 +1,3 @@
-using Lazerboard.Api.Dtos;
 using Lazerboard.Data.Database.Entities;
 
 namespace Lazerboard.ViewModels;

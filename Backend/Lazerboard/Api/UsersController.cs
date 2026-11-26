@@ -208,65 +208,75 @@ public class UsersController(IScoreRepository scoreRepository,
 
         if (userStatsCache is null)
         {
-            var filterData = FilterUtils.GetFilterText(clampedCommand);
-            var filterText = filterData.FilterText.Length == 0 ? "" : $" AND {filterData.FilterText}";
-            var parameters = filterData.Parameters;
-            var tableString = FilterUtils.GetTableStringWithJoins(clampedCommand, false);
-            
-            var context = scoreRepository.GetDbContext();
+            var query = FilterUtils.FilterScoreQuery(scoreRepository.GetByUserId(userId), clampedCommand);
+            var relevantData = await query
+                .AsNoTracking()
+                .Select(s => new { s.Date, s.Rank, s.SpeedChange, s.Beatmap!.Difficulty })
+                .ToListAsync(ct);
             
             // The score counts history
-            var historySql = $@"SELECT month, SUM(count) OVER (ORDER BY month ASC ROWS UNBOUNDED PRECEDING) monthly_count
-                        FROM (SELECT DATE_TRUNC('month', date) as month, COUNT(*) as count FROM {tableString}
-                        WHERE user_id = {userId}{filterText}
-                        GROUP BY month
-                        ORDER BY month ASC)";
-            var historyQuery = context.Database.SqlQueryRaw<UserHistory>(historySql, parameters);
-            var history = await historyQuery.ToListAsync(ct);
+            var countsByMonth = relevantData.Select(d => d.Date)
+                .OrderBy(d => d)
+                .GroupBy(d => new DateTime(d.Year, d.Month, 1))
+                .Select(g => new UserHistory
+                {
+                    Month = g.Key,
+                    MonthlyCount = g.Count(),
+                })
+                .ToList();
+
+            var accumulatedCount = 0;
+            var history = countsByMonth.Select(h =>
+            {
+                accumulatedCount += h.MonthlyCount;
+                return new UserHistory { Month = h.Month, MonthlyCount = accumulatedCount };
+            })
+            .ToList();
             
             // The rank distribution
-            var ranksSql = $@"SELECT i.rank_bound,
-                        CASE i.rank_bound
-                            WHEN 1   THEN top1  WHEN 3   THEN top3  WHEN 8   THEN top8
-                            WHEN 25  THEN top25 WHEN 50  THEN top50 WHEN 100 THEN top100
-                        END AS count
-                        FROM (
-                            SELECT
-                            COUNT(*) FILTER (WHERE s.rank <= 1)   AS top1,
-                            COUNT(*) FILTER (WHERE s.rank <= 3)   AS top3,
-                            COUNT(*) FILTER (WHERE s.rank <= 8)   AS top8,
-                            COUNT(*) FILTER (WHERE s.rank <= 25)  AS top25,
-                            COUNT(*) FILTER (WHERE s.rank <= 50)  AS top50,
-                            COUNT(*) FILTER (WHERE s.rank <= 100) AS top100
-                        FROM {tableString}
-                        WHERE user_id = {userId}{filterText}
-                        ) rank_distribution
-                        CROSS JOIN (VALUES (1),(3),(8),(25),(50),(100)) i(rank_bound)
-                        ORDER BY i.rank_bound";
-            var ranksQuery = context.Database.SqlQueryRaw<RankStats>(ranksSql, parameters);
-            var rankStats = await ranksQuery.ToListAsync(ct);
-            
-            // The star distribution
-            tableString = FilterUtils.GetTableStringWithJoins(clampedCommand, true);
-            var starSql = $@"SELECT CASE WHEN b.difficulty >= 10 THEN 10 ELSE FLOOR(b.difficulty) END AS sr_bracket, COUNT(*) AS count
-                        FROM {tableString}
-                        WHERE user_id = {userId}{filterText}
-                        GROUP BY sr_bracket
-                        ORDER BY sr_bracket";
-            var starsQuery = context.Database.SqlQueryRaw<UserStars>(starSql, parameters);
-            var starStats = await starsQuery.ToListAsync(ct);
+            var ranks = relevantData.Select(d => d.Rank).ToList();
+            var ranksDict = new Dictionary<int, int>
+            {
+                {1, ranks.Count(r => r <= 1)},
+                {3, ranks.Count(r => r <= 3)},
+                {8, ranks.Count(r => r <= 8)},
+                {25, ranks.Count(r => r <= 25)},
+                {50, ranks.Count(r => r <= 50)},
+                {100, ranks.Count(r => r <= 100)}
+            };
+            var rankStats = ranksDict.Select(kvp => new RankStats
+            {
+                RankBound = kvp.Key,
+                Count = kvp.Value,
+            })
+            .ToList();
             
             // The speed distribution
-            tableString = FilterUtils.GetTableStringWithJoins(clampedCommand, false);
-            var speedSql = $@"SELECT CASE WHEN speed_change < 1
-                        THEN FLOOR(speed_change * 20) / 20
-                        ELSE FLOOR(speed_change * 10) / 10 END AS speed_bracket, COUNT(*) AS count
-                        FROM {tableString}
-                        WHERE user_id = {userId} AND speed_change IS NOT NULL{filterText}
-                        GROUP BY speed_bracket
-                        ORDER BY speed_bracket";
-            var speedQuery = context.Database.SqlQueryRaw<UserSpeedStats>(speedSql, parameters);
-            var speedStats = await speedQuery.ToListAsync(ct);
+            var speedStats = relevantData
+                .Select(d => d.SpeedChange)
+                .Where(s => s != null)
+                .OrderBy(s => s)
+                .GroupBy(s => s < 1 
+                    ? Math.Floor((double)s * 20) / 20
+                    : Math.Floor((double)s! * 10) / 10)
+                .Select(g => new UserSpeedStats
+                {
+                    SpeedBracket = g.Key,
+                    Count = g.Count()
+                })
+                .ToList();
+            
+            // The star distribution
+            var starStats = relevantData
+                .Select(d => d.Difficulty)
+                .OrderBy(s => s)
+                .GroupBy(s => s > 10 ? 10 : Math.Floor(s))
+                .Select(g => new UserStars
+                {
+                    SrBracket = g.Key,
+                    Count = g.Count()
+                })
+                .ToList();
 
             var statsResponse = new UserStatsResponse
             {

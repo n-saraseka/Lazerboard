@@ -34,12 +34,13 @@ public class CountService : BackgroundService
                 var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
                 var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
 
-                var scoresCount = await scoreRepository.GetAll().CountAsync(stoppingToken);
+                var scoresCount = await scoreRepository.GetAll().Select(s => s.Id).CountAsync(stoppingToken);
                 _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
                 
-                var usersCount = await userRepository.GetAll().CountAsync(stoppingToken);
+                var usersCount = await userRepository.GetAll().Select(u => u.Id).CountAsync(stoppingToken);
                 var registeredUsersCount = await userRepository.GetAll()
-                    .Where(u => u.UserGroups.Any(u => u == UserGroup.RegisteredUser))
+                    .Where(u => u.UserGroups.Any(g => g == UserGroup.RegisteredUser))
+                    .Select(u => u.Id)
                     .CountAsync(stoppingToken);
 
                 var countsData = new CountsData

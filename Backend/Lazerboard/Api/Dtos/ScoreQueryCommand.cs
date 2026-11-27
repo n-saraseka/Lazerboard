@@ -45,16 +45,19 @@ public class ScoreQueryCommand
     /// <summary>
     /// An array of mod acronyms to include in scores
     /// </summary>
+    /// <remarks>Currently disabled for all queries</remarks>
     public string[] IncludeMods { get; set; } = [];
     
     /// <summary>
     /// An array of mod acronyms to exclude from scores
     /// </summary>
+    /// <remarks>Currently disabled for all queries</remarks>
     public string[] ExcludeMods { get; set; } = [];
     
     /// <summary>
     /// Whether to allow other mods than those listed in <see cref="IncludeMods"/> or not
     /// </summary>
+    /// <remarks>Currently disabled for all queries</remarks>
     public bool? LenientMode { get; set; }
     
     /// <summary>

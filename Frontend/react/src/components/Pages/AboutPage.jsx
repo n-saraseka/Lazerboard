@@ -38,7 +38,6 @@ function AboutPage() {
                 <p>You can filter scores by the following:</p>
                 <ul>
                     <li>Gameplay mode</li>
-                    <li>Gameplay modifiers <strong>(including osu!lazer exclusive mods)</strong></li>
                     <li><strong>Gameplay speed (from 0.5x to 2.0x)</strong></li>
                     <li>Position on the leaderboard (also known as beatmap rank)</li>
                     <li>PP</li>

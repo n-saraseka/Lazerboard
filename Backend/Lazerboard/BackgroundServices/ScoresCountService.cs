@@ -35,7 +35,6 @@ public class CountService : BackgroundService
                 var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
 
                 var scoresCount = await scoreRepository.GetAll().Select(s => s.Id).CountAsync(stoppingToken);
-                _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
                 
                 var usersCount = await userRepository.GetAll().Select(u => u.Id).CountAsync(stoppingToken);
                 var registeredUsersCount = await userRepository.GetAll()
@@ -49,6 +48,7 @@ public class CountService : BackgroundService
                     UsersCount = usersCount,
                     RegisteredUsersCount = registeredUsersCount
                 };
+                _logger.Log(LogLevel.Information, "Counts data: {@countsData}", countsData);
                 var serializedData = JsonConvert.SerializeObject(countsData);
                 await scoreCacheRepository.SetSerializedResponseAsync("counts-data", serializedData, 
                     TimeSpan.FromMinutes(_updateInterval + 30));

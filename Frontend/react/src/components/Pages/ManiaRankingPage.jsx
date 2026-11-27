@@ -15,7 +15,6 @@ function ScoreRankingPage({countries}) {
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
-        beatmapStatus: 'all',
         amount: 25
     }, [preferences.globalPreferences]);
     const rankingPreferences = useMemo(() => preferences.rankingPreferences ?? {
@@ -28,7 +27,7 @@ function ScoreRankingPage({countries}) {
         ppRange: {min: null, max: null},
         country: null,
         amount: rankingPreferences.amount,
-        beatmapStatus: globalPreferences.beatmapStatus,
+        beatmapStatus: 'all',
     });
 
     useEffect(() => setPreferences({...preferences,

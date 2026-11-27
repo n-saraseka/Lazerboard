@@ -60,21 +60,27 @@ function Filters({filters, setFilters, isRanking, countries}) {
                                 {filters.modes.map((mode, index) => (
                                     <div className={`mode-icon-wrapper ${mode.enabled ? "enabled" : "disabled"}`} key={index}>
                                         <div className={`mode-icon mode-${modeEnumToString(index)}`} onClick={() => {
-                                            let legitMods = [];
-                                            const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
-                                            matchingMods.forEach(m => {
-                                                legitMods.push(m.acronym);
-                                            });
-                                            const newIncludeMods = filters.includeMods.filter(m => legitMods.includes(m));
-                                            const newExcludeMods = filters.excludeMods.filter(m => legitMods.includes(m));
-                                            const allFilters = {...filters, modes: filters.modes.map((m, i) => {
+                                            let allFilters = {...filters, modes: filters.modes.map((m, i) => {
                                                     if (i === index) {
                                                         m.enabled = !m.enabled;
                                                     }
                                                     return m;
-                                                }),
-                                                includeMods: newIncludeMods,
-                                                excludeMods: newExcludeMods};
+                                                })};
+                                            
+                                            if (possibleFilters.includes('includeMods')) {
+                                                let legitMods = [];
+                                                const matchingMods = allModData.filter(m => filters.modes.some(mode => mode.enabled && m.modes.includes(mode.value)));
+                                                matchingMods.forEach(m => {
+                                                    legitMods.push(m.acronym);
+                                                });
+                                                const newIncludeMods = filters.includeMods.filter(m => legitMods.includes(m));
+                                                const newExcludeMods = filters.excludeMods.filter(m => legitMods.includes(m));
+                                                allFilters = {
+                                                    ...allFilters,
+                                                    includeMods: newIncludeMods,
+                                                    excludeMods: newExcludeMods
+                                                };
+                                            }
                                             setFilters(allFilters);
                                         }}></div>
                                     </div>

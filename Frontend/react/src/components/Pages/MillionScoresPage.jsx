@@ -18,7 +18,6 @@ function MillionScoresPage({countries}) {
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
-        beatmapStatus: 'all',
         amount: 25
     }, [preferences.globalPreferences]);
     const viewPreference = useMemo(() => preferences.view ?? globalPreferences.view ?? 'cards', [preferences.view]);
@@ -33,7 +32,7 @@ function MillionScoresPage({countries}) {
         sortBy: 'pp',
         sortDir: 'desc',
         amount: globalPreferences.amount,
-        beatmapStatus: globalPreferences.beatmapStatus,
+        beatmapStatus: 'all',
     });
 
     useEffect(() => setPreferences({...preferences,

@@ -18,7 +18,6 @@ function ScoresPage({countries}) {
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
-        beatmapStatus: 'all',
         amount: 25
     }, [preferences.globalPreferences]);
     const viewPreference = useMemo(() => preferences.view ?? globalPreferences.view ?? 'cards', [preferences.view]);
@@ -35,15 +34,14 @@ function ScoresPage({countries}) {
         sortBy: 'pp',
         sortDir: 'desc',
         amount: globalPreferences.amount,
-        beatmapStatus: globalPreferences.beatmapStatus,
+        beatmapStatus: 'all',
     });
     
     useEffect(() => setPreferences({...preferences, 
             globalPreferences: {...globalPreferences,
                 modes: filters.modes, 
                 excludeConverts: filters.excludeConverts, 
-                amount: filters.amount, 
-                beatmapStatus: filters.beatmapStatus}
+                amount: filters.amount}
     }), [filters]);
     
     const [currentPage, setCurrentPage] = useState(1);

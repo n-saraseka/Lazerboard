@@ -9,7 +9,6 @@ export const PreferencesContext = createContext({
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
-        beatmapStatus: 'all',
         amount: 25
     },
     rankingPreferences: {

@@ -15,7 +15,6 @@ function ScoreRankingPage({countries}) {
             return { value: i, enabled: true };
         }),
         excludeConverts: true,
-        beatmapStatus: 'all',
         amount: 25
     }, [preferences.globalPreferences]);
     const rankingPreferences = useMemo(() => preferences.rankingPreferences ?? {
@@ -31,7 +30,7 @@ function ScoreRankingPage({countries}) {
         modes: globalPreferences.modes,
         excludeConverts: globalPreferences.excludeConverts,
         amount: rankingPreferences.amount,
-        beatmapStatus: globalPreferences.beatmapStatus
+        beatmapStatus: 'all'
     });
     
     useEffect(() => setPreferences({...preferences,

@@ -1,3 +1,12 @@
+## Nov 27, 2026
+
+### Web and backend
+
+#### Removed
+
+- Temporarily disabled ability to filter by mods. **It will be back when mods storage is
+optimized in the database**.
+
 ## Nov 25, 2026
 
 ### Web
@@ -5,6 +14,9 @@
 #### Changed
 
 - Changing filters now resets the page to the first one.
+
+#### Removed
+
 - Removed scores counts from user profile.
 
 ### Backend

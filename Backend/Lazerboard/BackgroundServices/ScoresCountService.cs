@@ -34,12 +34,12 @@ public class CountService : BackgroundService
                 var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
                 var scoreCacheRepository = scope.ServiceProvider.GetRequiredService<IScoreCacheRepository>();
 
-                var scoresCount = await scoreRepository.GetAll().CountAsync(stoppingToken);
-                _logger.Log(LogLevel.Information, "Scores count: {scoresCount}", scoresCount);
+                var scoresCount = await scoreRepository.GetAll().Select(s => s.Id).CountAsync(stoppingToken);
                 
-                var usersCount = await userRepository.GetAll().CountAsync(stoppingToken);
+                var usersCount = await userRepository.GetAll().Select(u => u.Id).CountAsync(stoppingToken);
                 var registeredUsersCount = await userRepository.GetAll()
-                    .Where(u => u.UserGroups.Any(u => u == UserGroup.RegisteredUser))
+                    .Where(u => u.UserGroups.Any(g => g == UserGroup.RegisteredUser))
+                    .Select(u => u.Id)
                     .CountAsync(stoppingToken);
 
                 var countsData = new CountsData
@@ -48,6 +48,7 @@ public class CountService : BackgroundService
                     UsersCount = usersCount,
                     RegisteredUsersCount = registeredUsersCount
                 };
+                _logger.Log(LogLevel.Information, "Counts data: {@countsData}", countsData);
                 var serializedData = JsonConvert.SerializeObject(countsData);
                 await scoreCacheRepository.SetSerializedResponseAsync("counts-data", serializedData, 
                     TimeSpan.FromMinutes(_updateInterval + 30));

@@ -388,29 +388,29 @@ namespace OsuScoreStats.Migrations
                     b.HasKey("Id")
                         .HasName("pk_scores");
 
-                    b.HasIndex("Date", "Mode")
-                        .HasDatabaseName("ix_scores_date_mode");
+                    b.HasIndex("Date", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_date_mode_is_convert");
 
-                    b.HasIndex("Mode", "UserId")
-                        .HasDatabaseName("ix_scores_mode_user_id");
+                    b.HasIndex("Mode", "UserId", "IsConvert")
+                        .HasDatabaseName("ix_scores_mode_user_id_is_convert");
 
-                    b.HasIndex("Accuracy", "UserId", "Mode")
-                        .HasDatabaseName("ix_scores_accuracy_user_id_mode");
+                    b.HasIndex("Accuracy", "UserId", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_accuracy_user_id_mode_is_convert");
 
-                    b.HasIndex("BeatmapId", "UserId", "Mode")
-                        .HasDatabaseName("ix_scores_beatmap_id_user_id_mode");
+                    b.HasIndex("BeatmapId", "UserId", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_beatmap_id_user_id_mode_is_convert");
 
-                    b.HasIndex("PP", "UserId", "Mode")
-                        .HasDatabaseName("ix_scores_pp_user_id_mode");
+                    b.HasIndex("PP", "UserId", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_pp_user_id_mode_is_convert");
 
-                    b.HasIndex("Rank", "UserId", "Mode")
-                        .HasDatabaseName("ix_scores_rank_user_id_mode");
+                    b.HasIndex("Rank", "UserId", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_rank_user_id_mode_is_convert");
 
-                    b.HasIndex("SpeedChange", "UserId", "Mode")
-                        .HasDatabaseName("ix_scores_speed_change_user_id_mode");
+                    b.HasIndex("SpeedChange", "UserId", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_speed_change_user_id_mode_is_convert");
 
-                    b.HasIndex("UserId", "Date", "Mode")
-                        .HasDatabaseName("ix_scores_user_id_date_mode");
+                    b.HasIndex("UserId", "Date", "Mode", "IsConvert")
+                        .HasDatabaseName("ix_scores_user_id_date_mode_is_convert");
 
                     b.ToTable("scores", (string)null);
                 });

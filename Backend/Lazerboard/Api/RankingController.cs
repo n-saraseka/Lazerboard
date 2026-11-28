@@ -138,7 +138,7 @@ public class RankingController(IScoreRepository scoreRepository,
             .GroupBy(s => s.UserId)
             .Select(g => new
             {
-                g.First().UserId,
+                UserId = g.Key,
                 ScoresCount = g.Count()
             })
             .OrderByDescending(r => r.ScoresCount)

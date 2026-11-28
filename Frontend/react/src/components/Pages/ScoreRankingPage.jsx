@@ -91,7 +91,7 @@ function ScoreRankingPage({countries}) {
             else {
                 setCurrentPage(1);
                 setMorePagesAvailable(false);
-                if (response.status === 408) {
+                if ([408, 524].includes(response.status)) {
                     setIsTimeout(true);
                 }
                 else {

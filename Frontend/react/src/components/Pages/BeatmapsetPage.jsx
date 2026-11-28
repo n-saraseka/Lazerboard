@@ -57,7 +57,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
                 setBeatmapScores(json.scores);
             }
             else {
-                if (response.status === 408) {
+                if ([408, 524].includes(response.status)) {
                     setIsTimeout(true);
                 }
                 else {

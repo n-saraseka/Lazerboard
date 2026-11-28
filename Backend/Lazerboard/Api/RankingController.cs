@@ -142,6 +142,7 @@ public class RankingController(IScoreRepository scoreRepository,
                 ScoresCount = g.Count()
             })
             .OrderByDescending(r => r.ScoresCount)
+            .ThenBy(r => r.UserId)
             .Skip((rankingPage - 1) * rankingAmount)
             .Take(rankingAmount + 1)
             .ToListAsync(cancellationToken);

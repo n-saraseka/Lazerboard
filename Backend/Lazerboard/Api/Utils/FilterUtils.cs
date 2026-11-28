@@ -32,14 +32,14 @@ public static class FilterUtils
         // Don't care for Wind Up and Wind Down scores if we filter by minimum / maximum rate
         // SpeedChange is null only if one of the following command.Mods is active: Wind Up, Wind Down, Adaptive Speed
         if (command.SpeedRange[0] != null || command.SpeedRange[1] != null) query = query.Where(s => s.SpeedChange != null);
-        if (command.SpeedRange[0] != null && command.SpeedRange[0] > 0.5) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]);
-        if (command.SpeedRange[1] != null && command.SpeedRange[1] < 2) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]);
+        if (command.SpeedRange[0] != null && command.SpeedRange[0] > 0.5) query = query.Where(s => s.SpeedChange >= command.SpeedRange[0]!.Value);
+        if (command.SpeedRange[1] != null && command.SpeedRange[1] < 2) query = query.Where(s => s.SpeedChange <= command.SpeedRange[1]!.Value);
         
-        if (command.PpRange[0] != null && command.PpRange[0] > 0) query = query.Where(s => s.PP >= command.PpRange[0]);
-        if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]);
+        if (command.PpRange[0] != null && command.PpRange[0] > 0) query = query.Where(s => s.PP >= command.PpRange[0]!.Value);
+        if (command.PpRange[1] != null) query = query.Where(s => s.PP <= command.PpRange[1]!.Value);
         
-        if (command.RankRange[0] != null && command.RankRange[0] > 1) query = query.Where(s => s.Rank >= command.RankRange[0]);
-        if (command.RankRange[1] != null && command.RankRange[1] < 100) query = query.Where(s => s.Rank <= command.RankRange[1]);
+        if (command.RankRange[0] != null && command.RankRange[0] > 1) query = query.Where(s => s.Rank >= command.RankRange[0]!.Value);
+        if (command.RankRange[1] != null && command.RankRange[1] < 100) query = query.Where(s => s.Rank <= command.RankRange[1]!.Value);
         
         if (command.AccuracyRange[0] != null) {
             var acc = command.AccuracyRange[0] / 100.0f;
@@ -50,8 +50,8 @@ public static class FilterUtils
             query = query.Where(s => s.Accuracy <= acc);
         }
         
-        if (command.StarRange[0] != null && command.SpeedRange[1] > 0) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]);
-        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap!.Difficulty <= command.StarRange[1]);
+        if (command.StarRange[0] != null && command.SpeedRange[1] > 0) query = query.Where(s => s.Beatmap!.Difficulty >= command.StarRange[0]!.Value);
+        if (command.StarRange[1] != null) query = query.Where(s => s.Beatmap!.Difficulty <= command.StarRange[1]!.Value);
         
         if (command.BeatmapStatus != null)
         {

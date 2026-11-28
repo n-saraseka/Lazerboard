@@ -87,10 +87,16 @@ function MillionScoresPage({countries}) {
 
             if (response.ok) {
                 const json = await response.json();
-                setAllScores(json.scores);
+                const scores = json.scores;
+                setAllScores(scores);
 
                 if (pageNumber !== currentPage) {
-                    setCurrentPage(pageNumber);
+                    if (scores.length === 0) {
+                        setCurrentPage(currentPage + 1);
+                    }
+                    else {
+                        setCurrentPage(pageNumber);
+                    }
                 }
 
                 setMorePagesAvailable(json.moreAvailable);
@@ -138,7 +144,7 @@ function MillionScoresPage({countries}) {
                         ? <ScoresGrid scores={allScores}/> 
                         : <ScoresTable scores={allScores}/>))}
         </div>
-        {allScores.length > 0 &&
+        {(allScores.length > 0 || currentPage > 1) &&
             (<Pagination page={currentPage}
                          moreAvailable={morePagesAvailable}
                          onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>)

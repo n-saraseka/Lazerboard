@@ -8,6 +8,7 @@ import {modeEnumToString} from "../../utils/beatmap-things.js";
 import Error from "../Misc/Error.jsx";
 import Loader from "../Misc/Loader.jsx";
 import {debounce} from "../../utils/server-things.js";
+import TimedOut from "../Misc/TimedOut.jsx";
 
 function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode}) {
     const allModes = [0, 1, 2, 3];
@@ -18,6 +19,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
     const [currentMode, setCurrentMode] = useState(selectedMode);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [isTimeout, setIsTimeout] = useState(false);
     
     async function switchMode(mode) {
         if (!allowedModes.includes(mode)) return;
@@ -40,6 +42,7 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
     const getBeatmapScores = useCallback(async (id, mode) => {
         setIsLoading(true);
         setIsError(false);
+        setIsTimeout(false);
 
         const params = new URLSearchParams();
         params.append("mode", mode.toString());
@@ -54,7 +57,12 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
                 setBeatmapScores(json.scores);
             }
             else {
-                setIsError(true);
+                if (response.status === 408) {
+                    setIsTimeout(true);
+                }
+                else {
+                    setIsError(true);
+                }
             }
         }
         catch (error) {
@@ -101,11 +109,13 @@ function BeatmapsetPage({beatmapset, beatmaps, selectedBeatmapId, selectedMode})
                 ))}
             </div>
         </div>
-        {isError 
-            ? (<Error/>) 
-            : (isLoading
-                ? (<Loader/>)
-                :  <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>)}
+        {isError
+            ? (<Error/>)
+            : isTimeout
+                ? (<TimedOut/>)
+                : (isLoading
+                    ? (<Loader/>)
+                    :  <BeatmapScores key={selectedBeatmap.id} scores={beatmapScores}/>)}
         
     </>)
 }

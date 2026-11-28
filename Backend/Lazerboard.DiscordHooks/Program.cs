@@ -36,7 +36,7 @@ builder.Services.AddDbContext<ScoreDataContext>(
                     .MapEnum<ScanEventType>("scan_event_type")
                     .MapEnum<ReportStatus>("report_status")
                     .MapEnum<UserGroup>("user_group")
-                    .CommandTimeout(300))
+                    .CommandTimeout(400))
             .UseSnakeCaseNamingConvention());
 
 // Repositories

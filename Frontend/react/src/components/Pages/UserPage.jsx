@@ -12,6 +12,7 @@ import UserStats from "../User/UserStats.jsx";
 import CollapseUncollapseButton from "../Inputs/CollapseUncollapseButton.jsx";
 import {debounce} from "../../utils/server-things.js";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
+import TimedOut from "../Misc/TimedOut.jsx";
 
 function UserPage({user}) {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -52,17 +53,20 @@ function UserPage({user}) {
     const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [isTimeout, setIsTimeout] = useState(false);
     
     const [userData, setUserData] = useState(null);
     const [showUserData, setShowUserData] = useState(true);
     const [statsLoading, setStatsLoading] = useState(true);
     const [statsError, setStatsError] = useState(false);
+    const [statsTimeout, setStatsTimeout] = useState(false);
     
     const [dateRangeString, setDateRangeString] = useState("");
     
     const getUserStats = useCallback(async (filterOptions) => {
         setStatsLoading(true);
         setStatsError(false);
+        setStatsTimeout(false);
 
         const command = createScoreQueryCommand(filterOptions);
 
@@ -83,7 +87,12 @@ function UserPage({user}) {
                 setUserData(json);
             }
             else {
-                setStatsError(true);
+                if (response.status === 408) {
+                    setStatsTimeout(true);
+                }
+                else {
+                    setStatsError(true);
+                }
             }
         }
         catch (error) {
@@ -97,6 +106,7 @@ function UserPage({user}) {
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
+        setIsTimeout(false);
 
         if (filterOptions.dateRange.min !== null || filterOptions.dateRange.max !== null) {
             let tempDateString = ' from ';
@@ -149,7 +159,12 @@ function UserPage({user}) {
             else {
                 setCurrentPage(1);
                 setMorePagesAvailable(false);
-                setIsError(true);
+                if (response.status === 408) {
+                    setIsTimeout(true);
+                }
+                else {
+                    setIsError(true);
+                }
             }
         }
         catch (error) {
@@ -190,9 +205,11 @@ function UserPage({user}) {
             <div className={`card-stats-column ${!showUserData ? 'collapsed' : ''}`}>
                 {statsError 
                     ? (<Error/>)
-                    : (statsLoading
-                        ? (<Loader/>)
-                        : <UserStats data={userData}/>)}
+                    : statsTimeout 
+                        ? (<TimedOut/>)
+                        : (statsLoading 
+                            ? (<Loader/>)
+                            : <UserStats data={userData}/>)}
             </div>
         </div>
         <h1 className="section-header">Filter user scores:</h1>
@@ -207,11 +224,13 @@ function UserPage({user}) {
         <div className="component-container">
             {isError
                 ? (<Error/>)
-                : (isLoading
-                    ? (<Loader/>)
-                    : allScores.length > 0 && (viewPreference === 'cards'
-                        ? <ScoresGrid scores={allScores}/>
-                        : <ScoresTable scores={allScores}/>))}
+                : isTimeout
+                    ? (<TimedOut/>)
+                    : (isLoading
+                        ? (<Loader/>)
+                        : allScores.length > 0 && (viewPreference === 'cards'
+                            ? <ScoresGrid scores={allScores}/>
+                            : <ScoresTable scores={allScores}/>))}
         </div>
         {(allScores.length > 0 || currentPage > 0) &&
             (<Pagination page={currentPage} 

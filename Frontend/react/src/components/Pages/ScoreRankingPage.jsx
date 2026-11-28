@@ -71,10 +71,16 @@ function ScoreRankingPage({countries}) {
 
             if (response.ok) {
                 const json = await response.json();
-                setUserRankings(json.userRankings);
+                const rankings = json.userRankings;
+                setUserRankings(rankings);
 
                 if (pageNumber !== currentPage) {
-                    setCurrentPage(pageNumber);
+                    if (rankings.length === 0) {
+                        setCurrentPage(currentPage + 1);
+                    }
+                    else {
+                        setCurrentPage(pageNumber);
+                    }
                 }
 
                 setMorePagesAvailable(json.moreAvailable);
@@ -120,7 +126,7 @@ function ScoreRankingPage({countries}) {
                     </>
                 ))}
         </div>
-        {userRankings.length > 0 && 
+        {(userRankings.length > 0 || currentPage > 1) && 
             (<Pagination page={currentPage} 
                          moreAvailable={morePagesAvailable}
                          onPageChange={(newPage) => debouncedGetRankings(filters, newPage)}/>)

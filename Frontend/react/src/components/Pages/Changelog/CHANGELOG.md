@@ -1,3 +1,11 @@
+## Nov 28, 2026
+
+### Web
+
+#### Added
+
+- Added ability to jump between pages to the pagination component.
+
 ## Nov 27, 2026
 
 ### Web and backend

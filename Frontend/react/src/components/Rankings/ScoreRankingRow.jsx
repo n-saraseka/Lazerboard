@@ -6,9 +6,9 @@ function ScoreRankingRow({ranking}) {
             <td>{ranking.rank}</td>
             <td>
                 <div className="score-user-data">
-                    <img src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(ranking.user.countryCode)}.svg`}
-                         alt={ranking.user.countryCode}
-                         title={ranking.user.countryCode}
+                    <img src={`https://osu.ppy.sh/assets/images/flags/${getEncodedCountry(ranking.user.country.id)}.svg`}
+                         alt={ranking.user.country.name}
+                         title={ranking.user.country.name}
                          className="country-img"/>
                     <img src={`https://a.ppy.sh/${ranking.user.id}`} alt={ranking.user.username} className="user-avatar"/>
                     <a href={`/users/${ranking.user.id}`}>{ranking.user.username}</a>

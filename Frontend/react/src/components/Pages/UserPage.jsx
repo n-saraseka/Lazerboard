@@ -130,10 +130,18 @@ function UserPage({user}) {
 
             if (response.ok) {
                 const json = await response.json();
-                setAllScores(json.scores);
+                const scores = json.scores;
+                setAllScores(scores);
 
                 if (pageNumber !== currentPage) {
-                    setCurrentPage(pageNumber);
+                    console.log(scores.length);
+                    console.log(morePagesAvailable);
+                    if (scores.length === 0) {
+                        setCurrentPage(currentPage + 1);
+                    }
+                    else {
+                        setCurrentPage(pageNumber);
+                    }
                 }
 
                 setMorePagesAvailable(json.moreAvailable);
@@ -205,7 +213,7 @@ function UserPage({user}) {
                         ? <ScoresGrid scores={allScores}/>
                         : <ScoresTable scores={allScores}/>))}
         </div>
-        {allScores.length > 0 && 
+        {(allScores.length > 0 || currentPage > 0) &&
             (<Pagination page={currentPage} 
                          moreAvailable={morePagesAvailable} 
                          onPageChange={(newPage) => debouncedGetScores(filters, newPage)}/>)

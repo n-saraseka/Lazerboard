@@ -304,11 +304,11 @@ input[type="number"], input[type="text"], input[type="date"], select, .calc-butt
     font-family: "Cascadia Mono", monospace;
 }
 
-input[type="date"] {
+.options input[type="date"] {
     width: 7.8em;
 }
 
-input[type="number"] {
+.options input[type="number"] {
     width: 4em;
 }
 
@@ -336,6 +336,14 @@ input:focus, select:focus {
     max-width: 100%;
 }
 
+.pagination {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
 .pages {
     display: flex;
     list-style-type: none;
@@ -344,6 +352,7 @@ input:focus, select:focus {
     margin: 0 auto;
     padding: 0 0;
     justify-content: center;
+    align-items: center;
 }
 
 .page {

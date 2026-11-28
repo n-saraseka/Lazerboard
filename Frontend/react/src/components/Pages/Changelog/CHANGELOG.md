@@ -5,6 +5,7 @@
 #### Added
 
 - Added ability to jump between pages to the pagination component.
+- Added timeout error display, distinguishing it from general server errors.
 
 ## Nov 27, 2026
 

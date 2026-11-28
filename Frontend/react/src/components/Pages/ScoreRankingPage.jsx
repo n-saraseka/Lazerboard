@@ -7,6 +7,7 @@ import Loader from "../Misc/Loader.jsx";
 import {createScoreQueryCommand} from "../../utils/score-things.js";
 import {debounce} from "../../utils/server-things.js";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
+import TimedOut from "../Misc/TimedOut.jsx";
 
 function ScoreRankingPage({countries}) {
     const { preferences, setPreferences } = useContext(PreferencesContext);
@@ -44,6 +45,7 @@ function ScoreRankingPage({countries}) {
     
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [isTimeout, setIsTimeout] = useState(false);
     
     const [currentPage, setCurrentPage] = useState(1);
     const [morePagesAvailable, setMorePagesAvailable] = useState(false);
@@ -52,6 +54,7 @@ function ScoreRankingPage({countries}) {
     async function getRankings(filterOptions, pageNumber = 1) {
         setIsLoading(true);
         setIsError(false);
+        setIsTimeout(false);
 
         const command = createScoreQueryCommand(filterOptions);
 
@@ -88,7 +91,12 @@ function ScoreRankingPage({countries}) {
             else {
                 setCurrentPage(1);
                 setMorePagesAvailable(false);
-                setIsError(true);
+                if (response.status === 408) {
+                    setIsTimeout(true);
+                }
+                else {
+                    setIsError(true);
+                }
             }
         }
         catch (error) {
@@ -118,13 +126,15 @@ function ScoreRankingPage({countries}) {
         <div className="component-container">
             {isError
                 ? (<Error/>)
-                : (isLoading
-                    ? (<Loader/>)
-                    : userRankings.length > 0 && (
-                    <>
-                        <ScoreRankingTable rankings={userRankings}/>
-                    </>
-                ))}
+                : isTimeout
+                    ? (<TimedOut/>)
+                    : (isLoading
+                        ? (<Loader/>)
+                        : userRankings.length > 0 && (
+                        <>
+                            <ScoreRankingTable rankings={userRankings}/>
+                        </>
+                    ))}
         </div>
         {(userRankings.length > 0 || currentPage > 1) && 
             (<Pagination page={currentPage} 

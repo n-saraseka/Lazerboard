@@ -9,6 +9,7 @@ import Loader from "../Misc/Loader.jsx";
 import {createScoreQueryCommand} from "../../utils/score-things.js";
 import {debounce} from "../../utils/server-things.js";
 import {PreferencesContext} from "../Preferences/PreferencesContext.jsx";
+import TimedOut from "../Misc/TimedOut.jsx";
 
 function MillionScoresPage({countries}) {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -47,12 +48,14 @@ function MillionScoresPage({countries}) {
     const [allScores, setAllScores] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [isTimeout, setIsTimeout] = useState(false);
 
     const [dateRangeString, setDateRangeString] = useState(" from today");
 
     const getScores = useCallback(async (filterOptions, pageNumber = 1) => {
         setIsLoading(true);
         setIsError(false);
+        setIsTimeout(false);
 
         if (filterOptions.dateRange.min === null && filterOptions.dateRange.max === null) {
             setDateRangeString(' from today');
@@ -104,7 +107,12 @@ function MillionScoresPage({countries}) {
             else {
                 setCurrentPage(1);
                 setMorePagesAvailable(false);
-                setIsError(true);
+                if (response.status === 408) {
+                    setIsTimeout(true);
+                }
+                else {
+                    setIsError(true);
+                }
             }
         }
         catch (error) {
@@ -138,11 +146,13 @@ function MillionScoresPage({countries}) {
         <div className="component-container">
             {isError
                 ? (<Error/>)
-                : (isLoading
-                    ? (<Loader/>)
-                    : allScores.length > 0 && (viewPreference === 'cards' 
-                        ? <ScoresGrid scores={allScores}/> 
-                        : <ScoresTable scores={allScores}/>))}
+                : isTimeout
+                    ? (<TimedOut/>)
+                    : (isLoading
+                        ? (<Loader/>)
+                        : allScores.length > 0 && (viewPreference === 'cards' 
+                            ? <ScoresGrid scores={allScores}/> 
+                            : <ScoresTable scores={allScores}/>))}
         </div>
         {(allScores.length > 0 || currentPage > 1) &&
             (<Pagination page={currentPage}
